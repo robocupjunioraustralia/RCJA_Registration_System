@@ -36,7 +36,7 @@ class Student(models.Model):
     # Fields
     first_name = models.CharField('First name', max_length=50)
     last_name = models.CharField('Last name', max_length=50)
-    yearLevel = models.IntegerField('Year level')
+    yearLevel = models.PositiveIntegerField('Year level')
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
     birthday = models.DateField('Birthday')
