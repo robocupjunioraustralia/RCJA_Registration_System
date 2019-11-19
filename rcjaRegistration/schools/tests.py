@@ -9,7 +9,4 @@ class TestNonTest(TestCase):
         self.assertTrue(False)
         self.assertFalse(True)
 
-
-if __name__ == '__main__':
-    unittest.main()
 # Create your tests here.
