@@ -30,10 +30,18 @@ jobs:
         #pip install pytest
         #pytest
       working-directory: ./rcjaRegistration
+    - name: Generate code coverage report
+      run: |
+        pip install coverage
+        coverage run manage.py test
+        coverage report
+        coverage xml
+        coverage html
+      working-directory: ./rcjaRegistration
 
     - uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{secrets.CODECOV_TOKEN}} #required
-        file: ./coverage.xml #optional
+        file: ./rcjaRegistration/coverage.xml #optional
         flags: unittests #optional
         name: codecov-umbrella #optional
