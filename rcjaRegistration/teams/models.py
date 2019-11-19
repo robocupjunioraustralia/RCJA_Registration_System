@@ -15,6 +15,8 @@ class Team(models.Model):
     name = models.CharField('Name', max_length=50)
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.name
 
     # *****Save & Delete Methods*****
 
@@ -42,6 +44,8 @@ class Student(models.Model):
     birthday = models.DateField('Birthday')
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.first_name + ' ' + self.last_name
 
     # *****Save & Delete Methods*****
 
