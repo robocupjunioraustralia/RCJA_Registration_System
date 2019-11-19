@@ -63,6 +63,8 @@ class Mentor(models.Model):
     mobile_phone_number = models.CharField('Phone Number', max_length=12)
 
     # *****Meta and clean*****
+    def __str__(self):
+        return str(self.user)
 
     # *****Save & Delete Methods*****
 
