@@ -1,6 +1,6 @@
 ![](https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System/workflows/pythonapp/badge.svg
 )
-
+[![codecov](https://codecov.io/gh/MelbourneHighSchoolRobotics/RCJA_Registration_System/branch/master/graph/badge.svg?token=TGG6NwrrJw)](https://codecov.io/gh/MelbourneHighSchoolRobotics/RCJA_Registration_System)
 RCJA_Registration_System
 
 Development getting started:
