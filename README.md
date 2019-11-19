@@ -1,3 +1,6 @@
+![](https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System/workflows/pythonapp/badge.svg
+)
+
 RCJA_Registration_System
 
 Development getting started:
