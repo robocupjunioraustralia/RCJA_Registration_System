@@ -22,6 +22,8 @@ class State(models.Model):
 
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.name
 
     # *****Save & Delete Methods*****
 
@@ -43,6 +45,8 @@ class Division(models.Model):
     description = models.CharField('Description', max_length=200, blank=True, null=True)
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.name
 
     # *****Save & Delete Methods*****
 
@@ -75,6 +79,8 @@ class Competition(models.Model):
 
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.name
 
     # *****Save & Delete Methods*****
 

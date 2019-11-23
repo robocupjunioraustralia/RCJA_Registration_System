@@ -12,6 +12,8 @@ class Region(models.Model):
     description = models.CharField('Description', max_length=200, blank=True, null=True)
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.name
 
     # *****Save & Delete Methods*****
 
@@ -36,6 +38,8 @@ class School(models.Model):
 
 
     # *****Meta and clean*****
+    def __str__(self):
+        return self.name
 
     # *****Save & Delete Methods*****
 
@@ -59,6 +63,8 @@ class Mentor(models.Model):
     mobile_phone_number = models.CharField('Phone Number', max_length=12)
 
     # *****Meta and clean*****
+    def __str__(self):
+        return str(self.user)
 
     # *****Save & Delete Methods*****
 
