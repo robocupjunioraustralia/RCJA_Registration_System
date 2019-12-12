@@ -4,10 +4,16 @@ from .models import *
 
 # Register your models here.
 
+class StudentInline(admin.TabularInline):
+    model = Student
+    extra = 0
 
 
-
-admin.site.register(Team)
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    inlines = [
+        StudentInline
+    ]
 
 
 
