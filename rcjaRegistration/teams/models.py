@@ -19,7 +19,7 @@ class Team(models.Model):
     class Meta:
         verbose_name = 'Team'
         unique_together = ('competition', 'name')
-        ordering = ['competition', 'school', 'division']
+        ordering = ['competition', 'school', 'division', 'name']
 
     # *****Save & Delete Methods*****
 
