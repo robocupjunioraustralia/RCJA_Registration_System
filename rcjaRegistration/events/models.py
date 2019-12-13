@@ -1,42 +1,7 @@
 from django.db import models
+from common.models import *
 
-# Create your models here.
-
-class State(models.Model):
-    # Foreign keys
-    treasurer = models.ForeignKey('auth.user', verbose_name='Treasurer', on_delete=models.PROTECT)
-    # Creation and update time
-    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
-    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
-    # Fields
-    name = models.CharField('Name', max_length=20, unique=True)
-    abbreviation = models.CharField('Short code', max_length=3, unique=True)
-    # Bank details
-    bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
-    bankAccountBSB = models.PositiveIntegerField('Bank Account BSB', blank=True, null=True)
-    bankAccountNumber = models.PositiveIntegerField('Bank Account Number', blank=True, null=True)
-    paypalEmail = models.EmailField('PayPal email', blank=True)
-    # Defaults
-    defaultCompDetails = models.TextField('Default competition details', blank=True)
-    invoiceMessage = models.TextField('Invoice message', blank=True)
-
-    # *****Meta and clean*****
-    class Meta:
-        verbose_name = 'State'
-        ordering = ['name']
-
-    # *****Save & Delete Methods*****
-
-    # *****Methods*****
-
-    # *****Get Methods*****
-
-    def __str__(self):
-        return self.name
-
-    # *****CSV export methods*****
-
-    # *****Email methods*****
+# **********MODELS**********
 
 class Division(models.Model):
     # Foreign keys
@@ -44,7 +9,7 @@ class Division(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    state = models.ForeignKey(State, verbose_name='State', on_delete=models.CASCADE, blank=True, null=True, help_text='Blank for global, available to all states')
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.CASCADE, blank=True, null=True, help_text='Blank for global, available to all states') # Do we want this, or just make it fully global?
     name = models.CharField('Name', max_length=20)
     description = models.CharField('Description', max_length=200, blank=True)
 
@@ -92,10 +57,10 @@ class Year(models.Model):
 
     # *****Email methods*****
 
-class Competition(models.Model):
+class Event(models.Model):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
-    state = models.ForeignKey(State, verbose_name = 'State', on_delete=models.PROTECT)
+    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -103,21 +68,21 @@ class Competition(models.Model):
     name = models.CharField('Name', max_length=50)
     max_team_members = models.PositiveIntegerField('Max team members')
     # Dates
-    startDate = models.DateField('Competition start date')
-    endDate = models.DateField('Competition end date')
+    startDate = models.DateField('Event start date')
+    endDate = models.DateField('Event end date')
     registrationsOpenDate = models.DateField('Registrations open date')
     registrationsCloseDate = models.DateField('Registration close date')
-    # Competition details
+    # Event details
     entryFee = models.PositiveIntegerField('Entry fee')
-    availableCompetitions = models.ManyToManyField(Division, verbose_name='Available division')
+    availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', blank=True)
     directEnquiriesTo = models.ForeignKey('auth.user', verbose_name='Direct enquiries to', on_delete=models.PROTECT)
     location = models.TextField('Location', blank=True)
-    compDetails = models.TextField('Competition details', blank=True)
+    compDetails = models.TextField('Event details', blank=True)
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True)
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = 'Competition'
+        verbose_name = 'Event'
         unique_together = ('year', 'state', 'name')
         ordering = ['year', 'state', '-startDate']
 
@@ -130,7 +95,7 @@ class Competition(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.name} {self.year}'
+        return f'{self.name} {self.year} ({self.state.abbreviation})'
 
     # *****CSV export methods*****
 
@@ -139,19 +104,19 @@ class Competition(models.Model):
 class Invoice(models.Model):
     # Foreign keys
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT)
-    competition = models.ForeignKey(Competition, verbose_name = 'Competition', on_delete=models.PROTECT)
+    event = models.ForeignKey(Event, verbose_name = 'Event', on_delete=models.PROTECT)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    purchaseOrderNumber = models.PositiveIntegerField('Purchase order number', blank=True, null=True)
+    purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)
     notes = models.TextField('Notes', blank=True)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Invoice'
-        unique_together = ('school', 'competition')
-        ordering = ['competition', 'school']
+        unique_together = ('school', 'event')
+        ordering = ['event', 'school']
 
     # *****Save & Delete Methods*****
 
@@ -161,7 +126,7 @@ class Invoice(models.Model):
 
     def invoiceAmount(self):
         from teams.models import Team
-        return self.competition.entryFee * Team.objects.filter(competition=self.competition, school=self.school).count()
+        return self.event.entryFee * Team.objects.filter(event=self.event, school=self.school).count()
     invoiceAmount.short_description = 'Invoice amount'
 
     def amountPaid(self):
@@ -173,7 +138,7 @@ class Invoice(models.Model):
     amountDue.short_description = 'Amount due'
 
     def __str__(self):
-        return f'{self.competition}: {self.school}'
+        return f'{self.event}: {self.school}'
 
     # *****CSV export methods*****
 

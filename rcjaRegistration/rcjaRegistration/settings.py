@@ -31,8 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'regions.apps.RegionsConfig',
     'teams.apps.TeamsConfig',
-    'competitions.apps.CompetitionsConfig',
+    'events.apps.EventsConfig',
     'schools.apps.SchoolsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
