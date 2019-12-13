@@ -4,6 +4,6 @@ from .models import *
 
 # Register your models here.
 
-admin.site.register(School)
+admin.site.register(State)
 
-admin.site.register(Mentor)
+admin.site.register(Region)

@@ -1,26 +1,26 @@
 <div class="row">
     <h2> {{rowHeading}} </h2>
     <div class="ui special cards four width column">
-        {% for competition in comps %}
+        {% for event in comps %}
         <div class="card">
             <div class="blurring dimmable image">
                 <img class="cardimage" src="/static/placeholderCity.png">
             </div>
             <div class="content">
-                <a href="{% url 'competitions:detail' competition.id %}" class="header">{{competition}}</a>
+                <a href="{% url 'events:detail' event.id %}" class="header">{{event}}</a>
                 <div class="meta">
-                    <span class="date">{{competition.startDate}} - {{competition.endDate}} Registrations close:
-                        {{competition.registrationsCloseDate}}</span>
+                    <span class="date">{{event.startDate}} - {{event.endDate}} Registrations close:
+                        {{event.registrationsCloseDate}}</span>
                 </div>
                 <div class="cardcontent">
                     <!-- <div style="float:right;">
-                        <a href="/competitions/{{competition.id}}"><button class="ui button green"> Teams -></button></a>
+                        <a href="/events/{{event.id}}"><button class="ui button green"> Teams -></button></a>
                     </div> -->
                     <div>
-                        {% if competition.compDetails %}
-                        {{competition.compDetails}}
+                        {% if event.compDetails %}
+                        {{event.compDetails}}
                         {% else %}
-                        {{competition.name}} Location: {{competition.location}}
+                        {{event.name}} Location: {{event.location}}
                         {% endif %}
                     </div>
 
@@ -29,10 +29,12 @@
             <div class="extra content">
                 <a>
                     <i class="users icon"></i>
-                    <!-- {{competition.team_set.count}} Teams -->
+                    <!-- {{event.team_set.count}} Teams -->
                 </a>
             </div>
         </div>
+        {% empty %}
+        No events
         {% endfor %}
     </div>
 </div>

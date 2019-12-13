@@ -1,6 +1,6 @@
 <head>
     <meta charset="utf-8" />
-    <title>Competitions list</title>
+    <title>Events list</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
@@ -27,10 +27,10 @@
     </div>
     <br>
     <div class="row">
-        {% include "competitions/compRow.html" with comps=currentCompetitions rowHeading="Current competitions" %}
+        {% include "events/compRow.html" with comps=currentEvents rowHeading="Current events" %}
         <br>
-        {% include "competitions/compRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration" %}
+        {% include "events/compRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration" %}
         <br>
-        {% include "competitions/compRow.html" with comps=pastCompetitions rowHeading="Past competitions" %}
+        {% include "events/compRow.html" with comps=pastEvents rowHeading="Past events" %}
     </div>
 </div>
