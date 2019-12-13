@@ -8,7 +8,7 @@ from .models import Competition
 
 
 def index(request):
-    competitions = Competition.objects.order_by('comp_start_date')
+    competitions = Competition.objects.order_by('startDate')
     template = loader.get_template('competitions/viewcomp.html')
     context = {
         'comps': competitions,
