@@ -121,6 +121,8 @@ class Competition(models.Model):
         unique_together = ('year', 'state', 'name')
         ordering = ['year', 'state', '-startDate']
 
+    # Check close and end date after start dates
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
