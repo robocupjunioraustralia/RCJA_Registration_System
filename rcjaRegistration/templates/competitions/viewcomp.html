@@ -1,64 +1,36 @@
 <head>
     <meta charset="utf-8" />
-    <title>Semantic UI CDN</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
+    <title>Competitions list</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
 </head>
 
 
 <style>
-.cardcontent {
-    margin-top: 10px;
-}
-.cardimage {
-    max-height:150px;
-}
+    .cardcontent {
+        margin-top: 10px;
+    }
 
+    .cardimage {
+        max-height: 150px;
+    }
 </style>
 
 <div class="ui aligned container">
-    <div class = "row">
+    <div class="row">
+        <h1>Payments</h1>
+    </div>
+    <br>
+    <div class="row">
         <h1>Your Events</h1>
     </div>
-    <div class = "row">
-        <h2>Current events </h2>
-        <div class="ui special cards four width column">
-            {% for competition in comps %}
-            <div class="card">
-            <div class="blurring dimmable image">
-                <img class = "cardimage" src="/static/placeholderCity.png">
-            </div>
-            <div class="content">
-                <a class="header">{{competition.name}}</a>
-                <div class="meta">
-                <span class="date">{{competition.startDate}} - {{competition.endDate}}  Registrations close: {{competition.registrationsCloseDate}}</span>
-                </div>
-                    <div class = "cardcontent">
-                        <div style = "float:right;">
-                            <a href="/competitions/{{competition.id}}"><button class = "ui button green"> Teams -></button></a>
-                        </div>
-                        <div>
-                            {% if competition.compDetails %}
-                                {{competition.compDetails}}
-                            {% else %}
-                                {{competition.name}} in {{competition.location}} aaaaaaaaaaaaaaaaaaaa loreeeeeeeeeeeeeeeeeemmmasd mmmmmmmmmm ipsummmmm
-                            {% endif %}
-                        </div>
-
-                    </div>
-            </div>
-            <div class="extra content">
-                <a>
-                <i class="users icon"></i>
-                2 Members
-                </a>
-            </div>
-        </div>
-            {% endfor %}
-    </div> 
+    <br>
+    <div class="row">
+        {% include "competitions/compRow.html" with comps=currentCompetitions rowHeading="Current competitions" %}
+        <br>
+        {% include "competitions/compRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration" %}
+        <br>
+        {% include "competitions/compRow.html" with comps=pastCompetitions rowHeading="Past competitions" %}
+    </div>
 </div>
-
-
-  
-
