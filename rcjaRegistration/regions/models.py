@@ -1,8 +1,9 @@
 from django.db import models
+from common.models import *
 
-# Create your models here.
+# **********MODELS**********
 
-class State(models.Model):
+class State(CustomSaveDeleteModel):
     # Foreign keys
     treasurer = models.ForeignKey('auth.user', verbose_name='Treasurer', on_delete=models.PROTECT)
     # Creation and update time
@@ -27,9 +28,15 @@ class State(models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        self.abbreviation = self.abbreviation.upper()
+
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def treasurerName(self):
+        return f'{self.treasurer.first_name} {self.treasurer.last_name}' if (self.treasurer.first_name and self.treasurer.last_name) else str(self.treasurer)
 
     def __str__(self):
         return self.name

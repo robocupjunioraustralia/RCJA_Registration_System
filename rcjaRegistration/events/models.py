@@ -1,6 +1,7 @@
 from django.db import models
+from common.models import *
 
-# Create your models here.
+# **********MODELS**********
 
 class Division(models.Model):
     # Foreign keys
@@ -8,7 +9,7 @@ class Division(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.CASCADE, blank=True, null=True, help_text='Blank for global, available to all states')
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.CASCADE, blank=True, null=True, help_text='Blank for global, available to all states') # Do we want this, or just make it fully global?
     name = models.CharField('Name', max_length=20)
     description = models.CharField('Description', max_length=200, blank=True)
 
@@ -73,7 +74,7 @@ class Event(models.Model):
     registrationsCloseDate = models.DateField('Registration close date')
     # Event details
     entryFee = models.PositiveIntegerField('Entry fee')
-    availableEvents = models.ManyToManyField(Division, verbose_name='Available division')
+    availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', blank=True)
     directEnquiriesTo = models.ForeignKey('auth.user', verbose_name='Direct enquiries to', on_delete=models.PROTECT)
     location = models.TextField('Location', blank=True)
     compDetails = models.TextField('Event details', blank=True)
@@ -94,7 +95,7 @@ class Event(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.name} {self.year}'
+        return f'{self.name} {self.year} ({self.state.abbreviation})'
 
     # *****CSV export methods*****
 
@@ -108,7 +109,7 @@ class Invoice(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    purchaseOrderNumber = models.PositiveIntegerField('Purchase order number', blank=True, null=True)
+    purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)
     notes = models.TextField('Notes', blank=True)
 
     # *****Meta and clean*****

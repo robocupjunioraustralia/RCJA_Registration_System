@@ -1,8 +1,7 @@
 from django.db import models
+from common.models import *
 
-# Create your models here.
-
-
+# **********MODELS**********
 
 class Team(models.Model):
     # Foreign keys
