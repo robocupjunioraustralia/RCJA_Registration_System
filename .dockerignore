@@ -2,7 +2,6 @@
 *.sqlite3
 **/__pycache__/
 .vscode/
-**/migrations/
 env/
 
 venv/
