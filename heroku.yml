@@ -9,4 +9,3 @@ release:
   image: web
   command:
     - manage.py migrate --noinput
-    - manage.py collectstatic --noinput
