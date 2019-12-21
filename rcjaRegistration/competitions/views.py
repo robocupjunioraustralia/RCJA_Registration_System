@@ -1,10 +1,12 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404,redirect
 
 # Create your views here.
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
 
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
 import datetime
 
 from .models import Competition
@@ -33,3 +35,4 @@ def detail(request, competitionID):
         'teams': teams
     }
     return render(request, 'competitions/compDetail.html', context)
+
