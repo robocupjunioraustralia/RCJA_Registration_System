@@ -1,13 +1,12 @@
 from django.db import models
+from common.models import *
 
-# Create your models here.
-
-
+# **********MODELS**********
 
 class Team(models.Model):
     # Foreign keys
-    competition = models.ForeignKey('competitions.Competition', verbose_name='Competition', on_delete=models.CASCADE)
-    division = models.ForeignKey('competitions.Division', verbose_name='Division', on_delete=models.PROTECT)
+    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
+    division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -18,8 +17,8 @@ class Team(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Team'
-        unique_together = ('competition', 'name')
-        ordering = ['competition', 'school', 'division', 'name']
+        unique_together = ('event', 'name')
+        ordering = ['event', 'school', 'division', 'name']
 
     # *****Save & Delete Methods*****
 
