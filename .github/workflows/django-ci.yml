@@ -9,41 +9,36 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-    - name: Install dependencies
+    - name: Set up Docker Compose stack
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        docker-compose up -d
     - name: Lint with flake8
       run: |
-        pip install flake8
+        docker-compose exec web pip install flake8
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker-compose exec web flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        docker-compose exec web flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       env:
         DEBUG: true
         SECRET_KEY: xmc$&0neem3(yld1mzt+2vhw14u%gyrd4r&y7t7btflzh^ljk)
       run: |
-        python3 manage.py test
+        docker-compose exec web manage.py test
         #pip install pytest
         #pytest
-      working-directory: ./rcjaRegistration
     - name: Generate code coverage report
       run: |
-        pip install coverage
-        coverage run --source='.' manage.py test
-        coverage report
-        coverage xml
-      working-directory: ./rcjaRegistration
-
+        docker-compose exec web pip install coverage
+        docker-compose exec web coverage run --source='.' manage.py test
+        docker-compose exec web coverage report
+        docker-compose exec web coverage xml
     - uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{secrets.CODECOV_TOKEN}} #required
         file: ./rcjaRegistration/coverage.xml #optional
         flags: unittests #optional
         name: codecov-umbrella #optional
+    - name: Tear down Docker Compose stack
+      run: |
+        docker-compose down
