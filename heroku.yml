@@ -9,3 +9,4 @@ release:
   image: web
   command:
     - manage.py migrate
+    - manage.py collectstatic
