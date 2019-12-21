@@ -1,5 +1,6 @@
 FROM python:3.8
 EXPOSE 80
+ENV PATH="${PATH}:/app"
 
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
