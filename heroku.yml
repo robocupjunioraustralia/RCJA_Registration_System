@@ -4,9 +4,9 @@ setup:
       as: DATABASE
 build:
   docker:
-    web: Dockerfile
+    web: Dockerfile.production
 release:
   image: web
   command:
-    - manage.py migrate
-    - manage.py collectstatic
+    - manage.py migrate --noinput
+    - manage.py collectstatic --noinput
