@@ -20,10 +20,7 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')), #login
-    path('', include('competitions.urls'))
-]
-
-    path('accounts/', include('django.contrib.auth.urls')), #login,
     path('accounts/signup', views.signup, name='signup'),
-    path('', include('competitions.urls')),
-    path('',include('schools.urls'))
+    path('', include('events.urls')),
+    path('',include('schools.urls')),
+]
