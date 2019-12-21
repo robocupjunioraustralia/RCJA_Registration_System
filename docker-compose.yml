@@ -8,6 +8,8 @@ services:
     volumes:
       - ./rcjaRegistration:/app
     environment:
+      - DEBUG=true
+      - SECRET_KEY=u75_y555kb_-11g)u3f&3z5bk&+noj0!a4ddo8_8a%oqe6&tu!
       - DATABASE_URL=postgres://rcjaRegistration:abc123@db/rcjaRegistration
     depends_on:
       - db
