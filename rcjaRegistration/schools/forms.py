@@ -5,8 +5,8 @@ from .models import Mentor, School
 class MentorForm(ModelForm):
     class Meta:
         model = Mentor
-        fields = ['school', 'mobile_phone_number']
+        fields = ['school', 'mobileNumber']
 class SchoolForm(ModelForm):
     class Meta:
         model = School
-        fields = ['name','abbreviation','region']
+        fields = ['name','abbreviation','region','state']
