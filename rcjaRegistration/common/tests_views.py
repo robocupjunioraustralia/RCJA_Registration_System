@@ -51,5 +51,6 @@ class AuthViewTests(TestCase):
     def testUserCreatedLogsIn(self):
         payloadData = {'username':self.username,'password1':self.password,'password2':self.password}
         self.client.post(path=reverse('signup'),data = payloadData)
-        response = self.client.post(path=reverse('login'),data = payloadData)
+        loginPayload = {'username':self.username,'password':self.password}
+        response = self.client.post(path=reverse('login'),data = loginPayload)
         self.assertEqual(response.status_code,302) #ensure a successful login works and redirects
