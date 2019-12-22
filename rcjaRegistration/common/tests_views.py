@@ -37,19 +37,19 @@ class AuthViewTests(TestCase):
                                                     #note that this works because transactions aren't saved in django tests
 
     def testUserInvalidSignup(self):
-        payloadData = {'username':self.username,'password':self.password,'password':'onetwothree'}
+        payloadData = {'username':self.username,'password1':self.password,'password2':'onetwothree'}
         response = self.client.post(path=reverse('signup'),data = payloadData)
         self.assertEqual(response.status_code,200) #ensure user is not redirected
         self.assertEqual(get_user_model().objects.all().count(), 0)
     
     def testUserExistingSignup(self):
-        payloadData = {'username':self.username,'password':self.password,'password':self.password}
+        payloadData = {'username':self.username,'password1':self.password,'password2':self.password}
         self.client.post(path=reverse('signup'),data = payloadData)
         response = self.client.post(path=reverse('signup'), data = payloadData)
         self.assertEqual(response.status_code,200) #ensure failed signup
         self.assertIn(b'A user with that username already exists.',response.content)
     def testUserCreatedLogsIn(self):
-        payloadData = {'username':self.username,'password':self.password,'password':self.password}
+        payloadData = {'username':self.username,'password1':self.password,'password2':self.password}
         self.client.post(path=reverse('signup'),data = payloadData)
         response = self.client.post(path=reverse('login'),data = payloadData)
         self.assertEqual(response.status_code,302) #ensure a successful login works and redirects
