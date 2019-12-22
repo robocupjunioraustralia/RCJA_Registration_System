@@ -12,15 +12,15 @@ class AuthViewTests(TestCase):
     password = 'password123'
 
 
-    def testViewUrlByUrl(self):
+    def testSignupByUrl(self):
         response = self.client.get('/accounts/signup')
         self.assertEqual(response.status_code, 200)
 
-    def testViewUrlByName(self):
+    def testSignupByName(self):
         response = self.client.get(reverse('signup'))
         self.assertEqual(response.status_code, 200)
 
-    def testViewUsesCorrectTempalte(self):
+    def testSignupUsesCorrectTemplate(self):
         response = self.client.get(reverse('signup'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/signup.html')
@@ -48,6 +48,22 @@ class AuthViewTests(TestCase):
         response = self.client.post(path=reverse('signup'), data = payloadData)
         self.assertEqual(response.status_code,200) #ensure failed signup
         self.assertIn(b'A user with that username already exists.',response.content)
+
+
+    def testLoginByUrl(self):
+        response = self.client.get('/accounts/login')
+        self.assertEqual(response.status_code, 200)
+
+    def testLoginByName(self):
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+
+    def testLoginUsesCorrectTemplate(self):
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+
     def testUserCreatedLogsIn(self):
         payloadData = {'username':self.username,'password1':self.password,'password2':self.password}
         self.client.post(path=reverse('signup'),data = payloadData)
