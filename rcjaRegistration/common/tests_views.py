@@ -28,7 +28,7 @@ class AuthViewTests(TestCase):
     def testUserValidSignup(self):
         prevUsers = get_user_model().objects.all().count()
 
-        payloadData = {'username':self.username,'password':self.password,'password':self.password}
+        payloadData = {'username':self.username,'password1':self.password,'password2':self.password}
         response = self.client.post(path=reverse('signup'),data = payloadData)
         self.assertEqual(response.status_code,302) #ensure user is redirected on signup
         self.assertEqual(get_user_model().objects.all().count(), prevUsers + 1)
