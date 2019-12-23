@@ -19,15 +19,21 @@
     </div>
     <br>
     <div class="row">
-        <h1>Your Events</h1>
+        <h1>Your Events:</h1>
     </div>
     <br>
-    <div class="row">
-        {% include "events/eventRow.html" with comps=currentEvents rowHeading="Current events" %}
-        <br>
-        {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration" %}
-        <br>
-        {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events" %}
+    <div class="row">  
+        {% if currentEvents or openForRegistrationEvents or pastEvents %}
+            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently running events:" %}
+            <br>
+            {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration:" %}
+            <br>
+            {% if pastEvents %}
+                {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events:" %}
+            {% endif %}
+        {% else %}
+            <h1> Sorry! No current or past events. Check back later! </h1>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

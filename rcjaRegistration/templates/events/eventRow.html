@@ -34,7 +34,15 @@
             </div>
         </div>
         {% empty %}
-        No events
+        <div class="ui icon message">
+                <i class="frown icon"></i>
+                <div class="content">
+                  <div class="header">
+                    No Events
+                  </div>
+                  <p> Sorry! No Events could be found. Maybe Sign up for an event, or check back later.</p>
+                </div>
+        </div
         {% endfor %}
     </div>
 </div>
