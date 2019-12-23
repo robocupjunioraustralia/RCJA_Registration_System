@@ -1,0 +1,32 @@
+<head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
+        {% load static %}
+        <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+        
+        <style type="text/css">
+            body {
+            background-color: #ffffff;
+            }
+        </style>
+    
+        {% block head %}
+        {% endblock %}
+    </head>
+    
+    <body>
+
+        <div class="ui visible top fixed inverted labeled menu">
+                <a class="item">
+                        <i class="home icon"></i>
+                        Home
+                    </a>        </div>
+        <div class="pusher">
+            {% block content %}
+            {% endblock %} 
+        </div>
+    </body>
+      
+    
