@@ -1,0 +1,45 @@
+{% extends 'common/loggedInbase.html' %}
+
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Your Teams - {{event.name}}</h1>
+    </div>
+    <div class="row">
+        <button class = "ui primary button"> Add a team</button>
+
+    </div>
+    <br>
+    <div>
+            <table class = "ui celled table">
+                <thead>
+                    <th> Team Name</th>
+                    <th> Division</th> 
+                    <th> Students</th>
+                    <th> Actions </th>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                        <tr>
+                            <td>{{team.name}}</td> 
+                            <td>{{team.division}}</td> 
+                            <td> 
+                                    {% for student in team.student_set.all %}
+                                        {{student.firstName}} {{student.lastName}} ({{student.yearLevel}}) 
+                                        {% if not forloop.last %}, {% endif %}
+
+                                    {% endfor %}
+                            </td>
+                            <td><button class = "ui primary button">Edit/View Details </button>
+                                 <button class = "ui primary button">Remove </button> 
+                            </td> 
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+    </div>
+    <br>
+</div>
+{% endblock %}
