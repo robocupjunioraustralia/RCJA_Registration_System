@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'widget_tweaks',
     'regions.apps.RegionsConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
