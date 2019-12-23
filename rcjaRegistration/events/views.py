@@ -32,4 +32,4 @@ def detail(request, eventID):
         'event': event,
         'teams': teams
     }
-    return render(request, 'events/compDetail.html', context)
+    return render(request, 'events/eventDetail.html', context)

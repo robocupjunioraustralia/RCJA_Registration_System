@@ -1,12 +1,6 @@
-<head>
-    <meta charset="utf-8" />
-    <title>Events list</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
-</head>
+{% extends 'common/loggedInbase.html' %}
 
-
+{% block head %}
 <style>
     .cardcontent {
         margin-top: 10px;
@@ -16,7 +10,9 @@
         max-height: 150px;
     }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="ui aligned container">
     <div class="row">
         <h1>Payments</h1>
@@ -34,3 +30,4 @@
         {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events" %}
     </div>
 </div>
+{% endblock %}

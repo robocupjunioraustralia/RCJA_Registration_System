@@ -19,6 +19,6 @@ from django.urls import path, include
 from . import views
 urlpatterns = [
     path('events/index', views.index, name= 'events'),
-    path('events/detail', views.detail, name='detail'),
+    path('events/detail/<int:eventID>', views.detail, name='detail'),
 
 ]
