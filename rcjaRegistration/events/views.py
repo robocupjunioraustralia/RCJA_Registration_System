@@ -21,7 +21,7 @@ def index(request):
         'currentEvents': currentEvents,
         'pastEvents': pastEvents
     }
-    return render(request, 'events/viewcomp.html', context)
+    return render(request, 'events/eventList.html', context)
 
 @login_required
 def detail(request, eventID):

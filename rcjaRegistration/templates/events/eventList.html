@@ -27,10 +27,10 @@
     </div>
     <br>
     <div class="row">
-        {% include "events/compRow.html" with comps=currentEvents rowHeading="Current events" %}
+        {% include "events/eventRow.html" with comps=currentEvents rowHeading="Current events" %}
         <br>
-        {% include "events/compRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration" %}
+        {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration" %}
         <br>
-        {% include "events/compRow.html" with comps=pastEvents rowHeading="Past events" %}
+        {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events" %}
     </div>
 </div>
