@@ -33,3 +33,13 @@ def detail(request, eventID):
         'teams': teams
     }
     return render(request, 'events/eventDetail.html', context)
+@login_required
+def summary(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+    from teams.models import Team
+    teams = Team.objects.filter(school__mentor__user=request.user, event__pk=eventID).prefetch_related('student_set')
+    context = {
+        'event': event,
+        'teams': teams
+    }
+    return render(request, 'events/eventSummary.html', context)    
