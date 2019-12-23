@@ -51,11 +51,12 @@ class AuthViewTests(TestCase):
 
 
     def testLoginByUrl(self):
-        response = self.client.get('/accounts/login')
+        response = self.client.get('/accounts/login/')
         self.assertEqual(response.status_code, 200)
 
     def testLoginByName(self):
         response = self.client.get(reverse('login'))
+        print(reverse('login'))
         self.assertEqual(response.status_code, 200)
 
     def testLoginUsesCorrectTemplate(self):
