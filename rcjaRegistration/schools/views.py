@@ -23,7 +23,6 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 
-@login_required
 def schoolCreation(request):
     if request.method == 'POST':
         form = SchoolForm(request.POST)
