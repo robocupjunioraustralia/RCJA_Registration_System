@@ -1,0 +1,152 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Add or edit a team </title>
+<style type="text/css">
+  body {
+    background-color: white;
+  }
+  .column {
+    max-width: 100%;
+  }
+
+  .formbox {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  .bg {
+      /* Full height */
+    height: 100%; 
+    width:auto;
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    /*background-color: #CCE2FF;*/
+  }
+  .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+  <div class = "">
+    <div class="ui center aligned grid ">
+      <div class = "twelve wide mobile six wide computer column ui">
+        <div class = "form form-group left-aligned-text">
+          <div>
+            <h1>Event: {{event.name}} </h1>
+            {% if team %}
+            <h2> Editing: Team {{team.name}} </h2>
+            {% else %}
+              <h2>Add a new team</h2> 
+            {% endif %}
+            {% if form.errors %}
+            
+            <!-- Error messaging -->
+            <div class="ui message left-aligned-text">
+              <div class="">
+                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                {{ form.non_field_errors }}
+                
+                <ul>
+                  {% for field in form %}
+                    {% if field.errors %}
+                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                  {% endfor %}
+                
+                </ul>
+              </div>
+            </div>
+            <!-- /Error messaging -->
+            {% endif %}
+          
+            <form method="post" class = "ui form">
+              {% csrf_token %}
+              {{ formset.management_form }}
+                
+              <h4 class="ui dividing header">Team Information</h4>
+               
+              <div class="two fields">
+                <div class = "field">
+                  <label>Team name: </label>
+                        {{form.name|attr:"placeholder:Team Name"}}
+                    
+                </div>
+                <div class = "field">
+                  <label> Division: </label>
+                            {{ form.division|attr:"placeholder:Division"|attr:"class:ui dropdown"}} 
+                </div>
+              </div>
+              {% for studentform in formset %}
+                {{studentform.id|attr:"type:hidden"}}
+              <div class = "ui segment">
+                <h4 class="ui dividing header">Student {{forloop.counter}}</h4>
+                {% if studentform.errors %}
+                  <div class="ui message left-aligned-text">
+                      <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                            {{ studentform.non_field_errors }}  
+                      <ul>
+                              {% for field in studentform %}
+                                {% if field.errors %}
+                                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                {% endif %}
+                              {% endfor %}
+                      </ul>
+
+                  </div>
+                {% endif %}
+                <div class = "two fields">
+                  <div class = "field">
+                    <label> {{studentform.firstName.label_tag}} </label>
+                            {{studentform.firstName}}
+                        
+                  </div>
+                  <div class = "field">
+                    <label> {{studentform.lastName.label_tag}} </label>
+                            {{studentform.lastName}}
+                        
+                  </div>
+                </div>
+                <div class = "three fields">
+                  <div class="field"> 
+                    <label> {{studentform.yearLevel.label_tag}}</label>
+                            {{studentform.yearLevel}}
+                        
+                  </div>
+                  <div class="field">
+                    <label> {{studentform.birthday.label_tag}}</label>
+                            {{studentform.birthday|attr:"type:date"}}
+                        
+                  </div>
+                  <div class="field">
+                    <label> {{studentform.gender.label_tag}}</label>
+                            {{studentform.gender}}
+                        
+                  </div>
+                  {% if formset.can_delete %}
+                  <div class="field">
+                      <label> Remove this student?</label>
+                        {{studentform.DELETE}} <span>This will delete this student from the team record</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+                {% endfor %}
+              <input class="primary ui button" type="submit" value="Save" />
+              {% if not team %}
+              <input class="primary ui button" type="submit" name="add_text" value="+ Add Another" />
+              {% endif %}    
+              <a href ="{% url 'events:summary' event.id %}"><button class = "ui button negative"> Cancel</button></a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

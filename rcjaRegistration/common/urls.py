@@ -1,4 +1,4 @@
-"""rcjaRegistration URL Configuration
+"""common URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
@@ -16,14 +16,6 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic.base import RedirectView
+from . import views
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')), #login
-    path('', include('events.urls')),
-    path('',include('schools.urls')),
-    path('',include('common.urls')),
-    path('',include('teams.urls')),
-    path('',RedirectView.as_view(url='/events/index', permanent=False), name='index')
-    
 ]

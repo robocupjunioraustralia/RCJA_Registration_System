@@ -1,0 +1,90 @@
+{% extends 'common/loggedInbase.html' %}
+
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Your Teams - {{event.name}}</h1>
+    </div>
+    <div class="row">
+        <a href ="{% url 'teams:create' event.id %}"><button class = "ui primary button"> Add a team</button> </a>
+
+    </div>
+    <br>
+    <div>
+            <table class = "ui celled table">
+                <thead>
+                    <th> Team Name</th>
+                    <th> Division</th> 
+                    <th> Students</th>
+                    <th> Actions </th>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                        <tr id = "teamRow{{team.id}}">
+                            <td>{{team.name}}</td> 
+                            <td>{{team.division}}</td> 
+                            <td> 
+                                    {% for student in team.student_set.all %}
+                                        {{student.firstName}} {{student.lastName}} ({{student.yearLevel}}) 
+                                        {% if not forloop.last %}, {% endif %}
+                                    
+                                    {% endfor %}
+                            </td>
+                            <td> <a href="{% url 'teams:edit' team.id %}"><button class = "ui primary button">Edit/View Details </button></a>
+                                 <button onClick ="showDeleteModal({{team.id}})" class = "ui primary button">Delete </button> 
+                            </td> 
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+    </div>
+    <br>
+</div>
+
+
+
+<div class="ui modal">
+<div class="header">
+    Delete Team
+</div>
+<div class="image content">
+    <div class="description">
+    <div class="ui header">Are you sure?</div>
+    <p> Deleting a team is an irreversable action. Are you sure that this is the team you want to delete?
+    </div>
+</div>
+<div class="actions">
+    <div class="ui black deny button">
+    Nope
+    </div>
+    <button id = "deleteConfirm" class="ui positive right labeled icon button">
+    Yes, I'm certain
+    <i class="checkmark icon"></i>
+    </button>
+</div>
+</div>
+
+
+<script> 
+    function showModal() {
+        $('.ui.modal').modal('show'); 
+    }
+
+    function deleteTeam(id) {
+        $.ajax({
+            type: "POST",
+            url: "{% url 'teams:delete' %}",
+            data: {teamID: id,csrfmiddlewaretoken: '{{ csrf_token }}' },
+            })
+            .done( (data) => $('#teamRow' + id).remove() )
+            .fail( (data) => alert('Unexpected Error!' + str(data)))
+    }
+    
+    function showDeleteModal(id) {
+        $('#deleteConfirm').attr('onClick', 'deleteTeam('+id +');');
+        showModal()
+    }
+</script>
+{% endblock %}

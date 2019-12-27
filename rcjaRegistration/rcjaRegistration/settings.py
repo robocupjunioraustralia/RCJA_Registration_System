@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import environ
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +38,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    'widget_tweaks',
     'regions.apps.RegionsConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
@@ -125,7 +127,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
+#https://stackoverflow.com/questions/44160666/valueerror-missing-staticfiles-manifest-entry-for-favicon-ico
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
+
 STATIC_URL = '/static/'
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = (
+    'django.contrib.staticfiles.storage.StaticFilesStorage'
+    if TESTING
+    else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+)
+
