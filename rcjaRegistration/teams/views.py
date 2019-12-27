@@ -2,12 +2,13 @@ from django.shortcuts import render, get_object_or_404,redirect
 from .models import Student,Team
 from django.core.exceptions import ValidationError,PermissionDenied
 from .forms import TeamForm,StudentForm
+from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
 from events.models import Event
 from django.http import HttpResponse
 from django.urls import reverse
 # Create your views here.
-
+@login_required
 def createTeam(request,eventID): #TODO!! validate eventID is one that teams can be created for
     event = get_object_or_404(Event, pk=eventID)
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=False)
@@ -30,7 +31,7 @@ def createTeam(request,eventID): #TODO!! validate eventID is one that teams can 
         form = TeamForm()
         formset = StudentInLineFormSet()
     return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event})
-
+@login_required
 def editTeam(request,teamID):
     team = get_object_or_404(Team, pk=teamID)
     event = team.event
@@ -54,7 +55,7 @@ def editTeam(request,teamID):
         form = TeamForm(instance=team)
         formset = StudentInLineFormSet(instance=team)
     return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event,'team':team})
-
+@login_required
 def deleteTeam(request): 
     #validate mentor is mentor of the team
     if request.method == 'POST':
