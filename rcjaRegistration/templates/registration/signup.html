@@ -2,6 +2,10 @@
 {% load widget_tweaks %}
 
 {% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
+{% load static %}
 <title> Login </title>
 <style type="text/css">
   body {
@@ -58,22 +62,43 @@
             </div>
             <!-- /Error messaging -->
           {% endif %}
-          <form method="post">
+          <form class="ui form segment" method="POST" action="{% url 'signup' %}">
               {% csrf_token %}
-              {% for field in form %}
-                <p>
-                  {{ field.label_tag }}<br>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <small style="color: grey">{{ field.help_text }}</small>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <p style="color: red">{{ error }}</p>
-                  {% endfor %}
-                </p>
-              {% endfor %}
-              <button type="submit">Submit</button>
-            </form>
+
+            <div class="field">
+              <label>Username</label>
+              {{ form.username|attr:"placeholder:Username"|attr:"type:text" }}
+            </div>
+            <div class="two fields">
+                <div class="field">
+                  <label>First Name</label>
+                  {{ form.first_name|attr:"placeholder:First Name"|attr:"type:text" }}
+                </div>
+                <div class="field">
+                  <label>Last Name</label>
+                  {{ form.last_name|attr:"placeholder:Last Name"|attr:"type:text" }}
+                </div>
+              </div>
+            <div class="field">
+              <label>Email</label>
+              {{ form.email|attr:"placeholder:Email"|attr:"type:text" }}
+            </div>
+            <div class="field">
+              <label>Password</label>
+              {{ form.password1|attr:"placeholder:Password"|attr:"type:password" }}
+            </div>
+            <div class="field">
+              {{ form.password2|attr:"placeholder:Confirm password"|attr:"type:password" }}
+
+            </div>
+            <div class="inline field">
+              <div class="ui checkbox">
+                {{ form.termsAndConditions }}
+                <label>I agree to the terms and conditions</label>
+              </div>
+            </div>
+            <button class="ui primary submit button" type="submit" value="SignUp">Submit</button>
+          </form>
 
         </div>
         </div>

@@ -7,7 +7,7 @@
                 <img class="cardimage" src="/static/placeholderCity.png">
             </div>
             <div class="content">
-                <a href="{% url 'events:detail' event.id %}" class="header">{{event}}</a>
+                <a href="{% url 'events:summary' event.id %}" class="header">{{event}}</a>
                 <div class="meta">
                     <span class="date">{{event.startDate}} - {{event.endDate}} Registrations close:
                         {{event.registrationsCloseDate}}</span>

@@ -1,36 +1,37 @@
 <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
-        {% load static %}
-        <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
-        
-        <style type="text/css">
-            body {
-            background-color: #ffffff;
-            }
-
-        </style>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
+    {% load static %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
     
-        {% block head %}
-        {% endblock %}
-    </head>
-    
-    <body>
+    <style type="text/css">
+        body {
+        background-color: #ffffff;
+        }
 
-        <div class="ui visible top fixed inverted labeled menu">
-                <a class="item">
-                        <i class="home icon"></i>
-                        Home
-                </a>       
-        </div>
+    </style>
 
-        <div class="pusher">
-            <div style="margin-bottom:3%;"> </div>
-            {% block content %}
-            {% endblock %} 
-        </div>
-    </body>
+    {% block head %}
+
+    {% endblock %}
+</head>
+
+<body>
+
+    <div class="ui visible top fixed inverted labeled menu">
+        <a class="item" href="/">
+            <i class="home icon"></i>
+            Home
+        </a>       
+    </div>
+
+    <div class="pusher">
+        <div style="margin-bottom:3%;"> </div>
+        {% block content %}
+        {% endblock %} 
+    </div>
+</body>
       
     
