@@ -22,12 +22,15 @@ docker-compose exec web manage.py createsuperuser
 ```
 
 ## Deploying to Production
-
+Staging is automatically deployed from the `master` branch.
 
 ```
 heroku login
-heroku git:remote -a rcja-registration-demo
-git push -f heroku
+heroku git:remote --app=rcja-registration-staging --remote=staging
+heroku git:remote --app=rcja-registration-demo --remote=production
+git config heroku.remote staging
+
+git push -f <environment> <branch>:master
 ```
 
 ## CI Instructions:
