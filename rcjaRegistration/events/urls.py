@@ -17,6 +17,8 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+app_name = 'events'
+
 urlpatterns = [
     path('events/index', views.index, name= 'events'),
     path('events/detail/<int:eventID>', views.detail, name='detail'),
