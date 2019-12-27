@@ -62,34 +62,44 @@
             </div>
             <!-- /Error messaging -->
           {% endif %}
-          <form class="ui form segment" method="POST" action="{% url 'signup' %}">
+          <form class="ui form segment" method="POST" >
               {% csrf_token %}
 
             <div class="field">
-              <label>Username</label>
-              {{ form.username|attr:"placeholder:Username"|attr:"type:text" }}
+                <label>Email</label>
+                {{ form.email|attr:"placeholder:Email"|attr:"type:text" }}
             </div>
+            
             <div class="two fields">
                 <div class="field">
                   <label>First Name</label>
-                  {{ form.first_name|attr:"placeholder:First Name"|attr:"type:text" }}
+                  {{ form.firstName|attr:"placeholder:First Name"|attr:"type:text" }}
                 </div>
                 <div class="field">
                   <label>Last Name</label>
-                  {{ form.last_name|attr:"placeholder:Last Name"|attr:"type:text" }}
+                  {{ form.lastName|attr:"placeholder:Last Name"|attr:"type:text" }}
                 </div>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                {{ form.password|attr:"placeholder:Password"|attr:"type:password" }}
               </div>
-            <div class="field">
-              <label>Email</label>
-              {{ form.email|attr:"placeholder:Email"|attr:"type:text" }}
+              <div class="field">
+                {{ form.passwordConfirm|attr:"placeholder:Confirm password"|attr:"type:password" }}
+              </div>
+            <div class = "two fields">
+                <div class="field">
+                  <label> School</label>
+                  {{form.school|add_class:":ui search dropdown"}}
+              </div>
+              <div class = "field">
+                <label> Can't find your school?</label>
+                <a href="{% url 'schools:createSchool' %}"><button class = "ui button primary"> Add a new School</button></a>
+              </div>
             </div>
-            <div class="field">
-              <label>Password</label>
-              {{ form.password1|attr:"placeholder:Password"|attr:"type:password" }}
-            </div>
-            <div class="field">
-              {{ form.password2|attr:"placeholder:Confirm password"|attr:"type:password" }}
-
+            <div class = "field">
+              <label> Mobile Number:</label>
+              {{ form.mobileNumber}}
             </div>
             <div class="inline field">
               <div class="ui checkbox">

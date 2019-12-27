@@ -4,31 +4,16 @@ from django.shortcuts import render, get_object_or_404,redirect
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth import login, authenticate
-from .forms import CustomUserCreationForm
-
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated, SAFE_METHODS
 from rest_framework import status, viewsets
 from rest_framework.response import Response
-
+from django.urls import reverse
 from django.db.models.deletion import ProtectedError
 
 # Create your views here.
 
 #*******************Pages**********
-def signup(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid(): 
-            user = form.save()
-            username = form.cleaned_data.get('username')
-            raw_password = form.cleaned_data.get('password1')
-            login(request, user)
-            return redirect('/schools/mentorRegistration')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'registration/signup.html', {'form': form})
-
 
 
 # **********CUSTOM CLASSES****

@@ -4,20 +4,24 @@ from django.contrib.auth.decorators import login_required
 # Create your views here.
 from django.http import HttpResponse
 from django.template import loader
-
+from django.contrib.auth import authenticate, login
 from .forms import MentorForm,SchoolForm
-@login_required
-def mentorRegistration(request):
+
+
+def signup(request):
     if request.method == 'POST':
         form = MentorForm(request.POST)
         if form.is_valid(): 
-            mentor = form.save(commit=False)
-            mentor.user = request.user
-            form.save()
+            mentor = form.save()
+            user = mentor.user
+            user.set_password(request.POST["password"])
+            user.save()
+            login(request, user)
             return redirect('/')
     else:
         form = MentorForm()
-    return render(request, 'schools/mentorRegistration.html', {'form': form}) 
+    return render(request, 'registration/signup.html', {'form': form})
+
 
 @login_required
 def schoolCreation(request):

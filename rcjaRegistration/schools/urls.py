@@ -3,9 +3,6 @@ from django.urls import path
 from . import views
 app_name = 'schools'
 urlpatterns = [
-    path('schools/mentorRegistration',views.mentorRegistration,name='mentorRegistration'),
-    path('schools/schoolCreation',views.schoolCreation,name='schoolCreation')
+    path('schools/createSchool',views.schoolCreation,name='createSchool'),
+    path('accounts/signup',views.signup,name="signup")
 ]
-
-
-
