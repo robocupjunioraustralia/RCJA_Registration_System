@@ -7,16 +7,25 @@ from django.urls import reverse
 from django.test import Client
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
-    username = 'user'
+    email = 'user@user.com'
+    username = email
     password = 'password'
+    validPayload = {'email':email,
+        'password':password,
+        'passwordConfirm':password,
+        'firstName':'test',
+        'lastName':'test',
+        'school':1,
+        'mobileNumber':'123123123'
+        }
     def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username=self.username,password=self.password)
+        self.user = user = User.objects.create_user(username=self.username,
+                                 password=self.password)
+        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
+        self.newRegion = Region.objects.create(name='Test Region',description='test desc')
+        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
+        self.validPayload["school"] = self.newSchool.id
 
-        newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
-        newRegion = Region.objects.create(name='Test Region',description='test desc')
-        newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=newState,region=newRegion)
-    
     def testValidPageLoad(self):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('schools:createSchool'))
@@ -24,7 +33,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     
     def testValidSchoolCreation(self):
         self.client.login(username=self.username, password=self.password)
-        payload= {'name':'test','abbreviation':'TSST','state':'1','region':'1'}
+        payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
         response = self.client.post(reverse('schools:createSchool'),data=payload)
         self.assertEqual(response.status_code,302)
         self.assertEqual(School.objects.all().count(), 2)
@@ -33,7 +42,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 
     def testInvalidSchoolCreation(self):
         self.client.login(username=self.username, password=self.password)
-        payload= {'name':'test','abbreviation':'TSST','state':'1','region':'1'}
+        payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
         self.client.post(reverse('schools:createSchool'),data=payload)
         response = self.client.post(reverse('schools:createSchool'),data=payload)
 
@@ -60,7 +69,7 @@ class AuthViewTests(TestCase):
         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
-
+        self.validPayload["school"] = self.newSchool.id
     def testSignupByUrl(self):
         response = self.client.get('/accounts/signup')
         self.assertEqual(response.status_code, 200)
@@ -105,7 +114,6 @@ class AuthViewTests(TestCase):
 
     def testLoginByName(self):
         response = self.client.get(reverse('login'))
-        print(reverse('login'))
         self.assertEqual(response.status_code, 200)
 
     def testLoginUsesCorrectTemplate(self):
