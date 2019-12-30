@@ -42,6 +42,13 @@
                     My Invoices
                 </a>                                                
                 <div class = "right menu">
+                    {% if user.is_staff %}
+                    <a class="item" href="{% url 'admin:index' %}">
+                        <i class="id badge icon"></i>
+                        Admin
+                    </a>     
+            
+                    {% endif %}
                     <a class = "item" href = "#">
                         Welcome, {% if user.get_full_name %} 
                         {{ user.get_full_name }}
