@@ -94,7 +94,7 @@
               </div>
               <div class = "field">
                 <label> Can't find your school?</label>
-                <a href="{% url 'schools:createSchool' %}"><button class = "ui button primary"> Add a new School</button></a>
+                <button onclick="showModal()" class = "ui button primary"> Add a new School</button>
               </div>
             </div>
             <div class = "field">
@@ -117,4 +117,88 @@
   </div>
 </div>
 </div>
+
+
+
+<div class="ui modal">
+    <div class="header">
+        Create School
+    </div>
+    <div class="image content">
+        <div class="description" id ="schoolContent">
+          <div id = "schoolErrors"></div>
+          <div class="ui header">You are creating a new School</div>
+          <form class="ui form" id = "schoolCreation">
+              {% csrf_token %}
+            <div class="field">
+                <label>Name</label>
+                {{schoolCreationModal.name}}
+            </div>
+            <div class="field">
+                <label>Abbreviation</label>
+                {{schoolCreationModal.abbreviation}}
+            </div>
+            <div class="field">
+                <label>Region</label>
+                {{schoolCreationModal.region}}
+            </div>
+            <div class="field">
+                <label>State</label>
+                {{schoolCreationModal.state}}
+            </div>
+          </form>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">
+        Cancel
+        </div>
+
+        <button id = "confirm" class="ui positive right labeled icon button">
+        Create School
+          <i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+    
+    
+    <script> 
+        function showModal() {
+            $('.ui.modal').modal({
+            closable  : false,
+            onDeny    : () => true,
+            onApprove : createSchool
+          })
+  .modal('show'); 
+        }
+    
+        function createSchool() {
+            $.ajax({
+                type: "POST",
+                url: "{% url 'schools:createAJAX' %}",
+                data: $("#schoolCreation").serialize()
+            })
+                .done( (data) => {
+                  console.log(data)
+                  $("#id_school").append(new Option(data.name, data.id)) 
+                  $("#id_school").val(data.id)
+                  $('.ui.modal').modal('hide');
+                } )
+                .fail( (data) => {
+                  console.error(data.responseJSON)
+                  $("#schoolErrors").empty()
+                  for(key in data.responseJSON.errors) {
+                    data.responseJSON.errors[key].map( (error) => {
+                      $("#schoolErrors").prepend("<div class = 'ui message' >" + capitalize(key) + ": " + error + " </div>")
+
+                    })
+                  }
+                })
+                return false //needed to stop modal from closing
+            }
+            const capitalize = (s) => {
+              if (typeof s !== 'string') return ''
+              return s.charAt(0).toUpperCase() + s.slice(1)
+            }
+    </script>
 {% endblock %}
