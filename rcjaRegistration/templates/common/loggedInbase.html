@@ -45,17 +45,23 @@
                     {% if user.is_staff %}
                     <a class="item" href="{% url 'admin:index' %}">
                         <i class="id badge icon"></i>
-                        Admin
+                        Manage organisation
                     </a>     
-            
                     {% endif %}
-                    <a class = "item" href = "#">
-                        Welcome, {% if user.get_full_name %} 
-                        {{ user.get_full_name }}
-                        {% else %}
-                        {{user.username}}
+                    <div class="ui dropdown simple item">
+                        <i class="user circle icon"></i>
+                        {% if user.get_full_name %} 
+                            {{ user.get_full_name }}
+                            {% else %}
+                            {{user.username}}
                         {% endif %}
-                    </a>                    
+                            <i class="dropdown icon"></i>
+                            <div class="menu">
+                              <a class="item">My Details</a>
+                              <a class="item">Log out</a>
+                              <a class="item">Help</a>
+                            </div>
+                    </div>             
                 </div>
 
         </div>
