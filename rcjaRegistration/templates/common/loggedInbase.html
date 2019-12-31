@@ -21,13 +21,55 @@
 </head>
 
 <body>
+        <div class="ui top massive menu">
+                <div class="item">
+                  <img src="{% static 'favicon-32x32.png' %}">
+                </div>
+                <a class="item" href="/">
+                    <i class="home icon"></i>
+                    Dashboard
+                </a>  
+                <a class="item" href="/">
+                    <i class="calendar alternate icon"></i>
+                    My Events
+                </a>  
+                <a class="item" href="/">
+                    <i class="users icon"></i>
+                    My Teams
+                </a>  
+                <a class="item" href="/">
+                    <i class="user icon"></i>
+                    My Students
+                </a>       
+                <a class="item" href="/">
+                    <i class="credit card icon"></i>
+                    My Invoices
+                </a>                                                
+                <div class = "right menu">
+                    {% if user.is_staff %}
+                    <a class="item" href="{% url 'admin:index' %}">
+                        <i class="id badge icon"></i>
+                        Manage organisation
+                    </a>     
+                    {% endif %}
+                    <div class="ui dropdown simple item">
+                        <i class="user circle icon"></i>
+                        {% if user.get_full_name %} 
+                            {{ user.get_full_name }}
+                            {% else %}
+                            {{user.username}}
+                        {% endif %}
+                            <i class="dropdown icon"></i>
+                            <div class="menu">
+                              <a class="item">My Details</a>
+                              <a href = "{% url 'logout' %}" class="item">Log out</a>
+                              <a class="item">Help</a>
+                            </div>
+                    </div>             
+                </div>
 
-    <div class="ui visible top fixed inverted labeled menu">
-        <a class="item" href="/">
-            <i class="home icon"></i>
-            Home
-        </a>       
-    </div>
+        </div>
+
 
     <div class="pusher">
         <div style="margin-bottom:3%;"> </div>

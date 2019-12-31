@@ -15,8 +15,16 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>Payments</h1>
-    </div>
+        <h1>Invoices:</h1> 
+        <div class="ui icon message">
+            <i class="thumbs up icon"></i>
+            <div class="content">
+              <div class="header">
+                Invoices
+              </div>
+              <p>All good. No actions required!</p>
+            </div>
+        </div>    </div>
     <br>
     <div class="row">
         <h1>Your Events:</h1>
@@ -24,7 +32,7 @@
     <br>
     <div class="row">  
         {% if currentEvents or openForRegistrationEvents or pastEvents %}
-            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently running events:" %}
+            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
             <br>
             {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration:" %}
             <br>
@@ -32,8 +40,16 @@
                 {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events:" %}
             {% endif %}
         {% else %}
-            <h1> Sorry! No current or past events. Check back later! </h1>
-        {% endif %}
+        <div class="ui icon warning message">
+            <i class="frown icon"></i>
+            <div class="content">
+              <div class="header">
+                No Events
+              </div>
+              <p> Sorry! No Events could be found. Check back later.</p>
+            </div>
+        </div>
+    {% endif %}
     </div>
 </div>
 {% endblock %}

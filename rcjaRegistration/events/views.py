@@ -30,7 +30,9 @@ def detail(request, eventID):
     teams = Team.objects.filter(school__mentor__user=request.user, event__pk=eventID).prefetch_related('student_set')
     context = {
         'event': event,
-        'teams': teams
+        'teams': teams,
+        'today':datetime.date.today()
+
     }
     return render(request, 'events/eventDetail.html', context)
 @login_required
@@ -40,6 +42,7 @@ def summary(request, eventID):
     teams = Team.objects.filter(school__mentor__user=request.user, event__pk=eventID).prefetch_related('student_set')
     context = {
         'event': event,
-        'teams': teams
+        'teams': teams,
+        'today':datetime.date.today()
     }
     return render(request, 'events/eventSummary.html', context)    

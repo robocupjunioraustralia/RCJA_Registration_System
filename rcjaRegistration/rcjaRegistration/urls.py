@@ -17,6 +17,12 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
+
+admin.site.site_header = "RCJA Admin"
+admin.site.site_title = "RCJA Admin Portal"
+admin.site.index_title = "Welcome to the RCJA Admin Portal"
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')), #login
