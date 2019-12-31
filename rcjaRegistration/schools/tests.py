@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.test import Client
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
+    reverseString = 'schools:createSchool'
     email = 'user@user.com'
     username = email
     password = 'password'
@@ -18,6 +19,9 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         'school':1,
         'mobileNumber':'123123123'
         }
+    validLoadCode = 200
+    validSubmitCode = 302
+    inValidCreateCode = 200
     def setUp(self):
         self.user = user = User.objects.create_user(username=self.username,
                                  password=self.password)
@@ -28,14 +32,14 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 
     def testValidPageLoad(self):
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('schools:createSchool'))
-        self.assertEqual(response.status_code, 200)    
+        response = self.client.get(reverse(self.reverseString))
+        self.assertEqual(response.status_code, self.validLoadCode)    
     
     def testValidSchoolCreation(self):
         self.client.login(username=self.username, password=self.password)
         payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
-        response = self.client.post(reverse('schools:createSchool'),data=payload)
-        self.assertEqual(response.status_code,302)
+        response = self.client.post(reverse(self.reverseString),data=payload)
+        self.assertEqual(response.status_code,self.validSubmitCode)
         self.assertEqual(School.objects.all().count(), 2)
         self.assertEqual(School.objects.all()
                          [1].name, 'test')
@@ -43,14 +47,17 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     def testInvalidSchoolCreation(self):
         self.client.login(username=self.username, password=self.password)
         payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
-        self.client.post(reverse('schools:createSchool'),data=payload)
-        response = self.client.post(reverse('schools:createSchool'),data=payload)
+        self.client.post(reverse(self.reverseString),data=payload)
+        response = self.client.post(reverse(self.reverseString),data=payload)
 
-        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.status_code,self.inValidCreateCode)
         self.assertIn(b'School with this Abbreviation already exists.',response.content)
         self.assertIn(b'School with this Name already exists.',response.content)
-
-
+class TestSchoolAJAXCreate(TestSchoolCreate):
+    reverseString = 'schools:createAJAX'
+    validLoadCode = 403 #no get requests to this url
+    validSubmitCode = 200
+    inValidCreateCode = 400
 class AuthViewTests(TestCase):
     email = 'user@user.com'
     password = 'password'
