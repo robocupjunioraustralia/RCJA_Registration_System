@@ -12,6 +12,8 @@ from django.http import HttpResponseForbidden
 def signup(request):
     if request.method == 'POST':
         form = MentorForm(request.POST)
+        schoolCreationDetails = SchoolForm(request.POST)#note this isn't saved here
+
         if form.is_valid(): 
             mentor = form.save()
             user = mentor.user
