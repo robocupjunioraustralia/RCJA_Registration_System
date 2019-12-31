@@ -29,8 +29,12 @@
             <div class="extra content">
                 <a>
                     <i class="users icon"></i>
-                    <!-- {{event.team_set.count}} Teams -->
+                    {{event.team_set.count}} Team(s) 
                 </a>
+                <span class="right floated">
+                        Location: {{event.location}}
+                    <i class="map marker icon"></i>        
+                </span>
             </div>
         </div>
         {% empty %}
