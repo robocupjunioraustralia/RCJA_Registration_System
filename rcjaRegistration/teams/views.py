@@ -7,12 +7,14 @@ from django.forms import modelformset_factory, inlineformset_factory
 from events.models import Event
 from django.http import HttpResponse
 from django.urls import reverse
+import datetime
 # Create your views here.
 @login_required
 def createTeam(request,eventID): #TODO!! validate eventID is one that teams can be created for
     event = get_object_or_404(Event, pk=eventID)
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=False)
-
+    if event.registrationsCloseDate < datetime.datetime.now().date():
+        raise PermissionDenied("Registrtaion has closed for this event!")
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST)
         form = TeamForm(request.POST)
@@ -35,7 +37,8 @@ def createTeam(request,eventID): #TODO!! validate eventID is one that teams can 
 def editTeam(request,teamID):
     team = get_object_or_404(Team, pk=teamID)
     event = team.event
-
+    if event.registrationsCloseDate < datetime.datetime.now().date():
+        raise PermissionDenied("Registrtaion has closed for this event!")
     if request.user.mentor.school != team.school:
         raise PermissionDenied("You are not a mentor of this Team!")
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=True)
@@ -60,6 +63,8 @@ def deleteTeam(request):
     #validate mentor is mentor of the team
     if request.method == 'POST':
         team = get_object_or_404(Team,pk=request.POST["teamID"])
+        if team.event.registrationsCloseDate < datetime.datetime.now().date():
+            raise PermissionDenied("Registrtaion has closed for this event!")
         if request.user.mentor.school == team.school:
             team.delete()
             return HttpResponse(status=200)
