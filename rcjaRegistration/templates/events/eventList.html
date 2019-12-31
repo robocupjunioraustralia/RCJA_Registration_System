@@ -32,7 +32,7 @@
     <br>
     <div class="row">  
         {% if currentEvents or openForRegistrationEvents or pastEvents %}
-            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently running events:" %}
+            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
             <br>
             {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration:" %}
             <br>
