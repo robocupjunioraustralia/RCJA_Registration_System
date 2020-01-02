@@ -148,3 +148,14 @@ class AuthViewTests(TestCase):
         response = self.client.get(reverse('logout'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+    def testUserCreatedLogsOut(self):
+        user = User.objects.create_user(username=self.email,
+                                        email=self.email,
+                                        password=self.password)
+        user.save()
+        self.client.login(username=self.email, password=self.password)
+        self.client.get(reverse('logout'))
+        # Try an unauthorized page
+        response = self.client.get('/events/index')
+        self.assertEqual(response.status_code, 302)
