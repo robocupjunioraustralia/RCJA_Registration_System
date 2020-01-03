@@ -8,6 +8,17 @@ class MentorForm(ModelForm):
         fields = ['school', 'mobileNumber','firstName','lastName','email','mobileNumber']
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned_data = super(MentorForm, self).clean()
+        password = cleaned_data.get("password")
+        passwordConfirm = cleaned_data.get("passwordConfirm")
+
+        if password != passwordConfirm:
+            raise forms.ValidationError(
+                "Passwords do not match"
+            )
+
 class SchoolForm(ModelForm):
     class Meta:
         model = School

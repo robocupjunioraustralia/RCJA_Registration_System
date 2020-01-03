@@ -114,6 +114,13 @@ class AuthViewTests(TestCase):
         self.assertEqual(response.status_code,200) #ensure failed signup
         self.assertIn(b'Email: Mentor with this Email already exists.',response.content)
 
+    def testUserInvalidPasswordConfirmSignup(self):
+        payloadData = self.validPayload.copy()
+        payloadData["passwordConfirm"] = 'asasdaasasa'
+        response = self.client.post(path=reverse('schools:signup'), data = payloadData)
+        self.assertEqual(response.status_code,200) #ensure failed signup
+        self.assertIn(b'Passwords do not match',response.content)
+
 
     def testLoginByUrl(self):
         response = self.client.get('/accounts/login/')

@@ -67,7 +67,7 @@
 
             <div class="field">
                 <label>Email</label>
-                {{ form.email|attr:"placeholder:Email"|attr:"type:text" }}
+                {{ form.email|attr:"placeholder:Email"|attr:"type:email" }}
             </div>
             
             <div class="two fields">
@@ -201,4 +201,32 @@
               return s.charAt(0).toUpperCase() + s.slice(1)
             }
     </script>
+
+
+<script>
+  $( document ).ready(function() {
+    $('.ui.form')
+    .form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        registerPassword: {
+        identifier  : 'id_password',
+        rules: [{
+            type   : 'empty',
+            prompt : 'Please enter a password.'
+        }]
+      },
+      registerPasswordVerify: {
+        identifier  : 'id_passwordConfirm',
+        rules: [{
+            type   : 'match[id_password]',
+            prompt : 'Your passwords do not match.'
+        }]
+      }
+      }
+    })
+  });
+  
+  </script>
 {% endblock %}
