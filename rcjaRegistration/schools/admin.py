@@ -1,11 +1,12 @@
 from django.contrib import admin
+from common.admin import *
 
 from .models import *
 
 # Register your models here.
 
 @admin.register(School)
-class SchoolAdmin(admin.ModelAdmin):
+class SchoolAdmin(admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
@@ -21,9 +22,18 @@ class SchoolAdmin(admin.ModelAdmin):
         'name',
         'abbreviation'
     ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'name',
+        'abbreviation',
+        'state',
+        'region'
+    ]
 
 @admin.register(Mentor)
-class MentorAdmin(admin.ModelAdmin):
+class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'school',
@@ -38,4 +48,14 @@ class MentorAdmin(admin.ModelAdmin):
         'school__state__name',
         'school__name',
         'school__abbreviation'
+    ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'firstName',
+        'lastName',
+        'school',
+        'email',
+        'mobileNumber'
     ]
