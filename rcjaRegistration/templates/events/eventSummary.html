@@ -15,7 +15,7 @@
     </div>
     <br>
     <div>
-            <table class = "ui celled table">
+            <table id = "eventTable" class = "ui celled table">
                 <thead>
                     <th> Team Name</th>
                     <th> Division</th> 
@@ -76,6 +76,9 @@
 
 
 <script> 
+    $(document).ready( function () {
+        $('#eventTable').DataTable();
+    } );
     function showModal() {
         $('.ui.modal').modal('show'); 
     }
