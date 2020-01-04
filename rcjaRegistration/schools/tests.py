@@ -166,3 +166,54 @@ class AuthViewTests(TestCase):
         # Try an unauthorized page
         response = self.client.get(reverse('events:dashboard'))
         self.assertEqual(response.status_code, 302)
+
+class ProfileEditTests(TestCase):
+    email = 'user@user.com'
+    password = 'password'
+    
+    def setUp(self):
+        self.validPayload = {'email':self.email,
+        'password':self.password,
+        'passwordConfirm':self.password,
+        'firstName':'test',
+        'lastName':'test',
+        'school':1,
+        'mobileNumber':'123123123'
+        }
+        self.user = user = User.objects.create_user(username='admin',
+                                 email='admin@test.com',
+                                 password='admin')
+        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
+        self.newRegion = Region.objects.create(name='Test Region',description='test desc')
+        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
+        self.validPayload["school"] = self.newSchool.id
+
+        response = self.client.post(path=reverse('schools:signup'),data = self.validPayload)
+        self.client.login(username=self.email,password=self.password)
+    def testPageLoads(self):
+        response = self.client.get(path=reverse('schools:profile'))
+        self.assertEqual(200,response.status_code)
+    def testEditWorks(self):
+        payload = {
+           "firstName":"Admin",
+           "lastName":"User",
+           "mobileNumber":123,
+           "email":"admon@admon.com",
+           "password":"password123",
+           "passwordConfirm":"password123"
+        }
+        response = self.client.post(path=reverse('schools:profile'),data=payload)
+        self.assertEqual(302,response.status_code)
+        self.assertEqual(Mentor.objects.get(firstName="Admin").email,'admon@admon.com')
+
+    def testInvalidEditFails(self):
+        payload = {
+           "firstName":"Admin",
+           "lastName":"User",
+           "mobileNumber":123,
+           "email":"adminNope",
+           "password":"password123",
+           "passwordConfirm":"passwor123"
+        }
+        response = self.client.post(path=reverse('schools:profile'),data=payload)
+        self.assertEqual(200,response.status_code)
