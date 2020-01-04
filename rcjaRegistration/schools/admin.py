@@ -49,6 +49,9 @@ class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
         'school__name',
         'school__abbreviation'
     ]
+    autocomplete_fields = [
+        'school'
+    ]
     actions = [
         'export_as_csv'
     ]
