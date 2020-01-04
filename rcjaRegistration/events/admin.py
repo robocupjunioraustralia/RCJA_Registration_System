@@ -11,7 +11,7 @@ class InvoicePaymentInline(admin.TabularInline):
 
 
 @admin.register(Division)
-class DivisionAdmin(admin.ModelAdmin):
+class DivisionAdmin(admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'state',
@@ -19,6 +19,14 @@ class DivisionAdmin(admin.ModelAdmin):
     ]
     list_filter = [
         'state'
+    ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'name',
+        'state',
+        'description'
     ]
 
     def get_queryset(self, request):
@@ -32,7 +40,7 @@ class DivisionAdmin(admin.ModelAdmin):
 admin.site.register(Year)
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'year',
@@ -48,6 +56,20 @@ class EventAdmin(admin.ModelAdmin):
         'state',
         'year'
     ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'name',
+        'year',
+        'state',
+        'startDate',
+        'endDate',
+        'registrationsOpenDate',
+        'registrationsCloseDate',
+        'entryFee',
+        'directEnquiriesTo'
+    ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -58,7 +80,7 @@ class EventAdmin(admin.ModelAdmin):
         return qs
 
 @admin.register(Invoice)
-class InvoiceAdmin(admin.ModelAdmin):
+class InvoiceAdmin(admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'event',
         'school',
@@ -84,6 +106,17 @@ class InvoiceAdmin(admin.ModelAdmin):
     ]
     inlines = [
         InvoicePaymentInline
+    ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'event',
+        'school',
+        'purchaseOrderNumber',
+        'invoiceAmount',
+        'amountPaid',
+        'amountDue'    
     ]
 
     def get_queryset(self, request):
