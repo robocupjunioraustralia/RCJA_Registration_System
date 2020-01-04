@@ -164,5 +164,5 @@ class AuthViewTests(TestCase):
         self.client.login(username=self.email, password=self.password)
         self.client.get(reverse('logout'))
         # Try an unauthorized page
-        response = self.client.get('/events/index')
+        response = self.client.get(reverse('events:dashboard'))
         self.assertEqual(response.status_code, 302)
