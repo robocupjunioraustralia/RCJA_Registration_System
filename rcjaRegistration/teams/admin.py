@@ -25,6 +25,14 @@ class TeamAdmin(admin.ModelAdmin, ExportCSVMixin):
         'name'
     ]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(school__state__coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs
+
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin, ExportCSVMixin):
     actions = [
@@ -38,3 +46,11 @@ class StudentAdmin(admin.ModelAdmin, ExportCSVMixin):
         'gender',
         'birthday'
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(team__school__state__coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs
