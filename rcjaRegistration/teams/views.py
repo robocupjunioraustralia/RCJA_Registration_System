@@ -53,7 +53,7 @@ def editTeam(request,teamID):
             team = form.save()
             formset.save() 
 
-            return redirect(reverse('events:summary', eventID = event.id))
+            return redirect(reverse('events:summary', kwargs = {"eventID":event.id}))
     else:
         form = TeamForm(instance=team)
         formset = StudentInLineFormSet(instance=team)
