@@ -1,0 +1,113 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Profile </title>
+
+<style>
+ .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+  <div class = "">
+    <div class="ui center aligned grid ">
+      <div class = "twelve wide mobile six wide computer column ui">
+        <div class = "form form-group left-aligned-text">
+        <h1> Edit Profile </h1>
+            {% if form.errors %}
+            
+            <!-- Error messaging -->
+            <div class="ui message left-aligned-text">
+              <div class="">
+                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                {{ form.non_field_errors }}
+                
+                <ul>
+                  {% for field in form %}
+                    {% if field.errors %}
+                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                  {% endfor %}
+                
+                </ul>
+              </div>
+            </div>
+            <!-- /Error messaging -->
+            {% endif %}
+          
+            <form method="post" class = "ui form">
+              {% csrf_token %}
+                
+              <h4 class="ui dividing header">Details</h4>
+               
+              <div class="two fields">
+                <div class = "field">
+                  <label>First Name: </label>
+                    {{form.firstName|attr:"placeholder:First Name"}}
+                </div>
+                <div class = "field">
+                  <label> Last Name: </label>
+                    {{form.lastName|attr:"placeholder:Last Name"}}
+                </div>
+              </div>
+              <div class="field">
+                <label> Mobile Number </label>
+                {{form.mobileNumber|attr:"placeholder:Mobile Number"}}
+              </div>
+              <div class="field">
+                <label> Email </label>
+                {{form.email|attr:"placeholder:Email"}}
+              </div>
+              <div class="field">
+                <label> Password </label>
+                {{form.password|attr:"type:password"}}
+              </div>
+              <div class="field">
+                <label> Password Confirm </label>
+                {{form.passwordConfirm|attr:"type:password"}}
+              </div>
+              <input class="primary ui button" type="submit" value="Save" />
+              <a href ="/"><button class = "ui button negative"> Cancel</button></a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  $( document ).ready(function() {
+    $('.ui.form')
+    .form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        registerPassword: {
+        identifier  : 'id_password',
+        rules: [{
+            type   : 'empty',
+            prompt : 'Please enter a password.'
+        }]
+      },
+      registerPasswordVerify: {
+        identifier  : 'id_passwordConfirm',
+        rules: [{
+            type   : 'match[id_password]',
+            prompt : 'Your passwords do not match.'
+        }]
+      }
+      }
+    })
+  });
+  
+  </script>
+  
+{% endblock %}

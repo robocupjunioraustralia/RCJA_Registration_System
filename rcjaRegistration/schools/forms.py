@@ -5,7 +5,7 @@ from django import forms
 class MentorForm(ModelForm):
     class Meta:
         model = Mentor
-        fields = ['school', 'mobileNumber','firstName','lastName','email','mobileNumber']
+        fields = ['school', 'mobileNumber','firstName','lastName','email',]
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
 
@@ -18,7 +18,11 @@ class MentorForm(ModelForm):
             raise forms.ValidationError(
                 "Passwords do not match"
             )
-
+class MentorEditForm(MentorForm):
+        class Meta:
+            model = Mentor
+            fields = ['mobileNumber','firstName','lastName','email',]
+            
 class SchoolForm(ModelForm):
     class Meta:
         model = School
