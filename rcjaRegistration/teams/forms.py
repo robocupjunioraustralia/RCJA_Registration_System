@@ -2,7 +2,7 @@ from django import forms
 from .models import Student,Team
 from django.forms import modelformset_factory, inlineformset_factory
 from django.core.exceptions import ValidationError
-
+import datetime
 
 class StudentForm(forms.ModelForm):
     class Meta:
@@ -13,6 +13,7 @@ class StudentForm(forms.ModelForm):
         widget=forms.DateInput(format='%Y-%m-%d'),
         input_formats=('%Y-%m-%d', )
         )
+    
 class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
@@ -28,11 +29,12 @@ class TeamForm(forms.ModelForm):
                                    event_id=self.event_id or cleaned_data['event_id'])
         
         teamIsSameTeam = False #this case handles editing, when we already have a team
-        if hasattr(self,'id'):
-            if(teamWithNameInEvent.first().id == self.team_id): #team_id must be manually set on the form by the view
+        try:
+            if(str(teamWithNameInEvent.first().id) == str(self.team_id)): #team_id must be manually set on the form by the view
                 teamIsSameTeam = True
-
-        if teamWithNameInEvent.exists() and not teamIsSameTeam:
+        except AttributeError:
+            pass
+        if (teamWithNameInEvent.exists() and (not teamIsSameTeam)):
             raise ValidationError(
                   'Team with this name already exists for this event')
         
