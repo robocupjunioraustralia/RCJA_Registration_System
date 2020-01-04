@@ -10,8 +10,6 @@ class InvoicePaymentInline(admin.TabularInline):
     extra = 0
 
 
-
-
 @admin.register(Division)
 class DivisionAdmin(admin.ModelAdmin):
     list_display = [
@@ -22,6 +20,14 @@ class DivisionAdmin(admin.ModelAdmin):
     list_filter = [
         'state'
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(Q(state__coordinator__in = Coordinator.objects.filter(user=request.user)) | Q(state=None))
+
+        return qs
 
 admin.site.register(Year)
 
@@ -42,6 +48,14 @@ class EventAdmin(admin.ModelAdmin):
         'state',
         'year'
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(state__coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
@@ -71,3 +85,11 @@ class InvoiceAdmin(admin.ModelAdmin):
     inlines = [
         InvoicePaymentInline
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(event__state__coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs

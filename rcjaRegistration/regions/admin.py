@@ -15,7 +15,11 @@ class StateAdmin(admin.ModelAdmin, ExportCSVMixin):
         'bankAccountBSB',
         'bankAccountNumber',
         'paypalEmail'
-        ]
+    ]
+    search_fields = [
+        'name',
+        'abbreviation'
+    ]
     actions = [
         'export_as_csv'
     ]
@@ -30,5 +34,13 @@ class StateAdmin(admin.ModelAdmin, ExportCSVMixin):
         'defaultCompDetails',
         'invoiceMessage'
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs
 
 admin.site.register(Region)

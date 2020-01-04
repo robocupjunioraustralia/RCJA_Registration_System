@@ -22,6 +22,9 @@ class SchoolAdmin(admin.ModelAdmin, ExportCSVMixin):
         'name',
         'abbreviation'
     ]
+    autocomplete_fields = [
+        'state'
+    ]
     actions = [
         'export_as_csv'
     ]
@@ -31,6 +34,14 @@ class SchoolAdmin(admin.ModelAdmin, ExportCSVMixin):
         'state',
         'region'
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(state__coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs
 
 @admin.register(Mentor)
 class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
@@ -62,3 +73,11 @@ class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
         'email',
         'mobileNumber'
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        from coordination.models import Coordinator
+        qs = qs.filter(school__state__coordinator__in = Coordinator.objects.filter(user=request.user))
+
+        return qs
