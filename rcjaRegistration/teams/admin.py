@@ -1,4 +1,5 @@
 from django.contrib import admin
+from common.admin import *
 
 from .models import *
 
@@ -10,12 +11,30 @@ class StudentInline(admin.TabularInline):
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
+class TeamAdmin(admin.ModelAdmin, ExportCSVMixin):
     inlines = [
         StudentInline
     ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'event',
+        'division',
+        'school',
+        'name'
+    ]
 
-
-
-
-admin.site.register(Student)
+@admin.register(Student)
+class StudentAdmin(admin.ModelAdmin, ExportCSVMixin):
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'team',
+        'firstName',
+        'lastName',
+        'yearLevel',
+        'gender',
+        'birthday'
+    ]
