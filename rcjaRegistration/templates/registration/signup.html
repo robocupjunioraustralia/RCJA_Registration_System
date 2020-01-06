@@ -39,7 +39,7 @@
 {% block content %}
 <div class="bg">
 <div class = "logincontent">
-  <div class="ui center aligned grid ">
+  <div class="ui center aligned container ">
 
     <div class = "twelve wide mobile six wide computer column ui segment formbox">
         <div class = "form form-group left-aligned-text">
@@ -94,7 +94,7 @@
               </div>
               <div class = "field">
                 <label> Can't find your school?</label>
-                <button onclick="showModal()" class = "ui button primary"> Add a new School</button>
+                <a onclick="showModal()" class = "ui button primary"> Add a new School</a>
               </div>
             </div>
             <div class = "field">
@@ -108,8 +108,9 @@
               </div>
             </div>
             <button class="ui primary submit button" type="submit" value="SignUp">Submit</button>
+            <a href = "/" class="ui negative button">Cancel</a>
           </form>
-
+          
         </div>
         </div>
       </div>

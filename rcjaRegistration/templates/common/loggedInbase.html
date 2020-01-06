@@ -1,5 +1,6 @@
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
@@ -14,7 +15,10 @@
         body {
         background-color: #ffffff;
         }
-
+        .menu-set {
+            margin-bottom: 0rem !important;
+            margin-top: 0rem !important;
+        }
     </style>
 
     {% block head %}
@@ -23,61 +27,83 @@
 </head>
 
 <body>
-        <div class="ui top massive menu">
-                <div class="item">
-                  <img src="{% static 'favicon-32x32.png' %}">
-                </div>
-                <a class="item" href="/">
-                    <i class="home icon"></i>
-                    Dashboard
-                </a>  
-                <a class="item" href="/">
-                    <i class="calendar alternate icon"></i>
-                    My Events
-                </a>  
-                <a class="item" href="/">
-                    <i class="users icon"></i>
-                    My Teams
-                </a>  
-                <a class="item" href="/">
-                    <i class="user icon"></i>
-                    My Students
-                </a>       
-                <a class="item" href="/">
-                    <i class="credit card icon"></i>
-                    My Invoices
-                </a>                                                
-                <div class = "right menu">
-                    {% if user.is_staff %}
-                    <a class="item" href="{% url 'admin:index' %}">
-                        <i class="id badge icon"></i>
-                        Manage organisation
-                    </a>     
-                    {% endif %}
-                    <div class="ui dropdown simple item">
-                        <i class="user circle icon"></i>
-                        {% if user.get_full_name %} 
-                            {{ user.get_full_name }}
-                            {% else %}
-                            {{user.username}}
-                        {% endif %}
-                            <i class="dropdown icon"></i>
-                            <div class="menu">
-                              <a href="{% url 'schools:profile' %}" class="item">My Details</a>
-                              <a href = "{% url 'logout' %}" class="item">Log out</a>
-                              <a class="item">Help</a>
-                            </div>
-                    </div>             
-                </div>
 
+    <div class="ui labeled icon left inline vertical sidebar menu">
+        <div class="item">
+            <img src="{% static 'favicon-32x32.png' %}">
         </div>
-
-
+        <a class="item">
+        2
+        </a>
+        <a class="item">
+        3
+        </a>
+    </div>
+    <div class="ui top massive fixed menu">
+        <a class="item" onclick = "toggleSidebar()">
+            <i class="sidebar icon"></i>
+            
+        </a>
+        <div class = "ui large screen only grid menu-set">
+            <a class="item" href="/">
+                <i class="home icon"></i>
+                Dashboard
+            </a>  
+            <a class="item" href="/">
+                <i class="calendar alternate icon"></i>
+                My Events
+            </a>  
+            <a class="item" href="/">
+                <i class="users icon"></i>
+                My Teams
+            </a>  
+            <a class="item" href="/">
+                <i class="user icon"></i>
+                My Students
+            </a>       
+            <a class="item" href="/">
+                <i class="credit card icon"></i>
+                My Invoices
+            </a>                          
+        </div>
+        <div class = "right menu">
+            {% if user.is_staff %}
+            <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
+                <i class="id badge icon"></i>
+                Admin
+            </a>     
+            {% endif %}
+            <div class="ui dropdown simple item" >
+                <i class="user circle icon"></i>
+                <span style="width:3.5rem;overflow: hidden;
+  text-overflow: ellipsis;">
+                {% if user.get_full_name %} 
+                    {{ user.get_full_name }}
+                    {% else %}
+                    {{user.username}}
+                {% endif %}
+                </span>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        <a href="{% url 'schools:profile' %}" class="item">My Details</a>
+                        <a href = "{% url 'logout' %}" class="item">Log out</a>
+                        <a class="item">Help</a>
+                    </div>
+            </div>
+        </div>             
+    </div>
     <div class="pusher">
-        <div style="margin-bottom:3%;"> </div>
+        <div style="margin-bottom:6rem;"> </div>
         {% block content %}
         {% endblock %} 
     </div>
+    
 </body>
       
     
+<script>
+function toggleSidebar() {
+$('.ui.labeled.icon.sidebar')
+  .sidebar('toggle');
+}
+</script>
