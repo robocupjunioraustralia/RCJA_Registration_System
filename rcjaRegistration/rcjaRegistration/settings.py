@@ -40,6 +40,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 INSTALLED_APPS = [
     'widget_tweaks',
     'regions.apps.RegionsConfig',
+    'coordination.apps.CoordinationConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
     'schools.apps.SchoolsConfig',
