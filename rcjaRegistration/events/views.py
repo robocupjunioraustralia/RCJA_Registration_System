@@ -45,4 +45,8 @@ def summary(request, eventID):
         'teams': teams,
         'today':datetime.date.today()
     }
-    return render(request, 'events/eventSummary.html', context)    
+    return render(request, 'events/eventSummary.html', context)   
+
+@login_required
+def loggedInUnderConstruction(request):
+    return render(request,'common/loggedInUnderConstruction.html') 
