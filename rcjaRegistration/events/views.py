@@ -55,6 +55,11 @@ def summary(request, eventID):
     }
     return render(request, 'events/eventSummary.html', context)   
 
+
+@login_required
+def invoice(request):
+    return render(request,'events/invoiceTemplate.html')
 @login_required
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 
+
