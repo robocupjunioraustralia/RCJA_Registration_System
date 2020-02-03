@@ -16,6 +16,18 @@
 <div class="ui aligned container">
     <div class="row">
         <h1>Invoices:</h1> 
+        {% if invoices %}
+            <div class="ui icon message">
+            <i class="ui dollar icon"></i>
+            <div class="content">
+              <div class="header">
+                Invoices
+              </div>
+               <a href = "#"> <span>You have {{ invoices.count }} invoices requiring your attention.</span> </a>
+            </div>
+        </div>  
+        {% else %}
+
         <div class="ui icon message">
             <i class="thumbs up icon"></i>
             <div class="content">
@@ -24,7 +36,9 @@
               </div>
               <p>All good. No actions required!</p>
             </div>
-        </div>    </div>
+        </div>   
+        {% endif %}
+         </div>
     <br>
     <div class="row">
         <h1>Your Events:</h1>

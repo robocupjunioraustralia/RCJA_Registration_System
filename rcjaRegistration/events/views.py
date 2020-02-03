@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 
 import datetime
 
@@ -16,10 +17,17 @@ def index(request):
     openForRegistrationEvents = Event.objects.filter(registrationsOpenDate__lte=datetime.datetime.today(), registrationsCloseDate__gte=datetime.datetime.today()).exclude(team__school__mentor__user=request.user).order_by('startDate').distinct()
     currentEvents = Event.objects.filter(endDate__gte=datetime.datetime.today(), team__school__mentor__user=request.user).distinct().order_by('startDate').distinct()
     pastEvents = Event.objects.filter(endDate__lt=datetime.datetime.today(), team__school__mentor__user=request.user).order_by('-startDate').distinct()
+    try:
+        invoices = Invoice.objects.filter(school=request.user.mentor.school)
+    except ObjectDoesNotExist:
+        print('user has no mentor')
+        invoices = Invoice.objects.none()
+
     context = {
         'openForRegistrationEvents': openForRegistrationEvents,
         'currentEvents': currentEvents,
-        'pastEvents': pastEvents
+        'pastEvents': pastEvents,
+        'invoices': invoices
     }
     return render(request, 'events/eventList.html', context)
 
