@@ -39,6 +39,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
 INSTALLED_APPS = [
     'widget_tweaks',
+    'mentorquestions.apps.MentorquestionsConfig',
     'regions.apps.RegionsConfig',
     'coordination.apps.CoordinationConfig',
     'teams.apps.TeamsConfig',
