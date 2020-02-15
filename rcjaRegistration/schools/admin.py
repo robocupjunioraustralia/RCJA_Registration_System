@@ -73,6 +73,10 @@ class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
         'email',
         'mobileNumber'
     ]
+    from mentorquestions.admin import MentorQuestionResponseInline
+    inlines = [
+        MentorQuestionResponseInline
+    ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
