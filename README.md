@@ -38,12 +38,22 @@ git push -f <staging/demo> <branch>:master
 
 ### Using Docker Compose
 
-Set the `SECRET_KEY` environment variable to a long random string.
+1. Install [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-convenience-script) and [Docker-Compose](https://docs.docker.com/compose/install/)
+2. Clone this repo and change to the directory
+3. Start the server
 
+Set the `SECRET_KEY` environment variable to a long random string.
 ```
 docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d
+```
+4. After upgrading the code version/on first install run
+```
+docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
 
 docker-compose -f docker-compose.yml -f docker-compose.production.yml exec web manage.py migrate
+```
+5. On first install run
+```
 docker-compose -f docker-compose.yml -f docker-compose.production.yml exec web manage.py createsuperuser
 ```
 
