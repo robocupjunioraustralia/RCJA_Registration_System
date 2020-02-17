@@ -38,7 +38,16 @@
       "required": false
     }
   },
-  
+  "environments": {
+    "review": {
+      "env": {
+        "DJANGO_SUPERUSER_USERNAME": "admin",
+        "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
+        "DJANGO_SUPERUSER_PASSWORD": "rcjareview",
+        "DEBUG": "true"
+      }
+    }
+  },
   "scripts": {
     "postdeploy": "/bin/sh /app/heroku-setup.sh"
   }
