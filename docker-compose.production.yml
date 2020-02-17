@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  web:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    ports:
+      - 8000:8000
+    environment:
+      - DEBUG=false
+      - SECRET_KEY
+  db:
+    restart: unless-stopped
