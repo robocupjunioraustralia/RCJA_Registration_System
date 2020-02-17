@@ -24,10 +24,22 @@ class Coordinator(CustomSaveDeleteModel):
     # *****Save & Delete Methods*****
 
     def postSave(self):
-        pass
+        # Set staff flag
+        self.user.is_staff = True
+
+        # Permissions
+
+        permissions = ['add_event']
+
+        from django.contrib.auth.models import Permission
+
+        permissionObjects = Permission.objects.filter(codename__in=permissions)
+
+        self.user.user_permissions.bulk_add(permissionObjects)
+
         # need to set user to staff and set desired permissions for state coordinators
 
-    def postSave(self):
+    def postDelete(self):
         pass
         # Need to reset staff flag and permissions, considering any other states still a coordinator of
 
