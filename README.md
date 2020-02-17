@@ -36,6 +36,17 @@ git config heroku.remote staging
 git push -f <staging/demo> <branch>:master
 ```
 
+### Using Docker Compose
+
+Set the `SECRET_KEY` environment variable to a long random string.
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+docker-compose -f docker-compose.yml -f docker-compose.production.yml exec web manage.py migrate
+docker-compose -f docker-compose.yml -f docker-compose.production.yml exec web manage.py createsuperuser
+```
+
 ## CI Instructions
 
 CI is currently provided by github actions. To see if tests pass, you can look at the actions menu (next to the pull requests button), or the little cross or tick next to your commit. Code coverage is visible in the action, or, you can look at the coverage report at codecov.
