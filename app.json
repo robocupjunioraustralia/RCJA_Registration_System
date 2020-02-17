@@ -40,6 +40,6 @@
   },
   
   "scripts": {
-    "postdeploy": "sh heroku-setup.sh"
+    "postdeploy": "/bin/sh /app/heroku-setup.sh"
   }
 }
