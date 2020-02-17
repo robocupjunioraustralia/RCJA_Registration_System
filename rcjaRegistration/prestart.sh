@@ -1,4 +1,4 @@
 #! /usr/bin/env bash
 
 # Collect static
-manage.py collectstatic
+manage.py collectstatic --noinput
