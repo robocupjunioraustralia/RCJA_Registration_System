@@ -39,7 +39,7 @@ def commonSetUp(obj):
         mobileNumber=''
     )
     obj.year = Year.objects.create(year=2019)
-    obj.division = Division.objects.create(state=obj.newState,name='test')
+    obj.division = Division.objects.create(name='test')
 
     obj.oldEvent = Event.objects.create(
         year=obj.year,
