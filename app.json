@@ -44,11 +44,15 @@
         "DJANGO_SUPERUSER_USERNAME": "admin",
         "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
         "DJANGO_SUPERUSER_PASSWORD": "rcjareview",
-        "DEBUG": "true"
+        "SECRET_KEY": {
+          "generator": "secret"
+        },
+        "DEBUG": "true",
+        "ALLOWED_HOSTS": "*"
       }
     }
   },
   "scripts": {
-    "postdeploy": "/bin/sh /app/heroku-setup.sh"
+    "postdeploy": "sh heroku-setup.sh"
   }
 }
