@@ -23,6 +23,8 @@ docker-compose exec web manage.py createsuperuser
 
 ## Deploying
 
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 Staging is auto deployed from the `master` branch. Demo is auto deployed from the `demo` branch.
 
 ### Manual Deploy
