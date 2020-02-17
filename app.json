@@ -3,6 +3,8 @@
   "description": "A custom registration system for Robocup Junior Australia built in Django",
   "repository": "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System",
   "logo": "https://www.robocupjunior.org.au/sites/all/themes/rcja/images/logo.png",
+  "success_url": "/admin/",
+  "stack": "container",
   "addons": [
     {
       "plan": "heroku-postgresql:hobby-dev"
@@ -36,7 +38,7 @@
       "required": false
     }
   },
-  "stack": "container",
+  
   "scripts": {
     "postdeploy": "sh heroku-setup.sh"
   }
