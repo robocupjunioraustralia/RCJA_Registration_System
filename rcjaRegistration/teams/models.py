@@ -20,6 +20,27 @@ class Team(models.Model):
         unique_together = ('event', 'name')
         ordering = ['event', 'school', 'division', 'name']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.event.state
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
@@ -52,6 +73,27 @@ class Student(models.Model):
     class Meta:
         verbose_name = 'Student'
         ordering = ['team', 'lastName', 'firstName']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.team.event.state
 
     # *****Save & Delete Methods*****
 

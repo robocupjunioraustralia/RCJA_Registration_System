@@ -1,5 +1,6 @@
 from django.contrib import admin
 from common.admin import *
+from coordination.adminPermissions import AdminPermissions
 
 from .models import *
 
@@ -11,7 +12,7 @@ class StudentInline(admin.TabularInline):
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin, ExportCSVMixin):
+class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     inlines = [
         StudentInline
     ]
@@ -25,16 +26,14 @@ class TeamAdmin(admin.ModelAdmin, ExportCSVMixin):
         'name'
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(school__state__coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
 
 @admin.register(Student)
-class StudentAdmin(admin.ModelAdmin, ExportCSVMixin):
+class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     actions = [
         'export_as_csv'
     ]
@@ -47,10 +46,8 @@ class StudentAdmin(admin.ModelAdmin, ExportCSVMixin):
         'birthday'
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(team__school__state__coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'team__event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }

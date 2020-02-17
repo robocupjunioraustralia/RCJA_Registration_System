@@ -1,12 +1,13 @@
 from django.contrib import admin
 from common.admin import *
+from coordination.adminPermissions import AdminPermissions
 
 from .models import *
 
 # Register your models here.
 
 @admin.register(School)
-class SchoolAdmin(admin.ModelAdmin, ExportCSVMixin):
+class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
@@ -35,16 +36,14 @@ class SchoolAdmin(admin.ModelAdmin, ExportCSVMixin):
         'region'
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(state__coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
 
 @admin.register(Mentor)
-class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
+class MentorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'school',
@@ -78,10 +77,8 @@ class MentorAdmin(admin.ModelAdmin, ExportCSVMixin):
         MentorQuestionResponseInline
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(school__state__coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }

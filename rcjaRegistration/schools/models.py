@@ -20,6 +20,27 @@ class School(CustomSaveDeleteModel):
         verbose_name = 'School'
         ordering = ['name']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'schoolmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
     # *****Save & Delete Methods*****
 
     def preSave(self):
@@ -54,6 +75,27 @@ class Mentor(CustomSaveDeleteModel):
     class Meta:
         verbose_name = 'Mentor'
         ordering = ['user']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'schoolmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.school.state
 
     # *****Save & Delete Methods*****
 

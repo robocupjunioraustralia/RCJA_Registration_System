@@ -26,6 +26,25 @@ class State(CustomSaveDeleteModel):
         verbose_name = 'State'
         ordering = ['name']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level == 'full':
+            return [
+                'view',
+                'change'
+            ]
+        elif level in ['viewall', 'eventmanager', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self
+
     # *****Save & Delete Methods*****
 
     def preSave(self):
