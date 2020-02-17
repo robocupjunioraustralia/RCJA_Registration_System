@@ -1,13 +1,13 @@
 <div class="row">
     <h2> {{rowHeading}} </h2>
-    <div class="ui special cards four width column">
+    <div class="ui special cards equal width grid" style="margin-left:1rem;">
         {% for event in comps %}
-        <div class="card">
+        <div class="card" style="max-width:19rem;">
             <div class="blurring dimmable image">
                 <img class="cardimage" src="/static/placeholderCity.png">
             </div>
             <div class="content">
-                <a href="{% url 'events:detail' event.id %}" class="header">{{event}}</a>
+                <a href="{% url 'events:summary' event.id %}" class="header">{{event}}</a>
                 <div class="meta">
                     <span class="date">{{event.startDate}} - {{event.endDate}} Registrations close:
                         {{event.registrationsCloseDate}}</span>
@@ -29,12 +29,24 @@
             <div class="extra content">
                 <a>
                     <i class="users icon"></i>
-                    <!-- {{event.team_set.count}} Teams -->
+                    {{event.team_set.count}} Team(s) 
                 </a>
+                <span class="right floated">
+                        Location: {{event.location}}
+                    <i class="map marker icon"></i>        
+                </span>
             </div>
         </div>
         {% empty %}
-        No events
+        <div class="ui icon message">
+                <i class="frown icon"></i>
+                <div class="content">
+                  <div class="header">
+                    No Events
+                  </div>
+                  <p> Sorry! No Events could be found. Maybe Sign up for an event, or check back later.</p>
+                </div>
+        </div
         {% endfor %}
     </div>
 </div>

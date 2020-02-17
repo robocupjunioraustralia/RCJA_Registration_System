@@ -1,9 +1,28 @@
-from django.urls import path
+"""common URL Configuration
 
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/2.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.conf.urls import include, url
+from django.contrib import admin
+from django.urls import path, include
 from . import views
-
 app_name = 'events'
+
 urlpatterns = [
-    path('events/', views.index, name='list'),
-    path('events/<int:eventID>', views.detail, name='detail')
+    path('events/dashboard', views.index, name= 'dashboard'),
+    path('events/detail/<int:eventID>', views.detail, name='detail'),
+    path('events/summary/<int:eventID>', views.summary, name='summary'),
+    path('error/underConstruction',views.loggedInUnderConstruction,name='loggedInConstruction')
+
 ]

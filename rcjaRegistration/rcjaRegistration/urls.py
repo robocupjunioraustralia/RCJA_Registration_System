@@ -16,9 +16,21 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic.base import RedirectView
+
+admin.site.site_header = "RCJA Admin"
+admin.site.site_title = "RCJA Admin Portal"
+admin.site.index_title = "Welcome to the RCJA Admin Portal"
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')), #login
-    path('', include('events.urls'))
+    path('api/v1/', include('apiv1.urls')),
+    path('', include('events.urls')),
+    path('',include('schools.urls')),
+    path('',include('common.urls')),
+    path('',include('teams.urls')),
+    path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index')
+    
 ]
