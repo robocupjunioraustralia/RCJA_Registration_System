@@ -9,14 +9,13 @@ class Division(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.CASCADE, blank=True, null=True, help_text='Blank for global, available to all states') # Do we want this, or just make it fully global?
     name = models.CharField('Name', max_length=20)
     description = models.CharField('Description', max_length=200, blank=True)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Division'
-        ordering = ['state', 'name']
+        ordering = ['name']
 
     # *****Permissions*****
     @classmethod
@@ -35,7 +34,7 @@ class Division(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return self.name if self.state is None else f'{self.state}: {self.name}'
+        return self.name
 
     # *****CSV export methods*****
 
