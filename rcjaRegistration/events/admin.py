@@ -15,18 +15,16 @@ class InvoicePaymentInline(admin.TabularInline):
 class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
-        'state',
         'description'
     ]
-    list_filter = [
-        'state'
+    search_fields = [
+        'name'
     ]
     actions = [
         'export_as_csv'
     ]
     exportFields = [
         'name',
-        'state',
         'description'
     ]
 
