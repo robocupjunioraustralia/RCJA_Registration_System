@@ -18,6 +18,16 @@ class Division(models.Model):
         verbose_name = 'Division'
         ordering = ['state', 'name']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'viewall', 'eventmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
@@ -43,6 +53,16 @@ class Year(models.Model):
     class Meta:
         verbose_name = "Year"
         ordering = ['-year']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'viewall', 'eventmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
 
     # *****Save & Delete Methods*****
 
@@ -88,6 +108,28 @@ class Event(models.Model):
 
     # Check close and end date after start dates
 
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
@@ -117,6 +159,34 @@ class Invoice(models.Model):
         verbose_name = 'Invoice'
         unique_together = ('school', 'event')
         ordering = ['event', 'school']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level == 'full':
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level == 'billingmanager':
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.event.state
 
     # *****Save & Delete Methods*****
 
