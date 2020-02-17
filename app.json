@@ -20,11 +20,9 @@
     },
     "ALLOWED_HOSTS": {
       "description": "A list of hostnames to allow connections from",
+      "value": "*",
       "required": false
     }
-  },
-  "scripts": {
-    "postdeploy": "manage.py migrate --noinput"
   },
   "stack": "container"
 }
