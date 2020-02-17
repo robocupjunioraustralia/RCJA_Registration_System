@@ -9,6 +9,18 @@
     }
   ],
   "env": {
+    "DJANGO_SUPERUSER_USERNAME": {
+      "description": "Django Admin username.",
+      "required": true
+    },
+    "DJANGO_SUPERUSER_EMAIL": {
+      "description": "Django Admin email.",
+      "required": true
+    },
+    "DJANGO_SUPERUSER_PASSWORD": {
+      "description": "Django Admin password.",
+      "required": true
+    },
     "SECRET_KEY": {
       "description": "The Django secret key.",
       "generator": "secret"
@@ -24,5 +36,8 @@
       "required": false
     }
   },
-  "stack": "container"
+  "stack": "container",
+  "scripts": {
+    "postdeploy": "sh heroku-setup.sh"
+  }
 }
