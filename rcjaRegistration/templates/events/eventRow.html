@@ -2,7 +2,7 @@
     <h2> {{rowHeading}} </h2>
     <div class="ui special cards equal width grid" style="margin-left:1rem;">
         {% for event in comps %}
-        <div class="card" style="max-width:19rem;">
+        <div class="card" style="max-width:19rem; cursor: pointer;" onclick="window.location='{% url 'events:summary' event.id %}';">
             <div class="blurring dimmable image">
                 <img class="cardimage" src="/static/placeholderCity.png">
             </div>

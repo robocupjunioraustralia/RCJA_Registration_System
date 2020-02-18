@@ -63,17 +63,10 @@
                 <label> Email </label>
                 {{form.email|attr:"placeholder:Email"}}
               </div>
-              <div class="field">
-                <label> Password </label>
-                {{form.password|attr:"type:password"}}
-              </div>
-              <div class="field">
-                <label> Password Confirm </label>
-                {{form.passwordConfirm|attr:"type:password"}}
-              </div>
               <input class="primary ui button" type="submit" value="Save" />
-              <a href ="/"><button class = "ui button negative"> Cancel</button></a>
             </form>
+            <a href ="/"><button class = "ui button negative"> Cancel</button></a>
+
           </div>
         </div>
       </div>
@@ -82,32 +75,5 @@
 </div>
 
 
-
-<script>
-  $( document ).ready(function() {
-    $('.ui.form')
-    .form({
-      on: 'blur',
-      inline: true,
-      fields: {
-        registerPassword: {
-        identifier  : 'id_password',
-        rules: [{
-            type   : 'empty',
-            prompt : 'Please enter a password.'
-        }]
-      },
-      registerPasswordVerify: {
-        identifier  : 'id_passwordConfirm',
-        rules: [{
-            type   : 'match[id_password]',
-            prompt : 'Your passwords do not match.'
-        }]
-      }
-      }
-    })
-  });
-  
-  </script>
   
 {% endblock %}
