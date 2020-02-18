@@ -53,6 +53,6 @@
     }
   },
   "scripts": {
-    "postdeploy": "./heroku-setup.sh"
+    "postdeploy": "echo test; ./heroku-setup.sh"
   }
 }
