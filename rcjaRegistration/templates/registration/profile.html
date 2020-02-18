@@ -75,28 +75,5 @@
 </div>
 
 
-
-<script>
-  $( document ).ready(function() {
-    $('.ui.form')
-    .form({
-      on: 'blur',
-      inline: true,
-      fields: {
-        registerPassword: {
-        identifier  : 'id_password',
-      },
-      registerPasswordVerify: {
-        identifier  : 'id_passwordConfirm',
-        rules: [{
-            type   : 'match[id_password]',
-            prompt : 'Your passwords do not match.'
-        }]
-      }
-      }
-    })
-  });
-  
-  </script>
   
 {% endblock %}
