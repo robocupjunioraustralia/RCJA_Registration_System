@@ -14,6 +14,7 @@ class School(CustomSaveDeleteModel):
     # Details
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
     region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True) # because imported teams don't have this field
+    joinKey = models.CharField('Join key', max_length=10, blank=True)
 
     # *****Meta and clean*****
     class Meta:
