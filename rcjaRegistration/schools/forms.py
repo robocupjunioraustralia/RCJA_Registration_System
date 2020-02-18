@@ -18,7 +18,7 @@ class MentorForm(ModelForm):
             raise forms.ValidationError(
                 "Passwords do not match"
             )
-class MentorEditForm(MentorForm):
+class MentorEditForm(ModelForm):
         class Meta:
             model = Mentor
             fields = ['mobileNumber','firstName','lastName','email',]

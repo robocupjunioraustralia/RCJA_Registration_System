@@ -32,14 +32,10 @@ def signup(request):
 def editProfile(request):
     if request.method == 'POST':
         form = MentorEditForm(request.POST,instance=request.user.mentor)
-        schoolCreationDetails = SchoolForm(request.POST)#note this isn't saved here
-
         if form.is_valid(): 
             mentor = form.save()
             user = mentor.user
-            user.set_password(request.POST["password"])
             user.save()
-            login(request, user)
             return redirect('/')
     else:
         form = MentorEditForm(instance=request.user.mentor)
