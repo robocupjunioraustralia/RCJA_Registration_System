@@ -53,6 +53,6 @@
     }
   },
   "scripts": {
-    "postdeploy": "echo test"
+    "postdeploy": ""
   }
 }
