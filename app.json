@@ -5,11 +5,13 @@
   "logo": "https://www.robocupjunior.org.au/sites/all/themes/rcja/images/logo.png",
   "success_url": "/admin/",
   "stack": "container",
-  "addons": [
-    {
-      "plan": "heroku-postgresql:hobby-dev"
+  "addons": ["heroku-postgresql:hobby-dev"],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
     }
-  ],
+  },
   "env": {
     "DJANGO_SUPERUSER_USERNAME": {
       "description": "Django Admin username.",
