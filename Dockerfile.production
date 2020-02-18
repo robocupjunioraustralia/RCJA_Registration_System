@@ -1,4 +1,4 @@
-FROM tiangolo/meinheld-gunicorn:python3.7-alpine
+FROM tiangolo/meinheld-gunicorn:python3.7-alpine3.8
 ENV PATH="${PATH}:/app"
 ENV APP_MODULE="rcjaRegistration.wsgi:application"
 ENV PORT=8000
