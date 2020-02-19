@@ -1,5 +1,6 @@
 from django.contrib import admin
 from common.admin import *
+from coordination.adminPermissions import AdminPermissions
 
 from .models import *
 
@@ -11,36 +12,26 @@ class InvoicePaymentInline(admin.TabularInline):
 
 
 @admin.register(Division)
-class DivisionAdmin(admin.ModelAdmin, ExportCSVMixin):
+class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
-        'state',
         'description'
     ]
-    list_filter = [
-        'state'
+    search_fields = [
+        'name'
     ]
     actions = [
         'export_as_csv'
     ]
     exportFields = [
         'name',
-        'state',
         'description'
     ]
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
-        from coordination.models import Coordinator
-        qs = qs.filter(Q(state__coordinator__in = Coordinator.objects.filter(user=request.user)) | Q(state=None))
-
-        return qs
 
 admin.site.register(Year)
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin, ExportCSVMixin):
+class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'year',
@@ -71,16 +62,14 @@ class EventAdmin(admin.ModelAdmin, ExportCSVMixin):
         'directEnquiriesTo'
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(state__coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
 
 @admin.register(Invoice)
-class InvoiceAdmin(admin.ModelAdmin, ExportCSVMixin):
+class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'event',
         'school',
@@ -119,10 +108,13 @@ class InvoiceAdmin(admin.ModelAdmin, ExportCSVMixin):
         'amountDue'    
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(event__state__coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
+    
+    # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation
+    # Reconsider in conjuction with signals
+    def has_delete_permission(self, request, obj=None):
+        return False

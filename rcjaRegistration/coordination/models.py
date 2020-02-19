@@ -11,7 +11,12 @@ class Coordinator(CustomSaveDeleteModel):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    permissionsOptions = (('readonly','Read only'),('full','Full'))
+    permissionsOptions = (
+        ('viewall', 'View all'),
+        ('eventmanager', 'Event manager'),
+        ('schoolmanager', 'School manager'),
+        ('billingmanager', 'Billing manager'),
+        ('full','Full'))
     permissions = models.CharField('Permissions', max_length=20, choices=permissionsOptions)
     position = models.CharField('Position', max_length=50) # if want to tie permissions to this will need to set options. Without considerable work user will get permissions of most permissive state.
 
@@ -24,15 +29,40 @@ class Coordinator(CustomSaveDeleteModel):
     # *****Save & Delete Methods*****
 
     def postSave(self):
-        pass
-        # need to set user to staff and set desired permissions for state coordinators
+        self.updateUserPermissions()
 
-    def postSave(self):
-        pass
-        # Need to reset staff flag and permissions, considering any other states still a coordinator of
-
+    def postDelete(self):
+        self.updateUserPermissions()
 
     # *****Methods*****
+
+    def updateUserPermissions(self):
+        # Get coordinator objects for this user
+        coordinators = Coordinator.objects.filter(user=self.user)
+
+        # Staff flag
+        self.user.is_staff = self.user.is_superuser or coordinators.exists()
+        self.user.save()
+
+        # Permissions
+
+        # Get permissions for all models for all states that this user is a coordinator of
+        permissionsToAdd = []
+
+        import django.apps
+        for coordinator in coordinators:
+            for model in django.apps.apps.get_models():
+                if hasattr(model, 'coordinatorPermissions'):
+                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
+
+        # Add permissions to user
+        from django.contrib.auth.models import Permission
+        permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
+        self.user.user_permissions.clear()
+        self.user.user_permissions.add(*permissionObjects)
+
+    def checkPermission(self, obj, permission):
+        return True if permission in obj.coordinatorPermissions(self.permissions) else False
 
     # *****Get Methods*****
 

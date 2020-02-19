@@ -17,37 +17,6 @@ import datetime
 
 # **********Action Mixins**********
 
-class EditingCheckMixin:
-    def checkModelEditingAllowed(self, obj):
-        # Try admin specific editingAllowed first
-        try:
-            return obj.editingAllowedAdmin()
-        except AttributeError:
-            pass
-        # Revert to generic editing allowed, which may be more db intensive unnesecarily (in admin case because change form not registered, extra db calls still needed in api)
-        try:
-            return obj.editingAllowed()
-        except AttributeError:
-            return True
-
-    def has_add_permission(self, request, obj=None):
-        if super().has_add_permission(request):
-            return self.checkModelEditingAllowed(obj)
-        return False
-    
-    def has_change_permission(self, request, obj=None):
-        if super().has_change_permission(request, obj=obj):
-            return self.checkModelEditingAllowed(obj)
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        if super().has_delete_permission(request, obj=obj):
-            return self.checkModelEditingAllowed(obj)
-        return False
-
-class EditingCheckModelAdmin(EditingCheckMixin, admin.ModelAdmin):
-    pass
-
 class ExportCSVMixin:
     def export_as_csv(self, request, queryset):
 

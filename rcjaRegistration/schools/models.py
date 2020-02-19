@@ -14,11 +14,33 @@ class School(CustomSaveDeleteModel):
     # Details
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
     region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True) # because imported teams don't have this field
+    joinKey = models.CharField('Join key', max_length=10, blank=True)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'School'
         ordering = ['name']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'schoolmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
 
     # *****Save & Delete Methods*****
 
@@ -54,6 +76,27 @@ class Mentor(CustomSaveDeleteModel):
     class Meta:
         verbose_name = 'Mentor'
         ordering = ['user']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'schoolmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.school.state
 
     # *****Save & Delete Methods*****
 

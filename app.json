@@ -1,0 +1,58 @@
+{
+  "name": "RCJA Registration App",
+  "description": "A custom registration system for Robocup Junior Australia built in Django",
+  "repository": "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System",
+  "logo": "https://www.robocupjunior.org.au/sites/all/themes/rcja/images/logo.png",
+  "success_url": "/admin/",
+  "stack": "container",
+  "addons": [
+    {
+      "plan": "heroku-postgresql:hobby-dev"
+    }
+  ],
+  "env": {
+    "DJANGO_SUPERUSER_USERNAME": {
+      "description": "Django Admin username.",
+      "required": true
+    },
+    "DJANGO_SUPERUSER_EMAIL": {
+      "description": "Django Admin email.",
+      "required": true
+    },
+    "DJANGO_SUPERUSER_PASSWORD": {
+      "description": "Django Admin password.",
+      "required": true
+    },
+    "SECRET_KEY": {
+      "description": "The Django secret key.",
+      "generator": "secret"
+    },
+    "DEBUG": {
+      "description": "Enable Django debug mode. DO NOT USE IN PRODUCTION.",
+      "value": "false",
+      "required": false
+    },
+    "ALLOWED_HOSTS": {
+      "description": "A list of hostnames to allow connections from",
+      "value": "*",
+      "required": false
+    }
+  },
+  "environments": {
+    "review": {
+      "env": {
+        "DJANGO_SUPERUSER_USERNAME": "admin",
+        "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
+        "DJANGO_SUPERUSER_PASSWORD": "rcjareview",
+        "SECRET_KEY": {
+          "generator": "secret"
+        },
+        "DEBUG": "true",
+        "ALLOWED_HOSTS": "*"
+      }
+    }
+  },
+  "scripts": {
+    "postdeploy": "/bin/sh /app/heroku-setup.sh"
+  }
+}

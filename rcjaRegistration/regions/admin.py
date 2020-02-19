@@ -1,12 +1,13 @@
 from django.contrib import admin
 from common.admin import *
+from coordination.adminPermissions import AdminPermissions
 
 from .models import *
 
 # Register your models here.
 
 @admin.register(State)
-class StateAdmin(admin.ModelAdmin, ExportCSVMixin):
+class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
@@ -35,12 +36,10 @@ class StateAdmin(admin.ModelAdmin, ExportCSVMixin):
         'invoiceMessage'
     ]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
+    def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-        qs = qs.filter(coordinator__in = Coordinator.objects.filter(user=request.user))
-
-        return qs
+        return {
+            'coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
 
 admin.site.register(Region)
