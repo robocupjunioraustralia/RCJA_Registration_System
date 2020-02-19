@@ -103,9 +103,8 @@ class Event(models.Model):
     class Meta:
         verbose_name = 'Event'
         unique_together = ('year', 'state', 'name')
-        ordering = ['year', 'state', '-startDate']
+        ordering = ['-startDate']
 
-    
     def clean(self):
         errors = []
         # Check required fields are not None
@@ -124,7 +123,6 @@ class Event(models.Model):
         # Raise any errors
         if errors:
             raise ValidationError(errors)
-
 
     # *****Permissions*****
     @classmethod
