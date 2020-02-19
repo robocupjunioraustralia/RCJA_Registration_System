@@ -40,9 +40,9 @@ def detail(request, eventID):
         'event': event,
         'teams': teams,
         'today':datetime.date.today()
-
     }
     return render(request, 'events/eventDetail.html', context)
+
 @login_required
 def summary(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
@@ -55,10 +55,10 @@ def summary(request, eventID):
     }
     return render(request, 'events/eventSummary.html', context)   
 
-
 @login_required
 def invoice(request):
     return render(request,'events/invoiceTemplate.html')
+
 @login_required
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 

@@ -8,7 +8,9 @@ from events.models import Event
 from django.http import HttpResponse
 from django.urls import reverse
 import datetime
+
 # Create your views here.
+
 @login_required
 def createTeam(request, eventID): #TODO!! validate eventID is one that teams can be created for
     event = get_object_or_404(Event, pk=eventID)
