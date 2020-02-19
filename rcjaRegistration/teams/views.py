@@ -32,7 +32,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
             formset.instance = team
             formset.save() 
             if 'add_text' in request.POST:
-                return redirect(reverse('teams:create', eventID = event.id))
+                return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
             return redirect('/')
 
     else:
