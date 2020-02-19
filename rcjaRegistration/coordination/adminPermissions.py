@@ -35,6 +35,10 @@ class AdminPermissions:
             return True
 
     def checkStatePermissions(self, request, obj, permission):
+        # First check super user
+        if request.user.is_superuser:
+            return True
+
         # If no object return True because can't do state level filtering
         if obj is None:
             return True
