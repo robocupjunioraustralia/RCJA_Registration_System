@@ -105,7 +105,25 @@ class Event(models.Model):
         unique_together = ('year', 'state', 'name')
         ordering = ['year', 'state', '-startDate']
 
-    # Check close and end date after start dates
+    
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+
+        # Check close and end date after start dates
+        if self.startDate > self.endDate:
+            errors.append(ValidationError('Start date must not be after end date'))
+
+        if self.registrationsOpenDate > self.registrationsCloseDate:
+            errors.append(ValidationError('Registration open date must not be after registration close date'))
+
+        if self.registrationsCloseDate >= self.startDate:
+            errors.append(ValidationError('Registration close date must be before event start date'))
+    
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
 
     # *****Permissions*****

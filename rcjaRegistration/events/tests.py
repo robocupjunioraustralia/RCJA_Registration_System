@@ -5,6 +5,7 @@ from teams.models import Team,Student
 from events.models import Event,Division,Year
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 import datetime
 # Create your tests here.
@@ -131,3 +132,76 @@ class TestEventSummaryPage(TestCase):
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
+
+class TestEventClean(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='test old not reg',
+            max_team_members=5,
+            entryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+    
+    def testMultidayEventOK(self):
+        self.event.clean()
+
+    def testSingleDayEventOK(self):
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.clean()
+
+    def testStartBeforeEnd(self):
+        try:
+            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+4)).date()
+            self.event.clean()
+        except ValidationError:
+            pass
+        else:
+            raise ValidationError('Date verification failed')
+
+    def testRegistrationOpenBeforeClose(self):
+        try:
+            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
+            self.event.clean()
+        except ValidationError:
+            pass
+        else:
+            raise ValidationError('Date verification failed')
+
+    def testOneDayRegistration(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.clean()
+
+    def testRegistrationCloseOnEventStartDate(self):
+        try:
+            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+            self.event.clean()
+        except ValidationError:
+            pass
+        else:
+            raise ValidationError('Date verification failed')
+
+    def testRegistrationCloseAfterEventStartDate(self):
+        try:
+            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+            self.event.clean()
+        except ValidationError:
+            pass
+        else:
+            raise ValidationError('Date verification failed')
