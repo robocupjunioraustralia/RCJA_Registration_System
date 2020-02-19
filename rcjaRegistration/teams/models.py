@@ -3,7 +3,7 @@ from common.models import *
 
 # **********MODELS**********
 
-class Team(models.Model):
+class Team(CustomSaveDeleteModel):
     # Foreign keys
     event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
@@ -42,6 +42,11 @@ class Team(models.Model):
         return self.event.state
 
     # *****Save & Delete Methods*****
+
+    def preSave(self):
+        # Create invoice
+        from events.models import Invoice
+        Invoice.objects.get_or_create(school=self.school, event=self.event)
 
     # *****Methods*****
 
