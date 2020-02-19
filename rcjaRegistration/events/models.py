@@ -116,9 +116,9 @@ class Event(models.Model):
             errors.append(ValidationError('Start date must not be after end date'))
 
         if self.registrationsOpenDate > self.registrationsCloseDate:
-            errors.append(ValidationError('Registration open date must be before registration close date'))
+            errors.append(ValidationError('Registration open date must not be after registration close date'))
 
-        if self.registrationsCloseDate > self.startDate:
+        if self.registrationsCloseDate >= self.startDate:
             errors.append(ValidationError('Registration close date must be before event start date'))
     
         # Raise any errors
