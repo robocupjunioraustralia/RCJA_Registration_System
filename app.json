@@ -48,5 +48,10 @@
         "ALLOWED_HOSTS": "*"
       }
     }
+  },
+  "scripts": {
+    "dokku": {
+      "postdeploy": "manage.py migrate --noinput"
+    }
   }
 }
