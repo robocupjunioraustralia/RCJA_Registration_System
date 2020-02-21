@@ -12,8 +12,7 @@ import datetime
 def commonSetUp(obj): #copied from events, todo refactor
     obj.username = 'user@user.com'
     obj.password = 'password'
-    obj.user = user = User.objects.create_user(username=obj.username,
-                                password=obj.password)
+    obj.user = user = User.objects.create_user(email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
         treasurer=obj.user,
         name='Victoria',

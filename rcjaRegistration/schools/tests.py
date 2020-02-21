@@ -25,8 +25,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     validSubmitCode = 302
     inValidCreateCode = 200
     def setUp(self):
-        self.user = user = User.objects.create_user(username=self.username,
-                                 password=self.password)
+        self.user = user = User.objects.create_user(email=self.username, password=self.password)
         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
@@ -74,9 +73,7 @@ class AuthViewTests(TestCase):
         'mobileNumber':'123123123'
         }
     def setUp(self):
-        self.user = user = User.objects.create_user(username='admin',
-                                 email='admin@test.com',
-                                 password='admin')
+        self.user = user = User.objects.create_user(email='admin@test.com', password='admin')
         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
@@ -102,8 +99,7 @@ class AuthViewTests(TestCase):
         response = self.client.post(path=reverse('schools:signup'),data = payloadData)
         self.assertEqual(response.status_code,302) #ensure user is redirected on signup
         self.assertEqual(get_user_model().objects.all().count(), prevUsers + 1)
-        self.assertEqual(get_user_model().objects.all()
-                         [1].username, self.email) #this checks the user created has the right username
+        self.assertEqual(get_user_model().objects.all()[1].email, self.email) #this checks the user created has the right username
                                                     #note that this works because transactions aren't saved in django tests
 
     def testUserInvalidSignup(self):
@@ -117,7 +113,7 @@ class AuthViewTests(TestCase):
         self.client.post(path=reverse('schools:signup'),data = payloadData)
         response = self.client.post(path=reverse('schools:signup'), data = payloadData)
         self.assertEqual(response.status_code,200) #ensure failed signup
-        self.assertIn(b'There is already an account with this email address.',response.content)
+        self.assertIn(b'Email address: User with this Email address already exists.',response.content)
 
     def testUserInvalidPasswordConfirmSignup(self):
         payloadData = self.validPayload.copy()
@@ -160,9 +156,10 @@ class AuthViewTests(TestCase):
         self.assertTemplateUsed(response, 'registration/logged_out.html')
 
     def testUserCreatedLogsOut(self):
-        user = User.objects.create_user(username=self.email,
-                                        email=self.email,
-                                        password=self.password)
+        user = User.objects.create_user(
+            email=self.email,
+            password=self.password
+        )
         user.save()
         self.client.login(username=self.email, password=self.password)
         self.client.get(reverse('logout'))
@@ -184,7 +181,6 @@ class ProfileEditTests(TestCase):
         'mobileNumber':'123123123'
         }
         self.user = user = User.objects.create_user(
-            username='admin',
             email='admin@test.com',
             password='admin'
         )
@@ -197,7 +193,7 @@ class ProfileEditTests(TestCase):
         self.client.login(username=self.email,password=self.password)
 
     def testPageLoads(self):
-        response = self.client.get(path=reverse('userprofiles:profile'))
+        response = self.client.get(path=reverse('users:profile'))
         self.assertEqual(200,response.status_code)
 
     def testEditWorks(self):
@@ -209,7 +205,7 @@ class ProfileEditTests(TestCase):
            "password":"password123",
            "passwordConfirm":"password123"
         }
-        response = self.client.post(path=reverse('userprofiles:profile'),data=payload)
+        response = self.client.post(path=reverse('users:profile'),data=payload)
         self.assertEqual(302,response.status_code)
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
@@ -222,5 +218,5 @@ class ProfileEditTests(TestCase):
            "password":"password123",
            "passwordConfirm":"passwor123"
         }
-        response = self.client.post(path=reverse('userprofiles:profile'),data=payload)
+        response = self.client.post(path=reverse('users:profile'),data=payload)
         self.assertEqual(200,response.status_code)
