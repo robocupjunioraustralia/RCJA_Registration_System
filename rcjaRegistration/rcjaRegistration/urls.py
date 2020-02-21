@@ -31,7 +31,7 @@ urlpatterns = [
     path('',include('schools.urls')),
     path('',include('common.urls')),
     path('',include('teams.urls')),
-    path('',include('userprofiles.urls')),
+    path('',include('users.urls')),
     path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index')
     
 ]

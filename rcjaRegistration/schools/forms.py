@@ -5,7 +5,6 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 
 from users.models import User
-from userprofiles.models import Profile
 
 class UserSignupForm(ModelForm):
     class Meta:
@@ -14,13 +13,11 @@ class UserSignupForm(ModelForm):
             'first_name',
             'last_name',
             'email',
+            'mobileNumber',
         ]
     # Password fields
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
-
-    # Profile fields
-    mobileNumber = forms.CharField(max_length=Profile._meta.get_field('mobileNumber').max_length)
 
     # Mentor fields
     school = forms.ModelChoiceField(queryset=School.objects.all(), label='School')
@@ -36,9 +33,9 @@ class UserSignupForm(ModelForm):
         
         validate_password(password)
 
-        # Check email is unique because we are setting the username to the email but email uniqueness is not enforced by default
-        if User.objects.filter(username=cleaned_data.get('email')).exists():
-            raise forms.ValidationError('There is already an account with this email address.')
+        # # Check email is unique because we are setting the username to the email but email uniqueness is not enforced by default
+        # if User.objects.filter(username=cleaned_data.get('email')).exists():
+        #     raise forms.ValidationError('There is already an account with this email address.')
             
 class SchoolForm(ModelForm):
     class Meta:
