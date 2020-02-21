@@ -52,8 +52,8 @@ class User(AbstractUser):
 
     # Additional fields
     mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True)
-    homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True)
-    homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True)
+    homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True)
+    homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True, blank=True)
 
     # *****Clean*****
 

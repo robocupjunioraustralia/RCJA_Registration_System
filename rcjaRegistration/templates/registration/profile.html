@@ -63,6 +63,16 @@
                 <label> Email </label>
                 {{form.email|attr:"placeholder:Email"}}
               </div>
+              <div class="two fields">
+                <div class = "field">
+                  <label>Home state: </label>
+                    {{form.homeState}}
+                </div>
+                <div class = "field">
+                  <label> Home region: </label>
+                  {{form.homeRegion}}
+                </div>
+              </div>
               <input class="primary ui button" type="submit" value="Save" />
             </form>
             <a href ="/"><button class = "ui button negative"> Cancel</button></a>

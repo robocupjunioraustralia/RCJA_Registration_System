@@ -22,7 +22,9 @@ class UserAdmin(DjangoUserAdmin):
         (_('Personal info'), {'fields': (
             'first_name',
             'last_name',
-            'mobileNumber'
+            'mobileNumber',
+            'homeState',
+            'homeRegion',
         )}),
         (_('Permissions'), {'fields': (
             'is_active',
@@ -57,6 +59,8 @@ class UserAdmin(DjangoUserAdmin):
         'first_name',
         'last_name',
         'mobileNumber',
+        'homeState',
+        'homeRegion',
         'is_staff',
         'is_superuser',
         'is_active',

@@ -14,6 +14,8 @@ class UserSignupForm(ModelForm):
             'last_name',
             'email',
             'mobileNumber',
+            'homeState',
+            'homeRegion',
         ]
     # Password fields
     password = forms.CharField(widget=forms.PasswordInput)
@@ -23,7 +25,7 @@ class UserSignupForm(ModelForm):
     # Do at form level so can create incomplete users
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in ['first_name', 'last_name', 'mobileNumber']:
+        for field in ['first_name', 'last_name', 'mobileNumber', 'homeState', 'homeRegion']:
             self.fields[field].required = True
 
     # Mentor fields

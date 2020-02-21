@@ -87,6 +87,16 @@
               <div class="field">
                 {{ form.passwordConfirm|attr:"placeholder:Confirm password"|attr:"type:password" }}
               </div>
+              <div class="two fields">
+                <div class = "field">
+                  <label>Home state: </label>
+                    {{form.homeState}}
+                </div>
+                <div class = "field">
+                  <label> Home region: </label>
+                  {{form.homeRegion}}
+                </div>
+              </div>
             <div class = "two fields">
                 <div class="field">
                   <label> School</label>
