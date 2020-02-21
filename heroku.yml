@@ -8,4 +8,4 @@ build:
 release:
   image: web
   command:
-    - manage.py migrate --noinput
+    - ./postdeploy.sh

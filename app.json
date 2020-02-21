@@ -51,7 +51,7 @@
   },
   "scripts": {
     "dokku": {
-      "postdeploy": "manage.py migrate --noinput"
+      "postdeploy": "./postdeploy.sh"
     }
   }
 }
