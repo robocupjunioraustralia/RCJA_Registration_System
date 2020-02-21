@@ -51,7 +51,7 @@
   },
   "scripts": {
     "dokku": {
-      "postdeploy": "./postdeploy.sh"
+      "predeploy": "./postdeploy.sh"
     }
   }
 }
