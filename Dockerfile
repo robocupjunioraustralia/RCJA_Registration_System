@@ -1,6 +1,6 @@
 FROM python:3.7
-EXPOSE 80
-ENV PORT=80
+EXPOSE 8000
+ENV PORT=8000
 ENV PATH="${PATH}:/app"
 
 COPY requirements.txt /tmp/requirements.txt
