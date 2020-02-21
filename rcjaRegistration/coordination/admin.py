@@ -34,17 +34,3 @@ class CoordinatorAdmin(admin.ModelAdmin, ExportCSVMixin):
         if obj:
             return alwaysReadOnly + ['user']
         return alwaysReadOnly
-
-
-# User and group admin override
-
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
-
-admin.site.unregister(Group)
-
-# User admin
-
-UserAdmin.readonly_fields += ('user_permissions','groups',)
-UserAdmin.list_display += ('is_superuser','is_active',)
-# UserAdmin.exclude = ()

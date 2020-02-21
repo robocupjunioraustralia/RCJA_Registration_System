@@ -17,14 +17,18 @@ class StudentForm(forms.ModelForm):
 class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division','name']
+        fields= ['division','name','school']
 
     # Override init to filter division fk to available divisions
     def __init__(self, *args, **kwargs):
         eventID = kwargs.pop('event_id', None)
+        userID = kwargs.pop('userID', None)
         super().__init__(*args, **kwargs)
         from events.models import Division
         self.fields['division'].queryset = Division.objects.filter(event=eventID)
+        # Filter school to mentor's schools
+        from schools.models import School
+        self.fields['school'].queryset = School.objects.filter(mentor__user=userID)
 
     StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm)
 

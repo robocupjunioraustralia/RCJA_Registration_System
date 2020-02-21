@@ -48,11 +48,11 @@
               <div class="two fields">
                 <div class = "field">
                   <label>First Name: </label>
-                    {{form.firstName|attr:"placeholder:First Name"}}
+                    {{form.first_name|attr:"placeholder:First Name"}}
                 </div>
                 <div class = "field">
                   <label> Last Name: </label>
-                    {{form.lastName|attr:"placeholder:Last Name"}}
+                    {{form.last_name|attr:"placeholder:Last Name"}}
                 </div>
               </div>
               <div class="field">
@@ -62,6 +62,16 @@
               <div class="field">
                 <label> Email </label>
                 {{form.email|attr:"placeholder:Email"}}
+              </div>
+              <div class="two fields">
+                <div class = "field">
+                  <label>Home state: </label>
+                    {{form.homeState}}
+                </div>
+                <div class = "field">
+                  <label> Home region: </label>
+                  {{form.homeRegion}}
+                </div>
               </div>
               <input class="primary ui button" type="submit" value="Save" />
             </form>

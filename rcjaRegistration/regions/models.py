@@ -1,11 +1,12 @@
 from django.db import models
 from common.models import *
+from django.conf import settings
 
 # **********MODELS**********
 
 class State(CustomSaveDeleteModel):
     # Foreign keys
-    treasurer = models.ForeignKey('auth.user', verbose_name='Treasurer', on_delete=models.PROTECT)
+    treasurer = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Treasurer', on_delete=models.PROTECT, related_name='+')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)

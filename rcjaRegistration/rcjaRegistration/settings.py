@@ -38,6 +38,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    'users.apps.UsersConfig',
     'widget_tweaks',
     'mentorquestions.apps.MentorquestionsConfig',
     'regions.apps.RegionsConfig',
@@ -55,6 +56,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_pwned_passwords',
 ]
+
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
