@@ -37,13 +37,9 @@ class UserSignupForm(ModelForm):
 
         if password != passwordConfirm:
             raise forms.ValidationError("Passwords do not match")
-        
+
         validate_password(password)
 
-        # # Check email is unique because we are setting the username to the email but email uniqueness is not enforced by default
-        # if User.objects.filter(username=cleaned_data.get('email')).exists():
-        #     raise forms.ValidationError('There is already an account with this email address.')
-            
 class SchoolForm(ModelForm):
     class Meta:
         model = School
