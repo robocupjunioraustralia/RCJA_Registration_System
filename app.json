@@ -13,10 +13,6 @@
     }
   },
   "env": {
-    "DJANGO_SUPERUSER_USERNAME": {
-      "description": "Django Admin username.",
-      "required": true
-    },
     "DJANGO_SUPERUSER_EMAIL": {
       "description": "Django Admin email.",
       "required": true
@@ -43,7 +39,6 @@
   "environments": {
     "review": {
       "env": {
-        "DJANGO_SUPERUSER_USERNAME": "admin",
         "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
         "DJANGO_SUPERUSER_PASSWORD": "rcjareview",
         "SECRET_KEY": {
