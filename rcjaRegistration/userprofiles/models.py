@@ -22,9 +22,9 @@ class Profile(CustomSaveDeleteModel):
 
     # *****Save & Delete Methods*****
 
-    # def preDelete(self):
-    #     if self.user is not None:
-    #         self.user.delete()
+    # Need to stop deleting of the model because creates orphaned user models, which casues errors. Would like to do through permissions but that prevents cascade delete from the user object in the django admin.
+    def deletingAllowed(self):
+        return False
 
     # *****Methods*****
 

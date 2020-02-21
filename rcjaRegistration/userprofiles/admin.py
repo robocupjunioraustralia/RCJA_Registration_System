@@ -14,9 +14,10 @@ class ProfileInline(admin.StackedInline):
     # Profiles are created and deleted through user object
     def has_add_permission(self, request, obj=None):
         return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return False
+
+    # Currently commented out because blocks user delete because cascade required
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -36,9 +37,10 @@ class ProfileAdmin(admin.ModelAdmin):
     # Profiles are created and deleted through user object
     def has_add_permission(self, request, obj=None):
         return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return False
+
+    # Currently commented out because blocks user delete because cascade required
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
 
 
 # User and group admin override
@@ -53,7 +55,7 @@ admin.site.unregister(Group)
 admin.site.unregister(User)
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(UserAdmin):
     readonly_fields = UserAdmin.readonly_fields + (
         'user_permissions',
         'groups',
