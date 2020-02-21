@@ -14,9 +14,11 @@ def editProfile(request):
         if form.is_valid():
             # Save user
             user = form.save()
-            profile = user.profile
+            user.username = form.cleaned_data['email']
+            user.save()
 
             # Save profile
+            profile = user.profile
             profile.mobileNumber = form.cleaned_data['mobileNumber']
             profile.save()
 
