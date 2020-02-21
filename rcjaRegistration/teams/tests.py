@@ -32,11 +32,7 @@ def commonSetUp(obj): #copied from events, todo refactor
     )
     obj.mentor = Mentor.objects.create(
         school=obj.newSchool,
-        user=obj.user,
-        firstName='',
-        lastName='',
-        email=obj.username,
-        mobileNumber=''
+        user=obj.user
     )
     obj.year = Year.objects.create(year=2019)
     obj.division = Division.objects.create(name='test')
