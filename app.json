@@ -49,9 +49,4 @@
       }
     }
   },
-  "scripts": {
-    "dokku": {
-      "predeploy": "./postdeploy.sh"
-    }
-  }
 }
