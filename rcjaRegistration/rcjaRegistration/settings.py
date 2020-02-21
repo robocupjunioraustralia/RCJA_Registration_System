@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_pwned_passwords',
+    'keyvaluestore',
 ]
 
 AUTH_USER_MODEL = 'users.User'
