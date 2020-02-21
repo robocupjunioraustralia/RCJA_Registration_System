@@ -13,6 +13,13 @@ class UserEditForm(ModelForm):
             'mobileNumber',
         ]
 
+    # Make fields required
+    # Do at form level so can create incomplete users
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['first_name', 'last_name', 'mobileNumber']:
+            self.fields[field].required = True
+
     # def clean(self):
     #     cleaned_data = super().clean()
 

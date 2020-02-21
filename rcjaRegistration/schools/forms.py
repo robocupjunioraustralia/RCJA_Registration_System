@@ -19,6 +19,13 @@ class UserSignupForm(ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
 
+    # Make fields required
+    # Do at form level so can create incomplete users
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['first_name', 'last_name', 'mobileNumber']:
+            self.fields[field].required = True
+
     # Mentor fields
     school = forms.ModelChoiceField(queryset=School.objects.all(), label='School')
 
