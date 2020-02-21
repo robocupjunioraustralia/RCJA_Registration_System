@@ -18,7 +18,7 @@ def index(request):
     currentEvents = Event.objects.filter(endDate__gte=datetime.datetime.today(), team__school__mentor__user=request.user).distinct().order_by('startDate').distinct()
     pastEvents = Event.objects.filter(endDate__lt=datetime.datetime.today(), team__school__mentor__user=request.user).order_by('-startDate').distinct()
     try:
-        invoices = Invoice.objects.filter(school=request.user.mentor.school)
+        invoices = Invoice.objects.filter(school__mentor__user=request.user)
     except ObjectDoesNotExist:
         print('user has no mentor')
         invoices = Invoice.objects.none()

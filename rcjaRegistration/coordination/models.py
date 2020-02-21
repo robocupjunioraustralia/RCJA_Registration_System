@@ -1,11 +1,12 @@
 from django.db import models
 from common.models import *
+from django.conf import settings
 
 # **********MODELS**********
 
 class Coordinator(CustomSaveDeleteModel):
     # Foreign keys
-    user = models.ForeignKey('auth.user', verbose_name='User', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
     state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)

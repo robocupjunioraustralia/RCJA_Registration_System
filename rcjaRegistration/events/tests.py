@@ -3,7 +3,7 @@ from regions.models import State,Region
 from schools.models import School,Mentor
 from teams.models import Team,Student
 from events.models import Event,Division,Year
-from django.contrib.auth.models import User
+from users.models import User
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 
@@ -14,8 +14,7 @@ import datetime
 def commonSetUp(obj):
     obj.username = 'user@user.com'
     obj.password = 'password'
-    obj.user = user = User.objects.create_user(username=obj.username,
-                                password=obj.password)
+    obj.user = user = User.objects.create_user(email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
         treasurer=obj.user,
         name='Victoria',
@@ -33,11 +32,7 @@ def commonSetUp(obj):
     )
     obj.mentor = Mentor.objects.create(
         school=obj.newSchool,
-        user=obj.user,
-        firstName='',
-        lastName='',
-        email=obj.username,
-        mobileNumber=''
+        user=obj.user
     )
     obj.year = Year.objects.create(year=2019)
     obj.division = Division.objects.create(name='test')
