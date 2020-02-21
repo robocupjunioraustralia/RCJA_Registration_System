@@ -18,9 +18,10 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(
-    DEBUG=(bool, False),
+    DEBUG=(bool, True),
     ALLOWED_HOSTS=(list, ['127.0.0.1', 'localhost']),
-    STATIC_ROOT=(str, os.path.join(BASE_DIR, "static"))
+    STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
+    SECRET_KEY=(str, "FLJSKDHFSKDJFSKvskndjfbskdfjbnkjbn437")
 )
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +39,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    'users.apps.UserConfig'
     'widget_tweaks',
     'mentorquestions.apps.MentorquestionsConfig',
     'regions.apps.RegionsConfig',
@@ -56,6 +58,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_pwned_passwords',
 ]
+
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -93,9 +97,11 @@ WSGI_APPLICATION = 'rcjaRegistration.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db(),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators

@@ -2,7 +2,7 @@ from django.db import models
 from django.forms import ModelForm
 from .models import Profile
 from django import forms
-from django.contrib.auth.models import User
+from users.models import User
 
 class UserEditForm(ModelForm):
     class Meta:

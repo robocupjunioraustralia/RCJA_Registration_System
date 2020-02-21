@@ -1,11 +1,11 @@
-from django.contrib.auth.models import User
+from users.models import User
 from . models import School,Mentor
 from regions.models import State,Region
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.test import Client
-from django.contrib.auth.models import User
+from users.models import User
 
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model

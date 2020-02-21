@@ -1,5 +1,6 @@
 from django.db import models
 from common.models import *
+from django.conf import settings
 
 # **********MODELS**********
 
@@ -61,7 +62,7 @@ class School(CustomSaveDeleteModel):
 class Mentor(CustomSaveDeleteModel):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
-    user = models.ForeignKey('auth.user', verbose_name='User', on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.PROTECT)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -100,7 +101,7 @@ class Mentor(CustomSaveDeleteModel):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.user.get_full_name}'
+        return f'{self.user.get_full_name()}'
 
     # *****CSV export methods*****
 

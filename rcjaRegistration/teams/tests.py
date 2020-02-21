@@ -3,7 +3,7 @@ from regions.models import State,Region
 from schools.models import School,Mentor
 from teams.models import Team,Student
 from events.models import Event,Division,Year
-from django.contrib.auth.models import User
+from users.models import User
 from django.urls import reverse
 
 import datetime
