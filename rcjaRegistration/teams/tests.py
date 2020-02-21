@@ -9,7 +9,6 @@ from django.urls import reverse
 import datetime
 # Create your tests here.
 
-
 def commonSetUp(obj): #copied from events, todo refactor
     obj.username = 'user@user.com'
     obj.password = 'password'
@@ -91,16 +90,18 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
     def setUp(self):
         commonSetUp(self)
         
-    
     def testOpenRegoDoesLoad(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
-        self.assertEqual(200, response.status_code)    
+        self.assertEqual(200, response.status_code)
+
     def testClosedRegoReturnsError(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}))
-        self.assertEqual(403, response.status_code) 
+        self.assertEqual(403, response.status_code)
+
     def testMaxSubmissionNumber(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertContains(response,'First name', self.newEvent.max_team_members)
+
     def testWorkingTeamCreate(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
@@ -109,14 +110,16 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-MAX_NUM_FORMS":self.newEvent.max_team_members,
             "name":"test+team",
             "division":self.division.id,
+            "school":self.newSchool.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
             "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
-        response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
+        response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload,follow=False)
         self.assertEqual(302,response.status_code)
+
     def testInvalidTeamCreate(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
@@ -134,6 +137,7 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
         self.assertEqual(200,response.status_code)
         """TODO this tests fails for some reason 
+
     def testTeamIsDeleted(self):
         payload = {'teamID':self.newEventTeam.id}
         response = self.client.post(reverse('teams:delete'),data=payload)
@@ -145,9 +149,11 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
 class TestEditTeam(TestCase):
     def setUp(self):
         commonSetUp(self)
+
     def testOpenEditDoesLoad(self):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
-        self.assertEqual(200, response.status_code)    
+        self.assertEqual(200, response.status_code)
+  
     def testClosedEditReturnsError(self):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.oldEventTeam.id}))
         self.assertEqual(403, response.status_code)    
@@ -155,7 +161,8 @@ class TestEditTeam(TestCase):
         def testEditLoadsPreviousData(self):
             response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
             #print(response)
-        self.assertEqual(response.context['form'].initial['student_set-0-lastName'], 'thisisastringfortesting')   """ 
+        self.assertEqual(response.context['form'].initial['student_set-0-lastName'], 'thisisastringfortesting')   """
+
     def testEditStudentSucceeds(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
@@ -164,6 +171,7 @@ class TestEditTeam(TestCase):
             "student_set-MAX_NUM_FORMS":self.newEvent.max_team_members,
             "name":"test+team",
             "division":self.division.id,
+            "school":self.newSchool.id,
             "student_set-0-firstName":"teststringhere",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
@@ -174,6 +182,7 @@ class TestEditTeam(TestCase):
 
         self.assertEquals(Student.objects.get(firstName="teststringhere").firstName,"teststringhere")
         self.assertEquals(302,response.status_code)
+
     def testEditStudentWithInvalidFails(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
