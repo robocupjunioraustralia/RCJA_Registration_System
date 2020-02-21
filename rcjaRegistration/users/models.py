@@ -50,8 +50,7 @@ class User(AbstractUser):
     objects = UserManager()
 
     # Additional fields
-    mobileNumber = models.CharField(
-        'Phone Number', max_length=12, null=True, blank=True)
+    mobileNumber = models.CharField('Mobile Number', max_length=12, null=True, blank=True)
 
     # *****Clean*****
 

@@ -42,16 +42,15 @@ class UserAdmin(DjangoUserAdmin):
             'fields': (
                 'email',
                 'password1',
-                'password2
+                'password2'
             ),
         }),
     )
     ordering = ('email',)
 
-    readonly_fields = UserAdmin.readonly_fields + (
+    readonly_fields = DjangoUserAdmin.readonly_fields + (
         'user_permissions',
         'groups',
-        'username',
     )
     list_display = [
         'email',

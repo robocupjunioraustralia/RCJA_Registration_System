@@ -17,14 +17,8 @@ def signup(request):
         if form.is_valid():
             # Save user
             user = form.save()
-            user.username = form.cleaned_data["email"]
             user.set_password(form.cleaned_data["password"])
             user.save()
-
-            # Save profile
-            profile = user.profile
-            profile.mobileNumber = form.cleaned_data['mobileNumber']
-            profile.save()
 
             # Save mentor
             Mentor.objects.create(user=user, school=form.cleaned_data['school'])

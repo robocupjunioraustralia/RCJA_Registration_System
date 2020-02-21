@@ -65,13 +65,13 @@ text-overflow: ellipsis;">
             {% if user.get_full_name %} 
                 {{ user.get_full_name }}
                 {% else %}
-                {{user.username}}
+                {{user.email}}
             {% endif %}
             </span>
                 <i class="dropdown icon"></i>
                 <div class="menu">
-                    <a href="{% url 'userprofiles:profile' %}" class="item">My details</a>
-                    <a href="{% url 'userprofiles:profile' %}" class="item">My school</a>
+                    <a href="{% url 'users:profile' %}" class="item">My details</a>
+                    <a href="{% url 'users:profile' %}" class="item">My school</a>
                     <a href = "{% url 'password_change' %}" class="item">Change password</a>
                     <a href = "{% url 'logout' %}" class="item">Log out</a>
                     <a class="item">Help</a>
@@ -119,13 +119,13 @@ text-overflow: ellipsis;">
                 {% if user.get_full_name %} 
                     {{ user.get_full_name }}
                     {% else %}
-                    {{user.username}}
+                    {{user.email}}
                 {% endif %}
                 </span>
                     <i class="dropdown icon"></i>
                     <div class="menu">
-                        <a href="{% url 'userprofiles:profile' %}" class="item">My details</a>
-                        <a href="{% url 'userprofiles:profile' %}" class="item">My school</a>
+                        <a href="{% url 'users:profile' %}" class="item">My details</a>
+                        <a href="{% url 'users:profile' %}" class="item">My school</a>
                         <a href = "{% url 'password_change' %}" class="item">Change password</a>
                         <a href = "{% url 'logout' %}" class="item">Log out</a>
                         <a class="item">Help</a>

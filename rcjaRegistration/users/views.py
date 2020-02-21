@@ -14,15 +14,8 @@ def editProfile(request):
         if form.is_valid():
             # Save user
             user = form.save()
-            user.username = form.cleaned_data['email']
-            user.save()
-
-            # Save profile
-            profile = user.profile
-            profile.mobileNumber = form.cleaned_data['mobileNumber']
-            profile.save()
 
             return redirect('/')
     else:
-        form = UserEditForm(instance=request.user, initial={'mobileNumber': request.user.profile.mobileNumber})
+        form = UserEditForm(instance=request.user)
     return render(request, 'registration/profile.html', {'form': form})
