@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-if [ -z "$DYNO" ]; then
+if [ -n "$DYNO" ]; then
   manage.py herokuinit
 fi
 
