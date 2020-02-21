@@ -1,5 +1,6 @@
 from django.db import models
 from common.models import *
+from django.conf import settings
 
 # **********MODELS**********
 
@@ -94,7 +95,7 @@ class Event(models.Model):
     # Event details
     entryFee = models.PositiveIntegerField('Entry fee')
     availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', blank=True)
-    directEnquiriesTo = models.ForeignKey('auth.user', verbose_name='Direct enquiries to', on_delete=models.PROTECT)
+    directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT)
     location = models.TextField('Location', blank=True)
     compDetails = models.TextField('Event details', blank=True)
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True)
@@ -103,9 +104,8 @@ class Event(models.Model):
     class Meta:
         verbose_name = 'Event'
         unique_together = ('year', 'state', 'name')
-        ordering = ['year', 'state', '-startDate']
+        ordering = ['-startDate']
 
-    
     def clean(self):
         errors = []
         # Check required fields are not None
@@ -124,7 +124,6 @@ class Event(models.Model):
         # Raise any errors
         if errors:
             raise ValidationError(errors)
-
 
     # *****Permissions*****
     @classmethod
