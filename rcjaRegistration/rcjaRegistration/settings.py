@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
     'schools.apps.SchoolsConfig',
+    'userprofiles.apps.UserprofilesConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
