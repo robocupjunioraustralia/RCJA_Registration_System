@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from common.models import *
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -53,6 +54,12 @@ class User(AbstractUser):
     mobileNumber = models.CharField('Mobile Number', max_length=12, null=True, blank=True)
 
     # *****Clean*****
+
+    def clean(self):
+        super().clean()
+        # Force case insentive email
+        if User.objects.filter(email__iexact=self.email).exclude(pk=self.pk).exists():
+            raise ValidationError({'email': _('User with this Email address already exists.')})
 
     # *****Permissions*****
 
