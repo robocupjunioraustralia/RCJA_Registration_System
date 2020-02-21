@@ -4,13 +4,12 @@ from .models import Profile
 from django import forms
 from django.contrib.auth.models import User
 
-class ProfileEditForm(ModelForm):
+class UserEditForm(ModelForm):
     class Meta:
-        model = Profile
+        model = User
         fields = [
-            'mobileNumber',
+            'first_name',
+            'last_name',
+            'email',
         ]
-    
-    first_name = forms.CharField(max_length=User._meta.get_field('first_name').max_length)
-    last_name = forms.CharField(max_length=User._meta.get_field('last_name').max_length)
-    email = forms.EmailField()
+    mobileNumber = forms.CharField(max_length=Profile._meta.get_field('mobileNumber').max_length)
