@@ -70,14 +70,19 @@ class AuthViewTests(TestCase):
         'first_name':'test',
         'last_name':'test',
         'school':1,
-        'mobileNumber':'123123123'
+        'mobileNumber':'123123123',
+        'homeState': 1,
+        'homeRegion': 1,
         }
+
     def setUp(self):
         self.user = user = User.objects.create_user(email='admin@test.com', password='admin')
         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
+        self.validPayload["homeState"] = self.newState.id
+        self.validPayload["homeRegion"] = self.newRegion.id
 
     def testSignupByUrl(self):
         response = self.client.get('/accounts/signup')
@@ -181,13 +186,16 @@ class ProfileEditTests(TestCase):
     password = 'password'
     
     def setUp(self):
-        self.validPayload = {'email':self.email,
-        'password':self.password,
-        'passwordConfirm':self.password,
-        'first_name':'test',
-        'last_name':'test',
-        'school':1,
-        'mobileNumber':'123123123'
+        self.validPayload = {
+            'email':self.email,
+            'password':self.password,
+            'passwordConfirm':self.password,
+            'first_name':'test',
+            'last_name':'test',
+            'school':1,
+            'mobileNumber':'123123123',
+            'homeState': 1,
+            'homeRegion': 1,
         }
         self.user = user = User.objects.create_user(
             email='admin@test.com',
@@ -197,6 +205,8 @@ class ProfileEditTests(TestCase):
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
+        self.validPayload["homeState"] = self.newState.id
+        self.validPayload["homeRegion"] = self.newRegion.id
 
         response = self.client.post(path=reverse('schools:signup'),data = self.validPayload)
         self.client.login(username=self.email,password=self.password)
@@ -212,7 +222,9 @@ class ProfileEditTests(TestCase):
            "mobileNumber":123,
            "email":"admon@admon.com",
            "password":"password123",
-           "passwordConfirm":"password123"
+           "passwordConfirm":"password123",
+           'homeState': self.newState.id,
+           'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:profile'),data=payload)
         self.assertEqual(302,response.status_code)
