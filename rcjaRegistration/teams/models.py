@@ -45,7 +45,7 @@ class Team(CustomSaveDeleteModel):
 
     def preSave(self):
         # Create invoice
-        from events.models import Invoice
+        from invoices.models import Invoice
         Invoice.objects.get_or_create(school=self.school, event=self.event)
 
     # *****Methods*****
