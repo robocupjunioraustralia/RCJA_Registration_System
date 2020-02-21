@@ -18,10 +18,9 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(
-    DEBUG=(bool, True),
+    DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ['127.0.0.1', 'localhost']),
-    STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
-    SECRET_KEY=(str, "FLJSKDHFSKDJFSKvskndjfbskdfjbnkjbn437")
+    STATIC_ROOT=(str, os.path.join(BASE_DIR, "static"))
 )
 
 # Quick-start development settings - unsuitable for production
@@ -96,11 +95,9 @@ WSGI_APPLICATION = 'rcjaRegistration.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': env.db(),
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
