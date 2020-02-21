@@ -1,11 +1,9 @@
-# Create your views here.
 from django.shortcuts import render, get_object_or_404,redirect
 from django.contrib.auth.decorators import login_required
-# Create your views here.
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth import authenticate, login
-from .forms import MentorForm,SchoolForm,MentorEditForm
+from .forms import MentorForm, SchoolForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 
@@ -28,19 +26,6 @@ def signup(request):
     #we include the school creation here so we can preload the form details, but we
     #don't actually want to do anything with the data on this endpoint, which is why
     #it's not in the post area
-@login_required
-def editProfile(request):
-    if request.method == 'POST':
-        form = MentorEditForm(request.POST,instance=request.user.mentor)
-        if form.is_valid(): 
-            mentor = form.save()
-            user = mentor.user
-            user.save()
-            return redirect('/')
-    else:
-        form = MentorEditForm(instance=request.user.mentor)
-        schoolCreationDetails = SchoolForm
-    return render(request, 'registration/profile.html', {'form': form})
 
 def schoolCreation(request):
     if request.method == 'POST':

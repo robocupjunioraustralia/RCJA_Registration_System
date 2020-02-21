@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 # Create user profile on user save
 @receiver(post_save, sender=User)
-def GroupMembership_post_delete(sender, instance, **kwargs):
+def User_Post_Save(sender, instance, **kwargs):
     Profile.objects.get_or_create(
         user=instance
     )

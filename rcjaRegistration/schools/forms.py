@@ -19,11 +19,6 @@ class MentorForm(ModelForm):
             raise forms.ValidationError(
                 "Passwords do not match"
             )
-
-class MentorEditForm(ModelForm):
-        class Meta:
-            model = Mentor
-            fields = []
             
 class SchoolForm(ModelForm):
     class Meta:
