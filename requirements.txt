@@ -1,5 +1,6 @@
 Django==2.2.10
 django-environ==0.4.5
+django-pwned-passwords==4.1.0
 psycopg2-binary==2.8.4
 pytz==2019.3
 sqlparse==0.3.0

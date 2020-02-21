@@ -65,12 +65,14 @@ text-overflow: ellipsis;">
             {% if user.get_full_name %} 
                 {{ user.get_full_name }}
                 {% else %}
-                {{user.username}}
+                {{user.email}}
             {% endif %}
             </span>
                 <i class="dropdown icon"></i>
                 <div class="menu">
-                    <a href="{% url 'schools:profile' %}" class="item">My Details</a>
+                    <a href="{% url 'users:profile' %}" class="item">My details</a>
+                    <a href="{% url 'users:profile' %}" class="item">My school</a>
+                    <a href = "{% url 'password_change' %}" class="item">Change password</a>
                     <a href = "{% url 'logout' %}" class="item">Log out</a>
                     <a class="item">Help</a>
                 </div>
@@ -108,7 +110,7 @@ text-overflow: ellipsis;">
             <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
                 <i class="id badge icon"></i>
                 Admin
-            </a>     
+            </a>
             {% endif %}
             <div class="ui dropdown simple item" >
                 <i class="user circle icon"></i>
@@ -117,12 +119,14 @@ text-overflow: ellipsis;">
                 {% if user.get_full_name %} 
                     {{ user.get_full_name }}
                     {% else %}
-                    {{user.username}}
+                    {{user.email}}
                 {% endif %}
                 </span>
                     <i class="dropdown icon"></i>
                     <div class="menu">
-                        <a href="{% url 'schools:profile' %}" class="item">My Details</a>
+                        <a href="{% url 'users:profile' %}" class="item">My details</a>
+                        <a href="{% url 'users:profile' %}" class="item">My school</a>
+                        <a href = "{% url 'password_change' %}" class="item">Change password</a>
                         <a href = "{% url 'logout' %}" class="item">Log out</a>
                         <a class="item">Help</a>
                     </div>
@@ -134,9 +138,24 @@ text-overflow: ellipsis;">
         {% block content %}
         {% endblock %} 
     </div>
-    
-</body>
-      
+<div class="footer">
+  <p>RCJ Registration System. This site is in beta. View the source on <a href = "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System"> Github! </a></p>
+</div></body>
+
+<style>
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  min-height:1rem;
+  background-color: #c9c9c9;
+  color: black;
+  text-align: center;
+}
+</style>
+
+
     
 <script>
 function toggleSidebar() {

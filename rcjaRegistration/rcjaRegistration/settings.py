@@ -38,6 +38,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    'users.apps.UsersConfig',
     'widget_tweaks',
     'mentorquestions.apps.MentorquestionsConfig',
     'regions.apps.RegionsConfig',
@@ -53,7 +54,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_pwned_passwords',
 ]
+
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -100,6 +104,9 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     # {
+    #     'NAME': 'django_pwned_passwords.password_validation.PWNEDPasswordValidator'
+    # },
+    # {
     #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     # },
     # {
@@ -113,12 +120,22 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
+# HIBP settings
+
+PWNED_VALIDATOR_ERROR = "Your password was determined to have been involved in a major security breach. Go to https://haveibeenpwned.com/Passwords for more information."
+PWNED_VALIDATOR_ERROR_FAIL = "We could not validate the safety of this password. This does not mean the password is invalid. Please try again in a little bit, if the problem persists please contact us."
+PWNED_VALIDATOR_FAIL_SAFE = False
+
+# Dev only
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # REST
 
 DEFAULT_RENDERER_CLASSES = (
     'rest_framework.renderers.JSONRenderer',
 )
 
+# This should really test if debug is True
 if True:
     DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
         'rest_framework.renderers.BrowsableAPIRenderer',

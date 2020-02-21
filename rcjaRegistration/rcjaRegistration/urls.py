@@ -26,11 +26,12 @@ admin.site.index_title = "Welcome to the RCJA Admin Portal"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')), #login
-    path('api/v1/', include('apiv1.urls')),
+    # path('api/v1/', include('apiv1.urls')), # Disabled for initial release
     path('', include('events.urls')),
     path('',include('schools.urls')),
     path('',include('common.urls')),
     path('',include('teams.urls')),
+    path('',include('users.urls')),
     path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index')
     
 ]

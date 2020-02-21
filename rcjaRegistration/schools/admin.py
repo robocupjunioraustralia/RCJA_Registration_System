@@ -47,8 +47,6 @@ class MentorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'school',
-        'email',
-        'mobileNumber'
     ]
     list_filter = [
         'school__state',

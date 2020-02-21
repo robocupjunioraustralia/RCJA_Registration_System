@@ -36,7 +36,7 @@
 <div class="bg">
   <div class = "">
     <div class="ui center aligned grid ">
-      <div class = "twelve wide mobile six wide computer column ui">
+      <div class = "twelve wide mobile eight wide computer column ui">
         <div class = "form form-group left-aligned-text">
           <div>
             <h1>Event: {{event.name}} </h1>
@@ -71,7 +71,7 @@
                 
               <h4 class="ui dividing header">Team Information</h4>
                
-              <div class="two fields">
+              <div class="three fields">
                 <div class = "field">
                   <label>Team name: </label>
                         {{form.name|attr:"placeholder:Team Name"}}
@@ -80,6 +80,10 @@
                 <div class = "field">
                   <label> Division: </label>
                             {{ form.division|attr:"placeholder:Division"|attr:"class:ui dropdown"}} 
+                </div>
+                <div class = "field">
+                  <label> School: </label>
+                            {{ form.school|attr:"placeholder:School"|attr:"class:ui dropdown"}} 
                 </div>
               </div>
               {% for studentform in formset %}

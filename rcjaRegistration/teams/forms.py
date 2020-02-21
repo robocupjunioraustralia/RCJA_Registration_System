@@ -17,16 +17,30 @@ class StudentForm(forms.ModelForm):
 class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division','name']
+        fields= ['division','name','school']
+
+    # Override init to filter division fk to available divisions
+    def __init__(self, *args, **kwargs):
+        eventID = kwargs.pop('event_id', None)
+        userID = kwargs.pop('userID', None)
+        super().__init__(*args, **kwargs)
+        from events.models import Division
+        self.fields['division'].queryset = Division.objects.filter(event=eventID)
+        # Filter school to mentor's schools
+        from schools.models import School
+        self.fields['school'].queryset = School.objects.filter(mentor__user=userID)
+
     StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm)
+
     #NOTE: this is a custom clean method to enforce validation on the unique_together constraint
     #This is required because we need to add the event_id manually from the url
     def clean(self): 
         cleaned_data = self.cleaned_data
-        
-        
-        teamWithNameInEvent = Team.objects.filter(name=cleaned_data['name'],         
-                                   event_id=self.event_id or cleaned_data['event_id'])
+
+        teamWithNameInEvent = Team.objects.filter(
+            name=cleaned_data['name'],         
+            event_id=self.event_id or cleaned_data['event_id']
+        )
         
         teamIsSameTeam = False #this case handles editing, when we already have a team
         try:
@@ -36,7 +50,8 @@ class TeamForm(forms.ModelForm):
             pass
         if (teamWithNameInEvent.exists() and (not teamIsSameTeam)):
             raise ValidationError(
-                  'Team with this name already exists for this event')
+                'Team with this name already exists for this event'
+            )
         
         # Always return cleaned_data
         return cleaned_data
