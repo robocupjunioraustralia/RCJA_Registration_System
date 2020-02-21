@@ -56,14 +56,14 @@ class UserAdmin(DjangoUserAdmin):
         'email',
         'first_name',
         'last_name',
+        'mobileNumber',
         'is_staff',
         'is_superuser',
-        'is_superuser',
         'is_active',
-        'mobileNumber',
     ]
     search_fields = [
         'email',
         'first_name',
         'last_name',
+        'mobileNumber',
     ]

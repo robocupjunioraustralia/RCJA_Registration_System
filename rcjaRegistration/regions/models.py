@@ -6,7 +6,7 @@ from django.conf import settings
 
 class State(CustomSaveDeleteModel):
     # Foreign keys
-    treasurer = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Treasurer', on_delete=models.PROTECT)
+    treasurer = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Treasurer', on_delete=models.PROTECT, related_name='+')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
