@@ -3,24 +3,37 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth import authenticate, login
-from .forms import MentorForm, SchoolForm
+from .forms import UserSignupForm, SchoolForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 
+from schools.models import Mentor
+
 def signup(request):
     if request.method == 'POST':
-        form = MentorForm(request.POST)
-        schoolCreationDetails = SchoolForm(request.POST)#note this isn't saved here
+        form = UserSignupForm(request.POST)
+        schoolCreationDetails = SchoolForm(request.POST) #note this isn't saved here
 
-        if form.is_valid(): 
-            mentor = form.save()
-            user = mentor.user
-            user.set_password(request.POST["password"])
+        if form.is_valid():
+            # Save user
+            user = form.save()
+            user.username = form.cleaned_data["email"]
+            user.set_password(form.cleaned_data["password"])
             user.save()
+
+            # Save profile
+            profile = user.profile
+            profile.mobileNumber = form.cleaned_data['mobileNumber']
+            profile.save()
+
+            # Save mentor
+            Mentor.objects.create(user=user, school=form.cleaned_data['school'])
+
+            # Login and redirect
             login(request, user)
             return redirect('/')
     else:
-        form = MentorForm()
+        form = UserSignupForm()
         schoolCreationDetails = SchoolForm
     return render(request, 'registration/signup.html', {'form': form,'schoolCreationModal':schoolCreationDetails})
     #we include the school creation here so we can preload the form details, but we
