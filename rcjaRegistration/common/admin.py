@@ -12,6 +12,7 @@ from django.shortcuts import render
 
 import csv
 import datetime
+import keyvaluestore.admin
 
 # Register your models here.
 
@@ -90,3 +91,6 @@ class ExportCSVMixin:
 
     export_as_csv.short_description = "Export selected"
     export_as_csv.allowed_permissions = ('change',)
+
+# Disable key-value store admin
+admin.site.unregister(keyvaluestore.admin.KeyValueStore)

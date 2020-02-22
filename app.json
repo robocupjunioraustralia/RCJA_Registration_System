@@ -5,16 +5,14 @@
   "logo": "https://www.robocupjunior.org.au/sites/all/themes/rcja/images/logo.png",
   "success_url": "/admin/",
   "stack": "container",
-  "addons": [
-    {
-      "plan": "heroku-postgresql:hobby-dev"
+  "addons": ["heroku-postgresql:hobby-dev"],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
     }
-  ],
+  },
   "env": {
-    "DJANGO_SUPERUSER_USERNAME": {
-      "description": "Django Admin username.",
-      "required": true
-    },
     "DJANGO_SUPERUSER_EMAIL": {
       "description": "Django Admin email.",
       "required": true
@@ -41,7 +39,6 @@
   "environments": {
     "review": {
       "env": {
-        "DJANGO_SUPERUSER_USERNAME": "admin",
         "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
         "DJANGO_SUPERUSER_PASSWORD": "rcjareview",
         "SECRET_KEY": {
@@ -51,8 +48,5 @@
         "ALLOWED_HOSTS": "*"
       }
     }
-  },
-  "scripts": {
-    "postdeploy": "/bin/sh /app/heroku-setup.sh"
   }
 }
