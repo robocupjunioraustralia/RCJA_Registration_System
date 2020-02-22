@@ -20,5 +20,5 @@ from . import views
 app_name = 'invoices'
 
 urlpatterns = [
-    path('invoices/invoice',views.invoice,name='invoice')
+    path('invoice/<int:invoiceID>/detail', views.invoice, name='detail')
 ]
