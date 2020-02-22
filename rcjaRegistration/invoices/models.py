@@ -4,6 +4,31 @@ from django.conf import settings
 
 # **********MODELS**********
 
+class InvoiceGlobalSettings(models.Model):
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    invoiceFromName = models.CharField('Invoice name', max_length=50)
+    invoiceFromAddress = models.TextField('Invoice address')
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Invoice settings'
+
+    # Allow only one instance of model
+    def clean(self):
+        if InvoiceGlobalSettings.objects.exclude(pk=self.pk).exists():
+            raise(ValidationError('May only be one global settings object'))
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return 'Invoice settings'
 
 class Invoice(models.Model):
     # Foreign keys
