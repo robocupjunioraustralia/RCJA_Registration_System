@@ -16,7 +16,7 @@
         <div class="left floated left aligned six wide column">
           <div class="ui">
             <h1 class = "ui header pageTitle">Invoice <small class = "ui sub header">With Credit</small></h1>
-            <h4 class="ui sub header invDetails">PO Number: {{ invoice.purchaseOrderNumber }} | Date: {{ invoice.creationDateTime }} </h4>
+            <h4 class="ui sub header invDetails">PO Number: {{ invoice.purchaseOrderNumber }} | Date: {{ invoice.invoicedDate }} </h4>
           </div>
         </div>
         <!-- <div class="right floated left aligned six wide column">
@@ -66,11 +66,11 @@
           <thead>
             <tr>
               <th>Item / Details</th>
-              <th class="text-center colfix">Unit Cost</th>
-              <th class="text-center colfix">Sum Cost</th>
-              <th class="text-center colfix">Discount</th>
-              <th class="text-center colfix">Tax</th>
-              <th class="text-center colfix">Total</th>
+              <th class="text-center colfix">Unit cost</th>
+              <th class="text-center colfix">Number teams</th>
+              <th class="text-center colfix">GST</th>
+              <th class="text-center colfix">Total (excl GST)</th>
+              <th class="text-center colfix">Total (incl GST)</th>
             </tr>
           </thead>
           <tbody>
@@ -78,33 +78,23 @@
             <tr id="divisionRom{{enteredDivision.id}}">
               <td>
                 {{ enteredDivision.name }}
-                <br>
-                <small class="text-muted">The best lorem in town, try it now or leave forever</small>
+                <!-- <br>
+                <small class="text-muted">We can put more text here but I doubt we want to</small> -->
               </td>
               <td class="text-right">
-                <span class="mono">$1,000.00</span>
-                <br>
-                <small class="text-muted">Before Tax</small>
+                <span class="mono">{{ invoice.event.entryFee }}</span>
               </td>
               <td class="text-right">
-                <span class="mono">$18,000.00</span>
-                <br>
-                <small class="text-muted">18 Units</small>
+                <span class="mono">To do</span>
               </td>
               <td class="text-right">
-                <span class="mono">- $1,800.00</span>
-                <br>
-                <small class="text-muted">Special -10%</small>
+                <span class="mono">To do</span>
               </td>
               <td class="text-right">
-                <span class="mono">+ $3,240.00</span>
-                <br>
-                <small class="text-muted">VAT 20%</small>
+                  <span class="mono">To do</span>
               </td>
               <td class="text-right">
-                <strong class="mono">$19,440.00</strong>
-                <br>
-                <small class="text-muted mono">$16,200.00</small>
+                <strong class="mono">And this</strong>
               </td>
             </tr>
             {% endfor %}
@@ -112,8 +102,7 @@
          <tfoot class="full-width">
     <tr>
       <th> Total: </th>
-      <th colspan="2"></th>
-      <th colspan = "1"> $500 </th>
+      <th colspan="3"></th>
       <th colspan = "1"> $800 </th>
       <th colspan = "1"> $20000.00 </th>
     </tr>
