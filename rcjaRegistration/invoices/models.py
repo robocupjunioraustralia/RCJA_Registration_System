@@ -38,6 +38,7 @@ class Invoice(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
+    invoicedDate = models.DateTimeField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)
     notes = models.TextField('Notes', blank=True)
 
