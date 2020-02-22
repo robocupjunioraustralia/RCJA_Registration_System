@@ -6,6 +6,10 @@ from .models import *
 
 # Register your models here.
 
+@admin.register(InvoiceGlobalSettings)
+class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
+    pass
+
 class InvoicePaymentInline(admin.TabularInline):
     model = InvoicePayment
     extra = 0

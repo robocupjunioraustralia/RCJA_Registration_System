@@ -9,8 +9,8 @@ class InvoiceGlobalSettings(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    invoiceFromName = models.CharField('Invoice name', max_length=50)
-    invoiceFromAddress = models.TextField('Invoice address')
+    invoiceFromName = models.CharField('Invoice from name', max_length=50)
+    invoiceFromDetails = models.TextField('Invoice from details')
 
     # *****Meta and clean*****
     class Meta:
