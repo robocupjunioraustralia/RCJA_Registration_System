@@ -1,6 +1,4 @@
 from django.shortcuts import render, get_object_or_404
-
-# Create your views here.
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
@@ -14,9 +12,13 @@ from .models import *
 
 @login_required
 def index(request):
+    # Events
     openForRegistrationEvents = Event.objects.filter(registrationsOpenDate__lte=datetime.datetime.today(), registrationsCloseDate__gte=datetime.datetime.today()).exclude(team__school__mentor__user=request.user).order_by('startDate').distinct()
     currentEvents = Event.objects.filter(endDate__gte=datetime.datetime.today(), team__school__mentor__user=request.user).distinct().order_by('startDate').distinct()
     pastEvents = Event.objects.filter(endDate__lt=datetime.datetime.today(), team__school__mentor__user=request.user).order_by('-startDate').distinct()
+
+    # Invoices
+    from invoices.models import Invoice
     try:
         invoices = Invoice.objects.filter(school__mentor__user=request.user)
     except ObjectDoesNotExist:
@@ -54,10 +56,6 @@ def summary(request, eventID):
         'today':datetime.date.today()
     }
     return render(request, 'events/eventSummary.html', context)   
-
-@login_required
-def invoice(request):
-    return render(request,'events/invoiceTemplate.html')
 
 @login_required
 def loggedInUnderConstruction(request):

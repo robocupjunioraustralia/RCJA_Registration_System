@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'coordination.apps.CoordinationConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
+    'invoices.apps.InvoicesConfig',
     'schools.apps.SchoolsConfig',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -16,22 +16,20 @@
         <div class="left floated left aligned six wide column">
           <div class="ui">
             <h1 class = "ui header pageTitle">Invoice <small class = "ui sub header">With Credit</small></h1>
-            <h4 class="ui sub header invDetails">NO: 554775/R1 | Date: 01/01/2015</h4>
+            <h4 class="ui sub header invDetails">PO Number: {{ invoice.purchaseOrderNumber }} | Date: {{ invoice.invoicedDate }} </h4>
           </div>
         </div>
-        <div class="right floated left aligned six wide column">
+        <!-- <div class="right floated left aligned six wide column">
           <div class="ui">
             <div class="column two wide right floated">
               <img class="logo" src="https://scontent.fmel5-1.fna.fbcdn.net/v/t1.0-9/10358691_1595827163984651_6845505980791568353_n.png?_nc_cat=109&_nc_ohc=We4wwT6M2Q0AX8qY8-b&_nc_ht=scontent.fmel5-1.fna&oh=69bd30fc152063c470afd928919c8734&oe=5E94664A" />
               <ul class="">
-                <li><strong>RCJA Australia</strong></li>
-                <li>Lorem Ipsum</li>
-                <li>2 Alliance Lane VIC</li>
-                <li>info@rcja.com</li>
+                <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
+                {{ invoiceSettings.invoiceFromDetails }}
               </ul>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -42,11 +40,8 @@
       </div>
       <div class="content">
         <ul>
-          <li> <strong> Name: RCJA </strong> </li>
-          <li><strong> Address: </strong> 1 Unknown Street VIC</li>
-          <li><strong> Phone: </strong> (+61)404123123</li>
-          <li><strong> Email: </strong> admin@rcja.com</li>
-          <li><strong> Contact: </strong> John Smith</li>
+            <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
+            {{ invoiceSettings.invoiceFromDetails }}
         </ul>
       </div>
     </div>
@@ -71,85 +66,43 @@
           <thead>
             <tr>
               <th>Item / Details</th>
-              <th class="text-center colfix">Unit Cost</th>
-              <th class="text-center colfix">Sum Cost</th>
-              <th class="text-center colfix">Discount</th>
-              <th class="text-center colfix">Tax</th>
-              <th class="text-center colfix">Total</th>
+              <th class="text-center colfix">Unit cost</th>
+              <th class="text-center colfix">Number teams</th>
+              <th class="text-center colfix">GST</th>
+              <th class="text-center colfix">Total (excl GST)</th>
+              <th class="text-center colfix">Total (incl GST)</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
+            {% for enteredDivision in enteredDivisions %}
+            <tr id="divisionRom{{enteredDivision.id}}">
               <td>
-                Lorem Ipsum Dolor
-                <br>
-                <small class="text-muted">The best lorem in town, try it now or leave forever</small>
+                {{ enteredDivision.name }}
+                <!-- <br>
+                <small class="text-muted">We can put more text here but I doubt we want to</small> -->
               </td>
               <td class="text-right">
-                <span class="mono">$1,000.00</span>
-                <br>
-                <small class="text-muted">Before Tax</small>
+                <span class="mono">{{ invoice.event.entryFee }}</span>
               </td>
               <td class="text-right">
-                <span class="mono">$18,000.00</span>
-                <br>
-                <small class="text-muted">18 Units</small>
+                <span class="mono">To do</span>
               </td>
               <td class="text-right">
-                <span class="mono">- $1,800.00</span>
-                <br>
-                <small class="text-muted">Special -10%</small>
+                <span class="mono">To do</span>
               </td>
               <td class="text-right">
-                <span class="mono">+ $3,240.00</span>
-                <br>
-                <small class="text-muted">VAT 20%</small>
+                  <span class="mono">To do</span>
               </td>
               <td class="text-right">
-                <strong class="mono">$19,440.00</strong>
-                <br>
-                <small class="text-muted mono">$16,200.00</small>
+                <strong class="mono">And this</strong>
               </td>
             </tr>
-
-            <tr>
-              <td>
-                Sit Amet Dolo
-                <br>
-                <small class="text-muted">Now you may sit</small>
-              </td>
-              <td class="text-right">
-                <span class="mono">$120.00</span>
-                <br>
-                <small class="text-muted">Before Tax</small>
-              </td>
-              <td class="text-right">
-                <span class="mono">$240.00</span>
-                <br>
-                <small class="text-muted">2 Units</small>
-              </td>
-              <td class="text-right">
-                <span class="mono">- $0.00</span>
-                <br>
-                <small class="text-muted">-</small>
-              </td>
-              <td class="text-right">
-                <span class="mono">+ $72.00</span>
-                <br>
-                <small class="text-muted">VAT:20% S:10%</small>
-              </td>
-              <td class="text-right">
-                <strong class="mono">$312.00</strong>
-                <br>
-                <small class="text-muted mono">$240.00</small>
-              </td>
-            </tr>
+            {% endfor %}
           </tbody>
          <tfoot class="full-width">
     <tr>
       <th> Total: </th>
-      <th colspan="2"></th>
-      <th colspan = "1"> $500 </th>
+      <th colspan="3"></th>
       <th colspan = "1"> $800 </th>
       <th colspan = "1"> $20000.00 </th>
     </tr>
@@ -162,7 +115,7 @@
     <div class="ui card">
       <div class="content center aligned text segment">
         <small class="ui sub header"> Amount Due (AUD): </small>
-        <p class="bigfont"> $5000.25 </p>
+        <p class="bigfont"> ${{ invoice.amountDue }} </p>
       </div>
     </div>
         <div class="ui card">
@@ -170,9 +123,9 @@
         <div class="header">Payment Details</div>
       </div>
       <div class="content">
-        <p> <strong> Account Name: </strong> "RJCA" </p>
-        <p> <strong> BSB: </strong> 111-111 </p>
-        <p> <strong>Account Number: </strong> 1234101 </p>
+        <p> <strong> Account Name: </strong> {{ invoice.event.state.bankAccountName }} </p>
+        <p> <strong> BSB: </strong> {{ invoice.event.state.bankAccountBSB }} </p>
+        <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
       </div>
     </div>
     <div class="ui card">

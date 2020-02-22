@@ -23,7 +23,7 @@
               <div class="header">
                 Invoices
               </div>
-               <a href = "/events/invoice"> <span>You have {{ invoices.count }} invoices requiring your attention.</span> </a>
+               <a href = "{% url 'invoices:detail' invoices.first.id %}" target="_blank"> <span>You have {{ invoices.count }} invoices requiring your attention.</span> </a>
             </div>
         </div>  
         {% else %}
