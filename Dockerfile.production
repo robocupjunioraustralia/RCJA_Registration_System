@@ -6,3 +6,6 @@ ENV PORT=8000
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 COPY rcjaRegistration /app
+
+CMD ["/start.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
