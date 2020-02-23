@@ -15,8 +15,8 @@ class State(CustomSaveDeleteModel):
     abbreviation = models.CharField('Short code', max_length=3, unique=True)
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
-    bankAccountBSB = models.PositiveIntegerField('Bank Account BSB', blank=True, null=True)
-    bankAccountNumber = models.PositiveIntegerField('Bank Account Number', blank=True, null=True)
+    bankAccountBSB = models.CharField('Bank Account BSB', max_length=7, blank=True, null=True)
+    bankAccountNumber = models.CharField('Bank Account Number', max_length=10, blank=True, null=True)
     paypalEmail = models.EmailField('PayPal email', blank=True)
     # Defaults
     defaultCompDetails = models.TextField('Default event details', blank=True)
