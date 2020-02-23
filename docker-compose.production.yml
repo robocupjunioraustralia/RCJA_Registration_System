@@ -4,9 +4,7 @@ services:
   web:
     restart: unless-stopped
     image: rcja-registration:production
-    build:
-      context: .
-      dockerfile: Dockerfile.production
+    build: .
     ports:
       - 8000:8000
     environment:

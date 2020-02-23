@@ -3,6 +3,3 @@
 if [ -n "$DYNO" ]; then
   manage.py herokuinit
 fi
-
-# Collect static
-manage.py collectstatic --noinput
