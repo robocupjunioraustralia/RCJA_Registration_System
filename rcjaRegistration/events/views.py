@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
 
 import datetime
 
@@ -19,11 +18,7 @@ def index(request):
 
     # Invoices
     from invoices.models import Invoice
-    try:
-        invoices = Invoice.objects.filter(school__mentor__user=request.user)
-    except ObjectDoesNotExist:
-        print('user has no mentor')
-        invoices = Invoice.objects.none()
+    invoices = Invoice.objects.filter(school__mentor__user=request.user)
 
     context = {
         'openForRegistrationEvents': openForRegistrationEvents,
