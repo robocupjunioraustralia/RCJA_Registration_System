@@ -70,7 +70,18 @@ class Campus(CustomSaveDeleteModel):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Campus'
+        verbose_name_plural = 'Campuses'
         ordering = ['school', 'name']
+
+    def clean(self, cleanDownstreamObjects=True):
+        errors = []
+ 
+        # Check school change doesn't effect any attached administrators
+        cleanDownstream(self,'schooladministrator_set', 'campus', errors)
+    
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
@@ -121,6 +132,10 @@ class SchoolAdministrator(CustomSaveDeleteModel):
         verbose_name = 'School administrator'
         unique_together = ('school', 'user')
         ordering = ['user']
+
+    def clean(self, cleanDownstreamObjects=True):
+        if self.campus and self.campus.school != self.school:
+            raise(ValidationError('Campus school must match school'))
 
     # *****Permissions*****
     @classmethod

@@ -56,6 +56,7 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
     list_display = [
         '__str__',
         'school',
+        'campus'
     ]
     list_filter = [
         'school__state',
@@ -69,16 +70,16 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
     autocomplete_fields = [
         'school'
     ]
-    actions = [
-        'export_as_csv'
-    ]
-    exportFields = [
-        'firstName',
-        'lastName',
-        'school',
-        'email',
-        'mobileNumber'
-    ]
+    # actions = [
+    #     'export_as_csv'
+    # ]
+    # exportFields = [
+    #     'firstName',
+    #     'lastName',
+    #     'school',
+    #     'email',
+    #     'mobileNumber'
+    # ]
     from mentorquestions.admin import MentorQuestionResponseInline
     inlines = [
         MentorQuestionResponseInline
