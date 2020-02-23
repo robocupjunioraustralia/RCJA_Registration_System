@@ -65,7 +65,6 @@ class Team(CustomSaveDeleteModel):
 
     # *****Email methods*****
 
-
 class Student(models.Model):
     # Foreign keys
     team = models.ForeignKey(Team, verbose_name='Team', on_delete=models.CASCADE)

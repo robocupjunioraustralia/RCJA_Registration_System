@@ -7,7 +7,7 @@ from .forms import UserSignupForm, SchoolForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 
-from schools.models import SchoolAdministrator
+from .models import School, Campus, SchoolAdministrator
 
 def signup(request):
     if request.method == 'POST':
@@ -57,3 +57,16 @@ def createSchoolAJAX(request):
             },status=400)
     else:
         return HttpResponseForbidden()
+
+def setCurrentSchool(request, schoolID):
+    school = get_object_or_404(School, pk=schoolID)
+
+    # Check permissions
+    if not request.user.schooladministrator_set.filter(school=school).exists():
+        raise PermissionDenied("You do not have permission to view this school")
+
+    # Set current school on user
+    request.user.currentlySelectedSchool = school
+    request.user.save(update_fields=['currentlySelectedSchool'])
+    
+    return redirect('/')
