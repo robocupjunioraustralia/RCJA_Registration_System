@@ -61,6 +61,10 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         }
     
     # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation
+    # Prevent add because always created by signal
     # Reconsider in conjuction with signals
     def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
         return False

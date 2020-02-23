@@ -32,11 +32,17 @@ class InvoiceGlobalSettings(models.Model):
 
 class Invoice(models.Model):
     # Foreign keys
-    school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT)
-    event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT)
+    event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT, editable=False)
+
+    # User and school foreign keys
+    invoiceToUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT, editable=False)
+    school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True, editable=False)
+    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.CASCADE, null=True, blank=True, editable=False)
+
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
     # Fields
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)

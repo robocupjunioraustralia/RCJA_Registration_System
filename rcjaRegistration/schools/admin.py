@@ -42,6 +42,15 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
 
+@admin.register(Campus)
+class CampusAdmin(AdminPermissions, admin.ModelAdmin):
+    
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return {
+            'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
+
 @admin.register(SchoolAdministrator)
 class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
