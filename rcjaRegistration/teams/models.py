@@ -11,7 +11,7 @@ class Team(CustomSaveDeleteModel):
     # User and school foreign keys
     mentorUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
-    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.CASCADE, null=True, blank=True)
+    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)

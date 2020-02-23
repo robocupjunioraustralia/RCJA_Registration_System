@@ -37,7 +37,7 @@ class Invoice(models.Model):
     # User and school foreign keys
     invoiceToUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT, editable=False)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True, editable=False)
-    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.CASCADE, null=True, blank=True, editable=False)
+    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True, editable=False)
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
