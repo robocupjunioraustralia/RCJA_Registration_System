@@ -43,10 +43,14 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
 def editTeam(request, teamID):
     team = get_object_or_404(Team, pk=teamID)
     event = team.event
+
+    # Check permissions
     if event.registrationsCloseDate < datetime.datetime.now().date():
         raise PermissionDenied("Registrtaion has closed for this event!")
-    if team.school in request.user.mentor_set.all().values_list(flat=True):
+
+    if not request.user.mentor_set.filter(school=team.school).exists():
         raise PermissionDenied("You are not a mentor of this Team!")
+
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=True)
 
     if request.method == 'POST':
