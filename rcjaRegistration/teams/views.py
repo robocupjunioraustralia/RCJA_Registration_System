@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404,redirect
 from .models import Student,Team
-from django.core.exceptions import ValidationError,PermissionDenied
+from django.core.exceptions import ValidationError, PermissionDenied
 from .forms import TeamForm,StudentForm
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
@@ -35,7 +35,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
             return redirect('/')
 
     else:
-        form = TeamForm(event_id=eventID, userID=request.user.id, initial={'school':request.user.mentor_set.first().school})
+        form = TeamForm(event_id=eventID, userID=request.user.id, initial={'school':request.user.schooladministrator_set.first().school})
         formset = StudentInLineFormSet()
     return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event})
 
@@ -48,8 +48,8 @@ def editTeam(request, teamID):
     if event.registrationsCloseDate < datetime.datetime.now().date():
         raise PermissionDenied("Registrtaion has closed for this event!")
 
-    if not request.user.mentor_set.filter(school=team.school).exists():
-        raise PermissionDenied("You are not a mentor of this Team!")
+    if not request.user.schooladministrator_set.filter(school=team.school).exists():
+        raise PermissionDenied("You are not an administrator of this team")
 
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=True)
 
@@ -71,13 +71,13 @@ def editTeam(request, teamID):
 
 @login_required
 def deleteTeam(request): 
-    #validate mentor is mentor of the team
+    # validate schooladministrator is schooladministrator of the team
     if request.method == 'POST':
         team = get_object_or_404(Team,pk=request.POST["teamID"])
         if team.event.registrationsCloseDate < datetime.datetime.now().date():
             raise PermissionDenied("Registrtaion has closed for this event!")
-        if team.school in request.user.mentor_set.all().values_list(flat=True):
+        if team.school in request.user.schooladministrator_set.all().values_list(flat=True):
             team.delete()
             return HttpResponse(status=200)
         else:
-            raise PermissionDenied("You are not a mentor of this Team!")
+            raise PermissionDenied("You are not an administrator of this team")

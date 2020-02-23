@@ -10,12 +10,12 @@ admin.site.unregister(Group)
 
 # User admin
 
-class MentorInline(admin.TabularInline):
-    from schools.models import Mentor
-    model = Mentor
+class SchoolAdministratorInline(admin.TabularInline):
+    from schools.models import SchoolAdministrator
+    model = SchoolAdministrator
     extra = 0
-    verbose_name = "Mentor of"
-    verbose_name_plural = "Mentor of"
+    verbose_name = "School administrator of"
+    verbose_name_plural = "School administrator of"
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
@@ -78,5 +78,5 @@ class UserAdmin(DjangoUserAdmin):
         'mobileNumber',
     ]
     inlines = [
-        MentorInline,
+        SchoolAdministratorInline,
     ]

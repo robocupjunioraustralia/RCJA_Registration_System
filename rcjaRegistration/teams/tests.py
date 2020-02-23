@@ -1,8 +1,8 @@
 from django.test import TestCase
 from regions.models import State,Region
-from schools.models import School,Mentor
-from teams.models import Team,Student
-from events.models import Event,Division,Year
+from schools.models import School, SchoolAdministrator
+from teams.models import Team, Student
+from events.models import Event, Division, Year
 from users.models import User
 from django.urls import reverse
 
@@ -28,7 +28,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         state=obj.newState,
         region=obj.newRegion
     )
-    obj.mentor = Mentor.objects.create(
+    obj.schoolAdministrator = SchoolAdministrator.objects.create(
         school=obj.newSchool,
         user=obj.user
     )

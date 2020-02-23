@@ -1,6 +1,6 @@
 from django.test import TestCase
 from regions.models import State,Region
-from schools.models import School,Mentor
+from schools.models import School, SchoolAdministrator
 from teams.models import Team,Student
 from events.models import Event,Division,Year
 from users.models import User
@@ -30,7 +30,7 @@ def commonSetUp(obj):
         state=obj.newState,
         region=obj.newRegion
     )
-    obj.mentor = Mentor.objects.create(
+    obj.schoolAdministrator = SchoolAdministrator.objects.create(
         school=obj.newSchool,
         user=obj.user
     )

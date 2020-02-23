@@ -59,7 +59,7 @@ class School(CustomSaveDeleteModel):
 
     # *****Email methods*****
 
-class Mentor(CustomSaveDeleteModel):
+class SchoolAdministrator(CustomSaveDeleteModel):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.PROTECT)
@@ -70,7 +70,7 @@ class Mentor(CustomSaveDeleteModel):
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = 'Mentor'
+        verbose_name = 'School administrator'
         ordering = ['user']
 
     # *****Permissions*****

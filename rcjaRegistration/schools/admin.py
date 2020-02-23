@@ -42,8 +42,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
 
-@admin.register(Mentor)
-class MentorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+@admin.register(SchoolAdministrator)
+class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'school',

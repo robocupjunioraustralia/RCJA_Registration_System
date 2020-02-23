@@ -7,18 +7,18 @@ import datetime
 
 from .models import *
 
-# Need to check if mentor is None
+# Need to check if schooladministrator is None
 
 @login_required
 def index(request):
     # Events
-    openForRegistrationEvents = Event.objects.filter(registrationsOpenDate__lte=datetime.datetime.today(), registrationsCloseDate__gte=datetime.datetime.today()).exclude(team__school__mentor__user=request.user).order_by('startDate').distinct()
-    currentEvents = Event.objects.filter(endDate__gte=datetime.datetime.today(), team__school__mentor__user=request.user).distinct().order_by('startDate').distinct()
-    pastEvents = Event.objects.filter(endDate__lt=datetime.datetime.today(), team__school__mentor__user=request.user).order_by('-startDate').distinct()
+    openForRegistrationEvents = Event.objects.filter(registrationsOpenDate__lte=datetime.datetime.today(), registrationsCloseDate__gte=datetime.datetime.today()).exclude(team__school__schooladministrator__user=request.user).order_by('startDate').distinct()
+    currentEvents = Event.objects.filter(endDate__gte=datetime.datetime.today(), team__school__schooladministrator__user=request.user).distinct().order_by('startDate').distinct()
+    pastEvents = Event.objects.filter(endDate__lt=datetime.datetime.today(), team__school__schooladministrator__user=request.user).order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
-    invoices = Invoice.objects.filter(school__mentor__user=request.user)
+    invoices = Invoice.objects.filter(school__schooladministrator__user=request.user)
 
     context = {
         'openForRegistrationEvents': openForRegistrationEvents,
@@ -32,7 +32,7 @@ def index(request):
 def detail(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
     from teams.models import Team
-    teams = Team.objects.filter(school__mentor__user=request.user, event__pk=eventID).prefetch_related('student_set')
+    teams = Team.objects.filter(school__schooladministrator__user=request.user, event__pk=eventID).prefetch_related('student_set')
     context = {
         'event': event,
         'teams': teams,
@@ -44,7 +44,7 @@ def detail(request, eventID):
 def summary(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
     from teams.models import Team
-    teams = Team.objects.filter(school__mentor__user=request.user, event__pk=eventID).prefetch_related('student_set')
+    teams = Team.objects.filter(school__schooladministrator__user=request.user, event__pk=eventID).prefetch_related('student_set')
     context = {
         'event': event,
         'teams': teams,

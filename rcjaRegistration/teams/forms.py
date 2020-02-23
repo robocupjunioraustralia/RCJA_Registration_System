@@ -26,9 +26,10 @@ class TeamForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         from events.models import Division
         self.fields['division'].queryset = Division.objects.filter(event=eventID)
-        # Filter school to mentor's schools
+
+        # Filter school to school administrator's schools
         from schools.models import School
-        self.fields['school'].queryset = School.objects.filter(mentor__user=userID)
+        self.fields['school'].queryset = School.objects.filter(schooladministrator__user=userID)
 
     StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm)
 

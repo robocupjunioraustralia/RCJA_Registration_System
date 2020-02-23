@@ -7,7 +7,7 @@ from .forms import UserSignupForm, SchoolForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 
-from schools.models import Mentor
+from schools.models import SchoolAdministrator
 
 def signup(request):
     if request.method == 'POST':
@@ -20,8 +20,8 @@ def signup(request):
             user.set_password(form.cleaned_data["password"])
             user.save()
 
-            # Save mentor
-            Mentor.objects.create(user=user, school=form.cleaned_data['school'])
+            # Save school administrator
+            SchoolAdministrator.objects.create(user=user, school=form.cleaned_data['school'])
 
             # Login and redirect
             login(request, user)
