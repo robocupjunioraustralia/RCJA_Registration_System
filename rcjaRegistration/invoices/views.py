@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError, PermissionDenied
 
 import datetime
 
@@ -14,6 +14,10 @@ def invoice(request, invoiceID):
     invoice = get_object_or_404(Invoice, pk=invoiceID)
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
     enteredDivisions = Division.objects.filter(team__school__invoice=invoice)
+
+    # Check permissions
+    if not request.user.mentor_set.filter(school=invoice.school).exists():
+        raise PermissionDenied("You do not have permission to view this invoice")
 
     # Set invoiced date
     if invoice.invoicedDate is None:
