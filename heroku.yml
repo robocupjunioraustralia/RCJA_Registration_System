@@ -4,7 +4,7 @@ setup:
       as: DATABASE
 build:
   docker:
-    web: Dockerfile.production
+    web: Dockerfile
 release:
   image: web
   command:
