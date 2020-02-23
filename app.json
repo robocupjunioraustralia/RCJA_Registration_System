@@ -48,5 +48,10 @@
         "ALLOWED_HOSTS": "*"
       }
     }
+  },
+  "scripts": {
+    "dokku": {
+      "predeploy": "./postdeploy.sh"
+    }
   }
 }
