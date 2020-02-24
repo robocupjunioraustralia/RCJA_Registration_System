@@ -22,9 +22,12 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         'school':1,
         'mobileNumber':'123123123'
         }
-    validLoadCode = 200
-    validSubmitCode = 302
-    inValidCreateCode = 200
+    # validLoadCode = 200
+    # validSubmitCode = 302
+    # inValidCreateCode = 200
+    validLoadCode = 403 #no get requests to this url
+    validSubmitCode = 200
+    inValidCreateCode = 400
     def setUp(self):
         self.user = user = User.objects.create_user(email=self.username, password=self.password)
         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
