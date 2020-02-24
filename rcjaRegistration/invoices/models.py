@@ -35,7 +35,7 @@ class Invoice(models.Model):
     event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT, editable=False)
 
     # User and school foreign keys
-    invoiceToUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT, editable=False)
+    invoiceToUser = models.ForeignKey('users.User', verbose_name='Invoice to', on_delete=models.PROTECT, editable=False)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True, editable=False)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True, editable=False)
 

@@ -39,7 +39,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
             formset.save() 
             if 'add_text' in request.POST:
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
-            return redirect(f'/events/summary/{eventID}')
+            return redirect(reverse('events:summary', kwargs = {'eventID':event.id}))
 
     else:
         # Get default campus if only one campus for school

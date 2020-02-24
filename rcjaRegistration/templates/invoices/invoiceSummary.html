@@ -10,6 +10,7 @@
     <div>
         <table id = "invoiceTable" class = "ui celled table">
             <thead>
+                <th> Invoice </th>
                 <th> Event </th>
                 <th> Invoice to</th>
                 <th> School </th>
@@ -19,8 +20,15 @@
             <tbody>
                 {% for invoice in invoices %}
                     <tr id = "invoiceRow{{invoice.id}}">
-                        <td>{{invoice.event}}</td> 
-                        <td>{{invoice.invoiceToUser}}</td>
+                        <td><a href="{% url 'invoices:detail' invoice.id %}" target="_blank">View invoice</a></td>
+                        <td><a href="{% url 'events:summary' invoice.event.id %}">{{invoice.event}}</a></td> 
+                        <td>
+                            {{invoice.invoiceToUser.fullname_or_email}}
+                            {% if invoice.invoiceToUser != user %}
+                            <br>
+                            <a href="{% url 'invoices:setInvoiceTo' invoice.id %}"><button class = "ui primary button">Change to me</button></a>
+                            {% endif %}
+                        </td>
                         <td>{{invoice.school}}</td>
                         <td>{{invoice.campus}}</td>
                         <td>{{invoice.purchaseOrderNumber}}</td>
@@ -31,4 +39,10 @@
     </div>
     <br>
 </div>
+
+<script> 
+    $(document).ready( function () {
+        $('#invoiceTable').DataTable();
+    } );
+    </script>
 {% endblock %}
