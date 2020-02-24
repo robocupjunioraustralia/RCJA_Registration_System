@@ -22,7 +22,8 @@ def signup(request):
             user.save()
 
             # Save school administrator
-            SchoolAdministrator.objects.create(user=user, school=form.cleaned_data['school'])
+            if form.cleaned_data['school']:
+                SchoolAdministrator.objects.create(user=user, school=form.cleaned_data['school'])
 
             # Login and redirect
             login(request, user)

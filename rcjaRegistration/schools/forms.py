@@ -29,7 +29,7 @@ class UserSignupForm(ModelForm):
             self.fields[field].required = True
 
     # School fields
-    school = forms.ModelChoiceField(queryset=School.objects.filter(schooladministrator__isnull=True, team__isnull=True), label='School')
+    school = forms.ModelChoiceField(queryset=School.objects.filter(schooladministrator__isnull=True, team__isnull=True), label='School', required=False)
 
     def clean(self):
         # Check password
