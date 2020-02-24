@@ -1,0 +1,34 @@
+{% extends 'common/loggedInbase.html' %}
+
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Your Invoices</h1>
+    </div>
+    <br>
+    <div>
+        <table id = "invoiceTable" class = "ui celled table">
+            <thead>
+                <th> Event </th>
+                <th> Invoice to</th>
+                <th> School </th>
+                <th> Campus </th>
+                <th> PO Number</th>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                    <tr id = "invoiceRow{{invoice.id}}">
+                        <td>{{invoice.event}}</td> 
+                        <td>{{invoice.invoiceToUser}}</td>
+                        <td>{{invoice.school}}</td>
+                        <td>{{invoice.campus}}</td>
+                        <td>{{invoice.purchaseOrderNumber}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <br>
+</div>
+{% endblock %}

@@ -10,7 +10,17 @@ from .models import *
 from events.models import Division, Event
 
 @login_required
-def invoice(request, invoiceID):
+def summary(request):
+
+    context = {
+        'invoices': request.user.invoice_set.all()
+    }
+
+    return render(request, 'invoices/invoiceSummary.html', context)
+
+
+@login_required
+def detail(request, invoiceID):
     invoice = get_object_or_404(Invoice, pk=invoiceID)
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
     enteredDivisions = Division.objects.filter(team__school__invoice=invoice)
