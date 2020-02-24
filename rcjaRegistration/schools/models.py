@@ -21,6 +21,21 @@ class School(CustomSaveDeleteModel):
         verbose_name = 'School'
         ordering = ['name']
 
+    def clean(self):
+        errors = []
+
+        # Validate school not using name or abbreviation reserved for independent entries
+        if self.abbreviation.upper() == 'IND':
+            errors.append(ValidationError('IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.'))
+
+        # TODO: use regex to catch similar
+        if self.name.upper() == 'INDEPENDENT':
+            errors.append(ValidationError('Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
