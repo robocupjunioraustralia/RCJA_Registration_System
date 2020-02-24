@@ -6,6 +6,17 @@ from .models import *
 
 # Register your models here.
 
+class SchoolAdministratorInline(admin.TabularInline):
+    model = SchoolAdministrator
+    extra = 0
+    verbose_name = "Administrator"
+    verbose_name_plural = "Administrators"
+    fields = ['user', 'campus']
+
+class CampusInline(admin.TabularInline):
+    model = Campus
+    extra = 0
+
 @admin.register(School)
 class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -25,6 +36,10 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     autocomplete_fields = [
         'state'
+    ]
+    inlines = [
+        CampusInline,
+        SchoolAdministratorInline,
     ]
     actions = [
         'export_as_csv'
