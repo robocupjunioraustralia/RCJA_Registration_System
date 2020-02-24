@@ -5,7 +5,7 @@ from .forms import TeamForm,StudentForm
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
 from events.models import Event
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.urls import reverse
 import datetime
 
