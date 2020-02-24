@@ -32,7 +32,7 @@ class InvoiceGlobalSettings(models.Model):
     def __str__(self):
         return 'Invoice settings'
 
-class Invoice(models.Model):
+class Invoice(CustomSaveDeleteModel):
     # Foreign keys
     event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT, editable=False)
 
@@ -46,6 +46,7 @@ class Invoice(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
+    invoiceNumber = models.PositiveIntegerField('Invoice number', unique=True, editable=False)
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)
     notes = models.TextField('Notes', blank=True)
@@ -89,6 +90,13 @@ class Invoice(models.Model):
         return self.event.state
 
     # *****Save & Delete Methods*****
+
+    def preSave(self):
+        if self.invoiceNumber is None:
+            try:
+                self.invoiceNumber = Invoice.objects.latest('invoiceNumber').invoiceNumber + 1
+            except Invoice.DoesNotExist:
+                self.invoiceNumber = 1
 
     # *****Methods*****
 

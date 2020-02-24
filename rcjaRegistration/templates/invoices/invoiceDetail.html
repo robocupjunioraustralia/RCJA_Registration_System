@@ -48,7 +48,7 @@
             <li><strong>{{ invoice.invoiceToUser.get_full_name }}</strong></li>
             <li>{{ invoice.invoiceToUser.email }}</li>
             <li>Invoice Date: {{ invoice.invoicedDate }}</li>
-            <li>Invoice Number: </li>
+            <li>Invoice Number: {{ invoice.invoiceNumber }}</li>
             <li>{% if invoice.purchaseOrderNumber %}PO Number: {{ invoice.purchaseOrderNumber }} {% endif %}</li>
           </ul>
         </div>

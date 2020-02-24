@@ -21,6 +21,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceToUser',
         'school',
         'campus',
+        'invoiceNumber',
         'purchaseOrderNumber',
         'invoiceAmount',
         'amountPaid',
@@ -31,6 +32,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceToUser',
         'school',
         'campus',
+        'invoiceNumber',
         'invoiceAmount',
         'amountPaid',
         'amountDue'        
