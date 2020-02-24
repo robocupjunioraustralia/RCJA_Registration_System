@@ -6,15 +6,38 @@ from django.contrib.auth.decorators import login_required
 import datetime
 
 from .models import *
+from teams.models import Team
 
 # Need to check if schooladministrator is None
 
 @login_required
 def index(request):
     # Events
-    openForRegistrationEvents = Event.objects.filter(registrationsOpenDate__lte=datetime.datetime.today(), registrationsCloseDate__gte=datetime.datetime.today()).exclude(team__school__schooladministrator__user=request.user).order_by('startDate').distinct()
-    currentEvents = Event.objects.filter(endDate__gte=datetime.datetime.today(), team__school__schooladministrator__user=request.user).distinct().order_by('startDate').distinct()
-    pastEvents = Event.objects.filter(endDate__lt=datetime.datetime.today(), team__school__schooladministrator__user=request.user).order_by('-startDate').distinct()
+    # Get user event filtering attributes
+    if request.user.currentlySelectedSchool:
+        usersTeams = Team.objects.filter(school=request.user.currentlySelectedSchool)
+    else:
+        usersTeams = request.user.team_set.filter(school=None)
+
+    openForRegistrationEvents = Event.objects.filter(
+        registrationsOpenDate__lte=datetime.datetime.today(),
+        registrationsCloseDate__gte=datetime.datetime.today(),
+    ).exclude(
+        team__in=usersTeams,
+    ).order_by('startDate').distinct()
+
+    if not request.user.currentlySelectedSchool:
+        openForRegistrationEvents = openForRegistrationEvents.exclude()
+
+    currentEvents = Event.objects.filter(
+        endDate__gte=datetime.datetime.today(),
+        team__in=usersTeams,
+    ).distinct().order_by('startDate').distinct()
+
+    pastEvents = Event.objects.filter(
+        endDate__lt=datetime.datetime.today(),
+        team__in=usersTeams,
+    ).order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
@@ -31,7 +54,6 @@ def index(request):
 @login_required
 def detail(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
-    from teams.models import Team
     teams = Team.objects.filter(school__schooladministrator__user=request.user, event__pk=eventID).prefetch_related('student_set')
     context = {
         'event': event,
@@ -43,8 +65,15 @@ def detail(request, eventID):
 @login_required
 def summary(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
-    from teams.models import Team
-    teams = Team.objects.filter(school__schooladministrator__user=request.user, event__pk=eventID).prefetch_related('student_set')
+
+    # filter teams
+    if request.user.currentlySelectedSchool:
+        teams = Team.objects.filter(school=request.user.currentlySelectedSchool, event=event)
+    else:
+        teams = request.user.team_set.filter(event=event, school=None)
+    
+    teams = teams.prefetch_related('student_set')
+
     context = {
         'event': event,
         'teams': teams,
