@@ -1,6 +1,6 @@
 from django.test import TestCase
 from regions.models import State,Region
-from schools.models import School,Mentor
+from schools.models import School, SchoolAdministrator
 from teams.models import Team,Student
 from events.models import Event,Division,Year
 from users.models import User
@@ -30,7 +30,7 @@ def commonSetUp(obj):
         state=obj.newState,
         region=obj.newRegion
     )
-    obj.mentor = Mentor.objects.create(
+    obj.schoolAdministrator = SchoolAdministrator.objects.create(
         school=obj.newSchool,
         user=obj.user
     )
@@ -78,10 +78,10 @@ def commonSetUp(obj):
         directEnquiriesTo = obj.user     
     )
     obj.oldEventWithTeams.availableDivisions.add(obj.division)
-    obj.oldeventTeam = Team.objects.create(event=obj.oldEventWithTeams,division=obj.division,school=obj.newSchool,name='test')
+    obj.oldeventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
     obj.oldTeamStudent = Student(team=obj.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
     
-    obj.newEventTeam = Team.objects.create(event=obj.newEvent,division=obj.division,school=obj.newSchool,name='test new team')
+    obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
     login = obj.client.login(username=obj.username, password=obj.password) 

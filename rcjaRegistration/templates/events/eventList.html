@@ -15,6 +15,9 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
+        <h3>You are currently interacting as {{ user.currentlySelectedSchool.name|default:"independent" }}.</h3><br>
+    </div>
+    <div class="row">
         <h1>Invoices:</h1> 
         {% if invoices %}
             <div class="ui icon message">
