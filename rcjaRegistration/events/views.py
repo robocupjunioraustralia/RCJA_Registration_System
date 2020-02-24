@@ -44,6 +44,7 @@ def index(request):
     invoices = Invoice.objects.filter(school__schooladministrator__user=request.user)
 
     context = {
+        'user': request.user,
         'openForRegistrationEvents': openForRegistrationEvents,
         'currentEvents': currentEvents,
         'pastEvents': pastEvents,
