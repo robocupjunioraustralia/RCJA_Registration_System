@@ -78,6 +78,7 @@ class Campus(CustomSaveDeleteModel):
  
         # Check school change doesn't effect any attached administrators
         cleanDownstream(self,'schooladministrator_set', 'campus', errors)
+        cleanDownstream(self,'team_set', 'campus', errors)
     
         # Raise any errors
         if errors:
@@ -111,7 +112,7 @@ class Campus(CustomSaveDeleteModel):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.school}: {self.name}'
+        return f'{self.name}'
 
     # *****CSV export methods*****
 
@@ -134,6 +135,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
         ordering = ['user']
 
     def clean(self, cleanDownstreamObjects=True):
+        # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
             raise(ValidationError('Campus school must match school'))
 
@@ -159,6 +161,12 @@ class SchoolAdministrator(CustomSaveDeleteModel):
         return self.school.state
 
     # *****Save & Delete Methods*****
+
+    def postSave(self):
+        # Set currently selected school if not set
+        if self.user.currentlySelectedSchool is None:
+            self.user.currentlySelectedSchool = self.school
+            self.user.save(update_fields=['currentlySelectedSchool'])
 
     # *****Methods*****
 
