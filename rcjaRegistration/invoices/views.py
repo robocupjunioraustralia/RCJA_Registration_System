@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
 
+from django.http import JsonResponse
+from django.http import HttpResponseForbidden
 import datetime
 
 from .models import *
@@ -92,3 +94,24 @@ def setInvoiceTo(request, invoiceID):
     invoice.save(update_fields=['invoiceToUser'])
 
     return redirect(reverse('invoices:summary'))
+@login_required
+def editInvoicePOAJAX(request, invoiceID):
+    if request.method == 'POST':
+        invoice = get_object_or_404(Invoice, pk=invoiceID)
+
+        # Check permissions
+        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+            raise PermissionDenied("You do not have permission to view this invoice")
+        #slight hack, getting the object twice, .save wasn't working.
+        Invoice.objects.filter(id=invoiceID).update(purchaseOrderNumber=request.POST["PONumber"])
+        #invoice.save()
+        return JsonResponse({'id':invoiceID,'number':request.POST["PONumber"],'success':True})
+        #IF PO NUMBERS NEED AN ERROR RESPONSE
+        """
+            return JsonResponse({
+                'success': False,
+                'errors': dict(form.errors.items())
+            },status=400)
+        """
+    else:
+        return HttpResponseForbidden()

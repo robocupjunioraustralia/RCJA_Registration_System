@@ -33,7 +33,7 @@
                         </td>
                         <td>{{invoice.school}}</td>
                         <td>{{invoice.campus}}</td>
-                        <td>{{invoice.purchaseOrderNumber}}</td>
+                        <td ><span id = "inv-po-{{invoice.id}}">{{invoice.purchaseOrderNumber}} </span>  <button onclick = showModal({{invoice.id}}) style = "margin-left:2rem;" class = "ui button primary"> Set/Edit PO </button></td>
                         <td>{{invoice.amountDue}}</td>
                         <td>{{invoice.invoiceAmount}}</td>
                     </tr>
@@ -43,6 +43,81 @@
     </div>
     <br>
 </div>
+
+
+
+<div class="ui modal">
+    <div class="header">
+        Set/Edit Invoice PO Number
+    </div>
+    <div class="image content">
+        <div class="description" id ="POContent">
+          <div id = "POErrors"></div>
+          <div class="ui header">You are setting a purchase order number.</div>
+          <form class="ui form" id = "POCreation">
+              {% csrf_token %}
+            <input type = "hidden" id = "invoiceNumber" name = "invoiceNumber"> </input>
+            <div class="field">
+                <label>Number</label>
+                <input name = "PONumber" class = "ui input"> </input>
+            </div>
+          </form>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">
+        Cancel
+        </div>
+
+        <button id = "confirm" class="ui positive right labeled icon button">
+        Set Number
+          <i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+    
+    
+<script> 
+    function showModal(invoiceNumber) {
+        $('#invoiceNumber').val(invoiceNumber)
+        $('.ui.modal').modal({
+        closable  : false,
+        onDeny    : () => true,
+        onApprove : () => setPONum(invoiceNumber)
+        })
+.modal('show'); 
+    }
+
+    function setPONum(invoiceNumber) {
+        $.ajax({
+            type: "POST",
+            url: invoiceNumber + "/setPONumber",
+            data: $("#POCreation").serialize()
+        })
+            .done( (data) => {
+                console.log(data)
+                $("#inv-po-"+invoiceNumber).html(data.number)
+
+                $('.ui.modal').modal('hide');
+            } )
+            .fail( (data) => {
+                console.error(data.responseJSON)
+                $("#POErrors").empty()
+                for(key in data.responseJSON.errors) {
+                data.responseJSON.errors[key].map( (error) => {
+                    $("#POErrors").prepend("<div class = 'ui message' >" + capitalize(key) + ": " + error + " </div>")
+
+                })
+                }
+            })
+            return false //needed to stop modal from closing
+        }
+            const capitalize = (s) => {
+              if (typeof s !== 'string') return ''
+              return s.charAt(0).toUpperCase() + s.slice(1)
+            }
+</script>
+
 
 <script> 
     $(document).ready( function () {
