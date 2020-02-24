@@ -76,10 +76,10 @@ def commonSetUp(obj): #copied from events, todo refactor
         directEnquiriesTo = obj.user     
     )
     obj.oldEventWithTeams.availableDivisions.add(obj.division)
-    obj.oldEventTeam = Team.objects.create(event=obj.oldEventWithTeams,division=obj.division,school=obj.newSchool,name='test')
+    obj.oldEventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
     obj.oldTeamStudent = Student(team=obj.oldEventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
     
-    obj.newEventTeam = Team.objects.create(event=obj.newEvent,division=obj.division,school=obj.newSchool,name='test new team')
+    obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='thisisastringfortesting',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
     login = obj.client.login(username=obj.username, password=obj.password) 
