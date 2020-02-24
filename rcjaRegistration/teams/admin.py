@@ -14,10 +14,12 @@ class StudentInline(admin.TabularInline):
 @admin.register(Team)
 class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
+        'name',
         'event',
         'division',
+        'mentorUser',
         'school',
-        'name'
+        'campus'
     ]
     inlines = [
         StudentInline
