@@ -8,58 +8,59 @@ from django.test import Client
 from users.models import User
 
 # View Tests
-# class TestSchoolCreate(TestCase): #TODO update to use new auth model
-#     reverseString = 'schools:createSchool'
-#     email = 'user@user.com'
-#     username = email
-#     password = 'password'
-#     validPayload = {'email':email,
-#         'password':password,
-#         'passwordConfirm':password,
-#         'first_name':'test',
-#         'lastName':'test',
-#         'school':1,
-#         'mobileNumber':'123123123'
-#         }
-#     validLoadCode = 200
-#     validSubmitCode = 302
-#     inValidCreateCode = 200
-#     def setUp(self):
-#         self.user = user = User.objects.create_user(email=self.username, password=self.password)
-#         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
-#         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
-#         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
-#         self.validPayload["school"] = self.newSchool.id
-
-#     def testValidPageLoad(self):
-#         self.client.login(username=self.username, password=self.password)
-#         response = self.client.get(reverse(self.reverseString))
-#         self.assertEqual(response.status_code, self.validLoadCode)    
-    
-#     def testValidSchoolCreation(self):
-#         self.client.login(username=self.username, password=self.password)
-#         payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
-#         response = self.client.post(reverse(self.reverseString),data=payload)
-#         self.assertEqual(response.status_code,self.validSubmitCode)
-#         self.assertEqual(School.objects.all().count(), 2)
-#         self.assertEqual(School.objects.all()
-#                          [1].name, 'test')
-
-#     def testInvalidSchoolCreation(self):
-#         self.client.login(username=self.username, password=self.password)
-#         payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
-#         self.client.post(reverse(self.reverseString),data=payload)
-#         response = self.client.post(reverse(self.reverseString),data=payload)
-
-#         self.assertEqual(response.status_code,self.inValidCreateCode)
-#         self.assertIn(b'School with this Abbreviation already exists.',response.content)
-#         self.assertIn(b'School with this Name already exists.',response.content)
-
-class TestSchoolAJAXCreate(TestSchoolCreate):
+class TestSchoolCreate(TestCase): #TODO update to use new auth model
+    # reverseString = 'schools:createSchool'
     reverseString = 'schools:createAJAX'
-    validLoadCode = 403 #no get requests to this url
-    validSubmitCode = 200
-    inValidCreateCode = 400
+    email = 'user@user.com'
+    username = email
+    password = 'password'
+    validPayload = {'email':email,
+        'password':password,
+        'passwordConfirm':password,
+        'first_name':'test',
+        'lastName':'test',
+        'school':1,
+        'mobileNumber':'123123123'
+        }
+    validLoadCode = 200
+    validSubmitCode = 302
+    inValidCreateCode = 200
+    def setUp(self):
+        self.user = user = User.objects.create_user(email=self.username, password=self.password)
+        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
+        self.newRegion = Region.objects.create(name='Test Region',description='test desc')
+        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
+        self.validPayload["school"] = self.newSchool.id
+
+    def testValidPageLoad(self):
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.get(reverse(self.reverseString))
+        self.assertEqual(response.status_code, self.validLoadCode)    
+    
+    def testValidSchoolCreation(self):
+        self.client.login(username=self.username, password=self.password)
+        payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
+        response = self.client.post(reverse(self.reverseString),data=payload)
+        self.assertEqual(response.status_code,self.validSubmitCode)
+        self.assertEqual(School.objects.all().count(), 2)
+        self.assertEqual(School.objects.all()
+                         [1].name, 'test')
+
+    def testInvalidSchoolCreation(self):
+        self.client.login(username=self.username, password=self.password)
+        payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
+        self.client.post(reverse(self.reverseString),data=payload)
+        response = self.client.post(reverse(self.reverseString),data=payload)
+
+        self.assertEqual(response.status_code,self.inValidCreateCode)
+        self.assertIn(b'School with this Abbreviation already exists.',response.content)
+        self.assertIn(b'School with this Name already exists.',response.content)
+
+# class TestSchoolAJAXCreate(TestSchoolCreate):
+#     reverseString = 'schools:createAJAX'
+#     validLoadCode = 403 #no get requests to this url
+#     validSubmitCode = 200
+#     inValidCreateCode = 400
 
 class AuthViewTests(TestCase):
     email = 'user@user.com'
