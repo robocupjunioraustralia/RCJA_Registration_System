@@ -1,5 +1,5 @@
 from django import forms
-from .models import Student,Team
+from .models import Student, Team
 from django.forms import modelformset_factory, inlineformset_factory
 from django.core.exceptions import ValidationError
 import datetime
@@ -8,6 +8,7 @@ class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = ['team','firstName','lastName','yearLevel','gender','birthday']
+
     birthday = forms.DateField( #coerce type to yyyy-mm-dd so html5 date will prefill correctly
     #this does not affect the display of the field to the user, as that is localised on the clientside
         widget=forms.DateInput(format='%Y-%m-%d'),
@@ -17,24 +18,29 @@ class StudentForm(forms.ModelForm):
 class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division','name','school']
+        fields= ['division', 'name', 'campus']
 
     # Override init to filter division fk to available divisions
     def __init__(self, *args, **kwargs):
+        # Pop custom fields before init
         eventID = kwargs.pop('event_id', None)
-        userID = kwargs.pop('userID', None)
+        user = kwargs.pop('user', None)
+
         super().__init__(*args, **kwargs)
+
+        # Filter division to available divisions
         from events.models import Division
         self.fields['division'].queryset = Division.objects.filter(event=eventID)
 
-        # Filter school to school administrator's schools
-        from schools.models import School
-        self.fields['school'].queryset = School.objects.filter(schooladministrator__user=userID)
+        # Filter campus to user's campuses
+        from schools.models import Campus
+        self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
 
     StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm)
 
     #NOTE: this is a custom clean method to enforce validation on the unique_together constraint
     #This is required because we need to add the event_id manually from the url
+    # TODO: Refactor this
     def clean(self): 
         cleaned_data = self.cleaned_data
 
