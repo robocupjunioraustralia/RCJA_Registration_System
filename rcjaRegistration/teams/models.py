@@ -54,10 +54,13 @@ class Team(CustomSaveDeleteModel):
 
     # *****Save & Delete Methods*****
 
-    def preSave(self):
+    def postSave(self):
         # Create invoice
         from invoices.models import Invoice
-        Invoice.objects.get_or_create(school=self.school, event=self.event)
+        if self.school:
+            Invoice.objects.get_or_create(school=self.school, event=self.event, defaults={'invoiceToUser': self.mentorUser})
+        else:
+            Invoice.objects.get_or_create(invoiceToUser=self.mentorUser, event=self.event)
 
     # *****Methods*****
 
