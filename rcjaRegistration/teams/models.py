@@ -26,6 +26,11 @@ class Team(CustomSaveDeleteModel):
         unique_together = ('event', 'name')
         ordering = ['event', 'school', 'division', 'name']
 
+    def clean(self, cleanDownstreamObjects=True):
+        # Check campus school matches school on this object
+        if self.campus and self.campus.school != self.school:
+            raise(ValidationError('Campus school must match school'))
+
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
