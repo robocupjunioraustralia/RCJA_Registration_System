@@ -83,16 +83,19 @@ def detail(request, invoiceID):
 
 @login_required
 def setInvoiceTo(request, invoiceID):
-    invoice = get_object_or_404(Invoice, pk=invoiceID)
+    if request.method == 'POST':
+        invoice = get_object_or_404(Invoice, pk=invoiceID)
 
-    # Check permissions
-    if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
-        raise PermissionDenied("You do not have permission to view this invoice")
-    
-    invoice.invoiceToUser = request.user
-    invoice.save(update_fields=['invoiceToUser'])
+        # Check permissions
+        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+            raise PermissionDenied("You do not have permission to view this invoice")
+        
+        invoice.invoiceToUser = request.user
+        invoice.save(update_fields=['invoiceToUser'])
 
-    return redirect(reverse('invoices:summary'))
+        return JsonResponse({'id':invoiceID, 'invoiceTo':request.user.fullname_or_email(), 'success':True})
+    else:
+        return HttpResponseForbidden()
 
 @login_required
 def editInvoicePOAJAX(request, invoiceID):

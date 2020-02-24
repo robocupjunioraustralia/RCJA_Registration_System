@@ -116,10 +116,21 @@
             })
             return false //needed to stop modal from closing
         }
-            const capitalize = (s) => {
-              if (typeof s !== 'string') return ''
-              return s.charAt(0).toUpperCase() + s.slice(1)
-            }
+        const capitalize = (s) => {
+            if (typeof s !== 'string') return ''
+            return s.charAt(0).toUpperCase() + s.slice(1)
+        }
+        function setInvoiceTo(invoiceNumber) {
+            $.ajax({
+                type: "POST",
+                url: invoiceNumber + "/setInvoiceTo",
+                data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+            })
+            .done( (data) => {
+                $("#invoice-to-"+invoiceNumber).html(data.invoiceTo)
+                $("#invoice-to-button-"+invoiceNumber).html("")
+            })
+        }
 </script>
 
 
