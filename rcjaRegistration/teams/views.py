@@ -78,7 +78,7 @@ def editTeam(request, teamID):
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=True)
 
     if request.method == 'POST':
-        formset = StudentInLineFormSet(request.POST,instance=team)
+        formset = StudentInLineFormSet(request.POST, instance=team)
         form = TeamForm(request.POST,instance=team, event_id=event.id, user=request.user)
         form.event_id = event.id
         form.team_id = team.id

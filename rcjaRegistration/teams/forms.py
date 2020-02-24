@@ -36,7 +36,7 @@ class TeamForm(forms.ModelForm):
         from schools.models import Campus
         self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
 
-    StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm)
+    StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm) # Is this needed?
 
     #NOTE: this is a custom clean method to enforce validation on the unique_together constraint
     #This is required because we need to add the event_id manually from the url
