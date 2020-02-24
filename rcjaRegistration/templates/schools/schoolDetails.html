@@ -1,0 +1,155 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> School details </title>
+
+<style>
+    .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile six wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    <h1> School details </h1>
+                    {% if form.errors %}
+
+                    <!-- Error messaging -->
+                    <div class="ui message left-aligned-text">
+                        <div class="">
+                            <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                            {{ form.non_field_errors }}
+
+                            <ul>
+                                {% for field in form %}
+                                {% if field.errors %}
+                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                {% endfor %}
+
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- /Error messaging -->
+                    {% endif %}
+
+                    <form method="post" class="ui form">
+                        {% csrf_token %}
+                        {{ campusFormset.management_form }}
+                        {{ schoolAdministratorFormset.management_form }}
+
+                        <div class="field">
+                            <label>Name: </label>
+                            {{form.name}}
+                        </div>
+                        <div class="field">
+                            <label> Abbreviation: </label>
+                            {{form.abbreviation}}
+                        </div>
+                        <div class="field">
+                            <label>State: </label>
+                            {{form.state}}
+                        </div>
+                        <div class="field">
+                            <label> Region: </label>
+                            {{form.region}}
+                        </div>
+
+                        <!-- Campus -->
+                        <h1>Campuses</h1>
+                        {% for campusForm in campusFormset %}
+                        {{campusForm.id|attr:"type:hidden"}}
+                        <div class="ui segment">
+                            <h4 class="ui dividing header">Campus {{forloop.counter}}</h4>
+                            {% if campusForm.errors %}
+                            <div class="ui message left-aligned-text">
+                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ campusForm.non_field_errors }}
+                                <ul>
+                                    {% for field in campusForm %}
+                                    {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                            <div class="two fields">
+                                <div class="field">
+                                    <label> {{campusForm.name.label_tag}}</label>
+                                    {{campusForm.name}}
+                                </div>
+                                {% if campusFormset.can_delete %}
+                                <div class="field">
+                                    <label> Delete campus</label>
+                                    {{campusForm.DELETE}} <span>This will delete this campus.</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Administrators -->
+                        <h1>Administrators</h1>
+                        {% for administratorForm in schoolAdministratorFormset %}
+                        {{administratorForm.id|attr:"type:hidden"}}
+                        <div class="ui segment">
+                            <h4 class="ui dividing header">Administrator {{forloop.counter}}</h4>
+                            {% if administratorForm.errors %}
+                            <div class="ui message left-aligned-text">
+                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ administratorForm.non_field_errors }}
+                                <ul>
+                                    {% for field in administratorForm %}
+                                    {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                            <div class="three fields">
+                                <div class="field">
+                                    <label> {{administratorForm.user.label_tag}}</label>
+                                    {{administratorForm.user}}
+                                </div>
+                                <div class="field">
+                                        <label> {{administratorForm.campus.label_tag}}</label>
+                                        {{administratorForm.campus}}
+                                    </div>
+                                {% if schoolAdministratorFormset.can_delete %}
+                                <div class="field">
+                                    <label> Delete administrator</label>
+                                    {{administratorForm.DELETE}} <span>This will remove this user as an administrator for this school.</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Add administrator email field. Part of SchoolForm but place at end for aesthetics. -->
+                        <div class="field">
+                            <h3>Add new administrator: </h3>
+                            <span>To add a new administrator for this school enter their email.</span>
+                            {{form.addAdministratorEmail}}
+                        </div>
+
+                        <input class="primary ui button" type="submit" value="Save" />
+                    </form>
+                    <a href="/"><button class="ui button negative">Cancel</button></a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock %}

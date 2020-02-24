@@ -3,7 +3,7 @@
 
 {% block head %}
 
-<title> Profile </title>
+<title> My details </title>
 
 <style>
  .left-aligned-text {
@@ -19,7 +19,7 @@
     <div class="ui center aligned grid ">
       <div class = "twelve wide mobile six wide computer column ui">
         <div class = "form form-group left-aligned-text">
-        <h1> Edit Profile </h1>
+        <h1> My details </h1>
             {% if form.errors %}
             
             <!-- Error messaging -->
@@ -41,10 +41,7 @@
             {% endif %}
           
             <form method="post" class = "ui form">
-              {% csrf_token %}
-                
-              <h4 class="ui dividing header">Details</h4>
-               
+              {% csrf_token %}               
               <div class="two fields">
                 <div class = "field">
                   <label>First Name: </label>
@@ -75,7 +72,7 @@
               </div>
               <input class="primary ui button" type="submit" value="Save" />
             </form>
-            <a href ="/"><button class = "ui button negative"> Cancel</button></a>
+            <a href ="/"><button class = "ui button negative">Cancel</button></a>
 
           </div>
         </div>
@@ -83,7 +80,5 @@
     </div>
   </div>
 </div>
-
-
   
 {% endblock %}

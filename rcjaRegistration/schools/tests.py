@@ -9,7 +9,8 @@ from users.models import User
 
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
-    reverseString = 'schools:createSchool'
+    # reverseString = 'schools:createSchool'
+    reverseString = 'schools:createAJAX'
     email = 'user@user.com'
     username = email
     password = 'password'
@@ -21,9 +22,12 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         'school':1,
         'mobileNumber':'123123123'
         }
-    validLoadCode = 200
-    validSubmitCode = 302
-    inValidCreateCode = 200
+    # validLoadCode = 200
+    # validSubmitCode = 302
+    # inValidCreateCode = 200
+    validLoadCode = 403 #no get requests to this url
+    validSubmitCode = 200
+    inValidCreateCode = 400
     def setUp(self):
         self.user = user = User.objects.create_user(email=self.username, password=self.password)
         self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
@@ -55,11 +59,11 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         self.assertIn(b'School with this Abbreviation already exists.',response.content)
         self.assertIn(b'School with this Name already exists.',response.content)
 
-class TestSchoolAJAXCreate(TestSchoolCreate):
-    reverseString = 'schools:createAJAX'
-    validLoadCode = 403 #no get requests to this url
-    validSubmitCode = 200
-    inValidCreateCode = 400
+# class TestSchoolAJAXCreate(TestSchoolCreate):
+#     reverseString = 'schools:createAJAX'
+#     validLoadCode = 403 #no get requests to this url
+#     validSubmitCode = 200
+#     inValidCreateCode = 400
 
 class AuthViewTests(TestCase):
     email = 'user@user.com'

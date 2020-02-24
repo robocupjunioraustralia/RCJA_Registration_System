@@ -136,7 +136,7 @@ class Campus(CustomSaveDeleteModel):
 class SchoolAdministrator(CustomSaveDeleteModel):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
-    campus = models.ForeignKey(Campus, verbose_name='Campus', on_delete=models.CASCADE, null=True, blank=True)
+    campus = models.ForeignKey(Campus, verbose_name='Campus', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.PROTECT)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
