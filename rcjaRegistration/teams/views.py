@@ -1,11 +1,11 @@
-from django.shortcuts import render, get_object_or_404,redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Student,Team
 from django.core.exceptions import ValidationError, PermissionDenied
 from .forms import TeamForm,StudentForm
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
 from events.models import Event
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.urls import reverse
 import datetime
 
@@ -39,7 +39,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
             formset.save() 
             if 'add_text' in request.POST:
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
-            return redirect(f'/events/summary/{eventID}')
+            return redirect(reverse('events:summary', kwargs = {'eventID':event.id}))
 
     else:
         # Get default campus if only one campus for school
@@ -100,10 +100,10 @@ def editTeam(request, teamID):
     return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event,'team':team})
 
 @login_required
-def deleteTeam(request): 
+def deleteTeam(request, teamID): 
     # validate schooladministrator is schooladministrator of the team
-    if request.method == 'POST':
-        team = get_object_or_404(Team, pk=request.POST["teamID"])
+    if request.method == 'DELETE':
+        team = get_object_or_404(Team, pk=teamID)
 
         # Check registrations open
         if team.event.registrationsCloseDate < datetime.datetime.now().date():
@@ -123,3 +123,4 @@ def deleteTeam(request):
         # Delete team
         team.delete()
         return HttpResponse(status=200)
+    return HttpResponseNotFound('Can only do delete methods on this page')

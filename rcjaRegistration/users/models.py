@@ -74,6 +74,9 @@ class User(AbstractUser):
 
     # *****Get Methods*****
 
+    def fullname_or_email(self):
+        return self.get_full_name() or self.email
+
     # *****CSV export methods*****
 
     # *****Email methods*****

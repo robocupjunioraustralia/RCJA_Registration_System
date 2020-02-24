@@ -41,13 +41,16 @@ def index(request):
 
     # Invoices
     from invoices.models import Invoice
-    invoices = Invoice.objects.filter(school__schooladministrator__user=request.user)
+    invoices = Invoice.objects.filter(Q(school__schooladministrator__user=request.user) | Q(invoiceToUser=request.user))
+
+    outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDue() > 0])
 
     context = {
         'user': request.user,
         'openForRegistrationEvents': openForRegistrationEvents,
         'currentEvents': currentEvents,
         'pastEvents': pastEvents,
+        'outstandingInvoices': outstandingInvoices,
         'invoices': invoices
     }
     return render(request, 'events/eventList.html', context)

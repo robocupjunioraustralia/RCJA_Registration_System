@@ -19,14 +19,14 @@
     </div>
     <div class="row">
         <h1>Invoices:</h1> 
-        {% if invoices %}
+        {% if outstandingInvoices %}
             <div class="ui icon message">
             <i class="ui dollar icon"></i>
             <div class="content">
               <div class="header">
                 Invoices
               </div>
-               <a href = "{% url 'invoices:detail' invoices.first.id %}" target="_blank"> <span>You have {{ invoices.count }} invoices requiring your attention.</span> </a>
+               <a href = "{% url 'invoices:summary' %}"> <span>There are {{ outstandingInvoices }} invoices requiring your attention.</span> </a>
             </div>
         </div>  
         {% else %}

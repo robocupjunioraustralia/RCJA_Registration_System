@@ -1,0 +1,52 @@
+{% extends 'common/loggedInbase.html' %}
+
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Your Invoices</h1>
+    </div>
+    <br>
+    <div>
+        <table id = "invoiceTable" class = "ui celled table">
+            <thead>
+                <th> Invoice </th>
+                <th> Event </th>
+                <th> Invoice to</th>
+                <th> School </th>
+                <th> Campus </th>
+                <th> PO Number </th>
+                <th> Amount due </th>
+                <th> Total </th>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                    <tr id = "invoiceRow{{invoice.id}}">
+                        <td><a href="{% url 'invoices:detail' invoice.id %}" target="_blank">View invoice</a></td>
+                        <td><a href="{% url 'events:summary' invoice.event.id %}">{{invoice.event}}</a></td> 
+                        <td>
+                            {{invoice.invoiceToUser.fullname_or_email}}
+                            {% if invoice.invoiceToUser != user %}
+                            <br>
+                            <a href="{% url 'invoices:setInvoiceTo' invoice.id %}"><button class = "ui primary button">Change to me</button></a>
+                            {% endif %}
+                        </td>
+                        <td>{{invoice.school}}</td>
+                        <td>{{invoice.campus}}</td>
+                        <td>{{invoice.purchaseOrderNumber}}</td>
+                        <td>{{invoice.amountDue}}</td>
+                        <td>{{invoice.invoiceAmount}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <br>
+</div>
+
+<script> 
+    $(document).ready( function () {
+        $('#invoiceTable').DataTable();
+    } );
+    </script>
+{% endblock %}

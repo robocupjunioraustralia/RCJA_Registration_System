@@ -48,7 +48,7 @@
             <i class="user icon"></i>
             My Students
         </a>        -->
-        <a class="item" href="{% url 'events:loggedInConstruction' %}">
+        <a class="item" href="{% url 'invoices:summary' %}">
             <i class="credit card icon"></i>
             My Invoices
         </a>   
@@ -61,11 +61,7 @@
         <div class="vertical menu item" >
             <i class="user circle icon"></i>
             <span style="width:3.5rem;overflow: hidden; text-overflow: ellipsis;">
-            {% if user.get_full_name %} 
-                {{ user.get_full_name }}
-                {% else %}
-                {{user.email}}
-            {% endif %}
+            {{ user.fullname_or_email }}
             </span>
                 <i class="dropdown icon"></i>
                 <div class="menu">
@@ -99,7 +95,7 @@
                 <i class="user icon"></i>
                 My Students
             </a>        -->
-            <a class="item" href="{% url 'events:loggedInConstruction' %}">
+            <a class="item" href="{% url 'invoices:summary' %}">
                 <i class="credit card icon"></i>
                 My Invoices
             </a>                          
@@ -131,11 +127,7 @@
             <div class="ui dropdown simple item" >
                 <i class="user circle icon"></i>
                 <span style="width:3.5rem; overflow: hidden; text-overflow: ellipsis;">
-                {% if user.get_full_name %} 
-                    {{ user.get_full_name }}
-                    {% else %}
-                    {{user.email}}
-                {% endif %}
+                {{ user.fullname_or_email }}
                 </span>
                     <i class="dropdown icon"></i>
                     <div class="menu">

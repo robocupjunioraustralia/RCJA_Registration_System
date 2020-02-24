@@ -60,7 +60,7 @@ class Team(CustomSaveDeleteModel):
         if self.school:
             Invoice.objects.get_or_create(school=self.school, event=self.event, defaults={'invoiceToUser': self.mentorUser})
         else:
-            Invoice.objects.get_or_create(invoiceToUser=self.mentorUser, event=self.event)
+            Invoice.objects.get_or_create(invoiceToUser=self.mentorUser, event=self.event, school=None)
 
     # *****Methods*****
 
