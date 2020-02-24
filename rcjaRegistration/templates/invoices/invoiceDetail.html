@@ -1,25 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>CodePen - Invoice Template</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
-<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css'><link rel="stylesheet" href="./style.css">
+  <title>Invoice - {{ invoice.event }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css'>
+  <link rel="stylesheet" href="./style.css">
 
 </head>
+
 <body>
-<!-- partial:index.partial.html -->
-<div class="container invoice">
-  <div class="invoice-header">
-    <div class="ui left aligned grid">
-      <div class="row">
-        <div class="left floated left aligned six wide column">
-          <div class="ui">
-            <h1 class = "ui header pageTitle">Invoice <small class = "ui sub header">With Credit</small></h1>
-            <h4 class="ui sub header invDetails">PO Number: {{ invoice.purchaseOrderNumber }} | Date: {{ invoice.invoicedDate }} </h4>
+  <!-- partial:index.partial.html -->
+  <div class="container invoice">
+    <div class="invoice-header">
+      <div class="ui left aligned grid">
+        <div class="row">
+          <div class="left floated left aligned six wide column">
+            <div class="ui">
+              <h1 class="ui header pageTitle">Tax Invoice <small class="ui sub header">{{ invoice.event }}</small></h1>
+              <h3 class="ui sub header invDetails">Date: {{ invoice.invoicedDate }}{% if invoice.purchaseOrderNumber %} | Purchase Order Number: {{ invoice.purchaseOrderNumber }} {% endif %}</h3>
+            </div>
           </div>
-        </div>
-        <!-- <div class="right floated left aligned six wide column">
+          <!-- <div class="right floated left aligned six wide column">
           <div class="ui">
             <div class="column two wide right floated">
               <img class="logo" src="https://scontent.fmel5-1.fna.fbcdn.net/v/t1.0-9/10358691_1595827163984651_6845505980791568353_n.png?_nc_cat=109&_nc_ohc=We4wwT6M2Q0AX8qY8-b&_nc_ht=scontent.fmel5-1.fna&oh=69bd30fc152063c470afd928919c8734&oe=5E94664A" />
@@ -30,180 +34,192 @@
             </div>
           </div>
         </div> -->
+        </div>
       </div>
     </div>
-  </div>
-  <div class="ui segment cards">
-    <div class="ui card">
-      <div class="content">
-        <div class="header">Company Details</div>
-      </div>
-      <div class="content">
-        <ul>
+    <div class="ui segment cards">
+      <div class="ui card">
+        <div class="content">
+          <div class="header">Tax invoice from</div>
+        </div>
+        <div class="content">
+          <ul>
             <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
-            {{ invoiceSettings.invoiceFromDetails }}
-        </ul>
+            {{ invoiceSettings.invoiceFromDetails|escape|linebreaks }}
+          </ul>
+        </div>
       </div>
-    </div>
-    <div class="ui card customercard">
-      <div class="content">
-        <div class="header">Customer Details</div>
+      <div class="ui card">
+        <div class="content">
+          <div class="header">Tax invoice to</div>
+        </div>
+        <div class="content">
+          <ul>
+            <li><strong>{{ invoice.school.name }}</strong></li>
+            <li><strong>{{ invoice.invoiceToUser.get_full_name }}</strong></li>
+            <li>{{ invoice.invoiceToUser.email }}</li>
+          </ul>
+        </div>
       </div>
-      <div class="content">
-        <ul>
-          <li> <strong> Name: RCJA </strong> </li>
-          <li><strong> Address: </strong> 1 Unknown Street VIC</li>
-          <li><strong> Phone: </strong> (+61)404123123</li>
-          <li><strong> Email: </strong> admin@rcja.com</li>
-          <li><strong> Contact: </strong> John Smith</li>
-        </ul>
-      </div>
-    </div>
 
-    <div class="ui segment itemscard">
-      <div class="content">
-        <table class="ui celled table">
-          <thead>
-            <tr>
-              <th>Item / Details</th>
-              <th class="text-center colfix">Unit cost</th>
-              <th class="text-center colfix">Number teams</th>
-              <th class="text-center colfix">GST</th>
-              <th class="text-center colfix">Total (excl GST)</th>
-              <th class="text-center colfix">Total (incl GST)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for enteredDivision in enteredDivisions %}
-            <tr id="divisionRom{{enteredDivision.id}}">
-              <td>
-                {{ enteredDivision.name }}
-                <!-- <br>
+      <div class="ui segment itemscard">
+        <div class="content">
+          <table class="ui celled table">
+            <thead>
+              <tr>
+                <th>Division</th>
+                <th class="text-center colfix">Unit cost</th>
+                <th class="text-center colfix">Number teams</th>
+                <th class="text-center colfix">Total (excl GST)</th>
+                <th class="text-center colfix">GST</th>
+                <th class="text-center colfix">Total (incl GST)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for division in divisionDetails %}
+              <tr id="divisionRom{{division.id}}">
+                <td>
+                  {{ division.division.name }}
+                  <!-- <br>
                 <small class="text-muted">We can put more text here but I doubt we want to</small> -->
-              </td>
-              <td class="text-right">
-                <span class="mono">{{ invoice.event.entryFee }}</span>
-              </td>
-              <td class="text-right">
-                <span class="mono">To do</span>
-              </td>
-              <td class="text-right">
-                <span class="mono">To do</span>
-              </td>
-              <td class="text-right">
-                  <span class="mono">To do</span>
-              </td>
-              <td class="text-right">
-                <strong class="mono">And this</strong>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-         <tfoot class="full-width">
-    <tr>
-      <th> Total: </th>
-      <th colspan="3"></th>
-      <th colspan = "1"> $800 </th>
-      <th colspan = "1"> $20000.00 </th>
-    </tr>
-  </tfoot>
-        </table>
+                </td>
+                <td class="text-right">
+                  <span class="mono">{{ division.unitCost }}</span>
+                </td>
+                <td class="text-right">
+                  <span class="mono">{{ division.numberTeams }}</span>
+                </td>
+                <td class="text-right">
+                  <span class="mono">${{ division.totalExclGST|floatformat:2 }}</span>
+                </td>
+                <td class="text-right">
+                  <strong class="mono">${{ division.gst|floatformat:2 }}</strong>
+                </td>
+                <td class="text-right">
+                  <strong class="mono">${{ division.totalInclGST|floatformat:2 }}</strong>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="full-width">
+              <tr>
+                <th> Total: </th>
+                <th colspan="2"></th>
+                <th colspan="1"> ${{ overallTotalExclGST|floatformat:2 }} </th>
+                <th colspan="1"> ${{ overallTotalGST|floatformat:2 }} </th>
+                <th colspan="1"> ${{ overallTotalInclGST|floatformat:2 }} </th>
+              </tr>
+            </tfoot>
+          </table>
 
+        </div>
       </div>
-    </div>
 
-    <div class="ui card">
-      <div class="content center aligned text segment">
-        <small class="ui sub header"> Amount Due (AUD): </small>
-        <p class="bigfont"> ${{ invoice.amountDue }} </p>
+      <div class="ui card">
+        <div class="content center aligned text segment">
+          <small class="ui sub header"> Amount Due: </small>
+          <p class="bigfont"> ${{ invoice.amountDue|floatformat:2 }} </p>
+        </div>
       </div>
-    </div>
-        <div class="ui card">
-      <div class="content">
-        <div class="header">Payment Details</div>
+      <div class="ui card">
+        <div class="content center aligned text segment">
+          <small class="ui sub header"> Amount Paid: </small>
+          <p class="bigfont"> ${{ invoice.amountPaid|floatformat:2 }} </p>
+          <p class="smallfont"> As of {{ currentDate }}</p>
+        </div>
       </div>
-      <div class="content">
-        <p> <strong> Account Name: </strong> {{ invoice.event.state.bankAccountName }} </p>
-        <p> <strong> BSB: </strong> {{ invoice.event.state.bankAccountBSB }} </p>
-        <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
+      <div class="ui card">
+        <div class="content">
+          <div class="header">Payment Details</div>
+        </div>
+        <div class="content">
+          <p> <strong> Account Name: </strong> {{ invoice.event.state.bankAccountName }} </p>
+          <p> <strong> BSB: </strong> {{ invoice.event.state.bankAccountBSB }} </p>
+          <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
+        </div>
       </div>
-    </div>
-    <div class="ui card">
-      <div class="content">
-        <div class="header">Notes</div>
-      </div>
-      <div class="content">
-        Payment is requested within 15 days of recieving this invoice.
+      <div class="ui segment itemscard">
+        <div class="content">
+          <h3>Note:</h3>
+          {{ invoice.event.state.invoiceMessage|escape|linebreaks }}<br>
+          {{ invoice.event.additionalInvoiceMessage|escape|linebreaks  }}
+        </div>
       </div>
     </div>
   </div>
-</div>
-<!-- partial -->
+  <!-- partial -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
 </body>
+
 </html>
 
 
 <style>
-@page {
-  size: A4;
-  margin: 0;
-}
-@media print {
-  html, body {
-    width: 210mm;
-    height: 297mm;
+  @page {
+    size: A4;
+    margin: 0;
   }
-  /* ... the rest of the rules ... */
-}
 
-body{
-  background:#EEE;
-  /* font-size:0.9em !important; */
-}
+  @media print {
 
-.bigfont {
-  font-size: 3rem !important;
-}
-.invoice{
-  width:970px !important;
-  margin:50px auto;
-}
+    html,
+    body {
+      width: 210mm;
+      height: 297mm;
+    }
 
-.logo {
-  float:left;
-  padding-right: 10px;
-  margin:10px auto;
-}
+    /* ... the rest of the rules ... */
+  }
 
-dt {
-float:left;
-}
-dd {
-float:left;
-clear:right;
-}
+  body {
+    background: #EEE;
+    /* font-size:0.9em !important; */
+  }
 
-.customercard {
-  min-width:65%;
-}
+  .bigfont {
+    font-size: 3rem !important;
+  }
 
-.itemscard {
-  min-width:98.5%;
-  margin-left:0.5%;
-}
+  .invoice {
+    width: 970px !important;
+    margin: 50px auto;
+  }
 
-.logo {
-  max-width: 5rem;
-  margin-top: -0.25rem;
-}
+  .logo {
+    float: left;
+    padding-right: 10px;
+    margin: 10px auto;
+  }
 
-.invDetails {
-  margin-top: 0rem;
-}
+  dt {
+    float: left;
+  }
 
-.pageTitle {
-  margin-bottom: -1rem;
-}
+  dd {
+    float: left;
+    clear: right;
+  }
+
+  .customercard {
+    min-width: 65%;
+  }
+
+  .itemscard {
+    min-width: 98.5%;
+    margin-left: 0.5%;
+  }
+
+  .logo {
+    max-width: 5rem;
+    margin-top: -0.25rem;
+  }
+
+  .invDetails {
+    margin-top: 0rem;
+  }
+
+  .pageTitle {
+    margin-bottom: -1rem;
+  }
 </style>

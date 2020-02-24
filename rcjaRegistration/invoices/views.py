@@ -24,9 +24,9 @@ def summary(request):
 
 @login_required
 def detail(request, invoiceID):
+    # Get invoice
     invoice = get_object_or_404(Invoice, pk=invoiceID)
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
-    enteredDivisions = Division.objects.filter(team__school__invoice=invoice)
 
     # Check permissions
     if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
@@ -37,10 +37,45 @@ def detail(request, invoiceID):
         invoice.invoicedDate = datetime.datetime.today()
         invoice.save()
 
+    # Division details
+    teams = invoice.teamsQueryset()
+    enteredDivisions = Division.objects.filter(team__in=teams)
+
+    divisionDetails = []
+    overallTotalExclGST = 0
+    overallTotalGST = 0
+    overallTotalInclGST = 0
+
+    for division in enteredDivisions:
+        # Calculate values
+        numberTeams = teams.filter(division=division).count()
+        unitCost = invoice.event.entryFee
+        totalExclGST = numberTeams * unitCost
+        gst = 0.1 * totalExclGST
+        totalInclGST = totalExclGST + gst
+
+        # Update totals
+        overallTotalExclGST += totalExclGST
+        overallTotalGST += gst
+        overallTotalInclGST += totalInclGST
+
+        divisionDetails.append({
+            'division': division,
+            'numberTeams': numberTeams,
+            'unitCost': unitCost,
+            'totalExclGST': totalExclGST,
+            'gst': gst,
+            'totalInclGST': totalInclGST,
+        })
+
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'enteredDivisions': enteredDivisions
+        'divisionDetails': divisionDetails,
+        'overallTotalExclGST': overallTotalExclGST,
+        'overallTotalGST': overallTotalGST,
+        'overallTotalInclGST': overallTotalInclGST,
+        'currentDate': datetime.datetime.today().date,
     }
 
     return render(request, 'invoices/invoiceDetail.html', context)

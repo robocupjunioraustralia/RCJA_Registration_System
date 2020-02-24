@@ -2,6 +2,8 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+from teams.models import Team
+
 # **********MODELS**********
 
 class InvoiceGlobalSettings(models.Model):
@@ -92,9 +94,17 @@ class Invoice(models.Model):
 
     # *****Get Methods*****
 
+    # Queryset of teams covered by this invoice
+    def teamsQueryset(self):
+        if self.school:
+            # If school filter by school
+            return Team.objects.filter(event=self.event, school=self.school)
+        else:
+            # If no school filter by user
+            return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
+
     def invoiceAmount(self):
-        from teams.models import Team
-        return self.event.entryFee * Team.objects.filter(event=self.event, school=self.school).count()
+        return self.event.entryFee * self.teamsQueryset().count()
     invoiceAmount.short_description = 'Invoice amount'
 
     def amountPaid(self):
