@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login
 from .forms import UserSignupForm, SchoolForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
+from django.core.exceptions import ValidationError, PermissionDenied
 
 from .models import School, Campus, SchoolAdministrator
 
