@@ -66,7 +66,7 @@
                 <i class="dropdown icon"></i>
                 <div class="menu">
                     <a href="{% url 'users:profile' %}" class="item">My details</a>
-                    <a href="{% url 'users:profile' %}" class="item">My school</a>
+                    {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
                     <a href = "{% url 'password_change' %}" class="item">Change password</a>
                     <a href = "{% url 'logout' %}" class="item">Log out</a>
                     <a class="item">Help</a>
@@ -132,7 +132,7 @@
                     <i class="dropdown icon"></i>
                     <div class="menu">
                         <a href="{% url 'users:profile' %}" class="item">My details</a>
-                        <a href="{% url 'users:profile' %}" class="item">My school</a>
+                        {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
                         <a href = "{% url 'password_change' %}" class="item">Change password</a>
                         <a href = "{% url 'logout' %}" class="item">Log out</a>
                         <a class="item">Help</a>
