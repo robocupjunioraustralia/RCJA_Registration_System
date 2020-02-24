@@ -51,7 +51,11 @@ class Invoice(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Invoice'
-        unique_together = ('school', 'event')
+        constraints = [
+            models.UniqueConstraint(fields=['event', 'school'], condition=Q(campus=None), name='event_school'),
+            models.UniqueConstraint(fields=['event', 'invoiceToUser'], condition=Q(school=None), name='event_user'),
+            models.UniqueConstraint(fields=['event', 'school', 'campus'], name='event_school_campus'),
+        ]
         ordering = ['event', 'school']
 
     # *****Permissions*****

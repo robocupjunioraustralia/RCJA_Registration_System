@@ -18,13 +18,19 @@ class InvoicePaymentInline(admin.TabularInline):
 class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'event',
+        'invoiceToUser',
         'school',
+        'campus',
         'purchaseOrderNumber',
         'invoiceAmount',
         'amountPaid',
         'amountDue'    
     ]
     readonly_fields = [
+        'event',
+        'invoiceToUser',
+        'school',
+        'campus',
         'invoiceAmount',
         'amountPaid',
         'amountDue'        
