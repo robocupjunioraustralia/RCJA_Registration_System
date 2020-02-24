@@ -15,7 +15,9 @@
                 <th> Invoice to</th>
                 <th> School </th>
                 <th> Campus </th>
-                <th> PO Number</th>
+                <th> PO Number </th>
+                <th> Amount due </th>
+                <th> Total </th>
             </thead>
             <tbody>
                 {% for invoice in invoices %}
@@ -32,6 +34,8 @@
                         <td>{{invoice.school}}</td>
                         <td>{{invoice.campus}}</td>
                         <td>{{invoice.purchaseOrderNumber}}</td>
+                        <td>{{invoice.amountDue}}</td>
+                        <td>{{invoice.invoiceAmount}}</td>
                     </tr>
                 {% endfor %}
             </tbody>

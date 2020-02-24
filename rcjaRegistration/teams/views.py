@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404,redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Student,Team
 from django.core.exceptions import ValidationError, PermissionDenied
 from .forms import TeamForm,StudentForm
