@@ -38,11 +38,9 @@
                             </td>
                             {% if event.registrationsCloseDate >= today %}
                             <td> <a href="{% url 'teams:edit' team.id %}"><button class = "ui primary button">Edit/View Details </button></a>
-                                 <button onClick ="showDeleteModal({{team.id}})" class = "ui primary button">Delete </button> 
+                                 <button onClick ="showDeleteModal({{team.id}}, '{% url 'teams:delete' team.id %}')" class = "ui negative button">Delete </button> 
                             </td> 
                             {% endif %}
-
-
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -64,16 +62,10 @@
     </div>
 </div>
 <div class="actions">
-    <div class="ui black deny button">
-    Nope
-    </div>
-    <button id = "deleteConfirm" class="ui positive right labeled icon button">
-    Yes, I'm certain
-    <i class="checkmark icon"></i>
-    </button>
+    <div class="ui black deny button">No, cancel</div>
+    <button id = "deleteConfirm" class="ui negative right button">Yes, I'm certain</button>
 </div>
 </div>
-
 
 <script> 
     $(document).ready( function () {
@@ -83,18 +75,20 @@
         $('.ui.modal').modal('show'); 
     }
 
-    function deleteTeam(id) {
+    function deleteTeam(id, url) {
         $.ajax({
-            type: "POST",
-            url: "{% url 'teams:delete' %}",
-            data: {teamID: id,csrfmiddlewaretoken: '{{ csrf_token }}' },
-            })
+            type: "DELETE",
+            url: url,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+            },
+        })
             .done( (data) => $('#teamRow' + id).remove() )
-            .fail( (data) => alert('Unexpected Error!' + str(data)))
+            .fail( (data) => alert('Unexpected Error!' + data))
     }
-    
-    function showDeleteModal(id) {
-        $('#deleteConfirm').attr('onClick', 'deleteTeam('+id +');');
+
+    function showDeleteModal(id, url) {
+        $('#deleteConfirm').attr('onClick', "deleteTeam(" + id + ",'" + url + "');");
         showModal()
     }
 </script>
