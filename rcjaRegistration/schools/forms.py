@@ -1,6 +1,6 @@
 from django.db import models
 from django.forms import ModelForm
-from .models import Mentor, School
+from .models import SchoolAdministrator, School
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
@@ -28,8 +28,8 @@ class UserSignupForm(ModelForm):
         for field in ['first_name', 'last_name', 'mobileNumber', 'homeState', 'homeRegion']:
             self.fields[field].required = True
 
-    # Mentor fields
-    school = forms.ModelChoiceField(queryset=School.objects.all(), label='School')
+    # School fields
+    school = forms.ModelChoiceField(queryset=School.objects.filter(schooladministrator__isnull=True, team__isnull=True), label='School', required=False)
 
     def clean(self):
         # Check password

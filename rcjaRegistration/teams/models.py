@@ -7,10 +7,16 @@ class Team(CustomSaveDeleteModel):
     # Foreign keys
     event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
-    school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT)
+
+    # User and school foreign keys
+    mentorUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT)
+    school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
+    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
+
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
     # Fields
     name = models.CharField('Name', max_length=50)
 
@@ -19,6 +25,11 @@ class Team(CustomSaveDeleteModel):
         verbose_name = 'Team'
         unique_together = ('event', 'name')
         ordering = ['event', 'school', 'division', 'name']
+
+    def clean(self, cleanDownstreamObjects=True):
+        # Check campus school matches school on this object
+        if self.campus and self.campus.school != self.school:
+            raise(ValidationError('Campus school must match school'))
 
     # *****Permissions*****
     @classmethod
@@ -43,10 +54,13 @@ class Team(CustomSaveDeleteModel):
 
     # *****Save & Delete Methods*****
 
-    def preSave(self):
+    def postSave(self):
         # Create invoice
         from invoices.models import Invoice
-        Invoice.objects.get_or_create(school=self.school, event=self.event)
+        if self.school:
+            Invoice.objects.get_or_create(school=self.school, event=self.event, defaults={'invoiceToUser': self.mentorUser})
+        else:
+            Invoice.objects.get_or_create(invoiceToUser=self.mentorUser, event=self.event)
 
     # *****Methods*****
 
@@ -58,7 +72,6 @@ class Team(CustomSaveDeleteModel):
     # *****CSV export methods*****
 
     # *****Email methods*****
-
 
 class Student(models.Model):
     # Foreign keys

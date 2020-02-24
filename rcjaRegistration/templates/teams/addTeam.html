@@ -74,16 +74,15 @@
               <div class="three fields">
                 <div class = "field">
                   <label>Team name: </label>
-                        {{form.name|attr:"placeholder:Team Name"}}
-                    
+                    {{form.name|attr:"placeholder:Team Name"}}
                 </div>
                 <div class = "field">
                   <label> Division: </label>
-                            {{ form.division|attr:"placeholder:Division"|attr:"class:ui dropdown"}} 
+                    {{ form.division|attr:"placeholder:Division"|attr:"class:ui dropdown"}} 
                 </div>
                 <div class = "field">
-                  <label> School: </label>
-                            {{ form.school|attr:"placeholder:School"|attr:"class:ui dropdown"}} 
+                  <label> Campus: </label>
+                    {{ form.campus|attr:"placeholder:Campus"|attr:"class:ui dropdown"}} 
                 </div>
               </div>
               {% for studentform in formset %}

@@ -42,11 +42,21 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
 
-@admin.register(Mentor)
-class MentorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+@admin.register(Campus)
+class CampusAdmin(AdminPermissions, admin.ModelAdmin):
+    
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return {
+            'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
+
+@admin.register(SchoolAdministrator)
+class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'school',
+        'campus'
     ]
     list_filter = [
         'school__state',
@@ -60,16 +70,16 @@ class MentorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     autocomplete_fields = [
         'school'
     ]
-    actions = [
-        'export_as_csv'
-    ]
-    exportFields = [
-        'firstName',
-        'lastName',
-        'school',
-        'email',
-        'mobileNumber'
-    ]
+    # actions = [
+    #     'export_as_csv'
+    # ]
+    # exportFields = [
+    #     'firstName',
+    #     'lastName',
+    #     'school',
+    #     'email',
+    #     'mobileNumber'
+    # ]
     from mentorquestions.admin import MentorQuestionResponseInline
     inlines = [
         MentorQuestionResponseInline

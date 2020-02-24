@@ -1,5 +1,5 @@
 from users.models import User
-from . models import School,Mentor
+from . models import School, SchoolAdministrator
 from regions.models import State,Region
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase

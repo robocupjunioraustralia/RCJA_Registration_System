@@ -6,8 +6,9 @@ from django.contrib.auth import authenticate, login
 from .forms import UserSignupForm, SchoolForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
+from django.core.exceptions import ValidationError, PermissionDenied
 
-from schools.models import Mentor
+from .models import School, Campus, SchoolAdministrator
 
 def signup(request):
     if request.method == 'POST':
@@ -20,8 +21,9 @@ def signup(request):
             user.set_password(form.cleaned_data["password"])
             user.save()
 
-            # Save mentor
-            Mentor.objects.create(user=user, school=form.cleaned_data['school'])
+            # Save school administrator
+            if form.cleaned_data['school']:
+                SchoolAdministrator.objects.create(user=user, school=form.cleaned_data['school'])
 
             # Login and redirect
             login(request, user)
@@ -57,3 +59,16 @@ def createSchoolAJAX(request):
             },status=400)
     else:
         return HttpResponseForbidden()
+
+def setCurrentSchool(request, schoolID):
+    school = get_object_or_404(School, pk=schoolID)
+
+    # Check permissions
+    if not request.user.schooladministrator_set.filter(school=school).exists():
+        raise PermissionDenied("You do not have permission to view this school")
+
+    # Set current school on user
+    request.user.currentlySelectedSchool = school
+    request.user.save(update_fields=['currentlySelectedSchool'])
+    
+    return redirect('/')

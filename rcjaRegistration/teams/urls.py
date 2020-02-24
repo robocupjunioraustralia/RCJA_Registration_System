@@ -7,6 +7,3 @@ urlpatterns = [
     path('teams/delete/',views.deleteTeam,name='delete'),
     path('teams/edit/<int:teamID>/',views.editTeam,name='edit')
 ]
-
-
-

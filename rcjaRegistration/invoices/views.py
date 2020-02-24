@@ -16,7 +16,7 @@ def invoice(request, invoiceID):
     enteredDivisions = Division.objects.filter(team__school__invoice=invoice)
 
     # Check permissions
-    if not request.user.mentor_set.filter(school=invoice.school).exists():
+    if not request.user.schooladministrator_set.filter(school=invoice.school).exists():
         raise PermissionDenied("You do not have permission to view this invoice")
 
     # Set invoiced date

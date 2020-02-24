@@ -44,9 +44,8 @@
     <div class = "twelve wide mobile six wide computer column ui segment formbox">
         <div class = "form form-group left-aligned-text">
           <div>
-            <h1> Robocup Australia</h1>
-            <h5> Mentor Signup</h5>
-            <h4>Please enter your details</h4>
+            <h1> Robocup Australia - Mentor Signup</h1>
+            <h2>Please enter your details</h2>
             {% if form.errors %}
             <!-- Error messaging -->
             <div class="ui warning message left-aligned-text">
@@ -97,6 +96,10 @@
                   {{form.homeRegion}}
                 </div>
               </div>
+            <p>If you are the first mentor in you school, create a school here.</p>
+            <p>If you are an independent skip this step.</p>
+            <p>If someone else has already registered your school ask them to add you as an administrator.</p>
+            <p>If you don't know who your school administrator is please contact us, please do not create a duplicate school.</p>
             <div class = "two fields">
                 <div class="field">
                   <label> School</label>
