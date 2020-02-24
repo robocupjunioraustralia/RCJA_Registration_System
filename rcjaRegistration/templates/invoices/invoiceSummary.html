@@ -33,7 +33,11 @@
                         </td>
                         <td>{{invoice.school}}</td>
                         <td>{{invoice.campus}}</td>
-                        <td ><span id = "inv-po-{{invoice.id}}">{{invoice.purchaseOrderNumber}} </span>  <button onclick = showModal({{invoice.id}}) style = "margin-left:2rem;" class = "ui button primary"> Set/Edit PO </button></td>
+                        <td >
+                            <span id = "inv-po-{{invoice.id}}">{{invoice.purchaseOrderNumber}}</span>
+                            <br>
+                            <button onclick = showModal({{invoice.id}}) class = "ui button primary"> Set </button>
+                        </td>
                         <td>{{invoice.amountDue}}</td>
                         <td>{{invoice.invoiceAmount}}</td>
                     </tr>
