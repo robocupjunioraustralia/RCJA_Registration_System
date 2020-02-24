@@ -41,7 +41,7 @@ def index(request):
 
     # Invoices
     from invoices.models import Invoice
-    invoices = Invoice.objects.filter(Q(school__schooladministrator__user=request.user) | Q(invoiceToUser=request.user))
+    invoices = Invoice.objects.filter(Q(school__schooladministrator__user=request.user) | Q(invoiceToUser=request.user)).distinct()
 
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDue() > 0])
 

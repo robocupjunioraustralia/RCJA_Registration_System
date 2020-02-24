@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
 
+from django.http import JsonResponse
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
 
 from .models import *
@@ -12,7 +14,7 @@ from events.models import Division, Event
 
 @login_required
 def summary(request):
-    invoices = Invoice.objects.filter(Q(invoiceToUser=request.user) | Q(school__schooladministrator__user=request.user))
+    invoices = Invoice.objects.filter(Q(invoiceToUser=request.user) | Q(school__schooladministrator__user=request.user)).distinct()
 
     context = {
         'user': request.user,
@@ -20,7 +22,6 @@ def summary(request):
     }
 
     return render(request, 'invoices/invoiceSummary.html', context)
-
 
 @login_required
 def detail(request, invoiceID):
@@ -92,3 +93,30 @@ def setInvoiceTo(request, invoiceID):
     invoice.save(update_fields=['invoiceToUser'])
 
     return redirect(reverse('invoices:summary'))
+
+@login_required
+def editInvoicePOAJAX(request, invoiceID):
+    if request.method == 'POST':
+        invoice = get_object_or_404(Invoice, pk=invoiceID)
+
+        # Check permissions
+        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+            raise PermissionDenied("You do not have permission to view this invoice")
+
+        # Update invoice
+        try:
+            invoice.purchaseOrderNumber = request.POST["PONumber"]
+            invoice.save()
+        except KeyError:
+            return HttpResponseBadRequest()
+
+        return JsonResponse({'id':invoiceID,'number':request.POST["PONumber"], 'success':True})
+        #IF PO NUMBERS NEED AN ERROR RESPONSE
+        """
+            return JsonResponse({
+                'success': False,
+                'errors': dict(form.errors.items())
+            },status=400)
+        """
+    else:
+        return HttpResponseForbidden()
