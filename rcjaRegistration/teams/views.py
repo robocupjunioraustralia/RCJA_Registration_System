@@ -17,6 +17,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
 
     StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.max_team_members, max_num=event.max_team_members, can_delete=False)
 
+    # Check registrations open
     if event.registrationsCloseDate < datetime.datetime.now().date():
         raise PermissionDenied("Registrtaion has closed for this event")
 
