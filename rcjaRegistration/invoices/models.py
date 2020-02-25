@@ -146,7 +146,7 @@ class Invoice(CustomSaveDeleteModel):
     # Totals
 
     def invoiceAmount(self):
-        return self.event.entryFee * self.teamsQueryset().count()
+        return self.event.event_defaultEntryFee * self.teamsQueryset().count()
     invoiceAmount.short_description = 'Invoice amount'
 
     def amountPaid(self):
