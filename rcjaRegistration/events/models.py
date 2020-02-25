@@ -98,7 +98,7 @@ class Event(models.Model):
     registrationsCloseDate = models.DateField('Registration close date')
 
     # Team details
-    event_maxMembersPerTeam = models.PositiveIntegerField('Max members per team')
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team')
     event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
@@ -194,7 +194,6 @@ class AvailableDivision(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Team details
-    division_maxMembersPerTeam = models.PositiveIntegerField('Max members per team', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
     division_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
     division_maxTeamsForDivision = models.PositiveIntegerField('Max teams for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
 
