@@ -97,7 +97,7 @@ class Event(models.Model):
     availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', blank=True)
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT)
     location = models.TextField('Location', blank=True)
-    compDetails = models.TextField('Event details', blank=True)
+    eventDetails = models.TextField('Event details', blank=True)
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True)
 
     # *****Meta and clean*****
