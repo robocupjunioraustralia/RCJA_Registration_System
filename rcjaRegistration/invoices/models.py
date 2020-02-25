@@ -13,6 +13,7 @@ class InvoiceGlobalSettings(models.Model):
     # Fields
     invoiceFromName = models.CharField('Invoice from name', max_length=50)
     invoiceFromDetails = models.TextField('Invoice from details')
+    invoiceFooterMessage = models.TextField('Invoice footer message')
 
     # *****Meta and clean*****
     class Meta:
