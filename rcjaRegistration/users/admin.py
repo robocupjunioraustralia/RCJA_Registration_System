@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 from .models import User
+from coordination.adminPermissions import AdminPermissions
 
 # Unregister group
 
@@ -18,7 +19,7 @@ class SchoolAdministratorInline(admin.TabularInline):
     verbose_name_plural = "School administrator of"
 
 @admin.register(User)
-class UserAdmin(DjangoUserAdmin):
+class UserAdmin(AdminPermissions, DjangoUserAdmin):
     """Define admin model for custom User model with no email field."""
     fieldsets = (
         (None, {'fields': (
@@ -80,3 +81,9 @@ class UserAdmin(DjangoUserAdmin):
     inlines = [
         SchoolAdministratorInline,
     ]
+
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return {
+            'homeState__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
