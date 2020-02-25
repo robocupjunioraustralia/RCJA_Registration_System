@@ -2,8 +2,6 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
-from teams.models import Team
-
 # **********MODELS**********
 
 class InvoiceGlobalSettings(models.Model):
@@ -110,11 +108,16 @@ class Invoice(CustomSaveDeleteModel):
         if not self.school:
             return False
 
+        # Check no payments made
+        if self.invoicepayment_set.exists():
+            return False
+
         # Check if at least one invoice has campus field set
         return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
     # Returns true if teams with campus for this school and event exists and campus invoicing not already enabled
     def campusInvoicingAvailable(self):
+        from teams.models import Team
         if not self.school:
             return False
 
@@ -127,6 +130,7 @@ class Invoice(CustomSaveDeleteModel):
 
     # Queryset of teams covered by this invoice
     def teamsQueryset(self):
+        from teams.models import Team
         if self.campusInvoicingEnabled():
             # Filter by school and campus
             return Team.objects.filter(event=self.event, school=self.school, campus=self.campus)
