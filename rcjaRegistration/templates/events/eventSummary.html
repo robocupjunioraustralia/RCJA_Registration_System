@@ -22,6 +22,7 @@
         <h2>Location</h2>
         <p> {{ event.location|escape|linebreaks }} </p>
         <h2>Max members per team: {{ event.maxMembersPerTeam }}</h2>
+        <h2>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h2>
     </div><br>
 
     <div class="row">
