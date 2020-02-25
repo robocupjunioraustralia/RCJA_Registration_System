@@ -169,6 +169,7 @@
         })
             .done( (data) => {
                 $('.ui.modal.campus').modal('hide');
+                window.location.reload();
             } )
             return false //needed to stop modal from closing
         }
