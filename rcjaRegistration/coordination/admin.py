@@ -19,13 +19,30 @@ class CoordinatorAdmin(admin.ModelAdmin, ExportCSVMixin):
         'permissions',
         'position'
     ]
+    autocomplete_fields = [
+        'user',
+    ]
+    list_filter = [
+        'state',
+        'permissions',
+    ]
+    search_fields = [
+        'user__first_name',
+        'user__last_name',
+        'user__email',
+        'state__name',
+        'state__abbreviation',
+        'permissions',
+        'position',
+    ]
     actions = [
         'export_as_csv'
     ]
     exportFields = [
         'user',
         'state',
-        'position'
+        'permissions',
+        'position',
     ]
 
     # Don't allow editing user after initial creation

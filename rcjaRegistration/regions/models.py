@@ -12,14 +12,14 @@ class State(CustomSaveDeleteModel):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=20, unique=True)
-    abbreviation = models.CharField('Short code', max_length=3, unique=True)
+    abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
     bankAccountBSB = models.CharField('Bank Account BSB', max_length=7, blank=True, null=True)
     bankAccountNumber = models.CharField('Bank Account Number', max_length=10, blank=True, null=True)
     paypalEmail = models.EmailField('PayPal email', blank=True)
     # Defaults
-    defaultCompDetails = models.TextField('Default event details', blank=True)
+    defaultEventDetails = models.TextField('Default event details', blank=True)
     invoiceMessage = models.TextField('Invoice message', blank=True)
 
     # *****Meta and clean*****
@@ -56,7 +56,8 @@ class State(CustomSaveDeleteModel):
     # *****Get Methods*****
 
     def treasurerName(self):
-        return f'{self.treasurer.first_name} {self.treasurer.last_name}' if (self.treasurer.first_name and self.treasurer.last_name) else str(self.treasurer)
+        return self.treasurer.fullname_or_email()
+    treasurerName.short_description = 'Treasurer'
 
     def __str__(self):
         return self.name

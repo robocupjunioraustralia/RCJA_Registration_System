@@ -67,6 +67,18 @@ class User(AbstractUser):
             raise ValidationError({'email': _('User with this Email address already exists.')})
 
     # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'viewall', 'eventmanager', 'schoolmanager', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.homeState
 
     # *****Save & Delete Methods*****
 

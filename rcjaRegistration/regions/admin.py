@@ -21,6 +21,9 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'abbreviation'
     ]
+    autocomplete_fields = [
+        'treasurer',
+    ]
     actions = [
         'export_as_csv'
     ]
@@ -32,7 +35,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'bankAccountBSB',
         'bankAccountNumber',
         'paypalEmail',
-        'defaultCompDetails',
+        'defaultEventDetails',
         'invoiceMessage'
     ]
 
@@ -42,4 +45,9 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'coordinator__in': Coordinator.objects.filter(user=request.user)
         }
 
-admin.site.register(Region)
+@admin.register(Region)
+class StateAdmin(AdminPermissions, admin.ModelAdmin):
+    list_display = [
+        'name',
+        'description',
+    ]

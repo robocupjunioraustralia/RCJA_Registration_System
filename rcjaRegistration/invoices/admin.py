@@ -8,7 +8,9 @@ from .models import *
 
 @admin.register(InvoiceGlobalSettings)
 class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
-    pass
+    # Settings must be present for invoice view to work
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class InvoicePaymentInline(admin.TabularInline):
     model = InvoicePayment
@@ -39,16 +41,21 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     list_filter = [
         'event__state',
-        'event'
+        'event',
     ]
     search_fields = [
         'event__state__name',
+        'event__state__abbreviation',
         'event__name',
         'school__name',
-        'school__abbreviation'
+        'school__abbreviation',
+        'campus__name',
+        'invoiceToUser__first_name',
+        'invoiceToUser__last_name',
+        'invoiceToUser__email',
     ]
     inlines = [
-        InvoicePaymentInline
+        InvoicePaymentInline,
     ]
     actions = [
         'export_as_csv'
@@ -59,7 +66,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'purchaseOrderNumber',
         'invoiceAmount',
         'amountPaid',
-        'amountDueInclGST'    
+        'amountDueInclGST',
     ]
 
     def stateFilteringAttributes(self, request):

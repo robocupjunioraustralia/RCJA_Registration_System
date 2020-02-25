@@ -29,6 +29,9 @@ admin.site.register(Year)
 class AvailableDivisionInline(admin.TabularInline):
     model = AvailableDivision
     extra = 0
+    autocomplete_fields = [
+        'division',
+    ]
 
 @admin.register(Event)
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -42,8 +45,6 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'registrationsOpenDate',
         'registrationsCloseDate',
         'directEnquiriesTo'
-    ]
-    readonly_fields = [
     ]
     fieldsets = (
         (None, {
@@ -62,12 +63,25 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('directEnquiriesTo', 'eventDetails', 'location', 'additionalInvoiceMessage')
         }),
     )
+    autocomplete_fields = [
+        'state',
+        'directEnquiriesTo',
+    ]
     inlines = [
         AvailableDivisionInline,
     ]
     list_filter = [
         'state',
-        'year'
+        'eventType',
+        'year',
+    ]
+    search_fields = [
+        'name',
+        'state__name',
+        'state__abbreviation',
+        'directEnquiriesTo__first_name',
+        'directEnquiriesTo__last_name',
+        'directEnquiriesTo__email',
     ]
     actions = [
         'export_as_csv'
