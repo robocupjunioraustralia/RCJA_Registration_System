@@ -56,7 +56,8 @@ class State(CustomSaveDeleteModel):
     # *****Get Methods*****
 
     def treasurerName(self):
-        return f'{self.treasurer.first_name} {self.treasurer.last_name}' if (self.treasurer.first_name and self.treasurer.last_name) else str(self.treasurer)
+        return self.treasurer.fullname_or_email()
+    treasurerName.short_description = 'Treasurer'
 
     def __str__(self):
         return self.name

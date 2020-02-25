@@ -11,7 +11,15 @@ class SchoolAdministratorInline(admin.TabularInline):
     extra = 0
     verbose_name = "Administrator"
     verbose_name_plural = "Administrators"
-    fields = ['user', 'campus']
+    # Define fields to define order
+    fields = [
+        'user',
+        'campus',
+    ]
+    autocomplete_fields = [
+        'user',
+        'campus',
+    ]
 
 class CampusInline(admin.TabularInline):
     model = Campus
@@ -31,8 +39,10 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     search_fields = [
         'state__name',
+        'state__abbreviation',
+        'region__name',
         'name',
-        'abbreviation'
+        'abbreviation',
     ]
     autocomplete_fields = [
         'state'
@@ -58,8 +68,34 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         }
 
 @admin.register(Campus)
-class CampusAdmin(AdminPermissions, admin.ModelAdmin):
-    
+class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+    list_display = [
+        'name',
+        'school',
+    ]
+    list_filter = [
+        'school__state',
+        'school__region',
+    ]
+    search_fields = [
+        'name',
+        'school__state__name',
+        'school__state__abbreviation',
+        'school__region__name',
+        'school__name',
+        'school__abbreviation',
+    ]
+    autocomplete_fields = [
+        'school'
+    ]
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'name',
+        'school',
+    ]
+
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
         return {
@@ -69,7 +105,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin):
 @admin.register(SchoolAdministrator)
 class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        '__str__',
+        'user',
         'school',
         'campus'
     ]
@@ -78,26 +114,28 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
         'school__region'
     ]
     search_fields = [
+        'user__first_name',
+        'user__last_name',
+        'user__email',
         'school__state__name',
+        'school__state__abbreviation',
+        'school__region__name',
         'school__name',
-        'school__abbreviation'
+        'school__abbreviation',
+        'campus__name',
     ]
     autocomplete_fields = [
-        'school'
+        'user',
+        'school',
+        'campus',
     ]
-    # actions = [
-    #     'export_as_csv'
-    # ]
-    # exportFields = [
-    #     'firstName',
-    #     'lastName',
-    #     'school',
-    #     'email',
-    #     'mobileNumber'
-    # ]
-    from mentorquestions.admin import MentorQuestionResponseInline
-    inlines = [
-        MentorQuestionResponseInline
+    actions = [
+        'export_as_csv'
+    ]
+    exportFields = [
+        'user',
+        'school',
+        'campus',
     ]
 
     def stateFilteringAttributes(self, request):
