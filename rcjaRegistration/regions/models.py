@@ -12,7 +12,7 @@ class State(CustomSaveDeleteModel):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=20, unique=True)
-    abbreviation = models.CharField('Short code', max_length=3, unique=True)
+    abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
     bankAccountBSB = models.CharField('Bank Account BSB', max_length=7, blank=True, null=True)
