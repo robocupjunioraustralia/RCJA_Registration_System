@@ -82,6 +82,10 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'directEnquiriesTo'
     ]
 
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
+    }
+
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
         return {
