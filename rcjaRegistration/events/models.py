@@ -111,9 +111,9 @@ class Event(models.Model):
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
-    location = models.TextField('Location', blank=True)
     eventDetails = models.TextField('Event details', blank=True)
-    additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True)
+    location = models.TextField('Location', blank=True)
+    additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True, help_text='This appears below the state based invoice message on the invoice.')
 
     # Available divisions
     availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', through='AvailableDivision')
