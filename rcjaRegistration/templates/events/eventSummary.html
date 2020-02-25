@@ -9,7 +9,7 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>{{event}}</h1>
+        <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}}</h1>
     </div>
 
     <div class="row">
@@ -42,7 +42,7 @@
     <div>
         <table id="eventTable" class="ui celled table">
             <thead>
-                {% if event.boolWorkshop %}Attendee{% else %}<th> Team Name</th>{% endif %}
+                <th>{% if event.boolWorkshop %}Attendee{% else %}Team Name{% endif %}</th>
                 <th> Division</th>
                 <th> Campus</th>
                 {% if not event.boolWorkshop %}<th> Students</th>{% endif %}
