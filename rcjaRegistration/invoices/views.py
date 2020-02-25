@@ -38,44 +38,13 @@ def detail(request, invoiceID):
         invoice.invoicedDate = datetime.datetime.today()
         invoice.save()
 
-    # Division details
-    teams = invoice.teamsQueryset()
-    enteredDivisions = Division.objects.filter(team__in=teams).distinct()
-
-    invoiceItems = []
-    overallTotalExclGST = 0
-    overallTotalGST = 0
-    overallTotalInclGST = 0
-
-    for division in enteredDivisions:
-        # Calculate values
-        numberTeams = teams.filter(division=division).count()
-        unitCost = invoice.event.entryFee
-        totalExclGST = numberTeams * unitCost
-        gst = 0.1 * totalExclGST
-        totalInclGST = totalExclGST + gst
-
-        # Update totals
-        overallTotalExclGST += totalExclGST
-        overallTotalGST += gst
-        overallTotalInclGST += totalInclGST
-
-        invoiceItems.append({
-            'name': division.name,
-            'numberTeams': numberTeams,
-            'unitCost': unitCost,
-            'totalExclGST': totalExclGST,
-            'gst': gst,
-            'totalInclGST': totalInclGST,
-        })
-
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'invoiceItems': invoiceItems,
-        'overallTotalExclGST': overallTotalExclGST,
-        'overallTotalGST': overallTotalGST,
-        'overallTotalInclGST': overallTotalInclGST,
+        'invoiceItems': invoice.invoiceItems(),
+        'overallTotalExclGST': invoice.invoiceAmountExclGST(),
+        'overallTotalGST': invoice.amountGST(),
+        'overallTotalInclGST': invoice.invoiceAmountInclGST(),
         'currentDate': datetime.datetime.today().date,
     }
 

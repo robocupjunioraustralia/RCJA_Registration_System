@@ -50,7 +50,7 @@
                             <br>
                             <button onclick = showPOModal({{invoice.id}}) class = "ui button primary"> Set </button>
                         </td>
-                        <td>${{invoice.invoiceAmount|floatformat:2}}</td>
+                        <td>${{invoice.invoiceAmountInclGST|floatformat:2}}</td>
                         <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
                         <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
                     </tr>

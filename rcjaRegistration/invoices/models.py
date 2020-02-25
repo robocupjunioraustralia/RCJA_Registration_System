@@ -129,7 +129,7 @@ class Invoice(CustomSaveDeleteModel):
     # Teams
 
     # Queryset of teams covered by this invoice
-    def teamsQueryset(self):
+    def includedTeams(self):
         from teams.models import Team
         if self.campusInvoicingEnabled():
             # Filter by school and campus
@@ -143,22 +143,96 @@ class Invoice(CustomSaveDeleteModel):
             # If no school filter by user
             return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
 
-    # Totals
+    # Invoice items
 
-    def invoiceAmount(self):
-        return self.event.event_defaultEntryFee * self.teamsQueryset().count()
-    invoiceAmount.short_description = 'Invoice amount'
+    def includedDivisions(self):
+        from events.models import Division
+        return Division.objects.filter(team__in=self.includedTeams()).distinct()
+
+    def invoiceItems(self):
+        from events.models import AvailableDivision
+        from teams.models import Student
+        invoiceItems = []
+
+        for division in self.includedDivisions():
+            # Get available division
+            try:
+                availableDivision = self.event.availabledivision_set.get(division=division)
+            except AvailableDivision.DoesNotExist:
+                availableDivision = None
+
+            teams = self.includedTeams().filter(division=division)
+
+            # Get unit cost, use availableDivision value if present, otherwise use value from event
+            unitCost = self.event.event_defaultEntryFee
+            useDivision = False
+            if availableDivision and availableDivision.division_entryFee is not None:
+                unitCost = availableDivision.division_entryFee
+                useDivision = True
+
+            # Get quantity calculation method
+            if useDivision:
+                quantityMethod = availableDivision.division_billingType
+
+            else:
+                quantityMethod = self.event.event_billingType
+
+            # Get quantity
+            quantity = 0
+            if quantityMethod == 'team':
+                quantity = teams.count()
+
+            elif quantityMethod == 'student':
+                quantity = Student.objects.filter(team__in=teams).count()
+
+            # Calculate values
+            totalExclGST = quantity * unitCost
+            gst = 0.1 * totalExclGST
+            totalInclGST = totalExclGST + gst
+
+            # Quantity string
+            quantityString = f"{quantity} {quantityMethod if quantity <= 1 else quantityMethod + 's'}"
+
+            invoiceItems.append({
+                'name': division.name,
+                'quantity': quantity,
+                'quantityString': quantityString,
+                'unitCost': unitCost,
+                'totalExclGST': totalExclGST,
+                'gst': gst,
+                'totalInclGST': totalInclGST,
+            })
+        
+        return invoiceItems
+
+    # Totals
 
     def amountPaid(self):
         return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
     amountPaid.short_description = 'Amount paid'
 
+    def amountGST(self):
+        return sum([item['gst'] for item in self.invoiceItems()])
+    amountGST.short_description = 'GST'
+
+    # Invoice amount
+
+    def invoiceAmountExclGST(self):
+        return sum([item['totalExclGST'] for item in self.invoiceItems()])
+    invoiceAmountExclGST.short_description = 'Invoice amount (ex GST)'
+
+    def invoiceAmountInclGST(self):
+        return sum([item['totalInclGST'] for item in self.invoiceItems()])
+    invoiceAmountInclGST.short_description = 'Invoice amount (incl GST)'
+
+    # Amount due
+
     def amountDueExclGST(self):
-        return self.invoiceAmount() - self.amountPaid()
+        return self.invoiceAmountExclGST() - self.amountPaid()
     amountDueExclGST.short_description = 'Amount due (ex GST)'
 
     def amountDueInclGST(self):
-        return self.amountDueExclGST() * 1.1
+        return self.invoiceAmountInclGST() - self.amountPaid()
     amountDueInclGST.short_description = 'Amount due (incl GST)'
 
     def __str__(self):
