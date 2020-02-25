@@ -40,42 +40,42 @@ def commonSetUp(obj): #copied from events, todo refactor
         state=obj.newState,
         name='test old not reg',
         maxMembersPerTeam=5,
-        entryFee = 4,
+        event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         directEnquiriesTo = obj.user     
     )
-    obj.oldEvent.availableDivisions.add(obj.division)
+    obj.oldEvent.divisions.add(obj.division)
 
     obj.newEvent = Event.objects.create(
         year=obj.year,
         state=obj.newState,
         name='test new not reg',
         maxMembersPerTeam=5,
-        entryFee = 4,
+        event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
         directEnquiriesTo = obj.user     
     )
-    obj.newEvent.availableDivisions.add(obj.division)
+    obj.newEvent.divisions.add(obj.division)
 
     obj.oldEventWithTeams = Event.objects.create(
         year=obj.year,
         state=obj.newState,
         name='test old yes reg',
         maxMembersPerTeam=5,
-        entryFee = 4,
+        event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-6)).date(),
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         directEnquiriesTo = obj.user     
     )
-    obj.oldEventWithTeams.availableDivisions.add(obj.division)
+    obj.oldEventWithTeams.divisions.add(obj.division)
     obj.oldEventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
     obj.oldTeamStudent = Student(team=obj.oldEventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
     
