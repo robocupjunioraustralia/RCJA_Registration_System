@@ -1,10 +1,15 @@
 {% extends 'common/loggedInbase.html' %}
 
+{% block head %}
+
+<title> {{event}} </title>
+
+{% endblock %}
 
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>Your Teams - {{event.name}}</h1>
+        <h1>Your Teams - {{event}}</h1>
     </div>
     <div class="row">
         {% if event.registrationsCloseDate >= today %}
@@ -18,7 +23,8 @@
             <table id = "eventTable" class = "ui celled table">
                 <thead>
                     <th> Team Name</th>
-                    <th> Division</th> 
+                    <th> Division</th>
+                    <th> Campus</th>
                     <th> Students</th>
                     {% if event.registrationsCloseDate >= today %}
                     <th> Actions </th>
@@ -28,7 +34,8 @@
                     {% for team in teams %}
                         <tr id = "teamRow{{team.id}}">
                             <td>{{team.name}}</td> 
-                            <td>{{team.division}}</td> 
+                            <td>{{team.division}}</td>
+                            <td>{{team.campus}}</td> 
                             <td> 
                                     {% for student in team.student_set.all %}
                                         {{student.firstName}} {{student.lastName}} ({{student.yearLevel}}) 
