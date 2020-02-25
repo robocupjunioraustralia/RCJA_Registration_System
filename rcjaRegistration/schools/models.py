@@ -11,10 +11,10 @@ class School(CustomSaveDeleteModel):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=100, unique=True)
-    abbreviation = models.CharField('Abbreviation', max_length=5, unique=True)
+    abbreviation = models.CharField('Abbreviation', max_length=5, unique=True, help_text="Abbreviation is used in the schedule and scoring system")
     # Details
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
-    region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True) # because imported teams don't have this field
+    region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT)
 
     # *****Meta and clean*****
     class Meta:
