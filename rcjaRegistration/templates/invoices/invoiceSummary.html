@@ -21,8 +21,9 @@
                 <th> School </th>
                 <th> Campus </th>
                 <th> PO Number </th>
-                <th> Amount due </th>
-                <th> Total </th>
+                <th> Invoice amount </th>
+                <th> Amount due (EFT) </th>
+                <th> Amount due (PayPal) </th>
             </thead>
             <tbody>
                 {% for invoice in invoices %}
@@ -49,8 +50,9 @@
                             <br>
                             <button onclick = showPOModal({{invoice.id}}) class = "ui button primary"> Set </button>
                         </td>
-                        <td>{{invoice.amountDue}}</td>
-                        <td>{{invoice.invoiceAmount}}</td>
+                        <td>${{invoice.invoiceAmount|floatformat:2}}</td>
+                        <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
+                        <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -58,7 +58,7 @@ class Invoice(CustomSaveDeleteModel):
             models.UniqueConstraint(fields=['event', 'invoiceToUser'], condition=Q(school=None), name='event_user'),
             models.UniqueConstraint(fields=['event', 'school', 'campus'], name='event_school_campus'),
         ]
-        ordering = ['event', 'school']
+        ordering = ['-invoiceNumber']
 
     # *****Permissions*****
     @classmethod
@@ -153,9 +153,13 @@ class Invoice(CustomSaveDeleteModel):
         return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
     amountPaid.short_description = 'Amount paid'
 
-    def amountDue(self):
+    def amountDueExclGST(self):
         return self.invoiceAmount() - self.amountPaid()
-    amountDue.short_description = 'Amount due'
+    amountDueExclGST.short_description = 'Amount due (ex GST)'
+
+    def amountDueInclGST(self):
+        return self.amountDueExclGST() * 1.1
+    amountDueInclGST.short_description = 'Amount due (incl GST)'
 
     def __str__(self):
         return f'{self.event}: {self.school}'

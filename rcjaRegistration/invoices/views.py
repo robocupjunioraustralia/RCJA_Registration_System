@@ -40,9 +40,9 @@ def detail(request, invoiceID):
 
     # Division details
     teams = invoice.teamsQueryset()
-    enteredDivisions = Division.objects.filter(team__in=teams)
+    enteredDivisions = Division.objects.filter(team__in=teams).distinct()
 
-    divisionDetails = []
+    invoiceItems = []
     overallTotalExclGST = 0
     overallTotalGST = 0
     overallTotalInclGST = 0
@@ -60,8 +60,8 @@ def detail(request, invoiceID):
         overallTotalGST += gst
         overallTotalInclGST += totalInclGST
 
-        divisionDetails.append({
-            'division': division,
+        invoiceItems.append({
+            'name': division.name,
             'numberTeams': numberTeams,
             'unitCost': unitCost,
             'totalExclGST': totalExclGST,
@@ -72,7 +72,7 @@ def detail(request, invoiceID):
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'divisionDetails': divisionDetails,
+        'invoiceItems': invoiceItems,
         'overallTotalExclGST': overallTotalExclGST,
         'overallTotalGST': overallTotalGST,
         'overallTotalInclGST': overallTotalInclGST,

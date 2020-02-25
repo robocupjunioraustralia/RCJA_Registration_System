@@ -25,7 +25,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'purchaseOrderNumber',
         'invoiceAmount',
         'amountPaid',
-        'amountDue'    
+        'amountDueInclGST'    
     ]
     readonly_fields = [
         'event',
@@ -35,7 +35,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceNumber',
         'invoiceAmount',
         'amountPaid',
-        'amountDue'        
+        'amountDueInclGST'        
     ]
     list_filter = [
         'event__state',
@@ -59,7 +59,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'purchaseOrderNumber',
         'invoiceAmount',
         'amountPaid',
-        'amountDue'    
+        'amountDueInclGST'    
     ]
 
     def stateFilteringAttributes(self, request):
