@@ -24,6 +24,17 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     inlines = [
         StudentInline
     ]
+    list_filter = [
+        'event',
+        'division',
+    ]
+    search_fields = [
+        'school__name',
+        'school__abbreviation',
+        'mentorUser__first_name',
+        'mentorUser__last_name',
+        'mentorUser__email',
+    ]
     actions = [
         'export_as_csv'
     ]
