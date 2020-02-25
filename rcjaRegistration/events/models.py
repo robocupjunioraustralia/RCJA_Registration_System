@@ -116,7 +116,7 @@ class Event(models.Model):
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True, help_text='This appears below the state based invoice message on the invoice.')
 
     # Available divisions
-    availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', through='AvailableDivision')
+    divisions = models.ManyToManyField(Division, verbose_name='Available divisions', through='AvailableDivision')
   
     # *****Meta and clean*****
     class Meta:
@@ -194,13 +194,33 @@ class AvailableDivision(models.Model):
     # Billing details
     billingTypeChoices = (('event', 'Event settings'), ('team', 'By team'), ('student', 'By student'))
     division_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='event')
-    division_entryFee = models.PositiveIntegerField('Default entry fee', null=True, blank=True)
+    division_entryFee = models.PositiveIntegerField('Division entry fee', null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Available Division'
         unique_together = ('event', 'division')
         ordering = ['event', 'division']
+
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['event', 'division'])
+
+        # Validate division_entryFee and division_billingType
+        if self.division_billingType == 'event' and self.division_entryFee is not None:
+            errors.append(ValidationError('Division entry fee must be blank if event billing settings selected'))
+
+        if self.division_billingType != 'event' and self.division_entryFee is None:
+            errors.append(ValidationError('Division entry fee must not be blank if event billing settings not selected'))
+
+        # Validate division_billingType and event_specialRateNumber
+        if self.division_billingType != 'event' and (self.event.event_specialRateNumber is not None or self.event.event_specialRateFee is not None):
+            errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
