@@ -103,14 +103,43 @@ class Invoice(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    # Campus
+
+    # Returns true if campus based invoicing enabled for this school for this event
+    def campusInvoicingEnabled(self):
+        if not self.school:
+            return False
+
+        # Check if at least one invoice has campus field set
+        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+
+    # Returns true if teams with campus for this school and event exists and campus invoicing not already enabled
+    def campusInvoicingAvailable(self):
+        if not self.school:
+            return False
+
+        if self.campusInvoicingEnabled():
+            return False
+
+        return Team.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+
+    # Teams
+
     # Queryset of teams covered by this invoice
     def teamsQueryset(self):
-        if self.school:
-            # If school filter by school
+        if self.campusInvoicingEnabled():
+            # Filter by school and campus
+            return Team.objects.filter(event=self.event, school=self.school, campus=self.campus)
+
+        elif self.school:
+            # If school but campuses not enableed filter by school
             return Team.objects.filter(event=self.event, school=self.school)
+
         else:
             # If no school filter by user
             return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
+
+    # Totals
 
     def invoiceAmount(self):
         return self.event.entryFee * self.teamsQueryset().count()
