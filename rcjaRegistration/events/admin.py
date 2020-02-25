@@ -52,7 +52,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Team settings', {
-            'fields': ('event_maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
+            'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
             'fields': ('event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'))
