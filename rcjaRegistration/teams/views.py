@@ -24,6 +24,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST)
         form = TeamForm(request.POST, user=request.user, event=event)
+        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
         if form.is_valid() and formset.is_valid():
             # Create team object but don't save so can set foreign keys
@@ -78,9 +79,9 @@ def editTeam(request, teamID):
 
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST, instance=team)
-        form = TeamForm(request.POST,instance=team, user=request.user, event=event)
-        form.event_id = event.id
-        form.team_id = team.id
+        form = TeamForm(request.POST, instance=team, user=request.user, event=event)
+        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
+
         if form.is_valid() and formset.is_valid():
             # Create team object but don't save so can set foreign keys
             team = form.save(commit=False)
