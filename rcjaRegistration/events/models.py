@@ -139,6 +139,13 @@ class Event(models.Model):
         if self.registrationsCloseDate >= self.startDate:
             errors.append(ValidationError('Registration close date must be before event start date'))
     
+        # Validate billing settings
+        if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
+            errors.append(ValidationError('Both special rate number and fee must either be blank or not blank'))
+
+        if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
+            errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
