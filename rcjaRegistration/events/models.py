@@ -99,8 +99,8 @@ class Event(models.Model):
 
     # Team details
     event_maxMembersPerTeam = models.PositiveIntegerField('Max members per team')
-    event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced in the mentor signup page, can be overridden in the admin portal.')
-    event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced in the mentor signup page, can be overridden in the admin portal.')
+    event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+    event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
     # Billing details
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
