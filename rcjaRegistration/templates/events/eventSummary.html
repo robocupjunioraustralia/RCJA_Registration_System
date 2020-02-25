@@ -9,49 +9,63 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>Your Teams - {{event}}</h1>
+        <h1>{{event}}</h1>
     </div>
+
+    <div class="row">
+        <h2>Dates</h2>
+        <p>Start date: {{event.startDate}}</p>
+        <p>End date: {{event.endDate}}</p>
+        <p>Registrations close: {{event.registrationsClose}}</p>
+        <h2>Event details</h2>
+        <p> {{ event.eventDetails|escape|linebreaks }} </p>
+        <h2>Location</h2>
+        <p> {{ event.location|escape|linebreaks }} </p>
+        <h2>Max members per team: {{ event.maxMembersPerTeam }}</h2>
+    </div><br>
+
     <div class="row">
         {% if event.registrationsCloseDate >= today %}
-        <a href ="{% url 'teams:create' event.id %}"><button class = "ui primary button"> Add a team</button> </a>
+        <a href="{% url 'teams:create' event.id %}"><button class="ui primary button"> Add a team</button> </a>
         {% else %}
         <h5> Registration for this event has closed. If you need to make modifications, please contact your event supervisor. </h5>
         {% endif %}
     </div>
     <br>
     <div>
-            <table id = "eventTable" class = "ui celled table">
-                <thead>
-                    <th> Team Name</th>
-                    <th> Division</th>
-                    <th> Campus</th>
-                    <th> Students</th>
+        <table id="eventTable" class="ui celled table">
+            <thead>
+                <th> Team Name</th>
+                <th> Division</th>
+                <th> Campus</th>
+                <th> Students</th>
+                {% if event.registrationsCloseDate >= today %}
+                <th> Actions </th>
+                {% endif %}
+            </thead>
+            <tbody>
+                {% for team in teams %}
+                <tr id="teamRow{{team.id}}">
+                    <td>{{team.name}}</td>
+                    <td>{{team.division}}</td>
+                    <td>{{team.campus}}</td>
+                    <td>
+                        {% for student in team.student_set.all %}
+                        {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
+                        {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
                     {% if event.registrationsCloseDate >= today %}
-                    <th> Actions </th>
+                    <td> <a href="{% url 'teams:edit' team.id %}"><button class="ui primary button">Edit/View Details
+                            </button></a>
+                        <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:delete' team.id %}')" class="ui negative button">Delete
+                        </button>
+                    </td>
                     {% endif %}
-                </thead>
-                <tbody>
-                    {% for team in teams %}
-                        <tr id = "teamRow{{team.id}}">
-                            <td>{{team.name}}</td> 
-                            <td>{{team.division}}</td>
-                            <td>{{team.campus}}</td> 
-                            <td> 
-                                    {% for student in team.student_set.all %}
-                                        {{student.firstName}} {{student.lastName}} ({{student.yearLevel}}) 
-                                        {% if not forloop.last %}, {% endif %}
-                                    
-                                    {% endfor %}
-                            </td>
-                            {% if event.registrationsCloseDate >= today %}
-                            <td> <a href="{% url 'teams:edit' team.id %}"><button class = "ui primary button">Edit/View Details </button></a>
-                                 <button onClick ="showDeleteModal({{team.id}}, '{% url 'teams:delete' team.id %}')" class = "ui negative button">Delete </button> 
-                            </td> 
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     <br>
 </div>
@@ -59,39 +73,39 @@
 
 
 <div class="ui modal">
-<div class="header">
-    Delete Team
-</div>
-<div class="image content">
-    <div class="description">
-    <div class="ui header">Are you sure?</div>
-    <p> Deleting a team is an irreversable action. Are you sure that this is the team you want to delete?
+    <div class="header">
+        Delete Team
+    </div>
+    <div class="image content">
+        <div class="description">
+            <div class="ui header">Are you sure?</div>
+            <p> Deleting a team is an irreversable action. Are you sure that this is the team you want to delete?
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">No, cancel</div>
+        <button id="deleteConfirm" class="ui negative right button">Yes, I'm certain</button>
     </div>
 </div>
-<div class="actions">
-    <div class="ui black deny button">No, cancel</div>
-    <button id = "deleteConfirm" class="ui negative right button">Yes, I'm certain</button>
-</div>
-</div>
 
-<script> 
-    $(document).ready( function () {
+<script>
+    $(document).ready(function () {
         $('#eventTable').DataTable();
-    } );
+    });
     function showModal() {
-        $('.ui.modal').modal('show'); 
+        $('.ui.modal').modal('show');
     }
 
     function deleteTeam(id, url) {
         $.ajax({
             type: "DELETE",
             url: url,
-            beforeSend: function(xhr) {
+            beforeSend: function (xhr) {
                 xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
             },
         })
-            .done( (data) => $('#teamRow' + id).remove() )
-            .fail( (data) => alert('Unexpected Error!' + data))
+            .done((data) => $('#teamRow' + id).remove())
+            .fail((data) => alert('Unexpected Error!' + data))
     }
 
     function showDeleteModal(id, url) {
