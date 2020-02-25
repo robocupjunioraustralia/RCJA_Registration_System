@@ -194,7 +194,7 @@ class AvailableDivision(models.Model):
     # Billing details
     billingTypeChoices = (('event', 'Event settings'), ('team', 'By team'), ('student', 'By student'))
     division_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='event')
-    division_entryFee = models.PositiveIntegerField('Default entry fee')
+    division_entryFee = models.PositiveIntegerField('Default entry fee', null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
