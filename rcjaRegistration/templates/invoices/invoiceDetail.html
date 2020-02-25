@@ -3,11 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Invoice - {{ invoice.event }}</title>
+  <title>Invoice - {{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css'>
-  <link rel="stylesheet" href="./style.css">
+  <!-- <link rel="stylesheet" href="./style.css"> -->
 
 </head>
 
@@ -19,8 +19,8 @@
         <div class="row">
           <div class="left floated left aligned six wide column">
             <div class="ui">
-              <h1 class="ui header pageTitle">Tax Invoice <small class="ui sub header">{{ invoice.event }}</small></h1>
-              <h3 class="ui sub header invDetails">Date: {{ invoice.invoicedDate }}{% if invoice.purchaseOrderNumber %} | Purchase Order Number: {{ invoice.purchaseOrderNumber }} {% endif %}</h3>
+              <h1 class="ui header pageTitle">Tax Invoice <small class="ui sub header">{{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</small></h1>
+              <!-- <h3 class="ui sub header invDetails"></h3> -->
             </div>
           </div>
           <!-- <div class="right floated left aligned six wide column">
@@ -38,29 +38,32 @@
       </div>
     </div>
     <div class="ui segment cards">
-      <div class="ui card">
+      <div class="ui card customercard">
         <div class="content">
-          <div class="header">Tax invoice from</div>
+          <div class="header">To</div>
         </div>
         <div class="content">
           <ul>
-            <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
-            {{ invoiceSettings.invoiceFromDetails|escape|linebreaks }}
-          </ul>
-        </div>
-      </div>
-      <div class="ui card">
-        <div class="content">
-          <div class="header">Tax invoice to</div>
-        </div>
-        <div class="content">
-          <ul>
-            <li><strong>{{ invoice.school.name }}</strong></li>
+            <li><strong>{{ invoice.school.name }}{% if invoice.campusInvoicingEnabled %} , {{invoice.campus|default:'No'}} Campus {% endif %}</strong></li>
             <li><strong>{{ invoice.invoiceToUser.get_full_name }}</strong></li>
             <li>{{ invoice.invoiceToUser.email }}</li>
+            <li>Invoice Date: {{ invoice.invoicedDate }}</li>
+            <li>Invoice Number: {{ invoice.invoiceNumber }}</li>
+            <li>{% if invoice.purchaseOrderNumber %}PO Number: {{ invoice.purchaseOrderNumber }} {% endif %}</li>
           </ul>
         </div>
       </div>
+      <div class="ui card">
+          <div class="content">
+            <div class="header">From</div>
+          </div>
+          <div class="content">
+            <ul>
+              <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
+              {{ invoiceSettings.invoiceFromDetails|escape|linebreaks }}
+            </ul>
+          </div>
+        </div>
 
       <div class="ui segment itemscard">
         <div class="content">
@@ -68,35 +71,35 @@
             <thead>
               <tr>
                 <th>Division</th>
-                <th class="text-center colfix">Unit cost</th>
-                <th class="text-center colfix">Number teams</th>
-                <th class="text-center colfix">Total (excl GST)</th>
+                <th class="text-center colfix">Unit Cost (ex GST)</th>
+                <th class="text-center colfix">Number Teams</th>
+                <th class="text-center colfix">Total (ex GST)</th>
                 <th class="text-center colfix">GST</th>
                 <th class="text-center colfix">Total (incl GST)</th>
               </tr>
             </thead>
             <tbody>
-              {% for division in divisionDetails %}
-              <tr id="divisionRom{{division.id}}">
+              {% for invoiceItem in invoiceItems %}
+              <tr id="invoiceItemRom{{invoiceItem.id}}">
                 <td>
-                  {{ division.division.name }}
+                  {{ invoiceItem.name }}
                   <!-- <br>
                 <small class="text-muted">We can put more text here but I doubt we want to</small> -->
                 </td>
                 <td class="text-right">
-                  <span class="mono">{{ division.unitCost }}</span>
+                  <span class="mono">${{ invoiceItem.unitCost|floatformat:2 }}</span>
                 </td>
                 <td class="text-right">
-                  <span class="mono">{{ division.numberTeams }}</span>
+                  <span class="mono">{{ invoiceItem.numberTeams }}</span>
                 </td>
                 <td class="text-right">
-                  <span class="mono">${{ division.totalExclGST|floatformat:2 }}</span>
+                  <span class="mono">${{ invoiceItem.totalExclGST|floatformat:2 }}</span>
                 </td>
                 <td class="text-right">
-                  <strong class="mono">${{ division.gst|floatformat:2 }}</strong>
+                  <strong class="mono">${{ invoiceItem.gst|floatformat:2 }}</strong>
                 </td>
                 <td class="text-right">
-                  <strong class="mono">${{ division.totalInclGST|floatformat:2 }}</strong>
+                  <strong class="mono">${{ invoiceItem.totalInclGST|floatformat:2 }}</strong>
                 </td>
               </tr>
               {% endfor %}
@@ -116,19 +119,6 @@
       </div>
 
       <div class="ui card">
-        <div class="content center aligned text segment">
-          <small class="ui sub header"> Amount Due: </small>
-          <p class="bigfont"> ${{ invoice.amountDue|floatformat:2 }} </p>
-        </div>
-      </div>
-      <div class="ui card">
-        <div class="content center aligned text segment">
-          <small class="ui sub header"> Amount Paid: </small>
-          <p class="bigfont"> ${{ invoice.amountPaid|floatformat:2 }} </p>
-          <p class="smallfont"> As of {{ currentDate }}</p>
-        </div>
-      </div>
-      <div class="ui card">
         <div class="content">
           <div class="header">Payment Details</div>
         </div>
@@ -138,11 +128,27 @@
           <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
         </div>
       </div>
+      <div class="ui card">
+        <div class="content center aligned text segment">
+          <small class="ui sub header"> Amount Due (EFT): </small>
+          <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p>
+          <small class="ui sub header"> Amount Due (PayPal): </small>
+          <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p>
+        </div>
+      </div>
+      <div class="ui card">
+        <div class="content center aligned text segment">
+          <small class="ui sub header"> Amount Paid: </small>
+          <p class="bigfont"> ${{ invoice.amountPaid|floatformat:2 }} </p>
+          <p class="smallfont"> As of {{ currentDate }}</p>
+        </div>
+      </div>
       <div class="ui segment itemscard">
         <div class="content">
           <h3>Note:</h3>
           {{ invoice.event.state.invoiceMessage|escape|linebreaks }}<br>
-          {{ invoice.event.additionalInvoiceMessage|escape|linebreaks  }}
+          {{ invoice.event.additionalInvoiceMessage|escape|linebreaks }}<br>
+          <strong>{{ invoiceSettings.invoiceFooterMessage|escape|linebreaks }}</strong>
         </div>
       </div>
     </div>

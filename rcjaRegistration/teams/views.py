@@ -22,14 +22,12 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
 
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST)
-        form = TeamForm(request.POST, event_id=eventID, user=request.user)
-        form.event_id = eventID #NOTE: this is a custom property assignment, see forms.py
+        form = TeamForm(request.POST, user=request.user, event=event)
+
         if form.is_valid() and formset.is_valid():
             # Create team object but don't save so can set foreign keys
             team = form.save(commit=False)
-            team.event = event
             team.mentorUser = request.user
-            team.school = request.user.currentlySelectedSchool
 
             # Save team
             team.save()
@@ -45,12 +43,12 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
         # Get default campus if only one campus for school
         if request.user.currentlySelectedSchool:
             campuses = request.user.currentlySelectedSchool.campus_set.all()
-            defaultCampus = campuses.first() if campuses.count() == 1 else None
+            defaultCampusID = campuses.first().id if campuses.count() == 1 else None
         else:
-            defaultCampus = None
+            defaultCampusID = None
 
         # Create form
-        form = TeamForm(event_id=eventID, user=request.user, initial={'campus':defaultCampus})
+        form = TeamForm(user=request.user, event=event, initial={'campus':defaultCampusID})
         formset = StudentInLineFormSet()
     return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event})
 
@@ -79,7 +77,7 @@ def editTeam(request, teamID):
 
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST, instance=team)
-        form = TeamForm(request.POST,instance=team, event_id=event.id, user=request.user)
+        form = TeamForm(request.POST,instance=team, user=request.user, event=event)
         form.event_id = event.id
         form.team_id = team.id
         if form.is_valid() and formset.is_valid():
@@ -95,7 +93,7 @@ def editTeam(request, teamID):
 
             return redirect(reverse('events:summary', kwargs = {"eventID":event.id}))
     else:
-        form = TeamForm(instance=team, event_id=event.id, user=request.user)
+        form = TeamForm(instance=team, user=request.user, event=event)
         formset = StudentInLineFormSet(instance=team)
     return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event,'team':team})
 

@@ -18,47 +18,26 @@ class StudentForm(forms.ModelForm):
 class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division', 'name', 'campus']
+        fields= ['division', 'name', 'campus', 'school', 'event']
 
     # Override init to filter division fk to available divisions
-    def __init__(self, *args, **kwargs):
-        # Pop custom fields before init
-        eventID = kwargs.pop('event_id', None)
-        user = kwargs.pop('user', None)
-
+    def __init__(self, *args, user, event, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Filter division to available divisions
         from events.models import Division
-        self.fields['division'].queryset = Division.objects.filter(event=eventID)
+        self.fields['division'].queryset = Division.objects.filter(event=event)
 
         # Filter campus to user's campuses
         from schools.models import Campus
         self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
 
-    StudentFormSet = inlineformset_factory(Team,Student,form=StudentForm) # Is this needed?
+        # School field
+        self.fields['school'].initial = user.currentlySelectedSchool.id
+        self.fields['school'].disabled = True
+        self.fields['school'].widget = forms.HiddenInput()
 
-    #NOTE: this is a custom clean method to enforce validation on the unique_together constraint
-    #This is required because we need to add the event_id manually from the url
-    # TODO: Refactor this
-    def clean(self): 
-        cleaned_data = self.cleaned_data
-
-        teamWithNameInEvent = Team.objects.filter(
-            name=cleaned_data['name'],         
-            event_id=self.event_id or cleaned_data['event_id']
-        )
-        
-        teamIsSameTeam = False #this case handles editing, when we already have a team
-        try:
-            if(str(teamWithNameInEvent.first().id) == str(self.team_id)): #team_id must be manually set on the form by the view
-                teamIsSameTeam = True
-        except AttributeError:
-            pass
-        if (teamWithNameInEvent.exists() and (not teamIsSameTeam)):
-            raise ValidationError(
-                'Team with this name already exists for this event'
-            )
-        
-        # Always return cleaned_data
-        return cleaned_data
+        # Event field
+        self.fields['event'].initial = event.id
+        self.fields['event'].disabled = True
+        self.fields['event'].widget = forms.HiddenInput()

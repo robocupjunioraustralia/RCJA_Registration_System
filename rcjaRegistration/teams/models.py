@@ -1,6 +1,8 @@
 from django.db import models
 from common.models import *
 
+from invoices.models import Invoice
+
 # **********MODELS**********
 
 class Team(CustomSaveDeleteModel):
@@ -56,15 +58,42 @@ class Team(CustomSaveDeleteModel):
 
     def postSave(self):
         # Create invoice
-        from invoices.models import Invoice
-        if self.school:
-            Invoice.objects.get_or_create(school=self.school, event=self.event, defaults={'invoiceToUser': self.mentorUser})
+        if self.campusInvoicingEnabled():
+            # Get or create invoice with matching campus
+            Invoice.objects.get_or_create(
+                school=self.school,
+                campus=self.campus,
+                event=self.event,
+                defaults={'invoiceToUser': self.mentorUser}
+            )
+
+        elif self.school:
+            # Ignore campus and only look for matching school
+            Invoice.objects.get_or_create(
+                school=self.school,
+                event=self.event,
+                defaults={'invoiceToUser': self.mentorUser}
+            )
+
         else:
-            Invoice.objects.get_or_create(invoiceToUser=self.mentorUser, event=self.event, school=None)
+            # Get invoice for this user for independent entry
+            Invoice.objects.get_or_create(
+                invoiceToUser=self.mentorUser,
+                event=self.event,
+                school=None
+            )
 
     # *****Methods*****
 
     # *****Get Methods*****
+
+    # Returns true if campus based invoicing enabled for this school for this event
+    def campusInvoicingEnabled(self):
+        if not self.school:
+            return False
+
+        # Check if at least one invoice has campus field set
+        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
     def __str__(self):
         return self.name

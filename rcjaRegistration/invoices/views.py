@@ -40,9 +40,9 @@ def detail(request, invoiceID):
 
     # Division details
     teams = invoice.teamsQueryset()
-    enteredDivisions = Division.objects.filter(team__in=teams)
+    enteredDivisions = Division.objects.filter(team__in=teams).distinct()
 
-    divisionDetails = []
+    invoiceItems = []
     overallTotalExclGST = 0
     overallTotalGST = 0
     overallTotalInclGST = 0
@@ -60,8 +60,8 @@ def detail(request, invoiceID):
         overallTotalGST += gst
         overallTotalInclGST += totalInclGST
 
-        divisionDetails.append({
-            'division': division,
+        invoiceItems.append({
+            'name': division.name,
             'numberTeams': numberTeams,
             'unitCost': unitCost,
             'totalExclGST': totalExclGST,
@@ -72,7 +72,7 @@ def detail(request, invoiceID):
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'divisionDetails': divisionDetails,
+        'invoiceItems': invoiceItems,
         'overallTotalExclGST': overallTotalExclGST,
         'overallTotalGST': overallTotalGST,
         'overallTotalInclGST': overallTotalInclGST,
@@ -94,6 +94,34 @@ def setInvoiceTo(request, invoiceID):
         invoice.save(update_fields=['invoiceToUser'])
 
         return JsonResponse({'id':invoiceID, 'invoiceTo':request.user.fullname_or_email(), 'success':True})
+    else:
+        return HttpResponseForbidden()
+
+@login_required
+def setCampusInvoice(request, invoiceID):
+    if request.method == 'POST':
+        invoice = get_object_or_404(Invoice, pk=invoiceID)
+
+        # Check permissions
+        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+            raise PermissionDenied("You do not have permission to view this invoice")
+
+        # Check campus invoicing available
+        if not invoice.campusInvoicingAvailable():
+            return HttpResponseForbidden("Campus invoicing not available for this event")
+
+        # Create campus invoices for campuses that have teams entered in this event
+        # This invoice object remains for teams without a campus
+        from schools.models import Campus
+        for campus in Campus.objects.filter(school=invoice.school, team__event=invoice.event):
+            Invoice.objects.create(
+                event=invoice.event,
+                invoiceToUser=invoice.invoiceToUser,
+                school=invoice.school,
+                campus=campus,
+            )
+
+        return JsonResponse({'id':invoiceID, 'success':True})
     else:
         return HttpResponseForbidden()
 

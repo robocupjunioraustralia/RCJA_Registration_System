@@ -2,8 +2,6 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
-from teams.models import Team
-
 # **********MODELS**********
 
 class InvoiceGlobalSettings(models.Model):
@@ -13,6 +11,7 @@ class InvoiceGlobalSettings(models.Model):
     # Fields
     invoiceFromName = models.CharField('Invoice from name', max_length=50)
     invoiceFromDetails = models.TextField('Invoice from details')
+    invoiceFooterMessage = models.TextField('Invoice footer message')
 
     # *****Meta and clean*****
     class Meta:
@@ -32,7 +31,7 @@ class InvoiceGlobalSettings(models.Model):
     def __str__(self):
         return 'Invoice settings'
 
-class Invoice(models.Model):
+class Invoice(CustomSaveDeleteModel):
     # Foreign keys
     event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT, editable=False)
 
@@ -46,6 +45,7 @@ class Invoice(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
+    invoiceNumber = models.PositiveIntegerField('Invoice number', unique=True, editable=False)
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)
     notes = models.TextField('Notes', blank=True)
@@ -58,7 +58,7 @@ class Invoice(models.Model):
             models.UniqueConstraint(fields=['event', 'invoiceToUser'], condition=Q(school=None), name='event_user'),
             models.UniqueConstraint(fields=['event', 'school', 'campus'], name='event_school_campus'),
         ]
-        ordering = ['event', 'school']
+        ordering = ['-invoiceNumber']
 
     # *****Permissions*****
     @classmethod
@@ -90,18 +90,60 @@ class Invoice(models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self.invoiceNumber is None:
+            try:
+                self.invoiceNumber = Invoice.objects.latest('invoiceNumber').invoiceNumber + 1
+            except Invoice.DoesNotExist:
+                self.invoiceNumber = 1
+
     # *****Methods*****
 
     # *****Get Methods*****
 
+    # Campus
+
+    # Returns true if campus based invoicing enabled for this school for this event
+    def campusInvoicingEnabled(self):
+        if not self.school:
+            return False
+
+        # Check no payments made
+        if self.invoicepayment_set.exists():
+            return False
+
+        # Check if at least one invoice has campus field set
+        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+
+    # Returns true if teams with campus for this school and event exists and campus invoicing not already enabled
+    def campusInvoicingAvailable(self):
+        from teams.models import Team
+        if not self.school:
+            return False
+
+        if self.campusInvoicingEnabled():
+            return False
+
+        return Team.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+
+    # Teams
+
     # Queryset of teams covered by this invoice
     def teamsQueryset(self):
-        if self.school:
-            # If school filter by school
+        from teams.models import Team
+        if self.campusInvoicingEnabled():
+            # Filter by school and campus
+            return Team.objects.filter(event=self.event, school=self.school, campus=self.campus)
+
+        elif self.school:
+            # If school but campuses not enableed filter by school
             return Team.objects.filter(event=self.event, school=self.school)
+
         else:
             # If no school filter by user
             return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
+
+    # Totals
 
     def invoiceAmount(self):
         return self.event.entryFee * self.teamsQueryset().count()
@@ -111,9 +153,13 @@ class Invoice(models.Model):
         return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
     amountPaid.short_description = 'Amount paid'
 
-    def amountDue(self):
+    def amountDueExclGST(self):
         return self.invoiceAmount() - self.amountPaid()
-    amountDue.short_description = 'Amount due'
+    amountDueExclGST.short_description = 'Amount due (ex GST)'
+
+    def amountDueInclGST(self):
+        return self.amountDueExclGST() * 1.1
+    amountDueInclGST.short_description = 'Amount due (incl GST)'
 
     def __str__(self):
         return f'{self.event}: {self.school}'
