@@ -1,5 +1,10 @@
 {% extends 'common/loggedInbase.html' %}
 
+{% block head %}
+
+<title> Invoices </title>
+
+{% endblock %}
 
 {% block content %}
 <div class="ui aligned container">
@@ -16,8 +21,9 @@
                 <th> School </th>
                 <th> Campus </th>
                 <th> PO Number </th>
-                <th> Amount due </th>
-                <th> Total </th>
+                <th> Invoice amount </th>
+                <th> Amount due (EFT) </th>
+                <th> Amount due (PayPal) </th>
             </thead>
             <tbody>
                 {% for invoice in invoices %}
@@ -32,14 +38,21 @@
                             {% endif %}
                         </td>
                         <td>{{invoice.school}}</td>
-                        <td>{{invoice.campus}}</td>
+                        <td>
+                            {{invoice.campus}}
+                            {% if invoice.campusInvoicingAvailable %}
+                            <br>
+                            <button onclick = showCampusModal({{invoice.id}}) class = "ui button primary"> Enable campus invoicing </button>
+                            {% endif %}
+                        </td>
                         <td >
                             <span id = "inv-po-{{invoice.id}}">{{invoice.purchaseOrderNumber}}</span>
                             <br>
-                            <button onclick = showModal({{invoice.id}}) class = "ui button primary"> Set </button>
+                            <button onclick = showPOModal({{invoice.id}}) class = "ui button primary"> Set </button>
                         </td>
-                        <td>{{invoice.amountDue}}</td>
-                        <td>{{invoice.invoiceAmount}}</td>
+                        <td>${{invoice.invoiceAmount|floatformat:2}}</td>
+                        <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
+                        <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -50,7 +63,7 @@
 
 
 
-<div class="ui modal">
+<div class="ui modal poNumber">
     <div class="header">
         Set/Edit Invoice PO Number
     </div>
@@ -73,21 +86,50 @@
         Cancel
         </div>
 
-        <button id = "confirm" class="ui positive right labeled icon button">
+        <button id = "confirm" class="ui positive right button">
         Set Number
-          <i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+
+<div class="ui modal campus">
+    <div class="header">
+        Enable campus invoicing
+    </div>
+    <div class="image content">
+        <div class="description" id ="POContent">
+            <div id = "campusErrors"></div>
+            <div class="ui header">Are you sure you want to enable campus based invoicing? This can't be undone.</div>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">
+        Cancel
+        </div>
+
+        <button id = "confirm" class="ui positive right button">
+        Enable campus invoicing
         </button>
     </div>
 </div>
     
-    
 <script> 
-    function showModal(invoiceNumber) {
+    function showPOModal(invoiceNumber) {
         $('#invoiceNumber').val(invoiceNumber)
-        $('.ui.modal').modal({
-        closable  : false,
-        onDeny    : () => true,
-        onApprove : () => setPONum(invoiceNumber)
+        $('.ui.modal.poNumber').modal({
+            closable  : false,
+            onDeny    : () => true,
+            onApprove : () => setPONum(invoiceNumber)
+        })
+.modal('show'); 
+    }
+
+    function showCampusModal(invoiceNumber) {
+        $('#invoiceNumber').val(invoiceNumber)
+        $('.ui.modal.campus').modal({
+            closable  : false,
+            onDeny    : () => true,
+            onApprove : () => setCampusInvoicing(invoiceNumber)
         })
 .modal('show'); 
     }
@@ -99,13 +141,11 @@
             data: $("#POCreation").serialize()
         })
             .done( (data) => {
-                console.log(data)
                 $("#inv-po-"+invoiceNumber).html(data.number)
 
-                $('.ui.modal').modal('hide');
+                $('.ui.modal.poNumber').modal('hide');
             } )
             .fail( (data) => {
-                console.error(data.responseJSON)
                 $("#POErrors").empty()
                 for(key in data.responseJSON.errors) {
                 data.responseJSON.errors[key].map( (error) => {
@@ -120,6 +160,19 @@
             if (typeof s !== 'string') return ''
             return s.charAt(0).toUpperCase() + s.slice(1)
         }
+
+    function setCampusInvoicing(invoiceNumber) {
+        $.ajax({
+            type: "POST",
+            url: invoiceNumber + "/setCampusInvoice",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+        })
+            .done( (data) => {
+                $('.ui.modal.campus').modal('hide');
+            } )
+            return false //needed to stop modal from closing
+        }
+
         function setInvoiceTo(invoiceNumber) {
             $.ajax({
                 type: "POST",
