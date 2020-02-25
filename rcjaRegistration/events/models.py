@@ -187,9 +187,9 @@ class AvailableDivision(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Team details
-    division_maxMembersPerTeam = models.PositiveIntegerField('Max members per team')
-    division_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced in the mentor signup page, can be overridden in the admin portal.')
-    division_maxTeamsForDivision = models.PositiveIntegerField('Max teams for division', null=True, blank=True, help_text='Leave blank for no limit. Only enforced in the mentor signup page, can be overridden in the admin portal.')
+    division_maxMembersPerTeam = models.PositiveIntegerField('Max members per team', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxTeamsForDivision = models.PositiveIntegerField('Max teams for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
 
     # Billing details
     billingTypeChoices = (('event', 'Event settings'), ('team', 'By team'), ('student', 'By student'))
