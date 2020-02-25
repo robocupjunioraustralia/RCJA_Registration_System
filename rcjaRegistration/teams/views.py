@@ -52,7 +52,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
         # Create form
         form = TeamForm(user=request.user, event=event, initial={'campus':defaultCampusID})
         formset = StudentInLineFormSet()
-    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event})
+    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event})
 
 @login_required
 def editTeam(request, teamID):
@@ -97,7 +97,7 @@ def editTeam(request, teamID):
     else:
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = StudentInLineFormSet(instance=team)
-    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event,'team':team})
+    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
 @login_required
 def deleteTeam(request, teamID): 

@@ -77,7 +77,7 @@ class Year(models.Model):
 
     # *****Email methods*****
 
-class Event(models.Model):
+class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
     state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
@@ -98,7 +98,7 @@ class Event(models.Model):
     registrationsCloseDate = models.DateField('Registration close date')
 
     # Team details
-    maxMembersPerTeam = models.PositiveIntegerField('Max members per team')
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', help_text="Resets to 0 for workshops")
     event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
@@ -117,7 +117,7 @@ class Event(models.Model):
 
     # Available divisions
     divisions = models.ManyToManyField(Division, verbose_name='Available divisions', through='AvailableDivision')
-  
+
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Event'
@@ -138,7 +138,7 @@ class Event(models.Model):
 
         if self.registrationsCloseDate >= self.startDate:
             errors.append(ValidationError('Registration close date must be before event start date'))
-    
+
         # Validate billing settings
         if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
             errors.append(ValidationError('Both special rate number and fee must either be blank or not blank'))
@@ -173,9 +173,23 @@ class Event(models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self.eventType == 'workshop':
+            # Set maxMembersPerTeam to 0 if eventType is workshop
+            self.maxMembersPerTeam = 0
+
+            # Set billing type to team or event if eventType is workshop
+            self.event_billingType = 'team'
+            self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
+            self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
+
+
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def boolWorkshop(self):
+        return self.eventType == 'workshop'
 
     def __str__(self):
         return f'{self.name} {self.year} ({self.state.abbreviation})'
@@ -184,7 +198,7 @@ class Event(models.Model):
 
     # *****Email methods*****
 
-class AvailableDivision(models.Model):
+class AvailableDivision(CustomSaveDeleteModel):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
@@ -220,9 +234,12 @@ class AvailableDivision(models.Model):
         if self.division_billingType != 'event' and self.division_entryFee is None:
             errors.append(ValidationError('Division entry fee must not be blank if event billing settings not selected'))
 
-        # Validate division_billingType and event_specialRateNumber
+        # Validate division_billingType
         if self.division_billingType != 'event' and (self.event.event_specialRateNumber is not None or self.event.event_specialRateFee is not None):
             errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
+
+        if self.division_billingType == 'student' and self.event.eventType == 'workshop':
+            errors.append(ValidationError('Student billing not available on workshops, use team billing which bills per attendee'))
 
         # Raise any errors
         if errors:

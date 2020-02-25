@@ -34,6 +34,7 @@ class AvailableDivisionInline(admin.TabularInline):
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
+        'eventType',
         'year',
         'state',
         'startDate',

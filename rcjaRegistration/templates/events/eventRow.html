@@ -12,17 +12,9 @@
                     <span class="date">{{event.startDate}} - {{event.endDate}} Registrations close: {{event.registrationsCloseDate}}</span>
                 </div>
                 <div class="cardcontent">
-                    <!-- <div style="float:right;">
-                        <a href="/events/{{event.id}}"><button class="ui button green"> Teams -></button></a>
-                    </div> -->
-                    <!-- <div>
-                        {% if event.compDetails %}
-                        {{event.compDetails}}
-                        {% else %}
-                        {{event.name}} Location: {{event.location}}
-                        {% endif %}
-                    </div> -->
-
+                    {% if event.boolWorkshop %}
+                    This event is a workshop.
+                    {% endif %}
                 </div>
             </div>
             <div class="extra content">
