@@ -15,7 +15,7 @@ import datetime
 def createTeam(request, eventID): #TODO!! validate eventID is one that teams can be created for
     event = get_object_or_404(Event, pk=eventID)
 
-    StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.max_team_members, max_num=event.max_team_members, can_delete=False)
+    StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.maxMembersPerTeam, max_num=event.maxMembersPerTeam, can_delete=False)
 
     # Check registrations open
     if event.registrationsCloseDate < datetime.datetime.now().date():
@@ -74,7 +74,7 @@ def editTeam(request, teamID):
         if team.mentorUser != request.user or team.school:
             raise PermissionDenied("You are not an administrator of this team")
 
-    StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=True)
+    StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.maxMembersPerTeam,max_num=event.maxMembersPerTeam,can_delete=True)
 
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST, instance=team)

@@ -86,7 +86,7 @@ class Event(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=50)
-    max_team_members = models.PositiveIntegerField('Max team members')
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team')
     # Dates
     startDate = models.DateField('Event start date')
     endDate = models.DateField('Event end date')

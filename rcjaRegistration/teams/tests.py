@@ -39,7 +39,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         year=obj.year,
         state=obj.newState,
         name='test old not reg',
-        max_team_members=5,
+        maxMembersPerTeam=5,
         entryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -53,7 +53,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         year=obj.year,
         state=obj.newState,
         name='test new not reg',
-        max_team_members=5,
+        maxMembersPerTeam=5,
         entryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
@@ -67,7 +67,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         year=obj.year,
         state=obj.newState,
         name='test old yes reg',
-        max_team_members=5,
+        maxMembersPerTeam=5,
         entryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date(),
@@ -99,14 +99,14 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
 
     def testMaxSubmissionNumber(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
-        self.assertContains(response,'First name', self.newEvent.max_team_members)
+        self.assertContains(response,'First name', self.newEvent.maxMembersPerTeam)
 
     def testWorkingTeamCreate(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
             "student_set-MIN_NUM_FORMS":0,
-            "student_set-MAX_NUM_FORMS":self.newEvent.max_team_members,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
             "school":self.newSchool.id,
@@ -124,7 +124,7 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
             "student_set-MIN_NUM_FORMS":0,
-            "student_set-MAX_NUM_FORMS":self.newEvent.max_team_members,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
             "student_set-0-firstName":"test",
@@ -167,7 +167,7 @@ class TestEditTeam(TestCase):
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
             "student_set-MIN_NUM_FORMS":0,
-            "student_set-MAX_NUM_FORMS":self.newEvent.max_team_members,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
             "school":self.newSchool.id,
@@ -187,7 +187,7 @@ class TestEditTeam(TestCase):
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
             "student_set-MIN_NUM_FORMS":0,
-            "student_set-MAX_NUM_FORMS":self.newEvent.max_team_members,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
             "student_set-0-firstName":"test2",

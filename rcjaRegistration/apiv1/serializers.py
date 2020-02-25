@@ -22,6 +22,6 @@ class EventSerializer(serializers.ModelSerializer):
     state = StateSerializer(read_only=True)
     class Meta:
         model = Event
-        # fields = ['id','year','state','creationDateTime','updatedDateTime','name','max_team_members','startDate']
+        # fields = ['id','year','state','creationDateTime','updatedDateTime','name','maxMembersPerTeam','startDate']
         fields = '__all__'
 
