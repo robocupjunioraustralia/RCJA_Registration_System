@@ -26,6 +26,10 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
 admin.site.register(Year)
 
+class AvailableDivisionInline(admin.TabularInline):
+    model = AvailableDivision
+    extra = 0
+
 @admin.register(Event)
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -36,8 +40,29 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'entryFee',
         'directEnquiriesTo'
+    ]
+    readonly_fields = [
+    ]
+    fieldsets = (
+        (None, {
+            'fields': ('year', 'state', 'name', 'eventType')
+        }),
+        ('Dates', {
+            'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Team settings', {
+            'fields': ('event_maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
+        }),
+        ('Billing settings', {
+            'fields': ('event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'))
+        }),
+        ('Details', {
+            'fields': ('directEnquiriesTo', 'eventDetails', 'location', 'additionalInvoiceMessage')
+        }),
+    )
+    inlines = [
+        AvailableDivisionInline,
     ]
     list_filter = [
         'state',
@@ -54,7 +79,6 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'entryFee',
         'directEnquiriesTo'
     ]
 
