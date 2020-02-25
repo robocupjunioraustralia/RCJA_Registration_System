@@ -52,6 +52,9 @@
                         <div class="field">
                             <label> Abbreviation: </label>
                             {{form.abbreviation}}
+                            {% if form.abbreviation.help_text %}
+                            <small style="color: grey">{{ form.abbreviation.help_text }}</small>
+                            {% endif %}
                         </div>
                         <div class="field">
                             <label>State: </label>
@@ -64,6 +67,7 @@
 
                         <!-- Campus -->
                         <h1>Campuses</h1>
+                        <p>Campuses can be used to ease the management of large schools. Each administrator can be assigned a campus and you can choose to be invoiced on a per campus basis.</p>
                         {% for campusForm in campusFormset %}
                         {{campusForm.id|attr:"type:hidden"}}
                         <div class="ui segment">
@@ -98,6 +102,7 @@
 
                         <!-- Administrators -->
                         <h1>Administrators</h1>
+                        <p>Administratos can manage the school.</p>
                         {% for administratorForm in schoolAdministratorFormset %}
                         {{administratorForm.id|attr:"type:hidden"}}
                         <div class="ui segment">

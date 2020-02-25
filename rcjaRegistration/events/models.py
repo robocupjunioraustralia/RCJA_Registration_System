@@ -77,28 +77,46 @@ class Year(models.Model):
 
     # *****Email methods*****
 
-class Event(models.Model):
+class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
     state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
+
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
     # Fields
     name = models.CharField('Name', max_length=50)
-    max_team_members = models.PositiveIntegerField('Max team members')
+    eventTypeChoices = (('competition', 'Competition'), ('workshop', 'Workshop'))
+    eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, default='competition', help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
+
     # Dates
     startDate = models.DateField('Event start date')
     endDate = models.DateField('Event end date')
     registrationsOpenDate = models.DateField('Registrations open date')
     registrationsCloseDate = models.DateField('Registration close date')
+
+    # Team details
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', help_text="Resets to 0 for workshops")
+    event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+    event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+
+    # Billing details
+    billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
+    event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
+    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams/ students specified will be billed at this rate. Subsequent teams/ students will be billed at the default rate. Leave blank for no special rate.")
+    event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
+
     # Event details
-    entryFee = models.PositiveIntegerField('Entry fee')
-    availableDivisions = models.ManyToManyField(Division, verbose_name='Available divisions', blank=True)
-    directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT)
+    directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
+    eventDetails = models.TextField('Event details', blank=True)
     location = models.TextField('Location', blank=True)
-    compDetails = models.TextField('Event details', blank=True)
-    additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True)
+    additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True, help_text='This appears below the state based invoice message on the invoice.')
+
+    # Available divisions
+    divisions = models.ManyToManyField(Division, verbose_name='Available divisions', through='AvailableDivision')
 
     # *****Meta and clean*****
     class Meta:
@@ -120,7 +138,14 @@ class Event(models.Model):
 
         if self.registrationsCloseDate >= self.startDate:
             errors.append(ValidationError('Registration close date must be before event start date'))
-    
+
+        # Validate billing settings
+        if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
+            errors.append(ValidationError('Both special rate number and fee must either be blank or not blank'))
+
+        if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
+            errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
@@ -148,9 +173,23 @@ class Event(models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self.eventType == 'workshop':
+            # Set maxMembersPerTeam to 0 if eventType is workshop
+            self.maxMembersPerTeam = 0
+
+            # Set billing type to team or event if eventType is workshop
+            self.event_billingType = 'team'
+            self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
+            self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
+
+
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def boolWorkshop(self):
+        return self.eventType == 'workshop'
 
     def __str__(self):
         return f'{self.name} {self.year} ({self.state.abbreviation})'
@@ -159,4 +198,83 @@ class Event(models.Model):
 
     # *****Email methods*****
 
+class AvailableDivision(CustomSaveDeleteModel):
+    # Foreign keys
+    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
 
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
+    # Team details
+    division_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxTeamsForDivision = models.PositiveIntegerField('Max teams for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+
+    # Billing details
+    billingTypeChoices = (('event', 'Event settings'), ('team', 'By team'), ('student', 'By student'))
+    division_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='event')
+    division_entryFee = models.PositiveIntegerField('Division entry fee', null=True, blank=True)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Available Division'
+        unique_together = ('event', 'division')
+        ordering = ['event', 'division']
+
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['event', 'division'])
+
+        # Validate division_entryFee and division_billingType
+        if self.division_billingType == 'event' and self.division_entryFee is not None:
+            errors.append(ValidationError('Division entry fee must be blank if event billing settings selected'))
+
+        if self.division_billingType != 'event' and self.division_entryFee is None:
+            errors.append(ValidationError('Division entry fee must not be blank if event billing settings not selected'))
+
+        # Validate division_billingType
+        if self.division_billingType != 'event' and (self.event.event_specialRateNumber is not None or self.event.event_specialRateFee is not None):
+            errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
+
+        if self.division_billingType == 'student' and self.event.eventType == 'workshop':
+            errors.append(ValidationError('Student billing not available on workshops, use team billing which bills per attendee'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.event.state
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return str(self.division)
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****

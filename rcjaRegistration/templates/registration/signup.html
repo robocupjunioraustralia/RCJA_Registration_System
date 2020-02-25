@@ -151,6 +151,9 @@
             <div class="field">
                 <label>Abbreviation</label>
                 {{schoolCreationModal.abbreviation}}
+                {% if schoolCreationModal.abbreviation.help_text %}
+                <small style="color: grey">{{ schoolCreationModal.abbreviation.help_text }}</small>
+              {% endif %}
             </div>
             <div class="field">
                 <label>Region</label>

@@ -3,7 +3,21 @@
 
 {% block head %}
 
-<title> Add or edit a team </title>
+{% if event.boolWorkshop %}
+  {% if team %}
+  <title> Edit attendee </title>
+  {% else %}
+  <title> Add attendee </title>
+  {% endif %}
+{% else %}
+  {% if team %}
+  <title> Edit team </title>
+  {% else %}
+  <title> Add team </title>
+  {% endif %}
+{% endif %}
+
+
 <style type="text/css">
   body {
     background-color: white;
@@ -39,14 +53,16 @@
       <div class = "twelve wide mobile eight wide computer column ui">
         <div class = "form form-group left-aligned-text">
           <div>
-            <h1>Event: {{event.name}} </h1>
-            {% if team %}
-            <h2> Editing: Team {{team.name}} </h2>
-            {% else %}
-              <h2>Add a new team</h2> 
+            <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}}</h1>
+            {% if not event.boolWorkshop %}
+              {% if team %}
+              <h2> Editing: Team {{team.name}} </h2>
+              {% else %}
+                <h2>Add a new team</h2> 
+              {% endif %}
             {% endif %}
             {% if form.errors %}
-            
+
             <!-- Error messaging -->
             <div class="ui message left-aligned-text">
               <div class="">
@@ -71,11 +87,11 @@
               {{ form.school }}
               {{ form.event }}
                 
-              <h4 class="ui dividing header">Team Information</h4>
+              <h2>{% if event.boolWorkshop %}Attendee details{% else %}Team details{% endif %}</h2>
                
               <div class="three fields">
                 <div class = "field">
-                  <label>Team name: </label>
+                  <label>{% if event.boolWorkshop %}Attendee name:{% else %}Team name:{% endif %}</label>
                     {{form.name|attr:"placeholder:Team Name"}}
                 </div>
                 <div class = "field">
@@ -87,6 +103,9 @@
                     {{ form.campus|attr:"placeholder:Campus"|attr:"class:ui dropdown"}} 
                 </div>
               </div>
+
+              <!-- Students -->
+              {% if not event.boolWorkshop %}<h2>Students</h2>{% endif %}
               {% for studentform in formset %}
                 {{studentform.id|attr:"type:hidden"}}
               <div class = "ui segment">

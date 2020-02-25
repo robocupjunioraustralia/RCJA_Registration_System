@@ -15,14 +15,16 @@ import datetime
 def createTeam(request, eventID): #TODO!! validate eventID is one that teams can be created for
     event = get_object_or_404(Event, pk=eventID)
 
-    StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.max_team_members, max_num=event.max_team_members, can_delete=False)
+    StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.maxMembersPerTeam, max_num=event.maxMembersPerTeam, can_delete=False)
 
+    # Check registrations open
     if event.registrationsCloseDate < datetime.datetime.now().date():
         raise PermissionDenied("Registrtaion has closed for this event")
 
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST)
         form = TeamForm(request.POST, user=request.user, event=event)
+        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
         if form.is_valid() and formset.is_valid():
             # Create team object but don't save so can set foreign keys
@@ -50,7 +52,7 @@ def createTeam(request, eventID): #TODO!! validate eventID is one that teams can
         # Create form
         form = TeamForm(user=request.user, event=event, initial={'campus':defaultCampusID})
         formset = StudentInLineFormSet()
-    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event})
+    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event})
 
 @login_required
 def editTeam(request, teamID):
@@ -73,13 +75,13 @@ def editTeam(request, teamID):
         if team.mentorUser != request.user or team.school:
             raise PermissionDenied("You are not an administrator of this team")
 
-    StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.max_team_members,max_num=event.max_team_members,can_delete=True)
+    StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.maxMembersPerTeam,max_num=event.maxMembersPerTeam,can_delete=True)
 
     if request.method == 'POST':
         formset = StudentInLineFormSet(request.POST, instance=team)
-        form = TeamForm(request.POST,instance=team, user=request.user, event=event)
-        form.event_id = event.id
-        form.team_id = team.id
+        form = TeamForm(request.POST, instance=team, user=request.user, event=event)
+        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
+
         if form.is_valid() and formset.is_valid():
             # Create team object but don't save so can set foreign keys
             team = form.save(commit=False)
@@ -95,7 +97,7 @@ def editTeam(request, teamID):
     else:
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = StudentInLineFormSet(instance=team)
-    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset,'event':event,'team':team})
+    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
 @login_required
 def deleteTeam(request, teamID): 

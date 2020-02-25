@@ -55,6 +55,8 @@ def index(request):
     }
     return render(request, 'events/eventList.html', context)
 
+# Currently unused and not in urlconf
+# Changes to permissions checks required before used
 @login_required
 def detail(request, eventID):
     event = get_object_or_404(Event, pk=eventID)

@@ -26,18 +26,44 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
 admin.site.register(Year)
 
+class AvailableDivisionInline(admin.TabularInline):
+    model = AvailableDivision
+    extra = 0
+
 @admin.register(Event)
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
+        'eventType',
         'year',
         'state',
         'startDate',
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'entryFee',
         'directEnquiriesTo'
+    ]
+    readonly_fields = [
+    ]
+    fieldsets = (
+        (None, {
+            'fields': ('year', 'state', 'name', 'eventType')
+        }),
+        ('Dates', {
+            'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Team settings', {
+            'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
+        }),
+        ('Billing settings', {
+            'fields': ('event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'))
+        }),
+        ('Details', {
+            'fields': ('directEnquiriesTo', 'eventDetails', 'location', 'additionalInvoiceMessage')
+        }),
+    )
+    inlines = [
+        AvailableDivisionInline,
     ]
     list_filter = [
         'state',
@@ -54,9 +80,12 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'entryFee',
         'directEnquiriesTo'
     ]
+
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
+    }
 
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator

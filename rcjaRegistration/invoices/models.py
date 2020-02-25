@@ -108,10 +108,6 @@ class Invoice(CustomSaveDeleteModel):
         if not self.school:
             return False
 
-        # Check no payments made
-        if self.invoicepayment_set.exists():
-            return False
-
         # Check if at least one invoice has campus field set
         return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
@@ -122,6 +118,10 @@ class Invoice(CustomSaveDeleteModel):
             return False
 
         if self.campusInvoicingEnabled():
+            return False
+
+        # Check no payments made
+        if self.invoicepayment_set.exists():
             return False
 
         return Team.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
@@ -146,7 +146,7 @@ class Invoice(CustomSaveDeleteModel):
     # Totals
 
     def invoiceAmount(self):
-        return self.event.entryFee * self.teamsQueryset().count()
+        return self.event.event_defaultEntryFee * self.teamsQueryset().count()
     invoiceAmount.short_description = 'Invoice amount'
 
     def amountPaid(self):
