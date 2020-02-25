@@ -19,7 +19,7 @@ class State(CustomSaveDeleteModel):
     bankAccountNumber = models.CharField('Bank Account Number', max_length=10, blank=True, null=True)
     paypalEmail = models.EmailField('PayPal email', blank=True)
     # Defaults
-    defaultCompDetails = models.TextField('Default event details', blank=True)
+    defaultEventDetails = models.TextField('Default event details', blank=True)
     invoiceMessage = models.TextField('Invoice message', blank=True)
 
     # *****Meta and clean*****

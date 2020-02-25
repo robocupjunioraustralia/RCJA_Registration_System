@@ -32,7 +32,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'bankAccountBSB',
         'bankAccountNumber',
         'paypalEmail',
-        'defaultCompDetails',
+        'defaultEventDetails',
         'invoiceMessage'
     ]
 
