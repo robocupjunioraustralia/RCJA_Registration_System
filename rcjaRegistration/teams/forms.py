@@ -46,6 +46,7 @@ class TeamForm(forms.ModelForm):
     # Validate that this team can be created, not exceeding a school or global team maximum
     def clean(self):
         cleaned_data = super().clean()
+        errors = []
 
         # Only run these validation on team create, allows for a team to be manually created through the admin
         if not self.instance.pk:
@@ -69,8 +70,6 @@ class TeamForm(forms.ModelForm):
                     'school': None,
                     'mentorUser': mentorUser
                 }
-
-            errors = []
 
             # Check event based limits 
             if event.event_maxTeamsPerSchool is not None and Team.objects.filter(**teamFilterDict).count() + 1 > event.event_maxTeamsPerSchool:
