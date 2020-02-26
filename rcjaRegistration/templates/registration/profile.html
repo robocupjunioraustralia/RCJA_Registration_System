@@ -109,6 +109,7 @@
             <a href ="/"><button class = "ui button negative">Cancel</button></a>
 
             <!-- School details -->
+            {% if not user.forceDetailsUpdate %}
             {% if schools %}
             <h2>You are an administrator of the following schools:</h2>
             <ul>
@@ -126,6 +127,7 @@
             {% endif %}
 
             <a href ="{% url 'schools:create' %}"><button class = "ui button primary">Create school</button></a>
+            {% endif %}
 
           </div>
         </div>

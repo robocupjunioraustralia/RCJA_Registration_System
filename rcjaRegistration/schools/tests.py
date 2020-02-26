@@ -2,7 +2,7 @@ from users.models import User
 from . models import School, SchoolAdministrator
 from regions.models import State,Region
 from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, modify_settings
 from django.urls import reverse
 from django.test import Client
 from users.models import User
@@ -12,7 +12,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     reverseString = 'schools:create'
     email = 'user@user.com'
     username = email
-    password = 'password'
+    password = 'chdj48958DJFHJGKDFNM'
     validPayload = {'email':email,
         'password':password,
         'passwordConfirm':password,
@@ -64,9 +64,12 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 #     validSubmitCode = 200
 #     inValidCreateCode = 400
 
+@modify_settings(MIDDLEWARE={
+    'remove': 'common.redirectsMiddleware.RedirectMiddleware',
+})
 class AuthViewTests(TestCase):
     email = 'user@user.com'
-    password = 'password'
+    password = 'chdj48958DJFHJGKDFNM'
     validPayload = {'email':email,
         'password':password,
         'passwordConfirm':password,
@@ -186,7 +189,7 @@ class AuthViewTests(TestCase):
 
 class ProfileEditTests(TestCase):
     email = 'user@user.com'
-    password = 'password'
+    password = 'chdj48958DJFHJGKDFNM'
     
     def setUp(self):
         self.validPayload = {

@@ -44,18 +44,26 @@ def details(request):
         form = UserForm(request.POST, instance=request.user)
         questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials)
 
+        # Don't redirect to home if use was forced here and no schools, so user can create a school
+        if request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool:
+            redirectTo = reverse('users:details')
+        else:
+            redirectTo = '/'
+
         if form.is_valid() and questionFormset.is_valid():
             # Save user
-            user = form.save()
+            user = form.save(commit=False)
+            user.forceDetailsUpdate = False
+            user.save()
 
             # Save question response questionFormset
             questionFormset.save() 
 
-            return redirect('/')
+            return redirect(redirectTo)
     else:
         form = UserForm(instance=request.user)
         questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
+    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
 
 def signup(request):
     if request.method == 'POST':
@@ -65,11 +73,8 @@ def signup(request):
             # Save user
             user = form.save()
             user.set_password(form.cleaned_data["password"])
+            user.forceDetailsUpdate = True # Force redirect to details page so user can submit question responses and create a school
             user.save()
-
-            # Save school administrator
-            # if form.cleaned_data['school']:
-            #     SchoolAdministrator.objects.create(user=user, school=form.cleaned_data['school'])
 
             # Login and redirect
             login(request, user)

@@ -1,10 +1,14 @@
+certifi==2019.11.28
+chardet==3.0.4
 Django==2.2.10
 django-environ==0.4.5
 django-keyvaluestore==0.3
-django-pwned-passwords==4.1.0
+django-widget-tweaks==1.4.5
+djangorestframework==3.11.0
+idna==2.9
 psycopg2-binary==2.8.4
 pytz==2019.3
+requests==2.23.0
 sqlparse==0.3.0
+urllib3==1.25.8
 whitenoise==5.0.1
-djangorestframework==3.11.0
-django-widget-tweaks==1.4.5

@@ -29,9 +29,6 @@ class UserSignupForm(UserForm):
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
 
-    # School fields
-    # school = forms.ModelChoiceField(queryset=School.objects.filter(schooladministrator__isnull=True, team__isnull=True), label='School', required=False)
-
     def clean(self):
         # Check password
         cleaned_data = super().clean()
@@ -40,5 +37,8 @@ class UserSignupForm(UserForm):
 
         if password != passwordConfirm:
             raise forms.ValidationError("Passwords do not match")
+
+        if not password:
+            raise forms.ValidationError("Password must not be blank")
 
         validate_password(password)
