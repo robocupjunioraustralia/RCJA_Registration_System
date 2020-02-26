@@ -10,14 +10,18 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('regions', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('userquestions', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='state',
-            name='treasurer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Treasurer'),
+            model_name='questionresponse',
+            name='user',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='User'),
+        ),
+        migrations.AlterUniqueTogether(
+            name='questionresponse',
+            unique_together={('question', 'user')},
         ),
     ]
