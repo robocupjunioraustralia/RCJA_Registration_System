@@ -3,27 +3,35 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth import authenticate, login
-from .forms import SchoolForm, CampusForm, SchoolAdministratorForm
+from .forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdministratorForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
+from django.urls import reverse
 
 from .models import School, Campus, SchoolAdministrator
 
 @login_required
-def schoolCreation(request):
+def create(request):
     if request.method == 'POST':
         form = SchoolForm(request.POST)
+
         if form.is_valid(): 
-            form.save()
-            return redirect('/')
+            school = form.save()
+
+            # Save school administrator
+            SchoolAdministrator.objects.create(user=request.user, school=school)
+
+            return redirect(reverse('users:details'))
+
     else:
         form = SchoolForm()
+
     return render(request, 'schools/createSchool.html', {'form': form})
 
-def createSchoolAJAX(request):
+def createAJAX(request):
     if request.method == 'POST':
         form = SchoolForm(request.POST)
         if form.is_valid(): 
@@ -77,7 +85,7 @@ def details(request):
     )
 
     if request.method == 'POST':
-        form = SchoolForm(request.POST, instance=school)
+        form = SchoolEditForm(request.POST, instance=school)
         campusFormset = CampusInlineFormset(request.POST, instance=school)
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user})
         if form.is_valid() and campusFormset.is_valid() and schoolAdministratorFormset.is_valid():
@@ -118,7 +126,7 @@ def details(request):
 
             return redirect('/')
     else:
-        form = SchoolForm(instance=school)
+        form = SchoolEditForm(instance=school)
         campusFormset = CampusInlineFormset(instance=school)
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
     return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})

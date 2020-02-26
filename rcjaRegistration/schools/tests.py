@@ -9,8 +9,7 @@ from users.models import User
 
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
-    # reverseString = 'schools:createSchool'
-    reverseString = 'schools:createSchool'
+    reverseString = 'schools:create'
     email = 'user@user.com'
     username = email
     password = 'password'

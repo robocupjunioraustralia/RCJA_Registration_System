@@ -1,71 +1,49 @@
-{% extends 'common/base.html' %}
+{% extends 'common/loggedInbase.html' %}
 {% load widget_tweaks %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
-{% load static %}
-<title> Login </title>
-<style type="text/css">
-  body {
-    background-color: gray;
-  }
-  .column {
-    max-width: 100%;
-  }
-  .logincontent {
-    padding-top: 5%;
-  }
-  .formbox {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  }
-  .bg {
-      /* Full height */
-    height: 100%; 
-    width:auto;
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    /*background-color: #CCE2FF;*/
-  }
-  .left-aligned-text {
+
+<title> Create school </title>
+
+<style>
+ .left-aligned-text {
   text-align: left;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="bg">
-<div class = "logincontent">
-  <div class="ui center aligned grid ">
 
-    <div class = "twelve wide mobile six wide computer column ui segment formbox">
+<div class="bg">
+  <div class = "">
+    <div class="ui center aligned grid ">
+      <div class = "twelve wide mobile six wide computer column ui">
         <div class = "form form-group left-aligned-text">
-          <div>
-            <h1> Robocup Australia</h1>
-            <h5> Mentor Signup</h5>
-            <h4>Please enter your details</h4>
+        <h1> Create school </h1>
             {% if form.errors %}
+            
             <!-- Error messaging -->
-            <div class="ui warning message left-aligned-text">
+            <div class="ui message left-aligned-text">
               <div class="">
                 <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                 {{ form.non_field_errors }}
+                
                 <ul>
                   {% for field in form %}
-                    {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                    {% if field.errors %}
+                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
                   {% endfor %}
+                
                 </ul>
               </div>
             </div>
             <!-- /Error messaging -->
-          {% endif %}
-          <h2>School Creation</h2>
-          <form method="post" class = "ui form">
-            {% csrf_token %}
-            {% for field in form %}
+            {% endif %}
+          
+            <form method="post" class = "ui form">
+              {% csrf_token %}
+
+              {% for field in form %}
               <p>
                 {{ field.label_tag }}<br>
                 {{ field }}
@@ -76,17 +54,17 @@
                   <p style="color: red">{{ error }}</p>
                 {% endfor %}
               </p>
-            {% endfor %}
-            <button class = "ui button primary" type="submit">Create School</button>
-            <a href="{% url 'schools:signup' %}"><button class = "ui button warning"> Cancel/Return</button></a>
-          </form>
+              {% endfor %}
 
-        </div>
+              <input class="primary ui button" type="submit" value="Save" />
+            </form>
+            <a href ="{% url 'users:details' %}"><button class = "ui button negative">Cancel</button></a>
+
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-</div>
+  
 {% endblock %}
-

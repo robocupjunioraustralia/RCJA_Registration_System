@@ -8,6 +8,7 @@ class SchoolForm(ModelForm):
         model = School
         fields = ['name','abbreviation','region','state']
 
+class SchoolEditForm(SchoolForm):
     addAdministratorEmail = forms.EmailField(required=False)
 
 class CampusForm(ModelForm):

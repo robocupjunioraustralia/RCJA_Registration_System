@@ -15,6 +15,10 @@ from userquestions.forms import QuestionResponseForm
 
 @login_required
 def details(request):
+    # Schools
+    from schools.models import School
+    schools = School.objects.filter(schooladministrator__user=request.user)
+
     # Questions formset
     questions = Question.objects.all()
     numberQuestions = questions.count()
@@ -51,7 +55,7 @@ def details(request):
     else:
         form = UserForm(instance=request.user)
         questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset})
+    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
 
 def signup(request):
     if request.method == 'POST':
