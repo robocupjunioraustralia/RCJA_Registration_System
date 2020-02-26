@@ -127,7 +127,7 @@ def details(request):
                 try:
                     newUser = User.objects.get(email__iexact=form.cleaned_data['addAdministratorEmail'])
                 except User.DoesNotExist:
-                    newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'])
+                    newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'], forceDetailsUpdate=True)
                 SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
 
             return redirect('/')
