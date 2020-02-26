@@ -26,6 +26,10 @@ class School(CustomSaveDeleteModel):
     def clean(self):
         errors = []
 
+        # Check min length of abbreviation
+        if not self.abbreviation or len(self.abbreviation) < 3:
+            errors.append(ValidationError('Abbreviation must be at least three characters'))
+
         # Case insenstive abbreviation and name unique check
         if School.objects.filter(name__iexact=self.name).exclude(pk=self.pk).exists():
             errors.append(ValidationError('School with this name exists. Please ask your school administrator to add you.'))
