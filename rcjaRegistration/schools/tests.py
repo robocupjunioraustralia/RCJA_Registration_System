@@ -12,7 +12,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     reverseString = 'schools:create'
     email = 'user@user.com'
     username = email
-    password = 'password'
+    password = 'chdj48958DJFHJGKDFNM'
     validPayload = {'email':email,
         'password':password,
         'passwordConfirm':password,
@@ -69,7 +69,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 })
 class AuthViewTests(TestCase):
     email = 'user@user.com'
-    password = 'password'
+    password = 'chdj48958DJFHJGKDFNM'
     validPayload = {'email':email,
         'password':password,
         'passwordConfirm':password,
@@ -189,7 +189,7 @@ class AuthViewTests(TestCase):
 
 class ProfileEditTests(TestCase):
     email = 'user@user.com'
-    password = 'password'
+    password = 'chdj48958DJFHJGKDFNM'
     
     def setUp(self):
         self.validPayload = {

@@ -41,4 +41,7 @@ class UserSignupForm(UserForm):
         if password != passwordConfirm:
             raise forms.ValidationError("Passwords do not match")
 
+        if not password:
+            raise forms.ValidationError("Password must not be blank")
+
         validate_password(password)
