@@ -27,6 +27,20 @@ class State(CustomSaveDeleteModel):
         verbose_name = 'State'
         ordering = ['name']
 
+    def clean(self):
+        errors = []
+
+        # Case insenstive abbreviation and name unique check
+        if State.objects.filter(name__iexact=self.name).exclude(pk=self.pk).exists():
+            errors.append(ValidationError('State with this name exists.'))
+
+        if State.objects.filter(abbreviation__iexact=self.abbreviation).exclude(pk=self.pk).exists():
+            errors.append(ValidationError('State with this abbreviation exists.'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):

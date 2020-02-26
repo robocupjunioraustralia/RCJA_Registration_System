@@ -24,6 +24,13 @@ class School(CustomSaveDeleteModel):
     def clean(self):
         errors = []
 
+        # Case insenstive abbreviation and name unique check
+        if School.objects.filter(name__iexact=self.name).exclude(pk=self.pk).exists():
+            errors.append(ValidationError('School with this name exists. Please ask your school administrator to add you.'))
+
+        if School.objects.filter(abbreviation__iexact=self.abbreviation).exclude(pk=self.pk).exists():
+            errors.append(ValidationError('School with this abbreviation exists. Please ask your school administrator to add you.'))
+
         # Validate school not using name or abbreviation reserved for independent entries
         if self.abbreviation.upper() == 'IND':
             errors.append(ValidationError('IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.'))
