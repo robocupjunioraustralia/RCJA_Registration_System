@@ -221,14 +221,16 @@ class ProfileEditTests(TestCase):
 
     def testEditWorks(self):
         payload = {
-           "first_name":"Admin",
-           "last_name":"User",
-           "mobileNumber":123,
-           "email":"admon@admon.com",
-           "password":"password123",
-           "passwordConfirm":"password123",
-           'homeState': self.newState.id,
-           'homeRegion': self.newRegion.id,
+            'questionresponse_set-TOTAL_FORMS':0,
+            "questionresponse_set-INITIAL_FORMS":0,
+            "questionresponse_set-MIN_NUM_FORMS":0,
+            "questionresponse_set-MAX_NUM_FORMS":0,
+            "first_name":"Admin",
+            "last_name":"User",
+            "mobileNumber":123,
+            "email":"admon@admon.com",
+            'homeState': self.newState.id,
+            'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(302,response.status_code)
@@ -236,12 +238,14 @@ class ProfileEditTests(TestCase):
 
     def testInvalidEditFails(self):
         payload = {
-           "first_name":"Admin",
-           "last_name":"User",
-           "mobileNumber":123,
-           "email":"adminNope",
-           "password":"password123",
-           "passwordConfirm":"passwor123"
+            'questionresponse_set-TOTAL_FORMS':0,
+            "questionresponse_set-INITIAL_FORMS":0,
+            "questionresponse_set-MIN_NUM_FORMS":0,
+            "questionresponse_set-MAX_NUM_FORMS":0,
+            "first_name":"Admin",
+            "last_name":"User",
+            "mobileNumber":123,
+            "email":"adminNope",
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(200,response.status_code)
