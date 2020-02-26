@@ -150,6 +150,9 @@ EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
+SERVER_EMAIL = 'system@enter.robocupjunior.org.au'
+DEFAULT_FROM_EMAIL = 'system@enter.robocupjunior.org.au'
+
 # REST
 
 DEFAULT_RENDERER_CLASSES = (
