@@ -132,6 +132,9 @@ PWNED_VALIDATOR_FAIL_SAFE = False
 # Dev only
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+PASSWORD_RESET_TIMEOUT_DAYS = 1 # 1 day
+SESSION_COOKIE_AGE = 172800 # 2 days
+
 # REST
 
 DEFAULT_RENDERER_CLASSES = (
