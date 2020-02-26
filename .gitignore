@@ -5,3 +5,5 @@ __pycache__/
 env/
 venv/
 rcjaRegistration/static
+*.csv
+*.xlsx
