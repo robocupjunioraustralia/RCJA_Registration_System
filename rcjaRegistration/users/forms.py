@@ -29,9 +29,6 @@ class UserSignupForm(UserForm):
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
 
-    # School fields
-    # school = forms.ModelChoiceField(queryset=School.objects.filter(schooladministrator__isnull=True, team__isnull=True), label='School', required=False)
-
     def clean(self):
         # Check password
         cleaned_data = super().clean()
