@@ -129,7 +129,7 @@ else:
 
 # HIBP settings
 
-PWNED_VALIDATOR_ERROR = "Your password was determined to have been involved in a major security breach. Go to https://haveibeenpwned.com/Passwords for more information."
+PWNED_VALIDATOR_ERROR = "Your password was determined to have been involved in a major security breach. This was not a breach of this site. This can be caused by using this password on a different site that was breached or if someone else used the same password. Go to https://haveibeenpwned.com/Passwords for more information."
 PWNED_VALIDATOR_ERROR_FAIL = "We could not validate the safety of this password. This does not mean the password is invalid. Please try again in a little bit, if the problem persists please contact us."
 PWNED_VALIDATOR_FAIL_SAFE = False
 
