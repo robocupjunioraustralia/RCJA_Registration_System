@@ -21,7 +21,7 @@ class TeamForm(forms.ModelForm):
         model = Team
         fields= ['division', 'name', 'campus', 'school', 'event']
 
-    # Override init to filter division fk to available divisions
+    # Override init to filter division and campus, set school and event
     def __init__(self, *args, user, event, **kwargs):
         super().__init__(*args, **kwargs)
 

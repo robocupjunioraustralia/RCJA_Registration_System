@@ -97,9 +97,11 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         'homeState',
         'homeRegion',
     )
+    from userquestions.admin import QuestionResponseInline
     inlines = [
         SchoolAdministratorInline,
         CoordinatorInline,
+        QuestionResponseInline,
     ]
     autocomplete_fields = [
         'homeState',

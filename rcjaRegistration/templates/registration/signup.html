@@ -2,47 +2,52 @@
 {% load widget_tweaks %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
 {% load static %}
-<title> Login </title>
+<title> Create account </title>
 <style type="text/css">
   body {
     background-color: gray;
   }
+
   .column {
     max-width: 100%;
   }
+
   .logincontent {
     padding-top: 5%;
   }
+
   .formbox {
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
+
   .bg {
-      /* Full height */
-    height: 100%; 
-    width:auto;
+    /* Full height */
+    height: 100%;
+    width: auto;
     /* Center and scale the image nicely */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     /*background-color: #CCE2FF;*/
   }
+
   .left-aligned-text {
-  text-align: left;
-}
+    text-align: left;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="bg">
-<div class = "logincontent">
-  <div class="ui center aligned container ">
+  <div class="logincontent">
+    <div class="ui center aligned container ">
 
-    <div class = "twelve wide mobile six wide computer column ui segment formbox">
-        <div class = "form form-group left-aligned-text">
+      <div class="twelve wide mobile six wide computer column ui segment formbox">
+        <div class="form form-group left-aligned-text">
           <div>
             <h1> Robocup Australia - Mentor Signup</h1>
             <h2>Please enter your details</h2>
@@ -50,26 +55,26 @@
             <!-- Error messaging -->
             <div class="ui warning message left-aligned-text">
               <div class="">
-                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
                 {{ form.non_field_errors }}
                 <ul>
                   {% for field in form %}
-                    {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                  {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
                   {% endfor %}
                 </ul>
               </div>
             </div>
             <!-- /Error messaging -->
-          {% endif %}
-          <form class="ui form segment" method="POST" >
+            {% endif %}
+            <form class="ui form segment" method="POST">
               {% csrf_token %}
 
-            <div class="field">
+              <div class="field">
                 <label>Email</label>
                 {{ form.email|attr:"placeholder:Email"|attr:"type:email" }}
-            </div>
-            
-            <div class="two fields">
+              </div>
+
+              <div class="two fields">
                 <div class="field">
                   <label>First Name</label>
                   {{ form.first_name|attr:"placeholder:First Name"|attr:"type:text" }}
@@ -78,8 +83,8 @@
                   <label>Last Name</label>
                   {{ form.last_name|attr:"placeholder:Last Name"|attr:"type:text" }}
                 </div>
-            </div>
-            <div class="field">
+              </div>
+              <div class="field">
                 <label>Password</label>
                 {{ form.password|attr:"placeholder:Password"|attr:"type:password" }}
               </div>
@@ -87,44 +92,28 @@
                 {{ form.passwordConfirm|attr:"placeholder:Confirm password"|attr:"type:password" }}
               </div>
               <div class="two fields">
-                <div class = "field">
+                <div class="field">
                   <label>Home state: </label>
-                    {{form.homeState}}
+                  {{form.homeState}}
                 </div>
-                <div class = "field">
+                <div class="field">
                   <label> Home region: </label>
                   {{form.homeRegion}}
                 </div>
               </div>
-            <p>If you are the first mentor in you school, create a school here.</p>
-            <p>If you are an independent skip this step.</p>
-            <p>If someone else has already registered your school ask them to add you as an administrator.</p>
-            <p>If you don't know who your school administrator is please contact us, please do not create a duplicate school.</p>
-            <div class = "two fields">
-                <div class="field">
-                  <label> School</label>
-                  {{form.school|add_class:":ui search dropdown"}}
+
+              <div class="field">
+                <label> Mobile Number:</label>
+                {{ form.mobileNumber}}
               </div>
-              <div class = "field">
-                <label> Can't find your school?</label>
-                <a onclick="showModal()" class = "ui button primary"> Add a new School</a>
-              </div>
-            </div>
-            <div class = "field">
-              <label> Mobile Number:</label>
-              {{ form.mobileNumber}}
-            </div>
-            <div class="inline field">
-              <div class="ui checkbox">
-                {{ form.termsAndConditions }}
-                <label>I agree to the terms and conditions</label>
-              </div>
-            </div>
-            <button class="ui primary submit button" type="submit" value="SignUp">Submit</button>
-            <a href = "/" class="ui negative button">Cancel</a>
-          </form>
-          
-        </div>
+
+              <p>You will create your school in the next step.</p>
+
+              <button class="ui primary submit button" type="submit" value="SignUp">Submit</button>
+              <a href="/" class="ui negative button">Cancel</a>
+            </form>
+
+          </div>
         </div>
       </div>
     </div>
@@ -132,117 +121,30 @@
 </div>
 </div>
 
-
-
-<div class="ui modal">
-    <div class="header">
-        Create School
-    </div>
-    <div class="image content">
-        <div class="description" id ="schoolContent">
-          <div id = "schoolErrors"></div>
-          <div class="ui header">You are creating a new School</div>
-          <form class="ui form" id = "schoolCreation">
-              {% csrf_token %}
-            <div class="field">
-                <label>Name</label>
-                {{schoolCreationModal.name}}
-            </div>
-            <div class="field">
-                <label>Abbreviation</label>
-                {{schoolCreationModal.abbreviation}}
-                {% if schoolCreationModal.abbreviation.help_text %}
-                <small style="color: grey">{{ schoolCreationModal.abbreviation.help_text }}</small>
-              {% endif %}
-            </div>
-            <div class="field">
-                <label>Region</label>
-                {{schoolCreationModal.region}}
-            </div>
-            <div class="field">
-                <label>State</label>
-                {{schoolCreationModal.state}}
-            </div>
-          </form>
-        </div>
-    </div>
-    <div class="actions">
-        <div class="ui black deny button">
-        Cancel
-        </div>
-
-        <button id = "confirm" class="ui positive button">
-        Create School
-        </button>
-    </div>
-</div>
-    
-    
-    <script> 
-        function showModal() {
-            $('.ui.modal').modal({
-            closable  : false,
-            onDeny    : () => true,
-            onApprove : createSchool
-          })
-  .modal('show'); 
-        }
-    
-        function createSchool() {
-            $.ajax({
-                type: "POST",
-                url: "{% url 'schools:createAJAX' %}",
-                data: $("#schoolCreation").serialize()
-            })
-                .done( (data) => {
-                  console.log(data)
-                  $("#id_school").append(new Option(data.name, data.id)) 
-                  $("#id_school").val(data.id)
-                  $('.ui.modal').modal('hide');
-                } )
-                .fail( (data) => {
-                  console.error(data.responseJSON)
-                  $("#schoolErrors").empty()
-                  for(key in data.responseJSON.errors) {
-                    data.responseJSON.errors[key].map( (error) => {
-                      $("#schoolErrors").prepend("<div class = 'ui message' >" + capitalize(key) + ": " + error + " </div>")
-
-                    })
-                  }
-                })
-                return false //needed to stop modal from closing
-            }
-            const capitalize = (s) => {
-              if (typeof s !== 'string') return ''
-              return s.charAt(0).toUpperCase() + s.slice(1)
-            }
-    </script>
-
-
 <script>
-  $( document ).ready(function() {
+  $(document).ready(function () {
     $('.ui.form')
-    .form({
-      on: 'blur',
-      inline: true,
-      fields: {
-        registerPassword: {
-        identifier  : 'id_password',
-        rules: [{
-            type   : 'empty',
-            prompt : 'Please enter a password.'
-        }]
-      },
-      registerPasswordVerify: {
-        identifier  : 'id_passwordConfirm',
-        rules: [{
-            type   : 'match[id_password]',
-            prompt : 'Your passwords do not match.'
-        }]
-      }
-      }
-    })
+      .form({
+        on: 'blur',
+        inline: true,
+        fields: {
+          registerPassword: {
+            identifier: 'id_password',
+            rules: [{
+              type: 'empty',
+              prompt: 'Please enter a password.'
+            }]
+          },
+          registerPasswordVerify: {
+            identifier: 'id_passwordConfirm',
+            rules: [{
+              type: 'match[id_password]',
+              prompt: 'Your passwords do not match.'
+            }]
+          }
+        }
+      })
   });
-  
-  </script>
+
+</script>
 {% endblock %}

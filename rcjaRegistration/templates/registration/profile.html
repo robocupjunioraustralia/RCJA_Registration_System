@@ -41,7 +41,9 @@
             {% endif %}
           
             <form method="post" class = "ui form">
-              {% csrf_token %}               
+              {% csrf_token %}
+              {{ questionFormset.management_form }}
+
               <div class="two fields">
                 <div class = "field">
                   <label>First Name: </label>
@@ -70,9 +72,60 @@
                   {{form.homeRegion}}
                 </div>
               </div>
+
+              <!-- Questions -->
+
+              {% for questionForm in questionFormset %}
+              {{questionForm.id|attr:"type:hidden"}}
+              {{ questionForm.user }}
+              {{ questionForm.question }}
+              <div class="ui segment">
+                  <!-- <h4 class="ui dividing header">Campus {{forloop.counter}}</h4> -->
+                  {% if questionForm.errors %}
+                  <div class="ui message left-aligned-text">
+                      <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                      {{ questionForm.non_field_errors }}
+                      <ul>
+                          {% for field in questionForm %}
+                          {% if field.errors %}
+                          <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                          {% endif %}
+                          {% endfor %}
+                      </ul>
+                  </div>
+                  {% endif %}
+
+
+                  <div class="field">
+                    <label> {{questionForm.response.label}}</label>
+                    {{questionForm.response}}
+                  </div>
+
+              </div>
+              {% endfor %}
+
               <input class="primary ui button" type="submit" value="Save" />
             </form>
             <a href ="/"><button class = "ui button negative">Cancel</button></a>
+
+            <!-- School details -->
+            {% if schools %}
+            <h2>You are an administrator of the following schools:</h2>
+            <ul>
+              {% for school in schools %}
+              <li>{{ school }}</li>
+                {% endfor %}
+            </ul>
+            <h3>You can change which school you are currently editing with the dropdown in the top right corner (if you are administrator of multiple schools).</h3>              
+            {% else %}
+            <h2>You are not currently the administrator of any schools.</h2>
+            <p>If you are the first mentor in you school, create a school by clicking the button below.</p>
+            <p>If you are an independent skip this step, you can register teams as an individual.</p>
+            <p>If someone else has already registered your school ask them to add you as an administrator.</p>
+            <p>If you don't know who your school administrator is please contact us, please do not create a duplicate school.</p>
+            {% endif %}
+
+            <a href ="{% url 'schools:create' %}"><button class = "ui button primary">Create school</button></a>
 
           </div>
         </div>
