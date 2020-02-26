@@ -5,8 +5,8 @@ from .models import *
 
 # Register your models here.
 
-class UserQuestionResponseInline(admin.TabularInline):
-    model = UserQuestionResponse
+class QuestionResponseInline(admin.TabularInline):
+    model = QuestionResponse
     extra = 0
 
     # Only user can ever change their response
@@ -17,8 +17,8 @@ class UserQuestionResponseInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return False
 
-@admin.register(UserQuestion)
-class UserQuestionAdmin(admin.ModelAdmin):
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
     list_display = [
         'questionText',
         'required',

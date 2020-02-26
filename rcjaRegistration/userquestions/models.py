@@ -4,7 +4,7 @@ from django.conf import settings
 
 # **********MODELS**********
 
-class UserQuestion(models.Model):
+class Question(models.Model):
     # Fields and primary key
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -31,9 +31,9 @@ class UserQuestion(models.Model):
 
     # *****Email methods*****
 
-class UserQuestionResponse(models.Model):
+class QuestionResponse(models.Model):
     # Fields and primary key
-    userQuestion = models.ForeignKey(UserQuestion, verbose_name='User question', on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, verbose_name='Question', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -44,8 +44,8 @@ class UserQuestionResponse(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = "User Question Response"
-        ordering = ['userQuestion', 'user']
-        unique_together = ('userQuestion', 'user')
+        ordering = ['question', 'user']
+        unique_together = ('question', 'user')
 
     # *****Save & Delete Methods*****
 
@@ -54,7 +54,7 @@ class UserQuestionResponse(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return str(self.userQuestion)
+        return str(self.question)
 
     # *****CSV export methods*****
 
