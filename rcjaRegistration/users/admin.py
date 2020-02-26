@@ -58,7 +58,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         )}),
         (_('Important dates'), {'fields': (
             'last_login',
-            'date_joined'
+            'date_joined',
         )}),
     )
     add_fieldsets = (
@@ -76,6 +76,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     readonly_fields = DjangoUserAdmin.readonly_fields + (
         'user_permissions',
         'groups',
+        'last_login',
+        'date_joined',
     )
     list_display = [
         'email',
