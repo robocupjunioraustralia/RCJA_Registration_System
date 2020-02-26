@@ -92,7 +92,9 @@ def details(request):
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user})
         if form.is_valid() and campusFormset.is_valid() and schoolAdministratorFormset.is_valid():
             # Save school
-            school = form.save()
+            school = form.save(commit=False)
+            school.forceSchoolDetailsUpdate = False
+            school.save()
 
             # Save campus formset
             # Need commit=False to do manual deletion to catch protected errors

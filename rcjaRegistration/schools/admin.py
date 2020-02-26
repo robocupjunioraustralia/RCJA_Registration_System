@@ -52,7 +52,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         SchoolAdministratorInline,
     ]
     actions = [
-        'export_as_csv'
+        'export_as_csv',
+        'setForceDetailsUpdate',
     ]
     exportFields = [
         'name',
@@ -66,6 +67,11 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
+
+    def setForceDetailsUpdate(self, request, queryset):
+        queryset.update(forceSchoolDetailsUpdate=True)
+    setForceDetailsUpdate.short_description = "Require details update"
+    setForceDetailsUpdate.allowed_permissions = ('change',)
 
 @admin.register(Campus)
 class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
