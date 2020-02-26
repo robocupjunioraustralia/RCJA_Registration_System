@@ -88,7 +88,7 @@ def details(request):
         School,
         Campus,
         form=CampusForm,
-        extra=1,
+        extra=2,
         can_delete=True
     )
 
