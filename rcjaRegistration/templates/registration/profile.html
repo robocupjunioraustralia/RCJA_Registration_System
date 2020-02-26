@@ -70,6 +70,39 @@
                   {{form.homeRegion}}
                 </div>
               </div>
+
+              <!-- Questions -->
+
+              {% for questionForm in questionFormset %}
+              {{questionForm.id|attr:"type:hidden"}}
+              {{ questionForm.user }}
+              {{ questionForm.question }}
+              <div class="ui segment">
+                  <!-- <h4 class="ui dividing header">Campus {{forloop.counter}}</h4> -->
+                  {% if questionForm.errors %}
+                  <div class="ui message left-aligned-text">
+                      <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                      {{ questionForm.non_field_errors }}
+                      <ul>
+                          {% for field in questionForm %}
+                          {% if field.errors %}
+                          <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                          {% endif %}
+                          {% endfor %}
+                      </ul>
+                  </div>
+                  {% endif %}
+
+
+                  <div class="field">
+                    <label> {{questionForm.response.label_tag}}</label>
+                    {{questionForm.response}}
+                  </div>
+
+              </div>
+              {% endfor %}
+
+
               <input class="primary ui button" type="submit" value="Save" />
             </form>
             <a href ="/"><button class = "ui button negative">Cancel</button></a>
