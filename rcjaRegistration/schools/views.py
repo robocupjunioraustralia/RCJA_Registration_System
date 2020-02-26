@@ -123,7 +123,7 @@ def details(request):
             # Handle new administrator
             if form.cleaned_data['addAdministratorEmail']:
                 from users.models import User
-                newUser, created = User.objects.get_or_create(email=form.cleaned_data['addAdministratorEmail'])
+                newUser, created = User.objects.get_or_create(email__iexact=form.cleaned_data['addAdministratorEmail'])
                 SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
 
             return redirect('/')
