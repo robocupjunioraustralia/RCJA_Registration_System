@@ -108,6 +108,7 @@ AUTHENTICATION_BACKENDS = [
 AXES_ONLY_USER_FAILURES = True
 AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
+AXES_VERBOSE = False
 # 20 failed attempts results in hour long lockout
 AXES_FAILURE_LIMIT = 20
 AXES_COOLOFF_TIME = 1
@@ -146,6 +147,11 @@ else:
             'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
         },
     ]
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.UnsaltedSHA1PasswordHasher',
+]
 
 # HIBP settings
 
