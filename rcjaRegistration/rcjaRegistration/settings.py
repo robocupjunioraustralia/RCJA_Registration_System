@@ -34,6 +34,7 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+DEV = False
 
 # Application definition
 
@@ -105,23 +106,26 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
-    # {
-    #     'NAME': 'django_pwned_passwords.password_validation.PWNEDPasswordValidator'
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    # },
-    # {
-    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    # },
-]
+if DEV:
+    AUTH_PASSWORD_VALIDATORS = []
+else:
+    AUTH_PASSWORD_VALIDATORS = [
+        {
+            'NAME': 'common.hibpValidator.PWNEDPasswordValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        },
+    ]
 
 # HIBP settings
 
@@ -130,7 +134,8 @@ PWNED_VALIDATOR_ERROR_FAIL = "We could not validate the safety of this password.
 PWNED_VALIDATOR_FAIL_SAFE = False
 
 # Dev only
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if DEV:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 PASSWORD_RESET_TIMEOUT_DAYS = 1 # 1 day
 SESSION_COOKIE_AGE = 172800 # 2 days
@@ -142,7 +147,7 @@ DEFAULT_RENDERER_CLASSES = (
 )
 
 # This should really test if debug is True
-if True:
+if DEV and DEBUG:
     DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
         'rest_framework.renderers.BrowsableAPIRenderer',
     )
