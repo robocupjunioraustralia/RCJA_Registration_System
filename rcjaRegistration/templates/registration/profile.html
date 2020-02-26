@@ -41,7 +41,9 @@
             {% endif %}
           
             <form method="post" class = "ui form">
-              {% csrf_token %}               
+              {% csrf_token %}
+              {{ questionFormset.management_form }}
+
               <div class="two fields">
                 <div class = "field">
                   <label>First Name: </label>
@@ -95,7 +97,7 @@
 
 
                   <div class="field">
-                    <label> {{questionForm.response.label_tag}}</label>
+                    <label> {{questionForm.response.label}}</label>
                     {{questionForm.response}}
                   </div>
 

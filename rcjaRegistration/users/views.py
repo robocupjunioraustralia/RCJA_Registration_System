@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login
 from .forms import UserEditForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
+from django.forms import modelformset_factory, inlineformset_factory
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
@@ -14,7 +15,7 @@ from userquestions.forms import QuestionResponseForm
 @login_required
 def editProfile(request):
     # Questions formset
-    questions = Question.object.all()
+    questions = Question.objects.all()
     numberQuestions = questions.count()
 
     QuestionReponseFormSet = inlineformset_factory(
@@ -31,6 +32,7 @@ def editProfile(request):
     for question in questions:
         questionResponseInitials.append({
             'question': question.id,
+            'user': request.user.id,
         })
 
     if request.method == 'POST':
@@ -47,32 +49,5 @@ def editProfile(request):
             return redirect('/')
     else:
         form = UserEditForm(instance=request.user)
-        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user)
+        questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
     return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset})
-
-
-
-
-
-
-    # if request.method == 'POST':
-    #     formset = StudentInLineFormSet(request.POST, instance=team)
-    #     form = TeamForm(request.POST, instance=team, user=request.user, event=event)
-    #     form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
-
-    #     if form.is_valid() and formset.is_valid():
-    #         # Create team object but don't save so can set foreign keys
-    #         team = form.save(commit=False)
-    #         team.mentorUser = request.user
-
-    #         # Save team
-    #         team.save()
-
-    #         # Save student formset
-    #         formset.save() 
-
-    #         return redirect(reverse('events:summary', kwargs = {"eventID":event.id}))
-    # else:
-    #     form = TeamForm(instance=team, user=request.user, event=event)
-    #     formset = StudentInLineFormSet(instance=team)
-    # return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})

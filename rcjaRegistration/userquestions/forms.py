@@ -16,15 +16,20 @@ class QuestionResponseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # User field
-        self.fields['user'].initial = self.instance.user.id
         self.fields['user'].disabled = True
         self.fields['user'].widget = forms.HiddenInput()
 
         # Question field
-        # self.fields['question'].initial = question.id
         self.fields['question'].disabled = True
         self.fields['question'].widget = forms.HiddenInput()
 
+        question = Question.objects.get(pk=self.initial['question'])
+
         # Response
-        self.fields['response'].label_tag = question.questionText
+        self.fields['response'].label = f"{'Required: ' if question.required else ''}{question.questionText}"
         self.fields['response'].required = question.required
+    
+    def has_changed(self, *args, **kwargs):
+        if not self.instance.pk:
+            return True
+        return super().has_changed(*args, **kwargs)
