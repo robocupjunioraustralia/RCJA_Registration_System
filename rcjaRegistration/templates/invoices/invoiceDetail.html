@@ -128,6 +128,7 @@
           <p> <strong> Account Name: </strong> {{ invoice.event.state.bankAccountName }} </p>
           <p> <strong> BSB: </strong> {{ invoice.event.state.bankAccountBSB }} </p>
           <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
+          {% if invoice.event.paymentDueDate %}<p> <strong>Payment Due: </strong> {{ invoice.event.paymentDueDate }} </p>{% endif %}
         </div>
       </div>
       <div class="ui card">

@@ -108,6 +108,7 @@ class Event(CustomSaveDeleteModel):
     event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
     event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams/ students specified will be billed at this rate. Subsequent teams/ students will be billed at the default rate. Leave blank for no special rate.")
     event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
+    paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
