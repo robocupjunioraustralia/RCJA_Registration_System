@@ -33,11 +33,12 @@ class Command(BaseCommand):
                         forceDetailsUpdate=True,
                     )
 
-                    # Get or create school
-                    school, created = School.objects.get_or_create(abbreviation=row['schoolCode'], defaults={'name': row['schoolName'], 'forceSchoolDetailsUpdate': True})
+                    if row['schoolCode']:
+                        # Get or create school
+                        school, created = School.objects.get_or_create(abbreviation=row['schoolCode'], defaults={'name': row['schoolName'], 'forceSchoolDetailsUpdate': True})
 
-                    # Create school admin
-                    schoolAdmin = SchoolAdministrator.objects.create(school=school, user=user)
+                        # Create school admin
+                        schoolAdmin = SchoolAdministrator.objects.create(school=school, user=user)
 
                 except IntegrityError:
                     continue
