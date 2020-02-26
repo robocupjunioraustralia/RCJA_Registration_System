@@ -148,6 +148,11 @@ else:
         },
     ]
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.UnsaltedSHA1PasswordHasher',
+]
+
 # HIBP settings
 
 PWNED_VALIDATOR_ERROR = "Your password was determined to have been involved in a major security breach. This was not a breach of this site. This can be caused by using this password on a different site that was breached or if someone else used the same password. Go to https://haveibeenpwned.com/Passwords for more information."
