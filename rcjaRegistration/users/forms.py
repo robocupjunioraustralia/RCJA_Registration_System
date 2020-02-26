@@ -1,9 +1,11 @@
 from django.db import models
 from django.forms import ModelForm
 from django import forms
+from django.contrib.auth.password_validation import validate_password
+
 from users.models import User
 
-class UserEditForm(ModelForm):
+class UserForm(ModelForm):
     class Meta:
         model = User
         fields = [
@@ -21,3 +23,22 @@ class UserEditForm(ModelForm):
         super().__init__(*args, **kwargs)
         for field in ['first_name', 'last_name', 'mobileNumber', 'homeState', 'homeRegion']:
             self.fields[field].required = True
+
+class UserSignupForm(UserForm):
+    # Password fields
+    password = forms.CharField(widget=forms.PasswordInput)
+    passwordConfirm = forms.CharField(widget=forms.PasswordInput)
+
+    # School fields
+    # school = forms.ModelChoiceField(queryset=School.objects.filter(schooladministrator__isnull=True, team__isnull=True), label='School', required=False)
+
+    def clean(self):
+        # Check password
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        passwordConfirm = cleaned_data.get("passwordConfirm")
+
+        if password != passwordConfirm:
+            raise forms.ValidationError("Passwords do not match")
+
+        validate_password(password)

@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth import authenticate, login
-from .forms import UserSignupForm, SchoolForm, CampusForm, SchoolAdministratorForm
+from .forms import SchoolForm, CampusForm, SchoolAdministratorForm
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -12,32 +12,7 @@ from django.db.models import ProtectedError
 
 from .models import School, Campus, SchoolAdministrator
 
-def signup(request):
-    if request.method == 'POST':
-        form = UserSignupForm(request.POST)
-        schoolCreationDetails = SchoolForm(request.POST) #note this isn't saved here
-
-        if form.is_valid():
-            # Save user
-            user = form.save()
-            user.set_password(form.cleaned_data["password"])
-            user.save()
-
-            # Save school administrator
-            if form.cleaned_data['school']:
-                SchoolAdministrator.objects.create(user=user, school=form.cleaned_data['school'])
-
-            # Login and redirect
-            login(request, user)
-            return redirect('/')
-    else:
-        form = UserSignupForm()
-        schoolCreationDetails = SchoolForm
-    return render(request, 'registration/signup.html', {'form': form,'schoolCreationModal':schoolCreationDetails})
-    #we include the school creation here so we can preload the form details, but we
-    #don't actually want to do anything with the data on this endpoint, which is why
-    #it's not in the post area
-
+@login_required
 def schoolCreation(request):
     if request.method == 'POST':
         form = SchoolForm(request.POST)

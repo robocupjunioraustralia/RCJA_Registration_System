@@ -216,7 +216,7 @@ class ProfileEditTests(TestCase):
         self.client.login(username=self.email,password=self.password)
 
     def testPageLoads(self):
-        response = self.client.get(path=reverse('users:profile'))
+        response = self.client.get(path=reverse('users:details'))
         self.assertEqual(200,response.status_code)
 
     def testEditWorks(self):
@@ -230,7 +230,7 @@ class ProfileEditTests(TestCase):
            'homeState': self.newState.id,
            'homeRegion': self.newRegion.id,
         }
-        response = self.client.post(path=reverse('users:profile'),data=payload)
+        response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(302,response.status_code)
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
@@ -243,5 +243,5 @@ class ProfileEditTests(TestCase):
            "password":"password123",
            "passwordConfirm":"passwor123"
         }
-        response = self.client.post(path=reverse('users:profile'),data=payload)
+        response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(200,response.status_code)
