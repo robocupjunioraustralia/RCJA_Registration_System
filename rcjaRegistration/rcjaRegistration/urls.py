@@ -29,7 +29,6 @@ urlpatterns = [
     # path('api/v1/', include('apiv1.urls')), # Disabled for initial release
     path('', include('events.urls')),
     path('',include('schools.urls')),
-    path('',include('common.urls')),
     path('',include('teams.urls')),
     path('',include('users.urls')),
     path('',include('invoices.urls')),
