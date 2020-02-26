@@ -31,6 +31,7 @@ def create(request):
 
     return render(request, 'schools/createSchool.html', {'form': form})
 
+@login_required
 def createAJAX(request):
     if request.method == 'POST':
         form = SchoolForm(request.POST)
@@ -45,6 +46,7 @@ def createAJAX(request):
     else:
         return HttpResponseForbidden()
 
+@login_required
 def setCurrentSchool(request, schoolID):
     school = get_object_or_404(School, pk=schoolID)
 
