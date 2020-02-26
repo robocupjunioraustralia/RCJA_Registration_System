@@ -17,6 +17,8 @@ class RedirectMiddleware:
                 redirectTo = reverse('password_change')
             elif request.user.forceDetailsUpdate:
                 redirectTo = reverse('users:details')
+            elif request.user.currentlySelectedSchool and request.user.currentlySelectedSchool.forceSchoolDetailsUpdate:
+                redirectTo = reverse('schools:details')
 
             if redirectTo and request.path != redirectTo:
                 return HttpResponseRedirect(redirectTo)
