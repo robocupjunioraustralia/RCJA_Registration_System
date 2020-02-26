@@ -3,7 +3,6 @@ chardet==3.0.4
 Django==2.2.10
 django-environ==0.4.5
 django-keyvaluestore==0.3
-django-pwned-passwords==4.1.0
 django-widget-tweaks==1.4.5
 djangorestframework==3.11.0
 idna==2.9
