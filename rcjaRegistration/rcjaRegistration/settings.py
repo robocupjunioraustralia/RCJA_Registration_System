@@ -19,6 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(
     DEBUG=(bool, False),
+    SENGRID_API_KEY=(str, 'API_KEY'),
     ALLOWED_HOSTS=(list, ['127.0.0.1', 'localhost']),
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static"))
 )
@@ -138,6 +139,16 @@ if DEV:
 
 PASSWORD_RESET_TIMEOUT_DAYS = 1 # 1 day
 SESSION_COOKIE_AGE = 172800 # 2 days
+
+# Email
+
+SENDGRID_API_KEY = env('SENGRID_API_KEY')
+
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 # REST
 
