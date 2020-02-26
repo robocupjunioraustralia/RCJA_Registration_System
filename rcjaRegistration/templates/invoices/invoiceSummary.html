@@ -23,7 +23,7 @@
                 <th> PO Number </th>
                 <th> Invoice amount </th>
                 <th> Amount due (EFT) </th>
-                <th> Amount due (PayPal) </th>
+                <!-- <th> Amount due (PayPal) </th> -->
             </thead>
             <tbody>
                 {% for invoice in invoices %}
@@ -52,11 +52,12 @@
                         </td>
                         <td>${{invoice.invoiceAmountInclGST|floatformat:2}}</td>
                         <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
-                        <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
+                        <!-- <td>${{invoice.amountDueInclGST|floatformat:2}}</td> -->
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <p>PayPal support is coming soon.</p>
     </div>
     <br>
 </div>
