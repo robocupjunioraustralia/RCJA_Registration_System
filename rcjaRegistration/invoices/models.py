@@ -129,7 +129,7 @@ class Invoice(CustomSaveDeleteModel):
     # Teams
 
     # Queryset of teams covered by this invoice
-    def includedTeams(self):
+    def allTeams(self):
         from teams.models import Team
         if self.campusInvoicingEnabled():
             # Filter by school and campus
@@ -143,25 +143,100 @@ class Invoice(CustomSaveDeleteModel):
             # If no school filter by user
             return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
 
+    # Special rate teams
+
+    # All special rate teams for this school/ mentor if independent
+    def specialRateTeamsForSchool(self):
+        from teams.models import Team
+
+        numberSpecialRateTeams = self.event.event_specialRateNumber
+
+        # Check for special rate enabled
+        if not numberSpecialRateTeams:
+            return Team.objects.none()
+
+        # Get filter dict for teams for this school or mentor if independent
+        if self.school:
+            # If school
+            teamFilterDict = {
+                'event': self.event,
+                'school': self.school,
+            }
+
+        else:
+            # If no school filter by user
+            teamFilterDict = {
+                'event': self.event,
+                'mentorUser': self.invoiceToUser,
+                'school': None,
+            }
+
+        # Get special rate teams for this school for this invoice
+        specialRateTeams = Team.objects.filter(**teamFilterDict).order_by('creationDateTime')[:numberSpecialRateTeams]
+        print(specialRateTeams)
+
+        return specialRateTeams
+
+    # Special rate teams for this invoice
+    def specialRateTeams(self):
+        # Filter teams for this invoice to those that receive special rate
+        return self.allTeams().filter(pk__in=self.specialRateTeamsForSchool().values_list('pk', flat=True))
+
+    # Standard rate teams for this invoice - teams that don't receive the special rate
+    def standardRateTeams(self):
+        # Filter teams for this invoice to those that receive special rate
+        return self.allTeams().exclude(pk__in=self.specialRateTeamsForSchool().values_list('pk', flat=True))
+
+    # Need methods to calculate teams or students that get special rate and teams that don't
+    # Maybe just make special rate require teams
+
     # Invoice items
 
-    def includedDivisions(self):
+    def standardRateDivisions(self):
         from events.models import Division
-        return Division.objects.filter(team__in=self.includedTeams()).distinct()
+        return Division.objects.filter(team__in=self.standardRateTeams()).distinct()
 
     def invoiceItems(self):
         from events.models import AvailableDivision
         from teams.models import Student
         invoiceItems = []
 
-        for division in self.includedDivisions():
+        # Special rate entries
+        numberSpecialRateTeams = self.specialRateTeams().count()
+        maxNumberSpecialRateTeams = self.event.event_specialRateNumber
+        if numberSpecialRateTeams:
+
+            # Get values
+            quantity = numberSpecialRateTeams
+            quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
+            unitCost = self.event.event_specialRateFee
+
+            # Calculate totals
+            totalExclGST = quantity * unitCost
+            gst = 0.1 * totalExclGST
+            totalInclGST = totalExclGST + gst
+
+            invoiceItems.append({
+                'name': f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}",
+                'description': 'This is measured across all campuses from this school',
+                'quantity': quantity,
+                'quantityString': quantityString,
+                'unitCost': unitCost,
+                'totalExclGST': totalExclGST,
+                'gst': gst,
+                'totalInclGST': totalInclGST,
+            })
+
+
+        # Standard rate entries
+        for division in self.standardRateDivisions():
             # Get available division
             try:
                 availableDivision = self.event.availabledivision_set.get(division=division)
             except AvailableDivision.DoesNotExist:
                 availableDivision = None
 
-            teams = self.includedTeams().filter(division=division)
+            teams = self.standardRateTeams().filter(division=division)
 
             # Get unit cost, use availableDivision value if present, otherwise use value from event
             unitCost = self.event.event_defaultEntryFee
@@ -185,7 +260,7 @@ class Invoice(CustomSaveDeleteModel):
             elif quantityMethod == 'student':
                 quantity = Student.objects.filter(team__in=teams).count()
 
-            # Calculate values
+            # Calculate totals
             totalExclGST = quantity * unitCost
             gst = 0.1 * totalExclGST
             totalInclGST = totalExclGST + gst
@@ -195,6 +270,7 @@ class Invoice(CustomSaveDeleteModel):
 
             invoiceItems.append({
                 'name': division.name,
+                'description': '',
                 'quantity': quantity,
                 'quantityString': quantityString,
                 'unitCost': unitCost,
