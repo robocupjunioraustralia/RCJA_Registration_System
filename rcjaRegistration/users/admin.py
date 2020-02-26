@@ -52,6 +52,10 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
             'groups',
             'user_permissions'
         )}),
+        (_('Flags'), {'fields': (
+            'forcePasswordChange',
+            'forceDetailsUpdate',
+        )}),
         (_('Important dates'), {'fields': (
             'last_login',
             'date_joined'

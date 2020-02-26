@@ -58,6 +58,10 @@ class User(AbstractUser):
     # Preferences and settings
     currentlySelectedSchool = models.ForeignKey('schools.School', verbose_name='Currently selected school', on_delete=models.SET_NULL, null=True, blank=True, editable=False)
 
+    # Flags
+    forcePasswordChange = models.BooleanField('Force password change', default=False)
+    forceDetailsUpdate = models.BooleanField('Force details update', default=False)
+
     # *****Clean*****
 
     def clean(self):
