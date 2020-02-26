@@ -72,7 +72,7 @@
               <tr>
                 <th>Division</th>
                 <th class="text-center colfix">Unit Cost (ex GST)</th>
-                <th class="text-center colfix">Number Teams</th>
+                <th class="text-center colfix">Quantity</th>
                 <th class="text-center colfix">Total (ex GST)</th>
                 <th class="text-center colfix">GST</th>
                 <th class="text-center colfix">Total (incl GST)</th>
@@ -83,14 +83,16 @@
               <tr id="invoiceItemRom{{invoiceItem.id}}">
                 <td>
                   {{ invoiceItem.name }}
-                  <!-- <br>
-                <small class="text-muted">We can put more text here but I doubt we want to</small> -->
+                  {% if invoiceItem.description %}
+                  <br>
+                  <small class="text-muted">{{ invoiceItem.description }}</small>
+                  {% endif %}
                 </td>
                 <td class="text-right">
                   <span class="mono">${{ invoiceItem.unitCost|floatformat:2 }}</span>
                 </td>
                 <td class="text-right">
-                  <span class="mono">{{ invoiceItem.numberTeams }}</span>
+                  <span class="mono">{{ invoiceItem.quantityString }}</span>
                 </td>
                 <td class="text-right">
                   <span class="mono">${{ invoiceItem.totalExclGST|floatformat:2 }}</span>

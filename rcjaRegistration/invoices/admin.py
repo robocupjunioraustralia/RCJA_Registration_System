@@ -25,7 +25,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'campus',
         'invoiceNumber',
         'purchaseOrderNumber',
-        'invoiceAmount',
+        'invoiceAmountInclGST',
         'amountPaid',
         'amountDueInclGST'    
     ]
@@ -35,7 +35,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'school',
         'campus',
         'invoiceNumber',
-        'invoiceAmount',
+        'invoiceAmountInclGST',
         'amountPaid',
         'amountDueInclGST'        
     ]
@@ -64,7 +64,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'event',
         'school',
         'purchaseOrderNumber',
-        'invoiceAmount',
+        'invoiceAmountInclGST',
         'amountPaid',
         'amountDueInclGST',
     ]
