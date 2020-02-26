@@ -88,6 +88,11 @@ class User(AbstractUser):
 
     # *****Methods*****
 
+    # Reset forcePasswordChange
+    def set_password(self, password):
+        super().set_password(password)
+        self.forcePasswordChange = False
+
     # *****Get Methods*****
 
     def fullname_or_email(self):

@@ -11,8 +11,11 @@ class RedirectMiddleware:
         if request.user.is_authenticated:
             # Only want to redirect on logged in pages
 
+            # Check redirect conditions in this order
             redirectTo = None
-            if request.user.forceDetailsUpdate:
+            if request.user.forcePasswordChange:
+                redirectTo = reverse('password_change')
+            elif request.user.forceDetailsUpdate:
                 redirectTo = reverse('users:details')
 
             if redirectTo and request.path != redirectTo:
