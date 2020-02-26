@@ -15,7 +15,7 @@ class Question(models.Model):
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = "User Question"
+        verbose_name = "Question"
         ordering = ['-creationDateTime']
 
     # *****Save & Delete Methods*****
@@ -43,7 +43,7 @@ class QuestionResponse(models.Model):
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = "User Question Response"
+        verbose_name = "Question Response"
         ordering = ['question', 'user']
         unique_together = ('question', 'user')
 
