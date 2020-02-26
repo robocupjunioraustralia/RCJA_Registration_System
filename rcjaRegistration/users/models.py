@@ -62,6 +62,9 @@ class User(AbstractUser):
     forcePasswordChange = models.BooleanField('Force password change', default=False)
     forceDetailsUpdate = models.BooleanField('Force details update', default=False)
 
+    # For axes to work
+    backend = 'axes.backends.AxesBackend'
+
     # *****Clean*****
 
     def clean(self):

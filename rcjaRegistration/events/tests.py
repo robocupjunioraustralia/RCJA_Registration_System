@@ -6,6 +6,7 @@ from events.models import Event,Division,Year
 from users.models import User
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from django.http import HttpRequest
 
 import datetime
 # Create your tests here.
@@ -84,7 +85,7 @@ def commonSetUp(obj):
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
-    login = obj.client.login(username=obj.username, password=obj.password) 
+    login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
 
 class TestIndexDashboard(TestCase): #TODO more comprehensive tests
     

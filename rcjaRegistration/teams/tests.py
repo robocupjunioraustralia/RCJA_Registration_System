@@ -5,6 +5,7 @@ from teams.models import Team, Student
 from events.models import Event, Division, Year
 from users.models import User
 from django.urls import reverse
+from django.http import HttpRequest
 
 import datetime
 # Create your tests here.
@@ -82,7 +83,7 @@ def commonSetUp(obj): #copied from events, todo refactor
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='thisisastringfortesting',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
-    login = obj.client.login(username=obj.username, password=obj.password) 
+    login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
 
 class TestAddTeam(TestCase): #TODO more comprehensive tests
     

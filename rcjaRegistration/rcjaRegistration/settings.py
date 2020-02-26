@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'keyvaluestore',
+    'axes',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -72,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.redirectsMiddleware.RedirectMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'rcjaRegistration.urls'
@@ -94,12 +96,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'rcjaRegistration.wsgi.application'
 
+AUTHENTICATION_BACKENDS = [
+    # AxesBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+    'axes.backends.AxesBackend',
+
+    # Django ModelBackend is the default authentication backend.
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Axes
+AXES_ONLY_USER_FAILURES = True
+AXES_USERNAME_FORM_FIELD = 'email'
+AXES_RESET_ON_SUCCESS = True
+# 20 failed attempts results in hour long lockout
+AXES_FAILURE_LIMIT = 20
+AXES_COOLOFF_TIME = 1
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db(),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
 
