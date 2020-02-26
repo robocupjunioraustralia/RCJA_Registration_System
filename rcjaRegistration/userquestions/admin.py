@@ -8,6 +8,9 @@ from .models import *
 class QuestionResponseInline(admin.TabularInline):
     model = QuestionResponse
     extra = 0
+    readonly_fields = [
+        'updatedDateTime',
+    ]
 
     # Only user can ever change their response
     def has_change_permission(self, request, obj=None):
