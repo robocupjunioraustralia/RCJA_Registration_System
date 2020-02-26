@@ -6,6 +6,7 @@ from django.test import SimpleTestCase, TestCase, modify_settings
 from django.urls import reverse
 from django.test import Client
 from users.models import User
+from django.http import HttpRequest
 
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
@@ -32,15 +33,15 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
-        # self.client.login(username=self.email, password=self.password)
+        # self.client.login(request=HttpRequest(), username=self.email, password=self.password)
 
     def testValidPageLoad(self):
-        self.client.login(username=self.username, password=self.password)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
         response = self.client.get(reverse(self.reverseString))
         self.assertEqual(response.status_code, self.validLoadCode)    
     
     def testValidSchoolCreation(self):
-        self.client.login(username=self.username, password=self.password)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
         payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
         response = self.client.post(reverse(self.reverseString),data=payload)
         self.assertEqual(response.status_code,self.validSubmitCode)
@@ -49,7 +50,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
                          [1].name, 'test')
 
     def testInvalidSchoolCreation(self):
-        self.client.login(username=self.username, password=self.password)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
         payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id}
         self.client.post(reverse(self.reverseString),data=payload)
         response = self.client.post(reverse(self.reverseString),data=payload)
@@ -181,7 +182,7 @@ class AuthViewTests(TestCase):
             password=self.password
         )
         user.save()
-        self.client.login(username=self.email, password=self.password)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         self.client.get(reverse('logout'))
         # Try an unauthorized page
         response = self.client.get(reverse('events:dashboard'))
@@ -215,7 +216,7 @@ class ProfileEditTests(TestCase):
         self.validPayload["homeRegion"] = self.newRegion.id
 
         response = self.client.post(path=reverse('users:signup'),data = self.validPayload)
-        self.client.login(username=self.email,password=self.password)
+        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
 
     def testPageLoads(self):
         response = self.client.get(path=reverse('users:details'))
