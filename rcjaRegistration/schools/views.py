@@ -123,7 +123,11 @@ def details(request):
             # Handle new administrator
             if form.cleaned_data['addAdministratorEmail']:
                 from users.models import User
-                newUser, created = User.objects.get_or_create(email=form.cleaned_data['addAdministratorEmail'])
+                # Need to do this rather than use get_or_create because need to do case insentitve get
+                try:
+                    newUser = User.objects.get(email__iexact=form.cleaned_data['addAdministratorEmail'])
+                except User.DoesNotExist:
+                    newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'])
                 SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
 
             return redirect('/')

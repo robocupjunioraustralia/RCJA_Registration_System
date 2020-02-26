@@ -23,6 +23,13 @@
         <p> {{ event.location|escape|linebreaks }} </p>
         {% if not event.boolWorkshop %}<h2>Max members per team: {{ event.maxMembersPerTeam }}</h2>{% endif %}
         <h2>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h2>
+        {% if event.paymentDueDate %}<h2>Payment due: {{ event.paymentDueDate }}</h2>{% endif %}
+        <h2>Available divisions</h2>
+        <ul>
+            {% for availableDivision in event.availabledivision_set.all %}
+            <li><strong>{{ availableDivision.division.name }}{% if availableDivision.division.description %}: </strong>{{ availableDivision.division.description }}{% else %}</strong>{% endif %}</li>
+            {% endfor %}
+        </ul>
     </div><br>
 
     <div class="row">
