@@ -111,7 +111,9 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         'homeState',
     ]
     actions = [
-        'export_as_csv'
+        'export_as_csv',
+        'setForcePasswordChange',
+        'setForceDetailsUpdate'
     ]
     exportFields = [
         'email',
@@ -130,3 +132,13 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         return {
             'homeState__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
+
+    def setForcePasswordChange(self, request, queryset):
+        queryset.update(forcePasswordChange=True)
+    setForcePasswordChange.short_description = "Force password change"
+    setForcePasswordChange.allowed_permissions = ('change',)
+
+    def setForceDetailsUpdate(self, request, queryset):
+        queryset.update(forceDetailsUpdate=True)
+    setForceDetailsUpdate.short_description = "Require details update"
+    setForceDetailsUpdate.allowed_permissions = ('change',)
