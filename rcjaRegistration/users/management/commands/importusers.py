@@ -4,7 +4,7 @@ from users.models import User
 from regions.models import State, Region
 from schools.models import School, SchoolAdministrator
 
-from django.db.utils import IntegrityError
+from django.db.utils import IntegrityError, DataError
 
 import csv
 
@@ -28,7 +28,7 @@ class Command(BaseCommand):
                         password=f"sha1$${row['password']}",
                         first_name=row['firstName'],
                         last_name=row['lastName'],
-                        mobileNumber=row['mobileNumber'],
+                        mobileNumber=row['mobileNumber'] or None,
                         forcePasswordChange=True,
                         forceDetailsUpdate=True,
                     )
@@ -40,5 +40,5 @@ class Command(BaseCommand):
                         # Create school admin
                         schoolAdmin = SchoolAdministrator.objects.create(school=school, user=user)
 
-                except IntegrityError:
+                except (IntegrityError, DataError):
                     continue
