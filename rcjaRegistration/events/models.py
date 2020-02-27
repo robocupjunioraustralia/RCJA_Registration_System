@@ -10,7 +10,7 @@ class Division(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=20, unique=True)
+    name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
 
     # *****Meta and clean*****
