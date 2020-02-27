@@ -110,7 +110,7 @@ AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
 AXES_META_PRECEDENCE_ORDER = [
-   'X-Forwarded-For',
+   'HTTP_X_FORWARDED_FOR',
 ]
 # 20 failed attempts results in hour long lockout
 AXES_FAILURE_LIMIT = 20
