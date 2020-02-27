@@ -69,6 +69,7 @@
                     {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
                     <a href = "{% url 'password_change' %}" class="item">Change password</a>
                     <a href = "{% url 'logout' %}" class="item">Log out</a>
+                    <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
                     <a class="item">Help</a>
                 </div>
         </div>      
@@ -135,6 +136,7 @@
                         {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
                         <a href = "{% url 'password_change' %}" class="item">Change password</a>
                         <a href = "{% url 'logout' %}" class="item">Log out</a>
+                        <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
                         <a class="item">Help</a>
                     </div>
             </div>
