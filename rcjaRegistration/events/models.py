@@ -81,6 +81,7 @@ class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
     state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
+    globalEvent = models.BooleanField('Global event', default=False, help_text='Global events appear to users as not belonging to a state. Recommeneded for national events. Billing still uses state based settings.')
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -201,7 +202,10 @@ class Event(CustomSaveDeleteModel):
         return self.eventType == 'workshop'
 
     def __str__(self):
-        return f'{self.name} {self.year} ({self.state.abbreviation})'
+        if not self.globalEvent:
+            return f'{self.name} {self.year} ({self.state.abbreviation})'
+        else:
+            return f'{self.name} {self.year}'
 
     # *****CSV export methods*****
 

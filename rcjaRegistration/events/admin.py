@@ -48,7 +48,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     fieldsets = (
         (None, {
-            'fields': ('year', 'state', 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')

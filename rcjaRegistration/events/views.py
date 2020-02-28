@@ -19,12 +19,22 @@ def index(request):
     else:
         usersTeams = request.user.team_set.filter(school=None)
 
+    # Current state
+    if request.user.currentlySelectedSchool:
+        currentState = request.user.currentlySelectedSchool.state
+    else:
+        currentState = request.user.homeState
+
     openForRegistrationEvents = Event.objects.filter(
         registrationsOpenDate__lte=datetime.datetime.today(),
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
         team__in=usersTeams,
     ).order_by('startDate').distinct()
+
+    # viewingAll = False
+    if request.method == 'GET' and not 'viewAll' in request.GET:
+        openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
 
     if not request.user.currentlySelectedSchool:
         openForRegistrationEvents = openForRegistrationEvents.exclude()
@@ -46,7 +56,6 @@ def index(request):
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0])
 
     context = {
-        'user': request.user,
         'openForRegistrationEvents': openForRegistrationEvents,
         'currentEvents': currentEvents,
         'pastEvents': pastEvents,
