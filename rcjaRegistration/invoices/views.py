@@ -37,11 +37,13 @@ def detail(request, invoiceID):
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
 
     # Check permissions
-    if not (mentorInvoicePermissions(request, invoice) or coordinatorInvoiceView(request, invoice)):
+    mentor = mentorInvoicePermissions(request, invoice)
+    coordinator = coordinatorInvoiceView(request, invoice)
+    if not (mentor or coordinator):
         raise PermissionDenied("You do not have permission to view this invoice")
 
     # Set invoiced date
-    if invoice.invoicedDate is None:
+    if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today()
         invoice.save()
 
