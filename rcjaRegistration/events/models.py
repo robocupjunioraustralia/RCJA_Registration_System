@@ -103,6 +103,7 @@ class Event(CustomSaveDeleteModel):
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
     # Billing details
+    entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
     event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')

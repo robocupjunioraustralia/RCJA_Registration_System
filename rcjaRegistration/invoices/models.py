@@ -212,9 +212,15 @@ class Invoice(CustomSaveDeleteModel):
             unitCost = self.event.event_specialRateFee
 
             # Calculate totals
-            totalExclGST = quantity * unitCost
-            gst = 0.1 * totalExclGST
-            totalInclGST = totalExclGST + gst
+            if self.evnet.entryFeeIncludesGST:
+                totalInclGST = quantity * unitCost
+                totalExclGST = totalInclGST / 1.1
+                gst = totalInclGST - totalExclGST
+
+            else:
+                totalExclGST = quantity * unitCost
+                gst = 0.1 * totalExclGST
+                totalInclGST = totalExclGST * 1.1
 
             invoiceItems.append({
                 'name': f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}",
