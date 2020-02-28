@@ -23,6 +23,13 @@ def summary(request):
 
     return render(request, 'invoices/invoiceSummary.html', context)
 
+def mentorInvoicePermissions(request, invoice):
+    return request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user
+
+def coordinatorInvoiceView(request, invoice):
+    from coordination.adminPermissions import checkStatePermissions
+    return checkStatePermissions(request, invoice, 'view')
+
 @login_required
 def detail(request, invoiceID):
     # Get invoice
@@ -30,7 +37,7 @@ def detail(request, invoiceID):
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
 
     # Check permissions
-    if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+    if not (mentorInvoicePermissions(request, invoice) or coordinatorInvoiceView(request, invoice)):
         raise PermissionDenied("You do not have permission to view this invoice")
 
     # Set invoiced date
@@ -56,7 +63,7 @@ def setInvoiceTo(request, invoiceID):
         invoice = get_object_or_404(Invoice, pk=invoiceID)
 
         # Check permissions
-        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+        if not mentorInvoicePermissions(request, invoice):
             raise PermissionDenied("You do not have permission to view this invoice")
         
         invoice.invoiceToUser = request.user
@@ -72,7 +79,7 @@ def setCampusInvoice(request, invoiceID):
         invoice = get_object_or_404(Invoice, pk=invoiceID)
 
         # Check permissions
-        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+        if not mentorInvoicePermissions(request, invoice):
             raise PermissionDenied("You do not have permission to view this invoice")
 
         # Check campus invoicing available
@@ -100,7 +107,7 @@ def editInvoicePOAJAX(request, invoiceID):
         invoice = get_object_or_404(Invoice, pk=invoiceID)
 
         # Check permissions
-        if not (request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user):
+        if not mentorInvoicePermissions(request, invoice):
             raise PermissionDenied("You do not have permission to view this invoice")
 
         # Update invoice

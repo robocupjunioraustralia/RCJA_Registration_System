@@ -48,7 +48,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     fieldsets = (
         (None, {
-            'fields': ('year', 'state', 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -57,7 +57,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
-            'fields': ('event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'eventDetails', 'location', 'additionalInvoiceMessage')

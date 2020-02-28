@@ -33,7 +33,7 @@ class InvoiceGlobalSettings(models.Model):
 
 class Invoice(CustomSaveDeleteModel):
     # Foreign keys
-    event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT, editable=False)
+    event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.CASCADE, editable=False)
 
     # User and school foreign keys
     invoiceToUser = models.ForeignKey('users.User', verbose_name='Invoice to', on_delete=models.PROTECT, editable=False)
@@ -100,6 +100,10 @@ class Invoice(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('invoices:detail', kwargs = {"invoiceID": self.id})
 
     # Campus
 
@@ -212,9 +216,15 @@ class Invoice(CustomSaveDeleteModel):
             unitCost = self.event.event_specialRateFee
 
             # Calculate totals
-            totalExclGST = quantity * unitCost
-            gst = 0.1 * totalExclGST
-            totalInclGST = totalExclGST + gst
+            if self.event.entryFeeIncludesGST:
+                totalInclGST = quantity * unitCost
+                totalExclGST = totalInclGST / 1.1
+                gst = totalInclGST - totalExclGST
+
+            else:
+                totalExclGST = quantity * unitCost
+                gst = 0.1 * totalExclGST
+                totalInclGST = totalExclGST * 1.1
 
             invoiceItems.append({
                 'name': f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}",

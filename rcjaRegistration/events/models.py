@@ -81,6 +81,7 @@ class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
     state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
+    globalEvent = models.BooleanField('Global event', default=False, help_text='Global events appear to users as not belonging to a state. Recommeneded for national events. Billing still uses state based settings.')
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -103,6 +104,7 @@ class Event(CustomSaveDeleteModel):
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
     # Billing details
+    entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
     event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
@@ -192,11 +194,18 @@ class Event(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('events:summary', kwargs = {"eventID": self.id})
+
     def boolWorkshop(self):
         return self.eventType == 'workshop'
 
     def __str__(self):
-        return f'{self.name} {self.year} ({self.state.abbreviation})'
+        if not self.globalEvent:
+            return f'{self.name} {self.year} ({self.state.abbreviation})'
+        else:
+            return f'{self.name} {self.year}'
 
     # *****CSV export methods*****
 

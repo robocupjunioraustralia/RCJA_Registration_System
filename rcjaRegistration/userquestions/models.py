@@ -10,6 +10,7 @@ class Question(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
+    shortTitle = models.CharField('Short title', max_length=20, unique=True, null=True, help_text="This will appear in the admin where the full question text won't fit. Users will never see this.")
     questionText = models.TextField('Question text')
     required = models.BooleanField('Required', default=True, help_text='Users must accept required questions to register')
 

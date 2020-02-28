@@ -18,7 +18,7 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h3>You are currently interacting as {{ user.currentlySelectedSchool.name|default:"independent" }}.</h3><br>
+        <h3>You are currently interacting as {{ request.user.currentlySelectedSchool.name|default:"independent" }}.</h3><br>
     </div>
     <div class="row">
         <h1>Invoices:</h1> 
@@ -50,6 +50,7 @@
         <h1>Your Events:</h1>
     </div>
     <br>
+   
     <div class="row">  
         {% if currentEvents or openForRegistrationEvents or pastEvents %}
             {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
@@ -71,5 +72,13 @@
         </div>
     {% endif %}
     </div>
+
+    {% if not 'viewAll' in request.GET %}
+    <br>
+    <div>
+        <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
