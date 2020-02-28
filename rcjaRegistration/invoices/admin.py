@@ -25,11 +25,12 @@ class InvoicePaymentInline(admin.TabularInline):
 @admin.register(Invoice)
 class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'event',
+        'invoiceNumber',
+        'detailURL',
         'invoiceToUser',
+        'event',
         'school',
         'campus',
-        'invoiceNumber',
         'purchaseOrderNumber',
         'invoiceAmountInclGST',
         'amountDueInclGST',
@@ -82,7 +83,13 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return {
             'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
-    
+
+    def detailURL(self, instance):
+        from django.utils.safestring import mark_safe
+        url = instance.get_absolute_url()  
+        return mark_safe(f'<a href="{url}" target="_blank">View invoice</a>')
+    detailURL.short_description = 'View invoice'
+
     # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation
     # Prevent add because always created by signal
     # Reconsider in conjuction with signals

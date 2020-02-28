@@ -101,6 +101,10 @@ class Invoice(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('invoices:detail', kwargs = {"invoiceID": self.id})
+
     # Campus
 
     # Returns true if campus based invoicing enabled for this school for this event
@@ -212,7 +216,7 @@ class Invoice(CustomSaveDeleteModel):
             unitCost = self.event.event_specialRateFee
 
             # Calculate totals
-            if self.evnet.entryFeeIncludesGST:
+            if self.event.entryFeeIncludesGST:
                 totalInclGST = quantity * unitCost
                 totalExclGST = totalInclGST / 1.1
                 gst = totalInclGST - totalExclGST

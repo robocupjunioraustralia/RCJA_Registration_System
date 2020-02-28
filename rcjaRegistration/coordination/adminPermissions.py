@@ -5,6 +5,26 @@ from .models import *
 
 from django.contrib.auth import get_permission_codename
 
+def checkStatePermissions(request, obj, permission):
+    # First check super user
+    if request.user.is_superuser:
+        return True
+
+    # If no object return True because can't do state level filtering
+    if obj is None:
+        return True
+
+    # Check state level filtering is possible
+    if not hasattr(obj, 'getState'):
+        return True
+
+    # Check state level permission for object
+    for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
+        if coordinator.checkPermission(obj, permission):
+            return True
+
+    return False
+
 class AdminPermissions:
     def get_queryset(self, request):
         # Get base queryset
@@ -35,24 +55,7 @@ class AdminPermissions:
             return True
 
     def checkStatePermissions(self, request, obj, permission):
-        # First check super user
-        if request.user.is_superuser:
-            return True
-
-        # If no object return True because can't do state level filtering
-        if obj is None:
-            return True
-
-        # Check state level filtering is possible
-        if not hasattr(obj, 'getState'):
-            return True
-
-        # Check state level permission for object
-        for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
-            if coordinator.checkPermission(obj, permission):
-                return True
-
-        return False
+        return checkStatePermissions(request, obj, permission)
 
     def has_add_permission(self, request, obj=None):
         # Check django permissions and editing allowed
