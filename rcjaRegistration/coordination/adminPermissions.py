@@ -64,7 +64,7 @@ class AdminPermissions:
     
     def has_view_permission(self, request, obj=None):
         # Check django permissions
-        if not super().has_view_permission(request):
+        if not super().has_view_permission(request, obj=obj):
             return False
         
         # Check state permissions
@@ -72,7 +72,7 @@ class AdminPermissions:
 
     def has_change_permission(self, request, obj=None):
         # Check django permissions and editing allowed
-        if not (super().has_change_permission(request) and self.checkModelEditingAllowed(obj)):
+        if not (super().has_change_permission(request, obj=obj) and self.checkModelEditingAllowed(obj)):
             return False
 
         # Check state permissions
@@ -80,7 +80,7 @@ class AdminPermissions:
 
     def has_delete_permission(self, request, obj=None):
         # Check django permissions and editing allowed
-        if not (super().has_delete_permission(request) and self.checkModelEditingAllowed(obj)):
+        if not (super().has_delete_permission(request, obj=obj) and self.checkModelEditingAllowed(obj)):
             return False
 
         # Check state permissions
