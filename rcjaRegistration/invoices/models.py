@@ -33,7 +33,7 @@ class InvoiceGlobalSettings(models.Model):
 
 class Invoice(CustomSaveDeleteModel):
     # Foreign keys
-    event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.PROTECT, editable=False)
+    event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.CASCADE, editable=False)
 
     # User and school foreign keys
     invoiceToUser = models.ForeignKey('users.User', verbose_name='Invoice to', on_delete=models.PROTECT, editable=False)
