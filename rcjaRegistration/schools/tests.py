@@ -340,7 +340,7 @@ class TestSetCurrentSchool(TestCase):
         response = self.client.get(url, follow=True)
         self.assertContains(response, "Login")
         response = self.client.get(url)
-        self.assertEqual(response.url, "/accounts/login/?next=/schools/setCurrentSchool/3")
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school3.id}")
         self.assertEqual(response.status_code, 302)
 
         # Check still school 1
