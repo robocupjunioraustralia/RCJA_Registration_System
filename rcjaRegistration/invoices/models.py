@@ -271,9 +271,15 @@ class Invoice(CustomSaveDeleteModel):
                 quantity = Student.objects.filter(team__in=teams).count()
 
             # Calculate totals
-            totalExclGST = quantity * unitCost
-            gst = 0.1 * totalExclGST
-            totalInclGST = totalExclGST + gst
+            if self.event.entryFeeIncludesGST:
+                totalInclGST = quantity * unitCost
+                totalExclGST = totalInclGST / 1.1
+                gst = totalInclGST - totalExclGST
+
+            else:
+                totalExclGST = quantity * unitCost
+                gst = 0.1 * totalExclGST
+                totalInclGST = totalExclGST * 1.1
 
             # Quantity string
             quantityString = f"{quantity} {quantityMethod if quantity <= 1 else quantityMethod + 's'}"
