@@ -23,6 +23,7 @@ class QuestionResponseInline(admin.TabularInline):
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     list_display = [
+        'shortTitle',
         'questionText',
         'required',
     ]
