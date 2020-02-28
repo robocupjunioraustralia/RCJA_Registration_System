@@ -12,6 +12,7 @@ class InvoiceGlobalSettings(models.Model):
     invoiceFromName = models.CharField('Invoice from name', max_length=50)
     invoiceFromDetails = models.TextField('Invoice from details')
     invoiceFooterMessage = models.TextField('Invoice footer message')
+    firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
 
     # *****Meta and clean*****
     class Meta:
@@ -95,7 +96,10 @@ class Invoice(CustomSaveDeleteModel):
             try:
                 self.invoiceNumber = Invoice.objects.latest('invoiceNumber').invoiceNumber + 1
             except Invoice.DoesNotExist:
-                self.invoiceNumber = 1
+                try:
+                    self.invoiceNumber = InvoiceGlobalSettings.objects.get().firstInvoiceNumber
+                except InvoiceGlobalSettings.DoesNotExist:
+                    self.invoiceNumber = 1
 
     # *****Methods*****
 

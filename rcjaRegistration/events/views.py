@@ -91,6 +91,7 @@ def summary(request, eventID):
 
     context = {
         'event': event,
+        'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
         'today':datetime.date.today()
     }

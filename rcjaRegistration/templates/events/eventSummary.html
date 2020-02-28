@@ -13,23 +13,36 @@
     </div>
 
     <div class="row">
-        <h2>Dates</h2>
+        <h3>Dates</h3>
         <p>Start date: {{event.startDate}}</p>
         <p>End date: {{event.endDate}}</p>
         <p>Registrations close: {{event.registrationsClose}}</p>
-        <h2>Event details</h2>
-        <p> {{ event.eventDetails|escape|linebreaks }} </p>
-        <h2>Location</h2>
-        <p> {{ event.location|escape|linebreaks }} </p>
-        {% if not event.boolWorkshop %}<h2>Max members per team: {{ event.maxMembersPerTeam }}</h2>{% endif %}
-        <h2>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h2>
-        {% if event.paymentDueDate %}<h2>Payment due: {{ event.paymentDueDate }}</h2>{% endif %}
-        <h2>Available divisions</h2>
+        {% if not event.boolWorkshop %}<h3>Max members per team: {{ event.maxMembersPerTeam }}</h3>{% endif %}
+        <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h3>
+        <h3>Payment</h3>
+        <p>
+            This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {% if event.event_billingType == 'team' %}team{% else %}student{% endif %}.
+            {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} teams that your school enters, measured across all campuses.{% endif %}
+            {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
+            {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team limit per school for this event.{% endif %}
+            {% if event.event_maxTeamsForEvent %}<br>There is a {{ event.event_maxTeamsForEvent }} team overall limit for this event.{% endif %}
+        </p>
+        {% if event.paymentDueDate %}<p>Payment due is due on {{ event.paymentDueDate }}.</p>{% endif %}
+        <h3>Available divisions</h3>
         <ul>
             {% for availableDivision in event.availabledivision_set.all %}
-            <li><strong>{{ availableDivision.division.name }}{% if availableDivision.division.description %}: </strong>{{ availableDivision.division.description }}{% else %}</strong>{% endif %}</li>
+            <li><strong>{{ availableDivision.division.name }}</strong>
+                {% if availableDivision.division.description %}<br>{{ availableDivision.division.description }}{% endif %}
+                {% if availableDivision.division_billingType != 'event' %}<br>This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.{% endif %}
+                {% if availableDivision.division_maxTeamsPerSchool %}<br>There is a {{ availableDivision.division_maxTeamsPerSchool }} team limit per school for this division.{% endif %}
+                {% if availableDivision.division_maxTeamsForDivision %}<br>There is a {{ availableDivision.division_maxTeamsForDivision }} team overall limit for this division.{% endif %}
+            </li>
             {% endfor %}
         </ul>
+        <h3>Event details</h3>
+        <p> {{ event.eventDetails|escape|linebreaks }} </p>
+        <h3>Location</h3>
+        <p> {{ event.location|escape|linebreaks }} </p>
     </div><br>
 
     <div class="row">

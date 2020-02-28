@@ -30,6 +30,24 @@ class CoordinatorInline(admin.TabularInline):
     verbose_name = "Coordinator of"
     verbose_name_plural = "Coordinator of"
 
+class User_QuestionResponse_Filter(admin.SimpleListFilter):
+    title = "Question"
+    parameter_name = "question"
+
+    def lookups(self, request, model_admin):
+        from userquestions.models import Question
+        options = []
+        for question in Question.objects.all():
+            option = (question.id),question.shortTitle
+            options.append(option)
+        return options
+
+    def queryset(self, request, queryset):
+        try:
+            return queryset.filter(questionresponse__response = True, questionresponse__question__id = int(self.value()))
+        except (ValueError,TypeError):
+            return queryset
+
 @admin.register(User)
 class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     """Define admin model for custom User model with no email field."""
@@ -102,6 +120,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     list_filter = DjangoUserAdmin.list_filter + (
         'homeState',
         'homeRegion',
+        User_QuestionResponse_Filter,
     )
     from userquestions.admin import QuestionResponseInline
     inlines = [
@@ -128,6 +147,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         'is_superuser',
         'is_active',
     ]
+    exportFieldsManyRelations = ['questionresponse_set']
 
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator

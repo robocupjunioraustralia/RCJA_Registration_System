@@ -252,3 +252,97 @@ class ProfileEditTests(TestCase):
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(200,response.status_code)
+
+class TestSetCurrentSchool(TestCase):
+    email = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
+        self.region1 = Region.objects.create(name='Test Region', description='test desc')
+        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+
+    def testSchoolAdministratorCreate(self):
+        # Test creating first admin sets currentlySelectedSchool
+        self.assertEqual(self.user.currentlySelectedSchool, None)
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        # Test creating second one doesn't
+        SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+    def testSchoolAdministratorDelete(self):
+        # Setup
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        admin3 = SchoolAdministrator.objects.create(school=self.school3, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        # Test deletion while remaining schools
+        admin3.delete()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        # Test deletion of currently set school admin
+        admin1.delete()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
+
+        # test deletion of last school admin
+        admin2.delete()
+        self.assertEqual(self.user.currentlySelectedSchool, None)
+
+    def testSuccesful_setCurrentSchool(self):
+        # Setup
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+
+        # Change to school 2
+        url = reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+        # Check school changed
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
+
+    def testDenied_setCurrentSchool(self):
+        # Setup
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+
+        # Attempt change to school 3
+        url = reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school3.id})
+        response = self.client.get(url)
+        self.assertContains(response, "You do not have permission to view this school", status_code=403)
+        self.assertEqual(response.status_code, 403)
+
+        # Check still school 1
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+    def testLoginRequired_setCurrentSchool(self):
+        # Setup
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        # Attempt change to school 3
+        url = reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school3.id})
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school3.id}")
+        self.assertEqual(response.status_code, 302)
+
+        # Check still school 1
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)

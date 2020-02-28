@@ -17,7 +17,7 @@ class Question(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = "Question"
-        ordering = ['-creationDateTime']
+        ordering = ['-required', '-creationDateTime']
 
     # *****Save & Delete Methods*****
 
@@ -58,5 +58,17 @@ class QuestionResponse(models.Model):
         return str(self.question)
 
     # *****CSV export methods*****
+
+    # List of all csv headers for instance of this model
+    def csvHeaders(self):
+        return [
+            {'header': self.question.shortTitle, 'order': self.question.shortTitle},
+        ]
+
+    # Dictionary of values for each header
+    def csvValues(self):
+        return {
+            self.question.shortTitle: self.response,
+        }
 
     # *****Email methods*****
