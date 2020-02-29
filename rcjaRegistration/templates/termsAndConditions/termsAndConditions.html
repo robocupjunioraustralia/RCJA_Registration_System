@@ -4,39 +4,54 @@
 {% block head %}
 <title> Terms and Conditions </title>
 <style type="text/css">
-    body {
-        background-color: #ffffff;
-    }
+  body {
+    background-color: gray;
+  }
 
-    .column {
-        max-width: 100%;
-    }
+  .column {
+    max-width: 100%;
+  }
+  .logincontent {
+    padding-top:5%;
+  }
+  .scrollable-box {
+    max-height:50rem;
+    overflow:scroll;
+  }
 
-    .logincontent {
-        padding-top: 10%;
-    }
+  .formbox {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
 
-    .bg {
-        background-image: url('/static/homeimage2.jpg');
-        /* Full height */
-        height: 100%;
-        width: auto;
-        /* Center and scale the image nicely */
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-        /*background-color: #CCE2FF;*/
-    }
+  .bg {
+    /* Full height */
+    height: 100%;
+    width: auto;
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    /*background-color: #CCE2FF;*/
+  }
 
-    .left-aligned-text {
-        text-align: left;
-    }
+  .left-aligned-text {
+    text-align: left;
+  }
 </style>
+
 {% endblock %}
+
 
 {% block content %}
 
-<p><strong>RoboCup Junior (Australia) Inc. (RCJA) Privacy statement, as at 13 February 2018</strong><br />1. We value your privacy</p>
+<div class="bg">
+  <div class="logincontent">
+    <div class="ui center aligned container ">
+        <div class = "ui segment">
+          <h1> Terms and conditions </h1>
+        </div>
+        <div class="twelve wide mobile six wide computer column ui segment formbox left-aligned-text scrollable-box">
+          <p><strong>RoboCup Junior (Australia) Inc. (RCJA) Privacy statement, as at 13 February 2018</strong><br />1. We value your privacy</p>
 <p>The RCJA Privacy Statement (Privacy Statement) sets out RCJA's policies in relation to the management of your personal information. The Privacy Statement may be reviewed and updated from time to time to ensure it remains appropriate to the changes in RCJA's environment and in line with legislation. <br />2. Collection</p>
 <p>RCJA collects personal information (Information) about students, mentors, members and other people in order to perform its functions and activities. Information may be collected before, during and after the course of persons association with RCJA.</p>
 <p>3. Use and disclosure<br />RCJA will use Information it collects from you for the primary purpose of collection, and for such other secondary purposes that are related to the primary purpose of collection and reasonably expected, or to which you have consented. <br />Examples of purposes for which the School might use or disclose Information:<br />- Research by RCJA's affiliates.<br />- Marketing by RCJA's affiliates, however student information will not be disclosed for marketing purposes.</p>
@@ -62,5 +77,10 @@
 <p>15. Use of all RCJA systems and all of our legal notices will be governed by and construed in accordance with the laws of Victoria, Australia and you agree to submit to the jurisdiction of the courts of that State.</p>
 <p>Last updated 3rd April 2018</p>
 <a href="/"><button class="ui large blue button"> Home </button> </a>
+        </div>
+    </div>
+  </div>
+</div>
+
 
 {% endblock %}
