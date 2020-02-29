@@ -26,7 +26,16 @@
     background-repeat: no-repeat;
     background-size: cover;
     /*background-color: #CCE2FF;*/
+    
   }
+
+  .layer {
+    background-color: rgba(0, 0, 0, 0.5);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
   .left-aligned-text {
     text-align: left;
@@ -36,6 +45,7 @@
 
 {% block content %}
 <div class="bg">
+  <div class = "layer">
   <div class="logincontent">
     <div class="ui center aligned container grid">
 
@@ -84,7 +94,7 @@
                 <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
               </form>
               <br><br>
-              <a href="/accounts/signup"><button class="ui small teal button" type="" value="Sign Up"> Create account </button>
+              <a href="/accounts/signup"><button class="ui small teal button" style="margin-bottom:1rem;" type="" value="Sign Up"> Create account </button>
               </a>
               <a href="{% url 'password_reset' %}"><button class="ui small teal button" type="" value="Forgot password">
                   Forgot
@@ -96,5 +106,6 @@
       </div>
     </div>
   </div>
+</div>
 </div>
 {% endblock %}
