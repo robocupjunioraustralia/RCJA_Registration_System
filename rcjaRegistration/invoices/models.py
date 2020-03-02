@@ -323,7 +323,12 @@ class Invoice(CustomSaveDeleteModel):
     amountDueInclGST.short_description = 'Amount due (incl GST)'
 
     def __str__(self):
-        return f'{self.event}: {self.school}'
+        if self.campus:
+            return f'{self.event}: {self.school}, {self.campus}'
+        elif self.school:
+            return f'{self.event}: {self.school}'
+        else:
+            return f'{self.event}: {self.invoiceToUser}'
 
     # *****CSV export methods*****
 
