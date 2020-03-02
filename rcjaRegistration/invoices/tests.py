@@ -33,6 +33,7 @@ def commonSetUp(self):
         self.user1 = User.objects.create_user(email=self.email1, password=self.password)
         self.user2 = User.objects.create_user(email=self.email2, password=self.password)
         self.user3 = User.objects.create_user(email=self.email3, password=self.password)
+        self.superUser = User.objects.create_user(email=self.email4, password=self.password, is_superuser=True)
 
         self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
         self.state2 = State.objects.create(treasurer=self.user1, name='NSW', abbreviation='NSW')
@@ -161,6 +162,7 @@ class TestSetInvoiceToPermissions(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
+    email4 = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
@@ -225,6 +227,15 @@ class TestSetInvoiceToPermissions(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)    
+
+    def testDeniedSuperUser(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.client.login(request=HttpRequest(), username=self.email4, password=self.password)
 
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.post(url)
