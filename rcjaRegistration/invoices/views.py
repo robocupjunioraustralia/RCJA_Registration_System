@@ -50,10 +50,6 @@ def detail(request, invoiceID):
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'invoiceItems': invoice.invoiceItems(),
-        'overallTotalExclGST': invoice.invoiceAmountExclGST(),
-        'overallTotalGST': invoice.amountGST(),
-        'overallTotalInclGST': invoice.invoiceAmountInclGST(),
         'currentDate': datetime.datetime.today().date,
     }
 
