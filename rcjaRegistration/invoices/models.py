@@ -181,7 +181,6 @@ class Invoice(CustomSaveDeleteModel):
 
         # Get special rate teams for this school for this invoice
         specialRateTeams = Team.objects.filter(**teamFilterDict).order_by('creationDateTime')[:numberSpecialRateTeams]
-        print(specialRateTeams)
 
         return specialRateTeams
 
@@ -241,7 +240,6 @@ class Invoice(CustomSaveDeleteModel):
                 'totalInclGST': totalInclGST,
             })
 
-
         # Standard rate entries
         for division in self.standardRateDivisions():
             # Get available division
@@ -297,31 +295,31 @@ class Invoice(CustomSaveDeleteModel):
     # Totals
 
     def amountPaid(self):
-        return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
+        return round(sum(self.invoicepayment_set.values_list('amountPaid', flat=True)), 2)
     amountPaid.short_description = 'Amount paid'
 
     def amountGST(self):
-        return sum([item['gst'] for item in self.invoiceItems()])
+        return round(sum([item['gst'] for item in self.invoiceItems()]), 2)
     amountGST.short_description = 'GST'
 
     # Invoice amount
 
     def invoiceAmountExclGST(self):
-        return sum([item['totalExclGST'] for item in self.invoiceItems()])
+        return round(sum([item['totalExclGST'] for item in self.invoiceItems()]), 2)
     invoiceAmountExclGST.short_description = 'Invoice amount (ex GST)'
 
     def invoiceAmountInclGST(self):
-        return sum([item['totalInclGST'] for item in self.invoiceItems()])
+        return round(sum([item['totalInclGST'] for item in self.invoiceItems()]), 2)
     invoiceAmountInclGST.short_description = 'Invoice amount (incl GST)'
 
     # Amount due
 
     def amountDueExclGST(self):
-        return self.invoiceAmountExclGST() - self.amountPaid()
+        return round(self.invoiceAmountExclGST() - self.amountPaid(), 2)
     amountDueExclGST.short_description = 'Amount due (ex GST)'
 
     def amountDueInclGST(self):
-        return self.invoiceAmountInclGST() - self.amountPaid()
+        return round(self.invoiceAmountInclGST() - self.amountPaid(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
 
     def __str__(self):
