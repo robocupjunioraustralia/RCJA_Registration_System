@@ -1,12 +1,13 @@
 from django.test import TestCase
-from regions.models import State,Region
-from schools.models import School, SchoolAdministrator
-from teams.models import Team,Student
-from events.models import Event,Division,Year
-from users.models import User
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
+
+from regions.models import State,Region
+from schools.models import School, SchoolAdministrator
+from teams.models import Team, Student
+from events.models import Event, Division, Year, AvailableDivision
+from users.models import User
 
 import datetime
 # Create your tests here.
@@ -138,10 +139,11 @@ class TestEventSummaryPage(TestCase):
 class TestEventClean(TestCase):
     def setUp(self):
         commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
         self.event = Event(
             year=self.year,
             state=self.newState,
-            name='test old not reg',
+            name='Event 1',
             maxMembersPerTeam=5,
             event_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -150,7 +152,25 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
-    
+
+    # Dates validation
+
+    def teststartDateNoneInvalid(self):
+        self.event.startDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testendDateNoneInvalid(self):
+        self.event.endDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testRegistrationsOpenDateNoneInvalid(self):
+        self.event.registrationsOpenDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testRegistrationsCloseDateNoneInvalid(self):
+        self.event.registrationsCloseDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
     def testMultidayEventOK(self):
         self.event.clean()
 
@@ -188,4 +208,189 @@ class TestEventClean(TestCase):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
         self.assertRaises(ValidationError, self.event.clean)
 
-    # TODO: Validate billing settings, event and available division
+    # Billing settings validation
+
+    def testSpecialRateValidComplete(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+    def testSpecialRateInvalid(self):
+        self.event.event_specialRateFee = 50
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testSpecialRateStudentInvalid(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+        self.event.event_billingType = 'student'
+        self.assertRaises(ValidationError, self.event.clean)
+    
+    def testSpecialRateBillingAvailableDivisionValid(self):
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+    def testSpecialRateBillingAvailableDivisionInValid(self):
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+        self.availableDivision.division_billingType = 'team'
+        self.availableDivision.division_entryFee = 50
+        self.availableDivision.save()
+
+        self.assertRaises(ValidationError, self.event.clean)
+
+class TestEventMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='Event 1',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+
+    def testGetState(self):
+        self.assertEqual(self.event.getState(), self.newState)
+
+    def testBoolWorkshop_notWorkshop(self):
+        self.event.eventType = 'competition'
+        self.assertEqual(self.event.boolWorkshop(), False)
+
+    def testBoolWorkshop_isWorkshop(self):
+        self.event.eventType = 'workshop'
+        self.assertEqual(self.event.boolWorkshop(), True)
+
+    def testSave_competition(self):
+        self.event.eventType = 'competition'
+        self.event.event_billingType = 'student'
+        self.assertEqual(self.event.maxMembersPerTeam, 5)
+        self.assertEqual(self.event.event_billingType, 'student')
+
+        self.event.save()
+        self.assertEqual(self.event.maxMembersPerTeam, 5)
+        self.assertEqual(self.event.event_billingType, 'student')
+
+    def testSave_workshop(self):
+        self.event.eventType = 'workshop'
+        self.event.event_billingType = 'student'
+        self.assertEqual(self.event.maxMembersPerTeam, 5)
+        self.assertEqual(self.event.event_billingType, 'student')
+
+        self.event.save()
+        self.assertEqual(self.event.maxMembersPerTeam, 0)
+        self.assertEqual(self.event.event_billingType, 'team')
+
+    def testStr_state(self):
+        self.assertEqual(str(self.event), "Event 1 2019 (VIC)")
+
+    def testStr_global(self):
+        self.event.globalEvent = True
+        self.assertEqual(str(self.event), "Event 1 2019")
+
+class TestAvailableDivisionClean(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='Event 1',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+
+    def testBillingEntryFeeAndTypeValidBlank(self):
+        self.availableDivision.clean()
+
+    def testBillingEntryFeeAndTypeValidFilled(self):
+        self.availableDivision.division_billingType = 'team'
+        self.availableDivision.division_entryFee = 50
+        self.availableDivision.clean()
+
+    def testBillingEntryFeeAndTypeInValid1(self):
+        self.availableDivision.division_billingType = 'team'
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+    def testBillingEntryFeeAndTypeInValid2(self):
+        self.availableDivision.division_entryFee = 50
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+    def testSpecialRateValid(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.save()
+
+        self.availableDivision.clean()
+
+    def testSpecialRateInValid(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.save()
+
+        self.availableDivision.division_billingType = 'team'
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+        self.availableDivision.division_billingType = 'student'
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+    def testWorkshopValid(self):
+        self.event.eventType = 'workshop'
+        self.event.save()
+
+        self.availableDivision.clean()
+
+        self.availableDivision.division_billingType = 'team'
+        self.availableDivision.division_entryFee = 50
+        self.availableDivision.clean()
+
+    def testWorkshopInValid(self):
+        self.event.eventType = 'workshop'
+        self.event.save()
+
+        self.availableDivision.division_billingType = 'student'
+        self.availableDivision.division_entryFee = 50
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+class TestAvailableDivisionMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='Event 1',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+
+    def testGetState(self):
+        self.assertEqual(self.availableDivision.getState(), self.newState)
