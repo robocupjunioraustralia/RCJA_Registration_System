@@ -3,9 +3,10 @@ from django.test import SimpleTestCase, TestCase, modify_settings
 from django.urls import reverse
 from django.test import Client
 from django.http import HttpRequest
+from django.core.exceptions import ValidationError
 
 from users.models import User
-from .models import School, SchoolAdministrator
+from .models import School, SchoolAdministrator, Campus
 from regions.models import State, Region
 
 # View Tests
@@ -198,3 +199,168 @@ class TestEditSchoolDetails(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this school", status_code=403)
+
+def schoolSetUp(self):
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+    self.region1 = Region.objects.create(name='Test Region', description='test desc')
+    self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+
+class TestSchoolClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+
+    def testValid(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1
+        )
+
+        self.assertEqual(school2.clean(), None)
+
+    def testNameCaseInsensitive(self):
+        school2 = School(
+            name='SchoOl 1',
+            abbreviation='thi',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)
+
+    def testAbbreviationCaseInsensitive(self):
+        school2 = School(
+            name='Thing',
+            abbreviation='sCh1',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)
+
+    def testAbbreviationMinLength(self):
+        school2 = School(
+            name='Thing',
+            abbreviation='12',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)
+
+    def testAbbreviationNotIND(self):
+        school2 = School(
+            name='Thing',
+            abbreviation='ind',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)     
+
+    def testNameNotIndependent(self):
+        school2 = School(
+            name='IndePendent',
+            abbreviation='thi',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)    
+
+class TestSchoolMethods(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+
+    def testGetState(self):
+        self.assertEqual(self.school1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.school1), 'School 1')
+
+    def testSave(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1
+        )
+
+        self.assertEqual(school2.abbreviation, 'sch2')
+        school2.save()
+        self.assertEqual(school2.abbreviation, 'SCH2')
+
+def setupCampusAndAdministrators(self):
+    self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+    self.admin1 = SchoolAdministrator.objects.create(school=self.school1, campus=self.campus1, user=self.user1)
+    self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+
+class TestCampusClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        setupCampusAndAdministrators(self)
+
+    def testCreate(self):
+        campus2 = Campus(
+            school=self.school1,
+            name='Campus 1'
+        )
+
+        self.assertEqual(campus2.clean(), None)
+
+    def testSchoolChange(self):
+        self.campus1.school = self.school2
+        self.assertRaises(ValidationError, self.campus1.clean)
+
+class TestCampusMethods(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+
+    def testGetState(self):
+        self.assertEqual(self.campus1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.campus1), 'Campus 1')
+
+class TestSchoolAdministratorClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        setupCampusAndAdministrators(self)
+
+    def testValid(self):
+        self.assertEqual(self.admin1.clean(), None)
+
+    def testNoCampusValid(self):
+        self.admin1.campus = None
+        self.assertEqual(self.admin1.clean(), None)
+    
+    def testWrongSchool(self):
+        self.admin1.school = self.school2
+        self.assertRaises(ValidationError, self.admin1.clean)
+
+class TestSchoolAdministratorMethods(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+
+    def testGetState(self):
+        self.assertEqual(self.admin1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.admin1), self.email1)
