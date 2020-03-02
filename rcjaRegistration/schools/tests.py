@@ -1,12 +1,13 @@
-from users.models import User
-from . models import School, SchoolAdministrator
-from regions.models import State,Region
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase, modify_settings
 from django.urls import reverse
 from django.test import Client
-from users.models import User
 from django.http import HttpRequest
+from django.core.exceptions import ValidationError
+
+from users.models import User
+from .models import School, SchoolAdministrator, Campus
+from regions.models import State, Region
 
 # View Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
@@ -65,202 +66,16 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 #     validSubmitCode = 200
 #     inValidCreateCode = 400
 
-@modify_settings(MIDDLEWARE={
-    'remove': 'common.redirectsMiddleware.RedirectMiddleware',
-})
-class AuthViewTests(TestCase):
-    email = 'user@user.com'
-    password = 'chdj48958DJFHJGKDFNM'
-    validPayload = {'email':email,
-        'password':password,
-        'passwordConfirm':password,
-        'first_name':'test',
-        'last_name':'test',
-        'school':1,
-        'mobileNumber':'123123123',
-        'homeState': 1,
-        'homeRegion': 1,
-        }
-
-    def setUp(self):
-        self.user = user = User.objects.create_user(email='admin@test.com', password='admin')
-        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
-        self.newRegion = Region.objects.create(name='Test Region',description='test desc')
-        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
-        self.validPayload["school"] = self.newSchool.id
-        self.validPayload["homeState"] = self.newState.id
-        self.validPayload["homeRegion"] = self.newRegion.id
-
-    def testSignupByUrl(self):
-        response = self.client.get('/accounts/signup')
-        self.assertEqual(response.status_code, 200)
-
-    def testSignupByName(self):
-        response = self.client.get(reverse('users:signup'))
-        self.assertEqual(response.status_code, 200)
-
-    def testSignupUsesCorrectTemplate(self):
-        response = self.client.get(reverse('users:signup'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'registration/signup.html')
-
-    def testUserValidSignup(self):
-        prevUsers = get_user_model().objects.all().count()
-
-        payloadData = self.validPayload
-        response = self.client.post(path=reverse('users:signup'),data = payloadData)
-        self.assertEqual(response.status_code,302) #ensure user is redirected on signup
-        self.assertEqual(get_user_model().objects.all().count(), prevUsers + 1)
-        self.assertEqual(get_user_model().objects.all()[1].email, self.email) #this checks the user created has the right username
-                                                    #note that this works because transactions aren't saved in django tests
-
-    def testUserInvalidSignup(self):
-        payloadData = {'username':self.email}
-        response = self.client.post(path=reverse('users:signup'),data = payloadData)
-        self.assertEqual(response.status_code,200) #ensure user is not redirected
-        self.assertEqual(get_user_model().objects.all().count(), 1)
-    
-    def testUserExistingSignup(self):
-        payloadData = self.validPayload
-        self.client.post(path=reverse('users:signup'),data = payloadData)
-        response = self.client.post(path=reverse('users:signup'), data = payloadData)
-        self.assertEqual(response.status_code,200) #ensure failed signup
-        self.assertIn(b'Email address: User with this Email address already exists.',response.content)
-
-    def testUserExistingSignupCaseInsensitive(self):
-        payloadData = self.validPayload
-        self.client.post(path=reverse('users:signup'),data = payloadData)
-        payloadData['email'] = 'UsEr@user.com'
-        response = self.client.post(path=reverse('users:signup'), data = payloadData)
-        self.assertEqual(response.status_code,200) #ensure failed signup
-        self.assertIn(b'Email address: User with this Email address already exists.',response.content)
-        payloadData['email'] = self.email # reset email for other tests
-
-    def testUserInvalidPasswordConfirmSignup(self):
-        payloadData = self.validPayload.copy()
-        payloadData["passwordConfirm"] = 'asasdaasasa'
-        response = self.client.post(path=reverse('users:signup'), data = payloadData)
-        self.assertEqual(response.status_code,200) #ensure failed signup
-        self.assertIn(b'Passwords do not match',response.content)
-
-    def testLoginByUrl(self):
-        response = self.client.get('/accounts/login/')
-        self.assertEqual(response.status_code, 200)
-
-    def testLoginByName(self):
-        response = self.client.get(reverse('login'))
-        self.assertEqual(response.status_code, 200)
-
-    def testLoginUsesCorrectTemplate(self):
-        response = self.client.get(reverse('login'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'registration/login.html')
-
-    def testUserCreatedLogsIn(self):
-        payloadData = self.validPayload
-        self.client.post(path=reverse('users:signup'),data = payloadData)
-        loginPayload = {'username':self.email,'password':self.password}
-        response = self.client.post(path=reverse('login'),data = loginPayload)
-        self.assertEqual(response.status_code,302) #ensure a successful login works and redirects
-
-    def testLogoutByUrl(self):
-        response = self.client.get('/accounts/logout/')
-        self.assertEqual(response.status_code, 200)
-
-    def testLogoutByName(self):
-        response = self.client.get(reverse('logout'))
-        self.assertEqual(response.status_code, 200)
-
-    def testLogoutUsesCorrectTemplate(self):
-        response = self.client.get(reverse('logout'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'registration/logged_out.html')
-
-    def testUserCreatedLogsOut(self):
-        user = User.objects.create_user(
-            email=self.email,
-            password=self.password
-        )
-        user.save()
-        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-        self.client.get(reverse('logout'))
-        # Try an unauthorized page
-        response = self.client.get(reverse('events:dashboard'))
-        self.assertEqual(response.status_code, 302)
-
-class ProfileEditTests(TestCase):
-    email = 'user@user.com'
-    password = 'chdj48958DJFHJGKDFNM'
-    
-    def setUp(self):
-        self.validPayload = {
-            'email':self.email,
-            'password':self.password,
-            'passwordConfirm':self.password,
-            'first_name':'test',
-            'last_name':'test',
-            'school':1,
-            'mobileNumber':'123123123',
-            'homeState': 1,
-            'homeRegion': 1,
-        }
-        self.user = user = User.objects.create_user(
-            email='admin@test.com',
-            password='admin'
-        )
-        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
-        self.newRegion = Region.objects.create(name='Test Region',description='test desc')
-        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
-        self.validPayload["school"] = self.newSchool.id
-        self.validPayload["homeState"] = self.newState.id
-        self.validPayload["homeRegion"] = self.newRegion.id
-
-        response = self.client.post(path=reverse('users:signup'),data = self.validPayload)
-        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
-
-    def testPageLoads(self):
-        response = self.client.get(path=reverse('users:details'))
-        self.assertEqual(200,response.status_code)
-
-    def testEditWorks(self):
-        payload = {
-            'questionresponse_set-TOTAL_FORMS':0,
-            "questionresponse_set-INITIAL_FORMS":0,
-            "questionresponse_set-MIN_NUM_FORMS":0,
-            "questionresponse_set-MAX_NUM_FORMS":0,
-            "first_name":"Admin",
-            "last_name":"User",
-            "mobileNumber":123,
-            "email":"admon@admon.com",
-            'homeState': self.newState.id,
-            'homeRegion': self.newRegion.id,
-        }
-        response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEqual(302,response.status_code)
-        self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
-
-    def testInvalidEditFails(self):
-        payload = {
-            'questionresponse_set-TOTAL_FORMS':0,
-            "questionresponse_set-INITIAL_FORMS":0,
-            "questionresponse_set-MIN_NUM_FORMS":0,
-            "questionresponse_set-MAX_NUM_FORMS":0,
-            "first_name":"Admin",
-            "last_name":"User",
-            "mobileNumber":123,
-            "email":"adminNope",
-        }
-        response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEqual(200,response.status_code)
-
 class TestSetCurrentSchool(TestCase):
     email = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
         self.user = User.objects.create_user(email=self.email, password=self.password)
+
         self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
+
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
         self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
         self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
@@ -346,3 +161,206 @@ class TestSetCurrentSchool(TestCase):
         # Check still school 1
         self.user.refresh_from_db()
         self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+class TestEditSchoolDetails(TestCase):
+    email = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+
+        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
+        self.region1 = Region.objects.create(name='Test Region', description='test desc')
+
+        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+
+    def testLoginRequired(self):
+        url = reverse('schools:details')
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/profile")
+        self.assertEqual(response.status_code, 302)
+
+    def testLoads(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_noSchool(self):
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this school", status_code=403)
+
+def schoolSetUp(self):
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+    self.region1 = Region.objects.create(name='Test Region', description='test desc')
+    self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+
+class TestSchoolClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+
+    def testValid(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1
+        )
+
+        self.assertEqual(school2.clean(), None)
+
+    def testNameCaseInsensitive(self):
+        school2 = School(
+            name='SchoOl 1',
+            abbreviation='thi',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)
+
+    def testAbbreviationCaseInsensitive(self):
+        school2 = School(
+            name='Thing',
+            abbreviation='sCh1',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)
+
+    def testAbbreviationMinLength(self):
+        school2 = School(
+            name='Thing',
+            abbreviation='12',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)
+
+    def testAbbreviationNotIND(self):
+        school2 = School(
+            name='Thing',
+            abbreviation='ind',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)     
+
+    def testNameNotIndependent(self):
+        school2 = School(
+            name='IndePendent',
+            abbreviation='thi',
+            state=self.state1,
+            region=self.region1
+        )
+        self.assertRaises(ValidationError, school2.clean)    
+
+class TestSchoolMethods(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+
+    def testGetState(self):
+        self.assertEqual(self.school1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.school1), 'School 1')
+
+    def testSave(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1
+        )
+
+        self.assertEqual(school2.abbreviation, 'sch2')
+        school2.save()
+        self.assertEqual(school2.abbreviation, 'SCH2')
+
+def setupCampusAndAdministrators(self):
+    self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+    self.admin1 = SchoolAdministrator.objects.create(school=self.school1, campus=self.campus1, user=self.user1)
+    self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+
+class TestCampusClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        setupCampusAndAdministrators(self)
+
+    def testCreate(self):
+        campus2 = Campus(
+            school=self.school1,
+            name='Campus 1'
+        )
+
+        self.assertEqual(campus2.clean(), None)
+
+    def testSchoolChange(self):
+        self.campus1.school = self.school2
+        self.assertRaises(ValidationError, self.campus1.clean)
+
+class TestCampusMethods(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+
+    def testGetState(self):
+        self.assertEqual(self.campus1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.campus1), 'Campus 1')
+
+class TestSchoolAdministratorClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        setupCampusAndAdministrators(self)
+
+    def testValid(self):
+        self.assertEqual(self.admin1.clean(), None)
+
+    def testNoCampusValid(self):
+        self.admin1.campus = None
+        self.assertEqual(self.admin1.clean(), None)
+    
+    def testWrongSchool(self):
+        self.admin1.school = self.school2
+        self.assertRaises(ValidationError, self.admin1.clean)
+
+class TestSchoolAdministratorMethods(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+
+    def testGetState(self):
+        self.assertEqual(self.admin1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.admin1), self.email1)

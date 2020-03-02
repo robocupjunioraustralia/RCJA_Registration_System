@@ -45,15 +45,11 @@ def detail(request, invoiceID):
     # Set invoiced date
     if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today()
-        invoice.save()
+        invoice.save(update_fields=['invoicedDate'])
 
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'invoiceItems': invoice.invoiceItems(),
-        'overallTotalExclGST': invoice.invoiceAmountExclGST(),
-        'overallTotalGST': invoice.amountGST(),
-        'overallTotalInclGST': invoice.invoiceAmountInclGST(),
         'currentDate': datetime.datetime.today().date,
     }
 
@@ -86,7 +82,7 @@ def setCampusInvoice(request, invoiceID):
 
         # Check campus invoicing available
         if not invoice.campusInvoicingAvailable():
-            return HttpResponseForbidden("Campus invoicing not available for this event")
+            return HttpResponseForbidden("Campus invoicing is not available for this event")
 
         # Create campus invoices for campuses that have teams entered in this event
         # This invoice object remains for teams without a campus
@@ -115,7 +111,7 @@ def editInvoicePOAJAX(request, invoiceID):
         # Update invoice
         try:
             invoice.purchaseOrderNumber = request.POST["PONumber"]
-            invoice.save()
+            invoice.save(update_fields=['purchaseOrderNumber'])
         except KeyError:
             return HttpResponseBadRequest()
 

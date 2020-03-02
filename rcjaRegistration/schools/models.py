@@ -59,7 +59,7 @@ class School(CustomSaveDeleteModel):
                 'change',
                 'delete'
             ]
-        elif level in ['viewall', 'billingmanager']:
+        elif level in ['viewall', 'billingmanager', 'eventmanager']:
             return [
                 'view',
             ]
@@ -115,19 +115,7 @@ class Campus(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'schoolmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return School.coordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -170,19 +158,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'schoolmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return School.coordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -201,7 +177,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.user.get_full_name()}'
+        return f'{self.user.fullname_or_email()}'
 
     # *****CSV export methods*****
 

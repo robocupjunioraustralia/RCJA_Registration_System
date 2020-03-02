@@ -189,7 +189,6 @@ class Event(CustomSaveDeleteModel):
             self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
             self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
 
-
     # *****Methods*****
 
     # *****Get Methods*****
