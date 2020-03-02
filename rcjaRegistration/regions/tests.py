@@ -68,7 +68,7 @@ class TestStateMethods(TestCase):
     def testStr(self):
         self.assertEqual('Victoria', str(self.state1))
 
-    def testPreSave(self):
+    def testSave(self):
         state2 = State(
             treasurer=self.user1,
             name='New South Wales',
@@ -76,5 +76,5 @@ class TestStateMethods(TestCase):
         )
 
         self.assertEqual('nsw', state2.abbreviation)
-        state2.preSave()
+        state2.save()
         self.assertEqual('NSW', state2.abbreviation)
