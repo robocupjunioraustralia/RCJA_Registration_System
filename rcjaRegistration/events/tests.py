@@ -88,7 +88,6 @@ def commonSetUp(obj):
     login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
 
 class TestIndexDashboard(TestCase): #TODO more comprehensive tests
-    
     def setUp(self):
         commonSetUp(self)
 
