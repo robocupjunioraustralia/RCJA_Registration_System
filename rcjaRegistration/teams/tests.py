@@ -471,6 +471,20 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
         self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
 
+    def testInValidCreate_divisionMissing(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Required field is missing")
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
+
 class TestTeamCreationFormValidation_Independent(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -588,4 +602,18 @@ class TestTeamCreationFormValidation_Independent(TestCase):
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
+
+    def testInValidCreate_divisionMissing(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Required field is missing")
         self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
