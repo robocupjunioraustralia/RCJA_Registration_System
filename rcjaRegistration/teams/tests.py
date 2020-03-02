@@ -605,7 +605,7 @@ class TestTeamCreationFormValidation_Independent(TestCase):
         self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
 
     def testInValidCreate_divisionMissing(self):
-        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
         payload = {
             'student_set-TOTAL_FORMS':0,
             "student_set-INITIAL_FORMS":0,
