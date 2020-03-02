@@ -115,19 +115,7 @@ class Campus(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'schoolmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return School.coordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -170,19 +158,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'schoolmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return School.coordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
