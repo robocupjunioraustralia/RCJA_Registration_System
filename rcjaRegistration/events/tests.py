@@ -188,3 +188,5 @@ class TestEventClean(TestCase):
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
         self.assertRaises(ValidationError, self.event.clean)
+
+    # TODO: Validate billing settings, event and available division
