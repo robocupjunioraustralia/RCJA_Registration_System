@@ -1,11 +1,15 @@
 from django.test import TestCase
-from regions.models import State,Region
-from schools.models import School, SchoolAdministrator
-from teams.models import Team, Student
-from events.models import Event, Division, Year
-from users.models import User
 from django.urls import reverse
 from django.http import HttpRequest
+from django.core.exceptions import ValidationError
+
+from invoices.models import InvoiceGlobalSettings, Invoice, InvoicePayment
+from users.models import User
+from regions.models import State, Region
+from schools.models import School, SchoolAdministrator, Campus
+from events.models import Event, Year, Division, AvailableDivision
+from coordination.models import Coordinator
+from .models import Team, Student
 
 import datetime
 # Create your tests here.
@@ -199,3 +203,150 @@ class TestEditTeam(TestCase):
         }
         response = self.client.post(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEqual(200,response.status_code)
+
+def newCommonSetUp(self):
+        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user3 = User.objects.create_user(email=self.email3, password=self.password)
+        self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True)
+
+        self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(treasurer=self.user1, name='NSW', abbreviation='NSW')
+        self.region1 = Region.objects.create(name='Test Region', description='test desc')
+
+        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+        self.campus2 = Campus.objects.create(school=self.school1, name='Campus 2')
+
+        self.year = Year.objects.create(year=2020)
+        self.event = Event.objects.create(
+            year=self.year,
+            state=self.state1,
+            name='Test event 1',
+            maxMembersPerTeam=5,
+            entryFeeIncludesGST=True,
+            event_billingType='team',
+            event_defaultEntryFee = 50,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+            directEnquiriesTo = self.user1,
+        )
+        self.division1 = Division.objects.create(name='Division 1')
+        self.division2 = Division.objects.create(name='Division 2')
+        self.division3 = Division.objects.create(name='Division 3')
+
+        self.invoiceSettings = InvoiceGlobalSettings.objects.create(
+            invoiceFromName='From Name',
+            invoiceFromDetails='Test Details Text',
+            invoiceFooterMessage='Test Footer Text',
+        )
+
+class TestTeamClean(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school2, name='Team 2', division=self.division1)
+
+    def testNoCampus(self):
+        self.assertEqual(self.team1.clean(), None)
+
+    def testCampusValid(self):
+        self.team1.campus = self.campus1
+
+        self.assertEqual(self.team1.clean(), None)
+
+    def testCampusWrongSchool(self):
+        self.team2.campus = self.campus1
+
+        self.assertRaises(ValidationError, self.team2.clean)
+
+class TestInvoiceMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def testCampusInvoicingDisabled_noSchool(self):
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.assertEqual(self.team1.campusInvoicingEnabled(), False)
+
+    def testCampusInvoicingDisabled(self):
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.assertEqual(self.team1.campusInvoicingEnabled(), False)
+
+    def testCampusInvoicingEnabled(self):
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.assertEqual(self.team1.campusInvoicingEnabled(), True)
+
+    def testSave_NoSchool_NoExistingInvoice(self):
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 0)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
+
+    def testSave_NoSchool_ExistingInvoice(self):
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=None)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
+
+    def testSave_CampusInvoicingDisabled_NoExistingInvoice(self):
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1).count(), 0)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1).count(), 1)
+
+    def testSave_CampusInvoicingDisabled_ExistingInvoice(self):
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1).count(), 1)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1).count(), 1)
+
+    def testSave_CampusInvoicingEnabled_NoExistingInvoice(self):
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus1)
+
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus2).count(), 0)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, campus=self.campus2, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus2).count(), 1)
+
+    def testSave_CampusInvoicingEnabled_ExistingInvoice(self):
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus1)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus2)
+
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus2).count(), 1)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, campus=self.campus2, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus2).count(), 1)
+
+class TestTeamMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def testGetState(self):
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.assertEqual(self.team1.getState(), self.state1)
