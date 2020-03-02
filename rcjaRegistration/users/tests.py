@@ -195,3 +195,109 @@ class TestEditDetails(TestCase):
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(200,response.status_code)
+
+class TestUserSave(TestCase):
+    email = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+
+        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(treasurer=self.user, name='New South Wales', abbreviation='NSW')
+        self.region1 = Region.objects.create(name='Region 1')
+        self.region2 = Region.objects.create(name='Region 2')
+
+        self.school1 = School.objects.create(name='School 1', abbreviation='sch1')
+        self.school2 = School.objects.create(name='School 2', abbreviation='sch2')
+
+    def testSaveNoSchools(self):
+        self.user.save()
+    
+    def testSaveNoState(self):
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, None)
+        self.assertEqual(self.school1.region, None)
+
+        self.user.save()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, None)
+        self.assertEqual(self.school1.region, None)
+
+    def testSaveAddState(self):
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, None)
+        self.assertEqual(self.school1.region, None)
+
+        self.user.homeState = self.state1
+        self.user.save()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, self.state1)
+        self.assertEqual(self.school1.region, None)
+
+    def testSaveAddRegion(self):
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, None)
+        self.assertEqual(self.school1.region, None)
+
+        self.user.homeRegion = self.region1
+        self.user.save()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, None)
+        self.assertEqual(self.school1.region, self.region1)
+
+    def testSaveAddStateAndRegion(self):
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, None)
+        self.assertEqual(self.school1.region, None)
+
+        self.user.homeState = self.state1
+        self.user.homeRegion = self.region1
+        self.user.save()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, self.state1)
+        self.assertEqual(self.school1.region, self.region1)
+
+    def testSaveNoState_SchoolExistingState(self):
+        self.school1.state = self.state1
+        self.school1.region = self.region1
+        self.school1.save()
+
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, self.state1)
+        self.assertEqual(self.school1.region, self.region1)
+        self.assertEqual(self.user.homeState, None)
+        self.assertEqual(self.user.homeRegion, None)
+
+        self.user.save()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, self.state1)
+        self.assertEqual(self.school1.region, self.region1)
+        self.assertEqual(self.user.homeState, None)
+        self.assertEqual(self.user.homeRegion, None)
+
+    def testSaveChange(self):
+        self.school1.state = self.state1
+        self.school1.region = self.region1
+        self.school1.save()
+
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, self.state1)
+        self.assertEqual(self.school1.region, self.region1)
+        self.assertEqual(self.user.homeState, None)
+        self.assertEqual(self.user.homeRegion, None)
+
+        self.user.homeState = self.state2
+        self.user.homeRegion = self.region2
+        self.user.save()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.school1.state, self.state1)
+        self.assertEqual(self.school1.region, self.region1)
+        self.assertEqual(self.user.homeState, self.state2)
+        self.assertEqual(self.user.homeRegion, self.region2)
