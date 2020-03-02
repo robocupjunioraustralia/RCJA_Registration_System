@@ -455,15 +455,15 @@ class TestCampusInvoicing(TestCase):
     def setUp(self):
         commonSetUp(self)
     
-    def testCampusInvoicingEnabled_noSchool(self):
+    def testCampusInvoicingNotEnabled_noSchool(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
     
-    def testCampusInvoicingAvailable_noSchool(self):
+    def testCampusInvoicingNotAvailable_noSchool(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.assertEqual(self.invoice.campusInvoicingAvailable(), False)
     
-    def testCampusInvoicingAvailable_paymentMade(self):
+    def testCampusInvoicingNotAvailable_paymentMade(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, invoiceNumber=1)
 
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
