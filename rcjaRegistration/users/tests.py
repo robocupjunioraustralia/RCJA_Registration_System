@@ -14,12 +14,12 @@ from regions.models import State, Region
 class AuthViewTests(TestCase):
     email = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'
-    validPayload = {'email':email,
+    validPayload = {
+        'email':email,
         'password':password,
         'passwordConfirm':password,
         'first_name':'test',
         'last_name':'test',
-        'school':1,
         'mobileNumber':'123123123',
         'homeState': 1,
         'homeRegion': 1,
@@ -49,13 +49,14 @@ class AuthViewTests(TestCase):
 
     def testUserValidSignup(self):
         prevUsers = get_user_model().objects.all().count()
+        self.assertRaises(User.DoesNotExist, lambda: User.objects.get(email=self.email))
 
         payloadData = self.validPayload
         response = self.client.post(path=reverse('users:signup'),data = payloadData)
         self.assertEqual(response.status_code,302) #ensure user is redirected on signup
         self.assertEqual(get_user_model().objects.all().count(), prevUsers + 1)
-        self.assertEqual(get_user_model().objects.all()[1].email, self.email) #this checks the user created has the right username
-                                                    #note that this works because transactions aren't saved in django tests
+        # this checks the user created has the right username
+        User.objects.get(email=self.email)
 
     def testUserInvalidSignup(self):
         payloadData = {'username':self.email}
