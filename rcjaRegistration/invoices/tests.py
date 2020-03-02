@@ -128,6 +128,14 @@ class TestInvoiceDetailPermissions(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)     
 
+    def testSuccessSuperUser(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.client.login(request=HttpRequest(), username=self.email4, password=self.password)
+
+        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)    
+
     def testDeniedCoordinator_NotCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
