@@ -919,3 +919,16 @@ class TestInvoiceCalculations_Independent(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
 
+class TestInvoiceMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+
+    def testGetState(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.getState(), self.state1)
