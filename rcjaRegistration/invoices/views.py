@@ -45,7 +45,7 @@ def detail(request, invoiceID):
     # Set invoiced date
     if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today()
-        invoice.save()
+        invoice.save(update_fields=['invoicedDate'])
 
     context = {
         'invoice': invoice,
