@@ -254,17 +254,10 @@ class Invoice(CustomSaveDeleteModel):
 
             # Get unit cost, use availableDivision value if present, otherwise use value from event
             unitCost = self.event.event_defaultEntryFee
-            useDivision = False
+            quantityMethod = self.event.event_billingType
             if availableDivision and availableDivision.division_entryFee is not None:
                 unitCost = availableDivision.division_entryFee
-                useDivision = True
-
-            # Get quantity calculation method
-            if useDivision:
                 quantityMethod = availableDivision.division_billingType
-
-            else:
-                quantityMethod = self.event.event_billingType
 
             # Get quantity
             quantity = 0
