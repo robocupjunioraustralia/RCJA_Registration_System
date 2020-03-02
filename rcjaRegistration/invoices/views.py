@@ -86,7 +86,7 @@ def setCampusInvoice(request, invoiceID):
 
         # Check campus invoicing available
         if not invoice.campusInvoicingAvailable():
-            return HttpResponseForbidden("Campus invoicing not available for this event")
+            return HttpResponseForbidden("Campus invoicing is not available for this event")
 
         # Create campus invoices for campuses that have teams entered in this event
         # This invoice object remains for teams without a campus
