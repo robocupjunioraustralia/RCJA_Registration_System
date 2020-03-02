@@ -16,7 +16,7 @@
         <h3>Dates</h3>
         <p>Start date: {{event.startDate}}</p>
         <p>End date: {{event.endDate}}</p>
-        <p>Registrations close: {{event.registrationsClose}}</p>
+        <p>Registrations close: {{event.registrationsCloseDate}}</p>
         {% if not event.boolWorkshop %}<h3>Max members per team: {{ event.maxMembersPerTeam }}</h3>{% endif %}
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h3>
         <h3>Payment</h3>
