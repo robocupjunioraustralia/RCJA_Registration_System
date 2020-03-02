@@ -46,7 +46,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         }
 
 @admin.register(Region)
-class StateAdmin(AdminPermissions, admin.ModelAdmin):
+class RegionAdmin(AdminPermissions, admin.ModelAdmin):
     list_display = [
         'name',
         'description',
