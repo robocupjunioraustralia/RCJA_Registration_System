@@ -928,7 +928,20 @@ class TestInvoiceMethods(TestCase):
 
     def setUp(self):
         commonSetUp(self)
+        createCammpuses(self)
 
     def testGetState(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(self.invoice.getState(), self.state1)
+
+    def testStr_campus(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[0])
+        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): School 1, Campus 0")
+
+    def testStr_schoolNoCampus(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): School 1")
+
+    def testStr_independent(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): user1@user.com")
