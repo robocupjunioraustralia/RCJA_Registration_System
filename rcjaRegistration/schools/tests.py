@@ -160,3 +160,41 @@ class TestSetCurrentSchool(TestCase):
         # Check still school 1
         self.user.refresh_from_db()
         self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+class TestEditSchoolDetails(TestCase):
+    email = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+
+        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
+        self.region1 = Region.objects.create(name='Test Region', description='test desc')
+
+        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+
+    def testLoginRequired(self):
+        url = reverse('schools:details')
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/profile")
+        self.assertEqual(response.status_code, 302)
+
+    def testLoads(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_noSchool(self):
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this school", status_code=403)
