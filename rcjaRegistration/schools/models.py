@@ -59,7 +59,7 @@ class School(CustomSaveDeleteModel):
                 'change',
                 'delete'
             ]
-        elif level in ['viewall', 'billingmanager']:
+        elif level in ['viewall', 'billingmanager', 'eventmanager']:
             return [
                 'view',
             ]
