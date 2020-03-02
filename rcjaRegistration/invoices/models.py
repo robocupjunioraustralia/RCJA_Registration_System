@@ -48,7 +48,7 @@ class Invoice(CustomSaveDeleteModel):
     # Fields
     invoiceNumber = models.PositiveIntegerField('Invoice number', unique=True, editable=False)
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
-    purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True, null=True)
+    purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True)
     notes = models.TextField('Notes', blank=True)
 
     # *****Meta and clean*****

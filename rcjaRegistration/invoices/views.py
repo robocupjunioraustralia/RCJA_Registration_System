@@ -115,7 +115,7 @@ def editInvoicePOAJAX(request, invoiceID):
         # Update invoice
         try:
             invoice.purchaseOrderNumber = request.POST["PONumber"]
-            invoice.save()
+            invoice.save(update_fields=['purchaseOrderNumber'])
         except KeyError:
             return HttpResponseBadRequest()
 
