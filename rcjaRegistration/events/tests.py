@@ -91,40 +91,47 @@ class TestIndexDashboard(TestCase): #TODO more comprehensive tests
     
     def setUp(self):
         commonSetUp(self)
-        
-    
+
     def testPageLoad(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertEqual(200, response.status_code)    
+        self.assertEqual(response.status_code, 200)
+
     def testNonSignedUpOldDoesNotLoad(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertNotIn(b'test old not reg',response.content)
+        self.assertNotContains(response, 'test old not reg')
+
     def testNewEventWithRegoLoads(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertIn(b'test new not reg',response.content)
+        self.assertContains(response, 'test new not reg')
+
     def testOldEventWithTeamsLoad(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertIn(b'test old yes reg',response.content)
+        self.assertContains(response, 'test old yes reg')
 
     def testEventsAreSorted(self):
         pass
+
     def testEventDetailsLoad(self):
         pass
 
 class TestEventSummaryPage(TestCase):
     def setUp(self):
         commonSetUp(self)
+
     def testPageLoad(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))        
-        self.assertEqual(200, response.status_code) 
+        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
     def testTeamsLoad(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))        
-        self.assertIn(b'test old',response.content)
+        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertContains(response, 'test old')
+
     def testOldEventNotRegisterable(self):
         response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response,'Registration for this event has closed.')
         #print(response.content)
         #self.assert(response,'edit')
+
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
@@ -153,25 +160,15 @@ class TestEventClean(TestCase):
         self.event.clean()
 
     def testStartBeforeEnd(self):
-        try:
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+4)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+4)).date()
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testRegistrationOpenBeforeClose(self):
-        try:
-            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testOneDayRegistration(self):
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
@@ -179,25 +176,15 @@ class TestEventClean(TestCase):
         self.event.clean()
 
     def testRegistrationCloseOnEventStartDate(self):
-        try:
-            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testRegistrationCloseAfterEventStartDate(self):
-        try:
-            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.assertRaises(ValidationError, self.event.clean)
