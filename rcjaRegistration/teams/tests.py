@@ -350,3 +350,242 @@ class TestTeamMethods(TestCase):
     def testGetState(self):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.assertEqual(self.team1.getState(), self.state1)
+
+class TestTeamCreationFormValidation_School(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.availableDivision = AvailableDivision.objects.create(division=self.division1, event=self.event)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, school=self.school2, name='Team 2', division=self.division1)
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password) 
+
+    def testValidCreate(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+8",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 2)
+
+    def testInValidCreate_schoolEventMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        self.event.event_maxTeamsPerSchool = 1
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for school for this event exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_overallEventMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        self.event.event_maxTeamsForEvent = 2
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for this event exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_schoolDivisionMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        self.availableDivision.division_maxTeamsPerSchool = 1
+        self.availableDivision.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for school for this event division exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_overallDivisionMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        self.availableDivision.division_maxTeamsForDivision = 2
+        self.availableDivision.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for this event division exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_division(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division2.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertEqual(Team.objects.filter(school=self.school1).count(), 1)
+
+class TestTeamCreationFormValidation_Independent(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.availableDivision = AvailableDivision.objects.create(division=self.division1, event=self.event)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, school=self.school2, name='Team 2', division=self.division1)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password) 
+
+    def testValidCreate(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+8",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 2)
+
+    def testInValidCreate_schoolEventMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
+        self.event.event_maxTeamsPerSchool = 1
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for school for this event exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_overallEventMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
+        self.event.event_maxTeamsForEvent = 2
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for this event exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_schoolDivisionMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
+        self.availableDivision.division_maxTeamsPerSchool = 1
+        self.availableDivision.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for school for this event division exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_overallDivisionMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
+        self.availableDivision.division_maxTeamsForDivision = 2
+        self.availableDivision.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for this event division exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_division(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division2.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertEqual(Team.objects.filter(school=None, mentorUser=self.user1).count(), 1)
