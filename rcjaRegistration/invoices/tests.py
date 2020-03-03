@@ -270,6 +270,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testLoginRequired(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
     
         response = self.client.get(url, follow=True)
@@ -281,6 +282,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testSuccessInvoiceToUserMentor(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -289,6 +291,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedInvoiceToUserMentor(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -298,6 +301,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testSuccessSchoolInvoice(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -307,6 +311,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedSchoolInvoice(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -317,6 +322,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -327,6 +333,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedSuperUser(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -336,6 +343,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedCoordinator_NotCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -346,6 +354,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedCoordinator_WrongState(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -356,6 +365,7 @@ class TestPaypalViewPermissions(TestCase):
 
     def testDeniedCoordinator_WrongPermissionLevel(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='schoolmanager')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -378,6 +388,7 @@ class TestPaypalView(TestCase):
 
     def testMentorSetsInvoicedDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -392,6 +403,7 @@ class TestPaypalView(TestCase):
 
     def testDontOverwriteDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -406,6 +418,7 @@ class TestPaypalView(TestCase):
 
     def testUsesCorrectTemplate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -418,6 +431,7 @@ class TestPaypalView(TestCase):
         self.state1.save()
 
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
