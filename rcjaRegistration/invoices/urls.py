@@ -20,9 +20,9 @@ from . import views
 app_name = 'invoices'
 
 urlpatterns = [
-    path('invoice/summary', views.summary, name='summary'),
-    path('invoice/<int:invoiceID>', views.details, name='details'),
-    path('invoice/<int:invoiceID>/setInvoiceTo', views.setInvoiceTo, name='setInvoiceTo'),
-    path('invoice/<int:invoiceID>/setCampusInvoice', views.setCampusInvoice, name='setCampusInvoice'),
-    path('invoice/<int:invoiceID>/setPONumber',views.editInvoicePOAJAX,name='invoicePOAJAX')
+    path('invoices/summary', views.summary, name='summary'),
+    path('invoices/<int:invoiceID>', views.details, name='details'),
+    path('invoices/<int:invoiceID>/setInvoiceTo', views.setInvoiceTo, name='setInvoiceTo'),
+    path('invoices/<int:invoiceID>/setCampusInvoice', views.setCampusInvoice, name='setCampusInvoice'),
+    path('invoices/<int:invoiceID>/setPONumber',views.editInvoicePOAJAX,name='invoicePOAJAX')
 ]

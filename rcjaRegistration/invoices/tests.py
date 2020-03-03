@@ -87,7 +87,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}")
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoices/{self.invoice.id}")
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
@@ -265,7 +265,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}/setInvoiceTo")
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoices/{self.invoice.id}/setInvoiceTo")
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
@@ -374,7 +374,7 @@ class TestSetCampusInvoiceeToPermissions(TestCase):
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}/setCampusInvoice")
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoices/{self.invoice.id}/setCampusInvoice")
         self.assertEqual(response.status_code, 302)
 
     # Need to setup with valid campus data, probably just test in TestCampusView
@@ -567,7 +567,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}/setPONumber")
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoices/{self.invoice.id}/setPONumber")
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
