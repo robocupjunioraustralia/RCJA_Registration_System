@@ -123,6 +123,7 @@ class TestSetCurrentSchool(TestCase):
         # test changing user field on school administrator
         admin1.user = self.user2
         admin1.save()
+        self.user.refresh_from_db()
         self.assertEqual(self.user.currentlySelectedSchool, None)
         self.assertEqual(self.user2.currentlySelectedSchool, self.school1)
 
