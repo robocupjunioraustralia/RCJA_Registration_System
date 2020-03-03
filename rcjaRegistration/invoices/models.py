@@ -326,6 +326,15 @@ class Invoice(CustomSaveDeleteModel):
         return round(self.invoiceAmountInclGST() - self.amountPaid(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
 
+    def amountDuePaypal(self):
+        if self.amountDueInclGST() < 0.05: # 0.05 to avoid tiny sum edge caes
+            return 0
+        return round(self.amountDueInclGST() * 1.0275 + 0.3, 2)
+    amountDueInclGST.short_description = 'Amount due (PayPal)'
+
+    def paypalAvailable(self):
+        return bool(self.event.state.paypalEmail) and self.amountDueInclGST() >= 0.05 # 0.05 to avoid tiny sum edge caes
+
     def __str__(self):
         if self.campus:
             return f'{self.event}: {self.school}, {self.campus}'

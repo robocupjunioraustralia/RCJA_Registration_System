@@ -61,7 +61,7 @@ def paypal(request, invoiceID):
     invoice = get_object_or_404(Invoice, pk=invoiceID)
 
     # Check paypal email is set for this state
-    if not invoice.event.state.paypalEmail:
+    if not invoice.paypalAvailable():
         return HttpResponseForbidden('PayPal not enabled for this invoice')
 
     # Check permissions
