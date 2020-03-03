@@ -122,5 +122,5 @@ def deleteTeam(request, teamID):
 
         # Delete team
         team.delete()
-        return HttpResponse(status=200)
+        return HttpResponse(status=204)
     return HttpResponseForbidden()
