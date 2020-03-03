@@ -36,9 +36,6 @@ def index(request):
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
 
-    if not request.user.currentlySelectedSchool:
-        openForRegistrationEvents = openForRegistrationEvents.exclude()
-
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
         team__in=usersTeams,
