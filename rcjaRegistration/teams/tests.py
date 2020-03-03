@@ -90,7 +90,6 @@ def commonSetUp(obj): #copied from events, todo refactor
     login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
 
 class TestAddTeam(TestCase): #TODO more comprehensive tests
-    
     def setUp(self):
         commonSetUp(self)
         
@@ -98,12 +97,14 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertEqual(200, response.status_code)
 
-    def testClosedRegoReturnsError(self):
+    def testClosedRegoReturnsError_get(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}))
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
 
     def testMaxSubmissionNumber(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response,'First name', self.newEvent.maxMembersPerTeam)
 
     def testWorkingTeamCreate(self):
@@ -114,7 +115,6 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
-            "school":self.newSchool.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
@@ -122,9 +122,9 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload,follow=False)
-        self.assertEqual(302,response.status_code)
+        self.assertEqual(response.status_code, 302)
 
-    def testInvalidTeamCreate(self):
+    def testInvalidTeamCreate_badStudent(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -139,16 +139,44 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
-        self.assertEqual(200,response.status_code)
-        """TODO this tests fails for some reason 
+        self.assertEqual(response.status_code, 200)
 
-    def testTeamIsDeleted(self):
-        payload = {'teamID':self.newEventTeam.id}
-        response = self.client.post(reverse('teams:delete'),data=payload)
-        print(self.newEventTeam.id)
-        self.assertEqual(200,response.status_code)
-        self.assertEqual(self.newEventTeam,None)
-        """
+    def testInvalidTeamCreate_existingName(self):
+        Team.objects.create(event=self.newEvent, mentorUser=self.user, name='Test', division=self.division)
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"Test",
+            "division":self.division.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"5",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team with this Event and Name already exists.')
+
+    def testInvalidTeamCreate_closed(self):
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"Testnew",
+            "division":self.division.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"5",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}),data=payload)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
 
 class TestEditTeam(TestCase):
     def setUp(self):
