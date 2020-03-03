@@ -408,6 +408,7 @@ class TestEditSchoolDetails(TestCase):
         self.admin2 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
+        numberExistingAdmins = SchoolAdministrator.objects.count()
 
         payload = {
             'campus_set-TOTAL_FORMS':2,
@@ -429,7 +430,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertRaises(SchoolAdministrator.DoesNotExist, lambda: SchoolAdministrator.objects.get(pk=self.admin2.pk))
+        self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins-1)
 
     def testAdministratorAdd_existing(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
