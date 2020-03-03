@@ -105,6 +105,10 @@ class Invoice(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    @classmethod
+    def invoicesForUser(cls, user):
+        return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
+
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse('invoices:details', kwargs = {"invoiceID": self.id})
