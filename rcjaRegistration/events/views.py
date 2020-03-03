@@ -11,7 +11,7 @@ from teams.models import Team
 # Need to check if schooladministrator is None
 
 @login_required
-def index(request):
+def dashboard(request):
     # Events
     # Get user event filtering attributes
     if request.user.currentlySelectedSchool:
