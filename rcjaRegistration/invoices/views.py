@@ -60,14 +60,14 @@ def paypal(request, invoiceID):
     # Get invoice
     invoice = get_object_or_404(Invoice, pk=invoiceID)
 
-    # Check paypal email is set for this state
-    if not invoice.paypalAvailable():
-        return HttpResponseForbidden('PayPal not enabled for this invoice')
-
     # Check permissions
     mentor = mentorInvoicePermissions(request, invoice)
     if not mentor:
         raise PermissionDenied("You do not have permission to view this invoice")
+
+    # Check paypal email is set for this state
+    if not invoice.paypalAvailable():
+        return HttpResponseForbidden('PayPal not enabled for this invoice')
 
     # Set invoiced date
     if mentor and invoice.invoicedDate is None:
