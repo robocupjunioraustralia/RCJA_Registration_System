@@ -80,7 +80,7 @@ class TestInvoiceDetailPermissions(TestCase):
         commonSetUp(self)
 
     def testLoginRequired(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
     
         response = self.client.get(url, follow=True)
@@ -91,7 +91,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -99,7 +99,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def testDeniedInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -108,7 +108,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testSuccessSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -117,7 +117,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def testDeniedSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -127,7 +127,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testSuccessCoordinator(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -136,7 +136,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertEqual(response.status_code, 200)     
 
     def testSuccessSuperUser(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -144,7 +144,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertEqual(response.status_code, 200)    
 
     def testDeniedCoordinator_NotCoordinator(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -154,7 +154,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)   
 
     def testDeniedCoordinator_WrongState(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -164,7 +164,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedCoordinator_WrongPermissionLevel(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='schoolmanager')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -184,7 +184,7 @@ class TestInvoiceDetailView(TestCase):
         commonSetUp(self)
 
     def testMentorSetsInvoicedDate(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -198,7 +198,7 @@ class TestInvoiceDetailView(TestCase):
         self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
 
     def testDontOverwriteDate(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -212,7 +212,7 @@ class TestInvoiceDetailView(TestCase):
         self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=-10)).date())
 
     def testAdminDoesntSetDate(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -226,7 +226,7 @@ class TestInvoiceDetailView(TestCase):
         self.assertEqual(self.invoice.invoicedDate, None)
 
     def testInvoiceGlobalSettingsInInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -237,7 +237,7 @@ class TestInvoiceDetailView(TestCase):
         self.assertContains(response, "Test Footer Text")
 
     def testContainsInvoiceToDetails(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -258,7 +258,7 @@ class TestSetInvoiceToPermissions(TestCase):
         commonSetUp(self)
 
     def testLoginRequired(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
     
         response = self.client.post(url, follow=True)
@@ -269,7 +269,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
@@ -277,7 +277,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def testDeniedInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
@@ -286,7 +286,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedGet(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
@@ -294,7 +294,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def testSuccessSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -303,7 +303,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def testDeniedSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -313,7 +313,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedCoordinator(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -323,7 +323,7 @@ class TestSetInvoiceToPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedSuperUser(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
@@ -342,7 +342,7 @@ class TestSetInvoiceToView(TestCase):
         commonSetUp(self)
     
     def testInvoiceToUpdates(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -356,7 +356,7 @@ class TestSetInvoiceToView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceToUser, self.user2)
 
-class TestSetCampusInvoiceeToPermissions(TestCase):
+class TestSetCampusInvoiceePermissions(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
@@ -367,7 +367,7 @@ class TestSetCampusInvoiceeToPermissions(TestCase):
         commonSetUp(self)
 
     def testLoginRequired(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
     
         response = self.client.post(url, follow=True)
@@ -377,17 +377,8 @@ class TestSetCampusInvoiceeToPermissions(TestCase):
         self.assertEqual(response.url, f"/accounts/login/?next=/invoices/{self.invoice.id}/setCampusInvoice")
         self.assertEqual(response.status_code, 302)
 
-    # Need to setup with valid campus data, probably just test in TestCampusView
-    # def testSuccessInvoiceToUserMentor(self):
-    #     self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
-    #     self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-
-    #     url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
-    #     response = self.client.post(url)
-    #     self.assertEqual(response.status_code, 200)
-
     def testDeniedInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
@@ -396,25 +387,15 @@ class TestSetCampusInvoiceeToPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedGet(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
 
-    # Need to setup with valid campus data, probably just test in TestCampusView
-    # def testSuccessSchoolInvoice(self):
-    #     self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
-    #     self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
-    #     self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
-
-    #     url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
-    #     response = self.client.post(url)
-    #     self.assertEqual(response.status_code, 200)
-
     def testDeniedSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -424,7 +405,7 @@ class TestSetCampusInvoiceeToPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedCoordinator(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -434,7 +415,7 @@ class TestSetCampusInvoiceeToPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedSuperUser(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
         url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
@@ -460,15 +441,15 @@ class TestCampusInvoicing(TestCase):
         commonSetUp(self)
     
     def testCampusInvoicingNotEnabled_noSchool(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
     
     def testCampusInvoicingNotAvailable_noSchool(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(self.invoice.campusInvoicingAvailable(), False)
     
     def testCampusInvoicingNotAvailable_paymentMade(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
 
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
         self.assertEqual(self.invoice.campusInvoicingAvailable(), False)
@@ -482,7 +463,7 @@ class TestCampusInvoicing(TestCase):
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
         self.assertEqual(self.invoice.campusInvoicingAvailable(), False)
 
-class TestSetCampusInvoiceeToView(TestCase):
+class TestSetCampusInvoiceeView(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
@@ -493,7 +474,7 @@ class TestSetCampusInvoiceeToView(TestCase):
         commonSetUp(self)
     
     def testCampusInvoicingDisabled(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
@@ -508,7 +489,7 @@ class TestSetCampusInvoiceeToView(TestCase):
         self.assertEqual(self.invoice.campusInvoicingAvailable(), False)
 
     def testCampusInvoicingEnabled_invoiceUser(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.assertEqual(self.invoice.campusInvoicingEnabled(), False)
@@ -529,7 +510,7 @@ class TestSetCampusInvoiceeToView(TestCase):
         self.assertEqual(Invoice.objects.filter(event=self.event, school=self.school1).count(), 3)
 
     def testCampusInvoicingEnabled_schoolAdmin(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -560,7 +541,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         commonSetUp(self)
 
     def testLoginRequired(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         url = reverse('invoices:invoicePOAJAX', kwargs= {'invoiceID':self.invoice.id})
     
         response = self.client.post(url, follow=True, data={'PONumber': 'TEST'})
@@ -571,7 +552,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:invoicePOAJAX', kwargs= {'invoiceID':self.invoice.id})
@@ -579,7 +560,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def testDeniedInvoiceToUserMentor(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:invoicePOAJAX', kwargs= {'invoiceID':self.invoice.id})
@@ -588,7 +569,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedGet(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:invoicePOAJAX', kwargs= {'invoiceID':self.invoice.id})
@@ -596,7 +577,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def testSuccessSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -605,7 +586,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def testDeniedSchoolInvoice(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1, school=self.school1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
@@ -615,7 +596,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedCoordinator(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
@@ -625,7 +606,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
 
     def testDeniedSuperUser(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
         url = reverse('invoices:invoicePOAJAX', kwargs= {'invoiceID':self.invoice.id})
@@ -645,7 +626,7 @@ class TestEditInvoicePOAJAXView(TestCase):
     
     def testSetPONumber(self):
         poNumber = 'Test0001'
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -660,7 +641,7 @@ class TestEditInvoicePOAJAXView(TestCase):
 
     def testClearPONumber(self):
         poNumber = 'Test0002'
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, purchaseOrderNumber=poNumber, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, purchaseOrderNumber=poNumber)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
@@ -674,7 +655,7 @@ class TestEditInvoicePOAJAXView(TestCase):
         self.assertEqual(self.invoice.purchaseOrderNumber, '')
 
     def testEmptyPostFails(self):
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
