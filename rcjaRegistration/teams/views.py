@@ -54,6 +54,20 @@ def createTeam(request, eventID):
         formset = StudentInLineFormSet()
     return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event})
 
+def teamPermissions(request, team):
+    if request.user.currentlySelectedSchool:
+        # If user is a school administrator can only edit the currently selected school
+        if request.user.currentlySelectedSchool != team.school:
+            return False
+
+    else:
+        # If not a school administrator allow editing individually entered teams
+        if team.mentorUser != request.user or team.school:
+            return False
+    
+    return True
+            
+
 @login_required
 def editTeam(request, teamID):
     team = get_object_or_404(Team, pk=teamID)
@@ -65,15 +79,8 @@ def editTeam(request, teamID):
         raise PermissionDenied("Registrtaion has closed for this event!")
 
     # Check administrator of this team
-    if request.user.currentlySelectedSchool:
-        # If user is a school administrator can only edit the currently selected school
-        if request.user.currentlySelectedSchool != team.school:
-            raise PermissionDenied("You are not an administrator of this team")
-
-    else:
-        # If not a school administrator allow editing individually entered teams
-        if team.mentorUser != request.user or team.school:
-            raise PermissionDenied("You are not an administrator of this team")
+    if not teamPermissions(request, team):
+        raise PermissionDenied("You are not an administrator of this team")
 
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.maxMembersPerTeam,max_num=event.maxMembersPerTeam,can_delete=True)
 
@@ -109,16 +116,9 @@ def deleteTeam(request, teamID):
         if team.event.registrationsCloseDate < datetime.datetime.now().date():
             raise PermissionDenied("Registrtaion has closed for this event!")
 
-            # Check administrator of this team
-        if request.user.currentlySelectedSchool:
-            # If user is a school administrator can only edit the currently selected school
-            if request.user.currentlySelectedSchool != team.school:
-                raise PermissionDenied("You are not an administrator of this team")
-
-        else:
-            # If not a school administrator allow editing individually entered teams
-            if team.mentorUser != request.user or team.school:
-                raise PermissionDenied("You are not an administrator of this team")
+        # Check administrator of this team
+        if not teamPermissions(request, team):
+            raise PermissionDenied("You are not an administrator of this team")
 
         # Delete team
         team.delete()
