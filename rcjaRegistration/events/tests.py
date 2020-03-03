@@ -56,7 +56,7 @@ def commonSetUp(obj):
     obj.newEvent = Event.objects.create(
         year=obj.year,
         state=obj.newState,
-        name='test new not reg',
+        name='test new yes reg',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
@@ -124,7 +124,7 @@ class TestUnderConstruction(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'common/loggedInUnderConstruction.html')
 
-class TestDashboard(TestCase): #TODO more comprehensive tests
+class TestDashboard_school(TestCase): #TODO more comprehensive tests
     def setUp(self):
         commonSetUp(self)
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
@@ -139,19 +139,52 @@ class TestDashboard(TestCase): #TODO more comprehensive tests
 
     def testNewEventWithRegoLoads(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertContains(response, 'test new not reg')
+        self.assertContains(response, 'test new yes reg')
 
     def testOldEventWithTeamsLoad(self):
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response, 'test old yes reg')
+
+    def testCorrectInteraction(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'You are currently interacting as Melbourne High.')
 
     def testUsesCorrectTemplate(self):
         response = self.client.get(reverse('events:dashboard'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/dashboard.html')
 
-# Test events are sorted
+class TestDashboard_independent(TestDashboard_school):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.schoolAdministrator.delete()
 
+    def testNewEventWithRegoLoads(self):
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='test new team 2')
+        super().testNewEventWithRegoLoads()
+
+    def testOldEventWithTeamsLoad(self):
+        self.team1 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test 2')
+        super().testOldEventWithTeamsLoad()
+
+    def testSchoolTeamsNotPresent(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test old yes reg')
+
+    def testStateFiltering_filtered(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test new yes reg')
+
+    def testStateFiltering_all(self):
+        response = self.client.get(reverse('events:dashboard'), {'viewAll': 'yes'})
+        self.assertContains(response, 'test new yes reg')
+
+    def testCorrectInteraction(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'You are currently interacting as independent.')
+
+    # Need to test events are sorted
 
 class TestEventDetailsPage(TestCase):
     def setUp(self):
@@ -174,12 +207,12 @@ class TestEventDetailsPage(TestCase):
     def testOldEventNotRegisterable(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response,'Registration for this event has closed.')
-        #print(response.content)
-        #self.assert(response,'edit')
+        self.assertNotContains(response, 'Add team')
 
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
+        self.assertContains(response, 'Add team')
 
 class TestEventClean(TestCase):
     def setUp(self):
