@@ -256,6 +256,175 @@ class TestInvoiceDetailView(TestCase):
 
 # Need to test invoice content
 
+class TestPaypalViewPermissions(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.state1.paypalEmail = 'test@test.com'
+        self.state1.save()
+
+    def testLoginRequired(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoices/{self.invoice.id}/paypal")
+        self.assertEqual(response.status_code, 302)
+
+    def testSuccessInvoiceToUserMentor(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDeniedInvoiceToUserMentor(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
+
+    def testSuccessSchoolInvoice(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDeniedSchoolInvoice(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
+        self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
+
+    def testDeniedCoordinator(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)     
+
+    def testDeniedSuperUser(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)   
+
+    def testDeniedCoordinator_NotCoordinator(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)   
+
+    def testDeniedCoordinator_WrongState(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='viewall')
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
+
+    def testDeniedCoordinator_WrongPermissionLevel(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='schoolmanager')
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
+
+class TestPaypalView(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.state1.paypalEmail = 'test@test.com'
+        self.state1.save()
+
+    def testMentorSetsInvoicedDate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, None)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
+
+    def testDontOverwriteDate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=-10)).date())
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=-10)).date())
+
+    def testUsesCorrectTemplate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'invoices/paypal.html')
+
+    def testDeniedIfNoPaypalEmail(self):
+        self.state1.paypalEmail = ''
+        self.state1.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "PayPal not enabled for this invoice", status_code=403)
+
 class TestSetInvoiceToPermissions(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'

@@ -22,7 +22,8 @@ app_name = 'invoices'
 urlpatterns = [
     path('invoices', views.summary, name='summary'),
     path('invoices/<int:invoiceID>', views.details, name='details'),
+    path('invoices/<int:invoiceID>/paypal', views.paypal, name='paypal'),
     path('invoices/<int:invoiceID>/setInvoiceTo', views.setInvoiceTo, name='setInvoiceTo'),
     path('invoices/<int:invoiceID>/setCampusInvoice', views.setCampusInvoice, name='setCampusInvoice'),
-    path('invoices/<int:invoiceID>/setPONumber',views.editInvoicePOAJAX,name='invoicePOAJAX')
+    path('invoices/<int:invoiceID>/setPONumber', views.editInvoicePOAJAX, name='invoicePOAJAX'),
 ]
