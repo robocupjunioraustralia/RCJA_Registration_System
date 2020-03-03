@@ -23,13 +23,13 @@
                 <th> PO Number </th>
                 <th> Invoice amount (incl GST)</th>
                 <th> Amount due (EFT) </th>
-                <!-- <th> Amount due (PayPal) </th> -->
+                <th> Amount due (PayPal) </th>
             </thead>
             <tbody>
                 {% for invoice in invoices %}
                     <tr id = "invoiceRow{{invoice.id}}">
-                        <td><a href="{% url 'invoices:detail' invoice.id %}" target="_blank">View invoice</a></td>
-                        <td><a href="{% url 'events:summary' invoice.event.id %}">{{invoice.event}}</a></td> 
+                        <td><a href="{% url 'invoices:details' invoice.id %}" target="_blank">View invoice</a></td>
+                        <td><a href="{% url 'events:details' invoice.event.id %}">{{invoice.event}}</a></td> 
                         <td>
                             <span id = "invoice-to-{{invoice.id}}">{{invoice.invoiceToUser.fullname_or_email}}</span>
                             {% if invoice.invoiceToUser != user %}
@@ -52,16 +52,22 @@
                         </td>
                         <td>${{invoice.invoiceAmountInclGST|floatformat:2}}</td>
                         <td>${{invoice.amountDueInclGST|floatformat:2}}</td>
-                        <!-- <td>${{invoice.amountDueInclGST|floatformat:2}}</td> -->
+                        <td>
+                            {% if invoice.paypalAvailable %}
+                            ${{invoice.amountDuePaypal|floatformat:2}}
+                            <br>
+                            <a href="{% url 'invoices:paypal' invoice.id %}"><button class = "ui button primary" > Pay with PayPal </button></a>
+                            {% else %}
+                            PayPal not available
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <p>PayPal support is coming soon.</p>
     </div>
     <br>
 </div>
-
 
 
 <div class="ui modal poNumber">
@@ -138,7 +144,7 @@
     function setPONum(invoiceNumber) {
         $.ajax({
             type: "POST",
-            url: invoiceNumber + "/setPONumber",
+            url: "invoices/" + invoiceNumber + "/setPONumber",
             data: $("#POCreation").serialize()
         })
             .done( (data) => {
@@ -165,7 +171,7 @@
     function setCampusInvoicing(invoiceNumber) {
         $.ajax({
             type: "POST",
-            url: invoiceNumber + "/setCampusInvoice",
+            url: "invoices/" + invoiceNumber + "/setCampusInvoice",
             data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
         })
             .done( (data) => {
@@ -178,7 +184,7 @@
         function setInvoiceTo(invoiceNumber) {
             $.ajax({
                 type: "POST",
-                url: invoiceNumber + "/setInvoiceTo",
+                url: "invoices/" + invoiceNumber + "/setInvoiceTo",
                 data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
             })
             .done( (data) => {

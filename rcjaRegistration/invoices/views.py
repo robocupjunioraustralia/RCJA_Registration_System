@@ -14,14 +14,14 @@ from events.models import Division, Event
 
 @login_required
 def summary(request):
-    invoices = Invoice.objects.filter(Q(invoiceToUser=request.user) | Q(school__schooladministrator__user=request.user)).distinct()
+    invoices = Invoice.invoicesForUser(request.user)
 
     context = {
         'user': request.user,
         'invoices': invoices,
     }
 
-    return render(request, 'invoices/invoiceSummary.html', context)
+    return render(request, 'invoices/summary.html', context)
 
 def mentorInvoicePermissions(request, invoice):
     return request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user
@@ -31,7 +31,7 @@ def coordinatorInvoiceView(request, invoice):
     return checkStatePermissions(request, invoice, 'view')
 
 @login_required
-def detail(request, invoiceID):
+def details(request, invoiceID):
     # Get invoice
     invoice = get_object_or_404(Invoice, pk=invoiceID)
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
@@ -45,19 +45,41 @@ def detail(request, invoiceID):
     # Set invoiced date
     if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today()
-        invoice.save()
+        invoice.save(update_fields=['invoicedDate'])
 
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'invoiceItems': invoice.invoiceItems(),
-        'overallTotalExclGST': invoice.invoiceAmountExclGST(),
-        'overallTotalGST': invoice.amountGST(),
-        'overallTotalInclGST': invoice.invoiceAmountInclGST(),
         'currentDate': datetime.datetime.today().date,
     }
 
-    return render(request, 'invoices/invoiceDetail.html', context)
+    return render(request, 'invoices/details.html', context)
+
+@login_required
+def paypal(request, invoiceID):
+    # Get invoice
+    invoice = get_object_or_404(Invoice, pk=invoiceID)
+
+    # Check permissions
+    mentor = mentorInvoicePermissions(request, invoice)
+    if not mentor:
+        raise PermissionDenied("You do not have permission to view this invoice")
+
+    # Check paypal email is set for this state
+    if not invoice.paypalAvailable():
+        return HttpResponseForbidden('PayPal not enabled for this invoice')
+
+    # Set invoiced date
+    if mentor and invoice.invoicedDate is None:
+        invoice.invoicedDate = datetime.datetime.today()
+        invoice.save(update_fields=['invoicedDate'])
+
+    context = {
+        'invoice': invoice,
+        'paypalDescription': f"{invoice.invoiceNumber} - {invoice.event} - {invoice.school or 'Independent'} - {invoice.invoiceToUser}",
+    }
+
+    return render(request, 'invoices/paypal.html', context)
 
 @login_required
 def setInvoiceTo(request, invoiceID):
@@ -86,7 +108,7 @@ def setCampusInvoice(request, invoiceID):
 
         # Check campus invoicing available
         if not invoice.campusInvoicingAvailable():
-            return HttpResponseForbidden("Campus invoicing not available for this event")
+            return HttpResponseForbidden("Campus invoicing is not available for this event")
 
         # Create campus invoices for campuses that have teams entered in this event
         # This invoice object remains for teams without a campus
@@ -115,7 +137,7 @@ def editInvoicePOAJAX(request, invoiceID):
         # Update invoice
         try:
             invoice.purchaseOrderNumber = request.POST["PONumber"]
-            invoice.save()
+            invoice.save(update_fields=['purchaseOrderNumber'])
         except KeyError:
             return HttpResponseBadRequest()
 

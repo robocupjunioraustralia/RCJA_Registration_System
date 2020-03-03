@@ -17,7 +17,8 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
-
+from django.contrib.auth import views as auth_views
+from .forms import CustomAuthForm
 admin.site.site_header = "RCJA Admin"
 admin.site.site_title = "RCJA Admin Portal"
 admin.site.index_title = "Welcome to the RCJA Admin Portal"
@@ -25,6 +26,8 @@ admin.site.index_title = "Welcome to the RCJA Admin Portal"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view(
+        template_name='registration/login.html', authentication_form=CustomAuthForm)),
     path('accounts/', include('django.contrib.auth.urls')), #login
     # path('api/v1/', include('apiv1.urls')), # Disabled for initial release
     path('', include('events.urls')),
@@ -32,6 +35,5 @@ urlpatterns = [
     path('',include('teams.urls')),
     path('',include('users.urls')),
     path('',include('invoices.urls')),
-    path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index')
-    
+    # path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index'),   
 ]

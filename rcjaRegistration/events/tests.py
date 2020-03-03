@@ -1,12 +1,13 @@
 from django.test import TestCase
-from regions.models import State,Region
-from schools.models import School, SchoolAdministrator
-from teams.models import Team,Student
-from events.models import Event,Division,Year
-from users.models import User
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
+
+from regions.models import State,Region
+from schools.models import School, SchoolAdministrator
+from teams.models import Team, Student
+from events.models import Event, Division, Year, AvailableDivision
+from users.models import User
 
 import datetime
 # Create your tests here.
@@ -55,7 +56,7 @@ def commonSetUp(obj):
     obj.newEvent = Event.objects.create(
         year=obj.year,
         state=obj.newState,
-        name='test new not reg',
+        name='test new yes reg',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
@@ -85,57 +86,216 @@ def commonSetUp(obj):
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
-    login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
-
-class TestIndexDashboard(TestCase): #TODO more comprehensive tests
-    
+class TestEventPermissions(TestCase):
     def setUp(self):
         commonSetUp(self)
-        
+
+    def testDashboardLoginRequired(self):
+        url = reverse('events:dashboard')
     
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/")
+        self.assertEqual(response.status_code, 302)
+
+    def testDetailsLoginRequired(self):
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/events/{self.newEvent.id}")
+        self.assertEqual(response.status_code, 302)
+
+class TestUnderConstruction(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
+    def testPageLoad(self):
+        response = self.client.get(reverse('events:loggedInConstruction'))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:loggedInConstruction'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'common/loggedInUnderConstruction.html')
+
+class TestDashboard_school(TestCase): #TODO more comprehensive tests
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
     def testPageLoad(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertEqual(200, response.status_code)    
+        self.assertEqual(response.status_code, 200)
+
     def testNonSignedUpOldDoesNotLoad(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertNotIn(b'test old not reg',response.content)
+        self.assertNotContains(response, 'test old not reg')
+
     def testNewEventWithRegoLoads(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertIn(b'test new not reg',response.content)
+        self.assertContains(response, 'test new yes reg')
+
     def testOldEventWithTeamsLoad(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertIn(b'test old yes reg',response.content)
+        self.assertContains(response, 'test old yes reg')
 
-    def testEventsAreSorted(self):
-        pass
-    def testEventDetailsLoad(self):
-        pass
+    def testCorrectInteraction(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'You are currently interacting as Melbourne High.')
 
-class TestEventSummaryPage(TestCase):
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/dashboard.html')
+
+class TestDashboard_independent(TestDashboard_school):
     def setUp(self):
         commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.schoolAdministrator.delete()
+
+    def testNewEventWithRegoLoads(self):
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='test new team 2')
+        super().testNewEventWithRegoLoads()
+
+    def testOldEventWithTeamsLoad(self):
+        self.team1 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test 2')
+        super().testOldEventWithTeamsLoad()
+
+    def testSchoolTeamsNotPresent(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test old yes reg')
+
+    def testStateFiltering_filtered(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test new yes reg')
+
+    def testStateFiltering_all(self):
+        response = self.client.get(reverse('events:dashboard'), {'viewAll': 'yes'})
+        self.assertContains(response, 'test new yes reg')
+
+    def testCorrectInteraction(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'You are currently interacting as independent.')
+
+    # Need to test events are sorted
+    # Need to test invoices are properly filtered
+
+class TestEventDetailsPage_school(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
     def testPageLoad(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))        
-        self.assertEqual(200, response.status_code) 
-    def testTeamsLoad(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))        
-        self.assertIn(b'test old',response.content)
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/details.html')
+
+    def testEventTitlePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertContains(response, 'test old')
+
+    def testTeamNamePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new team')
+
     def testOldEventNotRegisterable(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response,'Registration for this event has closed.')
-        #print(response.content)
-        #self.assert(response,'edit')
+        self.assertNotContains(response, 'Add team')
+
     def testCreationButtonsVisibleWhenRegoOpen(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.newEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
+        self.assertContains(response, 'Add team')
+
+    def testCorrectTeams(self):
+        self.school2 = School.objects.create(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.newState,
+            region=self.newRegion
+        )
+        self.user2 = User.objects.create(email='user2@user.com', password=self.password)
+
+        # Already one team for this user in common setup
+        # Teams that should be visible
+        self.team1 = Team.objects.create(event=self.newEvent, division=self.division, school=self.newSchool, mentorUser=self.user2, name='Team 1')
+
+        # Teams that should not be visible
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, school=self.school2, mentorUser=self.user2, name='Team 2') # Wrong school
+        self.team3 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='Team 3') # No school
+
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team 1')
+        self.assertNotContains(response, 'Team 2')
+        self.assertNotContains(response, 'Team 3')
+
+        self.assertEqual(response.context['teams'].count(), 2)
+
+        for team in response.context['teams']:
+            assert team.school == self.user.currentlySelectedSchool, 'No permission to view this team'
+
+class TestEventDetailsPage_independent(TestEventDetailsPage_school):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.schoolAdministrator.delete()
+        self.team = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='test new team ind')
+
+    def testTeamNamePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new team ind')
+
+    def testCorrectTeams(self):
+        self.school2 = School.objects.create(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.newState,
+            region=self.newRegion
+        )
+        self.user2 = User.objects.create(email='user2@user.com', password=self.password)
+
+        # Already one team for this user in common setup
+        # Teams that should be visible
+        self.team1 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='Team 1')
+
+        # Teams that should not be visible
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, school=self.school2, mentorUser=self.user2, name='Team 2') # Has a school
+        self.team3 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user2, name='Team 3') # Wrong mentor
+
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team 1')
+        self.assertNotContains(response, 'Team 2')
+        self.assertNotContains(response, 'Team 3')
+
+        self.assertEqual(response.context['teams'].count(), 2)
+
+        for team in response.context['teams']:
+            assert team.school is None and team.mentorUser == self.user, 'No permission to view this team'
 
 class TestEventClean(TestCase):
     def setUp(self):
         commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
         self.event = Event(
             year=self.year,
             state=self.newState,
-            name='test old not reg',
+            name='Event 1',
             maxMembersPerTeam=5,
             event_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -144,7 +304,25 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
-    
+
+    # Dates validation
+
+    def teststartDateNoneInvalid(self):
+        self.event.startDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testendDateNoneInvalid(self):
+        self.event.endDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testRegistrationsOpenDateNoneInvalid(self):
+        self.event.registrationsOpenDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testRegistrationsCloseDateNoneInvalid(self):
+        self.event.registrationsCloseDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
     def testMultidayEventOK(self):
         self.event.clean()
 
@@ -153,25 +331,15 @@ class TestEventClean(TestCase):
         self.event.clean()
 
     def testStartBeforeEnd(self):
-        try:
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+4)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+4)).date()
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testRegistrationOpenBeforeClose(self):
-        try:
-            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testOneDayRegistration(self):
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
@@ -179,25 +347,202 @@ class TestEventClean(TestCase):
         self.event.clean()
 
     def testRegistrationCloseOnEventStartDate(self):
-        try:
-            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testRegistrationCloseAfterEventStartDate(self):
-        try:
-            self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-            self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-            self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
-            self.event.clean()
-        except ValidationError:
-            pass
-        else:
-            raise ValidationError('Date verification failed')
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.assertRaises(ValidationError, self.event.clean)
+
+    # Billing settings validation
+
+    def testSpecialRateValidComplete(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+    def testSpecialRateInvalid(self):
+        self.event.event_specialRateFee = 50
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testSpecialRateStudentInvalid(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+        self.event.event_billingType = 'student'
+        self.assertRaises(ValidationError, self.event.clean)
+    
+    def testSpecialRateBillingAvailableDivisionValid(self):
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+    def testSpecialRateBillingAvailableDivisionInValid(self):
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.clean()
+
+        self.availableDivision.division_billingType = 'team'
+        self.availableDivision.division_entryFee = 50
+        self.availableDivision.save()
+
+        self.assertRaises(ValidationError, self.event.clean)
+
+class TestEventMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='Event 1',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+
+    def testGetState(self):
+        self.assertEqual(self.event.getState(), self.newState)
+
+    def testBoolWorkshop_notWorkshop(self):
+        self.event.eventType = 'competition'
+        self.assertEqual(self.event.boolWorkshop(), False)
+
+    def testBoolWorkshop_isWorkshop(self):
+        self.event.eventType = 'workshop'
+        self.assertEqual(self.event.boolWorkshop(), True)
+
+    def testSave_competition(self):
+        self.event.eventType = 'competition'
+        self.event.event_billingType = 'student'
+        self.assertEqual(self.event.maxMembersPerTeam, 5)
+        self.assertEqual(self.event.event_billingType, 'student')
+
+        self.event.save()
+        self.assertEqual(self.event.maxMembersPerTeam, 5)
+        self.assertEqual(self.event.event_billingType, 'student')
+
+    def testSave_workshop(self):
+        self.event.eventType = 'workshop'
+        self.event.event_billingType = 'student'
+        self.assertEqual(self.event.maxMembersPerTeam, 5)
+        self.assertEqual(self.event.event_billingType, 'student')
+
+        self.event.save()
+        self.assertEqual(self.event.maxMembersPerTeam, 0)
+        self.assertEqual(self.event.event_billingType, 'team')
+
+    def testStr_state(self):
+        self.assertEqual(str(self.event), "Event 1 2019 (VIC)")
+
+    def testStr_global(self):
+        self.event.globalEvent = True
+        self.assertEqual(str(self.event), "Event 1 2019")
+
+class TestAvailableDivisionClean(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='Event 1',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+
+    def testBillingEntryFeeAndTypeValidBlank(self):
+        self.availableDivision.clean()
+
+    def testBillingEntryFeeAndTypeValidFilled(self):
+        self.availableDivision.division_billingType = 'team'
+        self.availableDivision.division_entryFee = 50
+        self.availableDivision.clean()
+
+    def testBillingEntryFeeAndTypeInValid1(self):
+        self.availableDivision.division_billingType = 'team'
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+    def testBillingEntryFeeAndTypeInValid2(self):
+        self.availableDivision.division_entryFee = 50
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+    def testSpecialRateValid(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.save()
+
+        self.availableDivision.clean()
+
+    def testSpecialRateInValid(self):
+        self.event.event_specialRateFee = 50
+        self.event.event_specialRateNumber = 5
+        self.event.save()
+
+        self.availableDivision.division_billingType = 'team'
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+        self.availableDivision.division_billingType = 'student'
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+    def testWorkshopValid(self):
+        self.event.eventType = 'workshop'
+        self.event.save()
+
+        self.availableDivision.clean()
+
+        self.availableDivision.division_billingType = 'team'
+        self.availableDivision.division_entryFee = 50
+        self.availableDivision.clean()
+
+    def testWorkshopInValid(self):
+        self.event.eventType = 'workshop'
+        self.event.save()
+
+        self.availableDivision.division_billingType = 'student'
+        self.availableDivision.division_entryFee = 50
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
+class TestAvailableDivisionMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.division1 = Division.objects.create(name='Division 1')
+        self.event = Event(
+            year=self.year,
+            state=self.newState,
+            name='Event 1',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.event.save()
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+
+    def testGetState(self):
+        self.assertEqual(self.availableDivision.getState(), self.newState)

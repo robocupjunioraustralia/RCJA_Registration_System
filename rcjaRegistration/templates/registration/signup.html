@@ -7,118 +7,90 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
 {% load static %}
 <title> Create account </title>
-<style type="text/css">
-  body {
-    background-color: gray;
-  }
-
-  .column {
-    max-width: 100%;
-  }
-
-  .logincontent {
-    padding-top: 5%;
-  }
-
-  .formbox {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  }
-
-  .bg {
-    /* Full height */
-    height: 100%;
-    width: auto;
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    /*background-color: #CCE2FF;*/
-  }
-
-  .left-aligned-text {
-    text-align: left;
-  }
-</style>
+{% include 'common/loginBase.html'%}
 {% endblock %}
 
 {% block content %}
 <div class="bg">
-  <div class="logincontent">
-    <div class="ui center aligned container ">
+  <div class = "layer">
+    <div class="logincontent">
+      <div class="ui center aligned container ">
 
-      <div class="twelve wide mobile six wide computer column ui segment formbox">
-        <div class="form form-group left-aligned-text">
-          <div>
-            <h1> Robocup Australia - Mentor Signup</h1>
-            <h2>Please enter your details</h2>
-            {% if form.errors %}
-            <!-- Error messaging -->
-            <div class="ui warning message left-aligned-text">
-              <div class="">
-                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                {{ form.non_field_errors }}
-                <ul>
-                  {% for field in form %}
-                  {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                  {% endfor %}
-                </ul>
+        <div class="twelve wide mobile six wide computer column ui segment formbox">
+          <div class="form form-group left-aligned-text">
+            <div>
+              <h1> Robocup Australia - Mentor Signup</h1>
+              <h2>Please enter your details</h2>
+
+              {% if form.errors %}
+              <!-- Error messaging -->
+              <div class="ui warning message left-aligned-text">
+                <div class="">
+                  <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                  {{ form.non_field_errors }}
+                  <ul>
+                    {% for field in form %}
+                    {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                    {% endfor %}
+                  </ul>
+                </div>
               </div>
+              <!-- /Error messaging -->
+              {% endif %}
+
+              <form class="ui form segment" method="POST">
+                {% csrf_token %}
+
+                <div class="field">
+                  <label>Email</label>
+                  {{ form.email|attr:"placeholder:Email"|attr:"type:email" }}
+                </div>
+
+                <div class="two fields">
+                  <div class="field">
+                    <label>First Name</label>
+                    {{ form.first_name|attr:"placeholder:First Name"|attr:"type:text" }}
+                  </div>
+                  <div class="field">
+                    <label>Last Name</label>
+                    {{ form.last_name|attr:"placeholder:Last Name"|attr:"type:text" }}
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Password</label>
+                  {{ form.password|attr:"placeholder:Password"|attr:"type:password" }}
+                </div>
+                <div class="field">
+                  {{ form.passwordConfirm|attr:"placeholder:Confirm password"|attr:"type:password" }}
+                </div>
+                <div class="two fields">
+                  <div class="field">
+                    <label>Home state: </label>
+                    {{form.homeState}}
+                  </div>
+                  <div class="field">
+                    <label> Home region: </label>
+                    {{form.homeRegion}}
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label> Mobile Number:</label>
+                  {{ form.mobileNumber}}
+                </div>
+
+                <p>You will create your school in the next step.</p>
+
+                <button class="ui primary submit button" type="submit" value="SignUp">Submit</button>
+                <a href="/" class="ui negative button">Cancel</a>
+              </form>
+
             </div>
-            <!-- /Error messaging -->
-            {% endif %}
-            <form class="ui form segment" method="POST">
-              {% csrf_token %}
-
-              <div class="field">
-                <label>Email</label>
-                {{ form.email|attr:"placeholder:Email"|attr:"type:email" }}
-              </div>
-
-              <div class="two fields">
-                <div class="field">
-                  <label>First Name</label>
-                  {{ form.first_name|attr:"placeholder:First Name"|attr:"type:text" }}
-                </div>
-                <div class="field">
-                  <label>Last Name</label>
-                  {{ form.last_name|attr:"placeholder:Last Name"|attr:"type:text" }}
-                </div>
-              </div>
-              <div class="field">
-                <label>Password</label>
-                {{ form.password|attr:"placeholder:Password"|attr:"type:password" }}
-              </div>
-              <div class="field">
-                {{ form.passwordConfirm|attr:"placeholder:Confirm password"|attr:"type:password" }}
-              </div>
-              <div class="two fields">
-                <div class="field">
-                  <label>Home state: </label>
-                  {{form.homeState}}
-                </div>
-                <div class="field">
-                  <label> Home region: </label>
-                  {{form.homeRegion}}
-                </div>
-              </div>
-
-              <div class="field">
-                <label> Mobile Number:</label>
-                {{ form.mobileNumber}}
-              </div>
-
-              <p>You will create your school in the next step.</p>
-
-              <button class="ui primary submit button" type="submit" value="SignUp">Submit</button>
-              <a href="/" class="ui negative button">Cancel</a>
-            </form>
-
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>
 
 <script>

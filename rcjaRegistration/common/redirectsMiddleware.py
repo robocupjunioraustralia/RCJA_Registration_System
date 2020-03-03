@@ -20,7 +20,11 @@ class RedirectMiddleware:
             elif request.user.currentlySelectedSchool and request.user.currentlySelectedSchool.forceSchoolDetailsUpdate:
                 redirectTo = reverse('schools:details')
 
-            if redirectTo and request.path != redirectTo:
+            neverRedirect = [
+                reverse('users:termsAndConditions'),
+            ]
+
+            if redirectTo and request.path != redirectTo and request.path not in neverRedirect:
                 return HttpResponseRedirect(redirectTo)
 
         return response

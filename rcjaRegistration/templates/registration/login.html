@@ -3,92 +3,62 @@
 
 {% block head %}
 <title> Login </title>
-<style type="text/css">
-  body {
-    background-color: #ffffff;
-  }
-
-  .column {
-    max-width: 100%;
-  }
-
-  .logincontent {
-    padding-top: 10%;
-  }
-
-  .bg {
-    background-image: url('/static/homeimage2.jpg');
-    /* Full height */
-    height: 100%;
-    width: auto;
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    /*background-color: #CCE2FF;*/
-  }
-
-  .left-aligned-text {
-    text-align: left;
-  }
-</style>
+{% include 'common/loginBase.html'%}
 {% endblock %}
 
 {% block content %}
 <div class="bg">
-  <div class="logincontent">
-    <div class="ui center aligned container grid">
+  <div class = "layer">
+    <div class="logincontent">
+      <div class="ui center aligned container grid">
+        <div class="twelve wide mobile six wide computer column ui segment">
+          <div class="form-group ">
+            <div>
+              <h1> Robocup Australia</h1>
+              <h3>Event and Workshop Registration System </h3>
+              <h4> Please Login, or Create an Account Below </h4>
+              <h5> For assistance, please contact us on <a href="https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System"> Github </a> </h5>
 
-      <!--<div class = "two wide column">
-        <img src=/static/homeimage.png style = "max-width:100%;
-        height:auto;">
-    </div>-->
-      <div class="twelve wide mobile six wide computer column ui segment">
-        <div class="form-group ">
-          <div>
-            <h1> Robocup Australia</h1>
-            <h5> Mentor login or signup</h5>
-            <h4>Please Login</h4>
-            {% if form.errors %}
-            <!-- Error messaging -->
-            <div class="ui warning message left-aligned-text">
-              <div class="">
-                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                {{ form.non_field_errors }}
-                <ul>
-                  {% for field in form %}
-                  {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                  {% endfor %}
-                </ul>
+              {% if form.errors %}
+              <!-- Error messaging -->
+              <div class="ui warning message left-aligned-text">
+                <div class="">
+                  <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                  {{ form.non_field_errors }}
+                  <ul>
+                    {% for field in form %}
+                    {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                    {% endfor %}
+                  </ul>
+                </div>
               </div>
-            </div>
-            <!-- /Error messaging -->
-            {% endif %}
-            <div class="ui large form">
-              <form method="post" action="{% url 'login' %}" style="display: inline">
-                {% csrf_token %}
-                <div class="field">
-                  <div class="ui left icon input">
-                    <i class="user icon"></i>
-                    {{ form.username }}
-                  </div>
-                </div>
+              <!-- /Error messaging -->
+              {% endif %}
 
-                <div class="field">
-                  <div class="ui left icon input">
-                    <i class="lock icon"></i>
-                    {{ form.password }}
+              <div class="ui large form">
+                <form method="post" action="{% url 'login' %}" style="display: inline">
+                  {% csrf_token %}
+                  <div class="field">
+                    <div class="ui left icon input">
+                      <i class="user icon"></i>
+                      {{ form.username }}
+                    </div>
                   </div>
-                </div>
-                <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
-              </form>
-              <br><br>
-              <a href="/accounts/signup"><button class="ui small teal button" type="" value="Sign Up"> Create account </button>
-              </a>
-              <a href="{% url 'password_reset' %}"><button class="ui small teal button" type="" value="Forgot password">
-                  Forgot
-                  password </button> </a>
 
+                  <div class="field">
+                    <div class="ui left icon input">
+                      <i class="lock icon"></i>
+                      {{ form.password }}
+                    </div>
+                  </div>
+                  <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
+                </form>
+                <br><br>
+
+                <a href="/accounts/signup"><button class="ui small teal button" style="max-width:40%;" type="" value="Sign Up"> Create account </button></a>
+                <a href="{% url 'password_reset' %}"><button class="ui small teal button" style="max-width:40%;" type="" value="Forgot password">Forgot password </button></a>
+
+              </div>
             </div>
           </div>
         </div>

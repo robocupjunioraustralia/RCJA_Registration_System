@@ -79,7 +79,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for invoiceItem in invoiceItems %}
+              {% for invoiceItem in invoice.invoiceItems %}
               <tr id="invoiceItemRom{{invoiceItem.id}}">
                 <td>
                   {{ invoiceItem.name }}
@@ -110,9 +110,9 @@
               <tr>
                 <th> Total: </th>
                 <th colspan="2"></th>
-                <th colspan="1"> ${{ overallTotalExclGST|floatformat:2 }} </th>
-                <th colspan="1"> ${{ overallTotalGST|floatformat:2 }} </th>
-                <th colspan="1"> ${{ overallTotalInclGST|floatformat:2 }} </th>
+                <th colspan="1"> ${{ invoice.invoiceAmountExclGST|floatformat:2 }} </th>
+                <th colspan="1"> ${{ invoice.amountGST|floatformat:2 }} </th>
+                <th colspan="1"> ${{ invoice.invoiceAmountInclGST|floatformat:2 }} </th>
               </tr>
             </tfoot>
           </table>
@@ -135,8 +135,10 @@
         <div class="content center aligned text segment">
           <small class="ui sub header"> Amount Due (EFT): </small>
           <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p>
-          <!-- <small class="ui sub header"> Amount Due (PayPal): </small>
-          <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p> -->
+          {% if invoice.paypalAvailable %}
+          <small class="ui sub header"> Amount Due (PayPal): </small>
+          <p class="bigfont"> ${{ invoice.amountDuePaypal|floatformat:2 }} </p>
+          {% endif %}
         </div>
       </div>
       <div class="ui card">
