@@ -245,6 +245,15 @@ class TestInvoiceDetailView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.user1.email)     
 
+    def testUsesCorrectTemplate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'invoices/details.html')
+
 # Need to test invoice content
 
 class TestSetInvoiceToPermissions(TestCase):
@@ -926,3 +935,74 @@ class TestInvoiceMethods(TestCase):
     def testStr_independent(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): user1@user.com")
+
+class TestInvoiceSummaryView(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+
+    def testLoginRequired(self):
+        url = reverse('invoices:summary')
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoices")
+        self.assertEqual(response.status_code, 302)
+
+    def testPageLoads_noInvoices(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('invoices:summary')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.user1)
+        self.assertQuerysetEqual(response.context['invoices'], Invoice.objects.none())
+
+    def testPageLoads_invoices(self):
+        self.invoice3 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2)
+
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+        url = reverse('invoices:summary')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.user2)
+        self.assertEqual(response.context['invoices'].count(), 1)
+
+    def testTemplateQuerysetCorrectlyFiltered(self):
+        # Invoices that user 2 should have access to
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1) # Through school admin
+        self.invoice1c = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campus1) # Through school admin
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2, school=self.school2) # Through invoice to
+        self.invoice3 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2) # Through invoice to
+        self.schoolAdmin = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
+
+        # Invoices that should not have access to
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school3)
+
+        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+        url = reverse('invoices:summary')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['user'], self.user2)
+
+        self.assertEqual(response.context['invoices'].count(), 4)
+
+        for invoice in response.context['invoices']:
+            assert invoice.invoiceToUser == self.user2 or invoice.school.id in self.user2.schooladministrator_set.values_list('school', flat=True), 'No permission to view this invoice'
+
+    def testUsesCorrectTemplate(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('invoices:summary')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'invoices/summary.html')
