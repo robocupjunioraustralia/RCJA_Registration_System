@@ -325,6 +325,7 @@ class TestEditSchoolDetails(TestCase):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
+        numberExistingCampuses = Campus.objects.count()
 
         payload = {
             'campus_set-TOTAL_FORMS':3,
@@ -347,6 +348,7 @@ class TestEditSchoolDetails(TestCase):
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
         self.assertRaises(Campus.DoesNotExist, lambda: Campus.objects.get(name='test 1'))
+        self.assertEqual(Campus.objects.count(), numberExistingCampuses-1)
 
     def testDeleteCampus_protected(self):
         self.campus1 = Campus.objects.create(school=self.school1, name='test 1')
@@ -408,6 +410,7 @@ class TestEditSchoolDetails(TestCase):
         self.admin2 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
+        SchoolAdministrator.objects.get(pk=self.admin2.pk)
         numberExistingAdmins = SchoolAdministrator.objects.count()
 
         payload = {
@@ -430,6 +433,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
+        self.assertRaises(SchoolAdministrator.DoesNotExist, lambda: SchoolAdministrator.objects.get(pk=self.admin2.pk))
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins-1)
 
     def testAdministratorAdd_existing(self):
