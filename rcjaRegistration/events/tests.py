@@ -86,11 +86,48 @@ def commonSetUp(obj):
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
-    login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
-
-class TestIndexDashboard(TestCase): #TODO more comprehensive tests
+class TestEventPermissions(TestCase):
     def setUp(self):
         commonSetUp(self)
+
+    def testDashboardLoginRequired(self):
+        url = reverse('events:dashboard')
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/events/dashboard")
+        self.assertEqual(response.status_code, 302)
+
+    def testDetailsLoginRequired(self):
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/events/{self.newEvent.id}")
+        self.assertEqual(response.status_code, 302)
+
+class TestUnderConstruction(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
+    def testPageLoad(self):
+        response = self.client.get(reverse('events:loggedInConstruction'))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:loggedInConstruction'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'common/loggedInUnderConstruction.html')
+
+class TestDashboard(TestCase): #TODO more comprehensive tests
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
         response = self.client.get(reverse('events:dashboard'))
@@ -108,19 +145,27 @@ class TestIndexDashboard(TestCase): #TODO more comprehensive tests
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response, 'test old yes reg')
 
-    def testEventsAreSorted(self):
-        pass
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/dashboard.html')
 
-    def testEventDetailsLoad(self):
-        pass
+# Test events are sorted
 
-class TestEventSummaryPage(TestCase):
+
+class TestEventDetailsPage(TestCase):
     def setUp(self):
         commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/details.html')
 
     def testTeamsLoad(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
