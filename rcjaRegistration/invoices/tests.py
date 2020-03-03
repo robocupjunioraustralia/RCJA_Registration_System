@@ -87,7 +87,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}/details")
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}")
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
