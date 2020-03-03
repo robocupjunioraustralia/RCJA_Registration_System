@@ -56,7 +56,7 @@ def commonSetUp(obj):
     obj.newEvent = Event.objects.create(
         year=obj.year,
         state=obj.newState,
-        name='test new not reg',
+        name='test new yes reg',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
@@ -86,11 +86,48 @@ def commonSetUp(obj):
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
-    login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
-
-class TestIndexDashboard(TestCase): #TODO more comprehensive tests
+class TestEventPermissions(TestCase):
     def setUp(self):
         commonSetUp(self)
+
+    def testDashboardLoginRequired(self):
+        url = reverse('events:dashboard')
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/")
+        self.assertEqual(response.status_code, 302)
+
+    def testDetailsLoginRequired(self):
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+    
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/events/{self.newEvent.id}")
+        self.assertEqual(response.status_code, 302)
+
+class TestUnderConstruction(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
+    def testPageLoad(self):
+        response = self.client.get(reverse('events:loggedInConstruction'))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:loggedInConstruction'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'common/loggedInUnderConstruction.html')
+
+class TestDashboard_school(TestCase): #TODO more comprehensive tests
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
         response = self.client.get(reverse('events:dashboard'))
@@ -102,39 +139,154 @@ class TestIndexDashboard(TestCase): #TODO more comprehensive tests
 
     def testNewEventWithRegoLoads(self):
         response = self.client.get(reverse('events:dashboard'))
-        self.assertContains(response, 'test new not reg')
+        self.assertContains(response, 'test new yes reg')
 
     def testOldEventWithTeamsLoad(self):
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response, 'test old yes reg')
 
-    def testEventsAreSorted(self):
-        pass
+    def testCorrectInteraction(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'You are currently interacting as Melbourne High.')
 
-    def testEventDetailsLoad(self):
-        pass
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/dashboard.html')
 
-class TestEventSummaryPage(TestCase):
+class TestDashboard_independent(TestDashboard_school):
     def setUp(self):
         commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.schoolAdministrator.delete()
+
+    def testNewEventWithRegoLoads(self):
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='test new team 2')
+        super().testNewEventWithRegoLoads()
+
+    def testOldEventWithTeamsLoad(self):
+        self.team1 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test 2')
+        super().testOldEventWithTeamsLoad()
+
+    def testSchoolTeamsNotPresent(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test old yes reg')
+
+    def testStateFiltering_filtered(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test new yes reg')
+
+    def testStateFiltering_all(self):
+        response = self.client.get(reverse('events:dashboard'), {'viewAll': 'yes'})
+        self.assertContains(response, 'test new yes reg')
+
+    def testCorrectInteraction(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'You are currently interacting as independent.')
+
+    # Need to test events are sorted
+    # Need to test invoices are properly filtered
+
+class TestEventDetailsPage_school(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 200)
 
-    def testTeamsLoad(self):
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/details.html')
+
+    def testEventTitlePresent(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response, 'test old')
+
+    def testTeamNamePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new team')
 
     def testOldEventNotRegisterable(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response,'Registration for this event has closed.')
-        #print(response.content)
-        #self.assert(response,'edit')
+        self.assertNotContains(response, 'Add team')
 
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
+        self.assertContains(response, 'Add team')
+
+    def testCorrectTeams(self):
+        self.school2 = School.objects.create(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.newState,
+            region=self.newRegion
+        )
+        self.user2 = User.objects.create(email='user2@user.com', password=self.password)
+
+        # Already one team for this user in common setup
+        # Teams that should be visible
+        self.team1 = Team.objects.create(event=self.newEvent, division=self.division, school=self.newSchool, mentorUser=self.user2, name='Team 1')
+
+        # Teams that should not be visible
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, school=self.school2, mentorUser=self.user2, name='Team 2') # Wrong school
+        self.team3 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='Team 3') # No school
+
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team 1')
+        self.assertNotContains(response, 'Team 2')
+        self.assertNotContains(response, 'Team 3')
+
+        self.assertEqual(response.context['teams'].count(), 2)
+
+        for team in response.context['teams']:
+            assert team.school == self.user.currentlySelectedSchool, 'No permission to view this team'
+
+class TestEventDetailsPage_independent(TestEventDetailsPage_school):
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.schoolAdministrator.delete()
+        self.team = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='test new team ind')
+
+    def testTeamNamePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new team ind')
+
+    def testCorrectTeams(self):
+        self.school2 = School.objects.create(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.newState,
+            region=self.newRegion
+        )
+        self.user2 = User.objects.create(email='user2@user.com', password=self.password)
+
+        # Already one team for this user in common setup
+        # Teams that should be visible
+        self.team1 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='Team 1')
+
+        # Teams that should not be visible
+        self.team2 = Team.objects.create(event=self.newEvent, division=self.division, school=self.school2, mentorUser=self.user2, name='Team 2') # Has a school
+        self.team3 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user2, name='Team 3') # Wrong mentor
+
+        url = reverse('events:details', kwargs= {'eventID':self.newEvent.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team 1')
+        self.assertNotContains(response, 'Team 2')
+        self.assertNotContains(response, 'Team 3')
+
+        self.assertEqual(response.context['teams'].count(), 2)
+
+        for team in response.context['teams']:
+            assert team.school is None and team.mentorUser == self.user, 'No permission to view this team'
 
 class TestEventClean(TestCase):
     def setUp(self):

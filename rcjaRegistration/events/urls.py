@@ -20,7 +20,7 @@ from . import views
 app_name = 'events'
 
 urlpatterns = [
-    path('events/dashboard', views.index, name= 'dashboard'),
+    path('', views.dashboard, name='dashboard'),
     path('events/<int:eventID>', views.details, name='details'),
     path('error/underConstruction',views.loggedInUnderConstruction,name='loggedInConstruction'),
 ]

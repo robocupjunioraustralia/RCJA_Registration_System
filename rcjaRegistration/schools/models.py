@@ -155,11 +155,18 @@ class SchoolAdministrator(CustomSaveDeleteModel):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self.pk:
+            self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
+
     def postSave(self):
         # Set currently selected school if not set
         if self.user.currentlySelectedSchool is None:
             self.user.currentlySelectedSchool = self.school
             self.user.save(update_fields=['currentlySelectedSchool'])
+
+        if hasattr(self, 'previousUser',) and self.user != self.previousUser:
+            self.previousUser.setCurrentlySelectedSchool()
 
     # *****Methods*****
 

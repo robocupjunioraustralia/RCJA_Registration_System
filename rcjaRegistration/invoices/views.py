@@ -14,7 +14,7 @@ from events.models import Division, Event
 
 @login_required
 def summary(request):
-    invoices = Invoice.objects.filter(Q(invoiceToUser=request.user) | Q(school__schooladministrator__user=request.user)).distinct()
+    invoices = Invoice.invoicesForUser(request.user)
 
     context = {
         'user': request.user,

@@ -72,10 +72,12 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 
 class TestSetCurrentSchool(TestCase):
     email = 'user@user.com'
+    email2 = 'user2@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
         self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
 
         self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
@@ -101,17 +103,29 @@ class TestSetCurrentSchool(TestCase):
         admin3 = SchoolAdministrator.objects.create(school=self.school3, user=self.user)
         self.assertEqual(self.user.currentlySelectedSchool, self.school1)
 
-        # Test deletion while remaining schools
+        # Test deletion of non current school admin while remaining schools
         admin3.delete()
         self.assertEqual(self.user.currentlySelectedSchool, self.school1)
 
-        # Test deletion of currently set school admin
+        # Test deletion of currently set school admin while remaining schools
         admin1.delete()
         self.assertEqual(self.user.currentlySelectedSchool, self.school2)
 
         # test deletion of last school admin
         admin2.delete()
         self.assertEqual(self.user.currentlySelectedSchool, None)
+
+    def testSchoolAdministratorUserChange(self):
+        # Setup
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        # test changing user field on school administrator
+        admin1.user = self.user2
+        admin1.save()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, None)
+        self.assertEqual(self.user2.currentlySelectedSchool, self.school1)
 
     def testSuccesful_setCurrentSchool(self):
         # Setup
