@@ -138,7 +138,7 @@
     function setPONum(invoiceNumber) {
         $.ajax({
             type: "POST",
-            url: invoiceNumber + "/setPONumber",
+            url: "invoices/" + invoiceNumber + "/setPONumber",
             data: $("#POCreation").serialize()
         })
             .done( (data) => {
@@ -165,7 +165,7 @@
     function setCampusInvoicing(invoiceNumber) {
         $.ajax({
             type: "POST",
-            url: invoiceNumber + "/setCampusInvoice",
+            url: "invoices/" + invoiceNumber + "/setCampusInvoice",
             data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
         })
             .done( (data) => {
@@ -178,7 +178,7 @@
         function setInvoiceTo(invoiceNumber) {
             $.ajax({
                 type: "POST",
-                url: invoiceNumber + "/setInvoiceTo",
+                url: "invoices/" + invoiceNumber + "/setInvoiceTo",
                 data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
             })
             .done( (data) => {
