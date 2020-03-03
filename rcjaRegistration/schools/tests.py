@@ -415,17 +415,17 @@ class TestEditSchoolDetails(TestCase):
             "campus_set-INITIAL_FORMS":0,
             "campus_set-MIN_NUM_FORMS":0,
             "campus_set-MAX_NUM_FORMS":1000,
-            'schooladministrator_set-TOTAL_FORMS':1,
-            "schooladministrator_set-INITIAL_FORMS":1,
+            'schooladministrator_set-TOTAL_FORMS':2,
+            "schooladministrator_set-INITIAL_FORMS":2,
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
             "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
-            'schooladministrator_set-0-id': self.admin2.id,
-            'schooladministrator_set-0-id': self.admin2.user.id,
-            'schooladministrator_set-0-DELETE': 'on',
+            'schooladministrator_set-0-id': self.admin1.id,
+            'schooladministrator_set-1-id': self.admin2.id,
+            'schooladministrator_set-1-DELETE': 'on',
         }
 
         response = self.client.post(url, data=payload)
