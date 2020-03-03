@@ -25,6 +25,7 @@ def dashboard(request):
     else:
         currentState = request.user.homeState
 
+    # Get open events
     openForRegistrationEvents = Event.objects.filter(
         registrationsOpenDate__lte=datetime.datetime.today(),
         registrationsCloseDate__gte=datetime.datetime.today(),
@@ -32,10 +33,11 @@ def dashboard(request):
         team__in=usersTeams,
     ).order_by('startDate').distinct()
 
-    # viewingAll = False
+    # Filter open events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
 
+    # Get current and past events
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
         team__in=usersTeams,
