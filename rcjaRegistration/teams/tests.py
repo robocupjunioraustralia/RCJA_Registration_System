@@ -320,6 +320,172 @@ def newCommonSetUp(self):
             invoiceFooterMessage='Test Footer Text',
         )
 
+class TestTeamEditPermissions(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+
+    def testLoginRequired(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+    
+        response = self.client.post(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/edit")
+        self.assertEqual(response.status_code, 302)
+
+    def testLoads_independent(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_independent(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testDenied_independent_teamHasSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testLoads_school(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user3)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_school_noSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testDenied_school_wrongSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school2, user=self.user3)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+class TestTeamDelete(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+
+    def testLoginRequired(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+    
+        response = self.client.delete(url, follow=True)
+        self.assertContains(response, "Login")
+
+        response = self.client.delete(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/delete")
+        self.assertEqual(response.status_code, 302)
+
+    def testGet_forbidden(self):
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def testPost_forbidden(self):
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+
+    def testDenied_independent(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team1.pk)
+
+    def testDenied_independent_teamHasSchool(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team3.pk)
+
+    def testDenied_school_noSchool(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team3.pk)
+
+    def testDenied_school_wrongSchool(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school2, user=self.user3)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team3.pk)
+
+    def testSuccess(self):
+        Team.objects.get(pk=self.team1.pk)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
+        self.assertRaises(Team.DoesNotExist, lambda: Team.objects.get(pk=self.team1.pk))
+
+    def testDenied_closed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.event.save()
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        Team.objects.get(pk=self.team1.pk)
+
+
 class TestTeamClean(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
