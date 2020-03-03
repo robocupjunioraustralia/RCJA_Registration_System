@@ -432,7 +432,7 @@ class TestPaypalView(TestCase):
 
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
-        self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
