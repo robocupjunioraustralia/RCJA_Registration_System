@@ -298,26 +298,6 @@ def setupCampusAndAdministrators(self):
     self.admin1 = SchoolAdministrator.objects.create(school=self.school1, campus=self.campus1, user=self.user1)
     self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
 
-class TestCampusClean(TestCase):
-    email1 = 'user@user.com'
-    password = 'chdj48958DJFHJGKDFNM'
-
-    def setUp(self):
-        schoolSetUp(self)
-        setupCampusAndAdministrators(self)
-
-    def testCreate(self):
-        campus2 = Campus(
-            school=self.school1,
-            name='Campus 1'
-        )
-
-        self.assertEqual(campus2.clean(), None)
-
-    def testSchoolChange(self):
-        self.campus1.school = self.school2
-        self.assertRaises(ValidationError, self.campus1.clean)
-
 class TestCampusMethods(TestCase):
     email1 = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'

@@ -108,6 +108,18 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
 
+    fields = [
+        'school',
+        'name',
+    ]
+
+    # Don't allow editing school after initial creation
+    def get_readonly_fields(self, request, obj=None):
+        alwaysReadOnly = []
+        if obj:
+            return alwaysReadOnly + ['school']
+        return alwaysReadOnly
+
 @admin.register(SchoolAdministrator)
 class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
