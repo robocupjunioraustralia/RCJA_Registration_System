@@ -21,7 +21,7 @@ def summary(request):
         'invoices': invoices,
     }
 
-    return render(request, 'invoices/invoiceSummary.html', context)
+    return render(request, 'invoices/summary.html', context)
 
 def mentorInvoicePermissions(request, invoice):
     return request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user
@@ -53,7 +53,7 @@ def details(request, invoiceID):
         'currentDate': datetime.datetime.today().date,
     }
 
-    return render(request, 'invoices/invoiceDetails.html', context)
+    return render(request, 'invoices/details.html', context)
 
 @login_required
 def setInvoiceTo(request, invoiceID):
