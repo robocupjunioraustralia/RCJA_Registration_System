@@ -97,7 +97,7 @@ class TestEventPermissions(TestCase):
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/events/dashboard")
+        self.assertEqual(response.url, f"/accounts/login/?next=/")
         self.assertEqual(response.status_code, 302)
 
     def testDetailsLoginRequired(self):
