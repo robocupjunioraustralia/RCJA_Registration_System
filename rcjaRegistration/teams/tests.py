@@ -216,14 +216,30 @@ class TestTeamEdit(TestCase):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
   
-    def testClosedEditReturnsError(self):
-        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.oldEventTeam.id}))
-        self.assertEqual(403, response.status_code)    
-        """
-        def testEditLoadsPreviousData(self):
-            response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
-            #print(response)
-        self.assertEqual(response.context['form'].initial['student_set-0-lastName'], 'thisisastringfortesting')   """
+    def testClosedEditReturnsError_get(self):
+        response = self.client.get(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(403, response.status_code)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+
+    def testClosedEditReturnsError_post(self):
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            "student_set-0-firstName":"teststringhere",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}),data=payload)
+
+        self.assertEqual(403, response.status_code)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
 
     def testEditStudentSucceeds(self):
         payload = {
