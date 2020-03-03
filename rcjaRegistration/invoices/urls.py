@@ -20,7 +20,7 @@ from . import views
 app_name = 'invoices'
 
 urlpatterns = [
-    path('invoices/summary', views.summary, name='summary'),
+    path('invoices', views.summary, name='summary'),
     path('invoices/<int:invoiceID>', views.details, name='details'),
     path('invoices/<int:invoiceID>/setInvoiceTo', views.setInvoiceTo, name='setInvoiceTo'),
     path('invoices/<int:invoiceID>/setCampusInvoice', views.setCampusInvoice, name='setCampusInvoice'),
