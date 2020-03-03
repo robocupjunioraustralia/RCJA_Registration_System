@@ -31,7 +31,7 @@ def coordinatorInvoiceView(request, invoice):
     return checkStatePermissions(request, invoice, 'view')
 
 @login_required
-def detail(request, invoiceID):
+def details(request, invoiceID):
     # Get invoice
     invoice = get_object_or_404(Invoice, pk=invoiceID)
     invoiceSettings = get_object_or_404(InvoiceGlobalSettings)
@@ -53,7 +53,7 @@ def detail(request, invoiceID):
         'currentDate': datetime.datetime.today().date,
     }
 
-    return render(request, 'invoices/invoiceDetail.html', context)
+    return render(request, 'invoices/invoiceDetails.html', context)
 
 @login_required
 def setInvoiceTo(request, invoiceID):

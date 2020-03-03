@@ -81,20 +81,20 @@ class TestInvoiceDetailPermissions(TestCase):
 
     def testLoginRequired(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
     
         response = self.client.get(url, follow=True)
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}/detail")
+        self.assertEqual(response.url, f"/accounts/login/?next=/invoice/{self.invoice.id}/details")
         self.assertEqual(response.status_code, 302)
 
     def testSuccessInvoiceToUserMentor(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -102,7 +102,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
@@ -112,7 +112,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -121,7 +121,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
@@ -131,7 +131,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)     
 
@@ -139,7 +139,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)    
 
@@ -148,7 +148,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)   
@@ -158,7 +158,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
@@ -168,7 +168,7 @@ class TestInvoiceDetailPermissions(TestCase):
         self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='schoolmanager')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this invoice", status_code=403)
@@ -190,7 +190,7 @@ class TestInvoiceDetailView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, None)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -204,7 +204,7 @@ class TestInvoiceDetailView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=-10)).date())
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -218,7 +218,7 @@ class TestInvoiceDetailView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, None)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -229,7 +229,7 @@ class TestInvoiceDetailView(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "From Name")
@@ -240,7 +240,7 @@ class TestInvoiceDetailView(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoiceNumber=1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
-        url = reverse('invoices:detail', kwargs= {'invoiceID':self.invoice.id})
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.user1.email)     
