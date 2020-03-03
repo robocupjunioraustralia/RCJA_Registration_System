@@ -39,7 +39,7 @@ def createTeam(request, eventID):
             formset.save() 
             if 'add_text' in request.POST:
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
-            return redirect(reverse('events:summary', kwargs = {'eventID':event.id}))
+            return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
     else:
         # Get default campus if only one campus for school
@@ -93,7 +93,7 @@ def editTeam(request, teamID):
             # Save student formset
             formset.save() 
 
-            return redirect(reverse('events:summary', kwargs = {"eventID":event.id}))
+            return redirect(reverse('events:details', kwargs = {"eventID":event.id}))
     else:
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = StudentInLineFormSet(instance=team)

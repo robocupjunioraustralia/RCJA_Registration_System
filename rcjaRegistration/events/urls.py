@@ -21,7 +21,6 @@ app_name = 'events'
 
 urlpatterns = [
     path('events/dashboard', views.index, name= 'dashboard'),
-    # path('events/detail/<int:eventID>', views.detail, name='detail'),
-    path('events/<int:eventID>', views.summary, name='summary'),
+    path('events/<int:eventID>', views.details, name='details'),
     path('error/underConstruction',views.loggedInUnderConstruction,name='loggedInConstruction'),
 ]

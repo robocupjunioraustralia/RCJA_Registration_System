@@ -64,21 +64,8 @@ def index(request):
     }
     return render(request, 'events/eventList.html', context)
 
-# Currently unused and not in urlconf
-# Changes to permissions checks required before used
 @login_required
-def detail(request, eventID):
-    event = get_object_or_404(Event, pk=eventID)
-    teams = Team.objects.filter(school__schooladministrator__user=request.user, event__pk=eventID).prefetch_related('student_set')
-    context = {
-        'event': event,
-        'teams': teams,
-        'today':datetime.date.today()
-    }
-    return render(request, 'events/eventDetail.html', context)
-
-@login_required
-def summary(request, eventID):
+def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
     # filter teams
@@ -95,7 +82,7 @@ def summary(request, eventID):
         'teams': teams,
         'today':datetime.date.today()
     }
-    return render(request, 'events/eventSummary.html', context)   
+    return render(request, 'events/details.html', context)   
 
 @login_required
 def loggedInUnderConstruction(request):

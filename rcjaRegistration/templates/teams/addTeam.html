@@ -165,7 +165,7 @@
               {% if not team %}
               <input class="primary ui button" type="submit" name="add_text" value="+ Add Another" />
               {% endif %}    
-              <a href ="{% url 'events:summary' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
             </form>
           </div>
         </div>

@@ -195,7 +195,7 @@ class Event(CustomSaveDeleteModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
-        return reverse('events:summary', kwargs = {"eventID": self.id})
+        return reverse('events:details', kwargs = {"eventID": self.id})
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
