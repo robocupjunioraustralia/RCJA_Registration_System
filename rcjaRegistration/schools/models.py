@@ -59,7 +59,7 @@ class School(CustomSaveDeleteModel):
                 'change',
                 'delete'
             ]
-        elif level in ['viewall', 'billingmanager']:
+        elif level in ['viewall', 'billingmanager', 'eventmanager']:
             return [
                 'view',
             ]
@@ -101,33 +101,10 @@ class Campus(CustomSaveDeleteModel):
         verbose_name_plural = 'Campuses'
         ordering = ['school', 'name']
 
-    def clean(self, cleanDownstreamObjects=True):
-        errors = []
- 
-        # Check school change doesn't effect any attached administrators
-        cleanDownstream(self,'schooladministrator_set', 'campus', errors)
-        cleanDownstream(self,'team_set', 'campus', errors)
-    
-        # Raise any errors
-        if errors:
-            raise ValidationError(errors)
-
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'schoolmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return School.coordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -170,19 +147,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'schoolmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return School.coordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -190,18 +155,25 @@ class SchoolAdministrator(CustomSaveDeleteModel):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self.pk:
+            self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
+
     def postSave(self):
         # Set currently selected school if not set
         if self.user.currentlySelectedSchool is None:
             self.user.currentlySelectedSchool = self.school
             self.user.save(update_fields=['currentlySelectedSchool'])
 
+        if hasattr(self, 'previousUser',) and self.user != self.previousUser:
+            self.previousUser.setCurrentlySelectedSchool()
+
     # *****Methods*****
 
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.user.get_full_name()}'
+        return f'{self.user.fullname_or_email()}'
 
     # *****CSV export methods*****
 

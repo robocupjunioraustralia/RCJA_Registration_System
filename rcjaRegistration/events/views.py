@@ -11,7 +11,7 @@ from teams.models import Team
 # Need to check if schooladministrator is None
 
 @login_required
-def index(request):
+def dashboard(request):
     # Events
     # Get user event filtering attributes
     if request.user.currentlySelectedSchool:
@@ -25,6 +25,7 @@ def index(request):
     else:
         currentState = request.user.homeState
 
+    # Get open events
     openForRegistrationEvents = Event.objects.filter(
         registrationsOpenDate__lte=datetime.datetime.today(),
         registrationsCloseDate__gte=datetime.datetime.today(),
@@ -32,13 +33,11 @@ def index(request):
         team__in=usersTeams,
     ).order_by('startDate').distinct()
 
-    # viewingAll = False
+    # Filter open events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
 
-    if not request.user.currentlySelectedSchool:
-        openForRegistrationEvents = openForRegistrationEvents.exclude()
-
+    # Get current and past events
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
         team__in=usersTeams,
@@ -51,7 +50,7 @@ def index(request):
 
     # Invoices
     from invoices.models import Invoice
-    invoices = Invoice.objects.filter(Q(school__schooladministrator__user=request.user) | Q(invoiceToUser=request.user)).distinct()
+    invoices = Invoice.invoicesForUser(request.user)
 
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0])
 
@@ -62,23 +61,10 @@ def index(request):
         'outstandingInvoices': outstandingInvoices,
         'invoices': invoices
     }
-    return render(request, 'events/eventList.html', context)
-
-# Currently unused and not in urlconf
-# Changes to permissions checks required before used
-@login_required
-def detail(request, eventID):
-    event = get_object_or_404(Event, pk=eventID)
-    teams = Team.objects.filter(school__schooladministrator__user=request.user, event__pk=eventID).prefetch_related('student_set')
-    context = {
-        'event': event,
-        'teams': teams,
-        'today':datetime.date.today()
-    }
-    return render(request, 'events/eventDetail.html', context)
+    return render(request, 'events/dashboard.html', context)
 
 @login_required
-def summary(request, eventID):
+def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
     # filter teams
@@ -95,7 +81,7 @@ def summary(request, eventID):
         'teams': teams,
         'today':datetime.date.today()
     }
-    return render(request, 'events/eventSummary.html', context)   
+    return render(request, 'events/details.html', context)   
 
 @login_required
 def loggedInUnderConstruction(request):

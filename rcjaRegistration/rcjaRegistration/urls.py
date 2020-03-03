@@ -35,6 +35,5 @@ urlpatterns = [
     path('',include('teams.urls')),
     path('',include('users.urls')),
     path('',include('invoices.urls')),
-    path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index')
-    
+    # path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index'),   
 ]

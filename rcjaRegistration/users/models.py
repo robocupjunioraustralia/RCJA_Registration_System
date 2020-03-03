@@ -96,6 +96,14 @@ class User(AbstractUser):
         super().set_password(password)
         self.forcePasswordChange = False
 
+    def setCurrentlySelectedSchool(self):
+        # Set currentlySelectedSchool to another school for this user or None if no other schools
+        if self.schooladministrator_set.exists():
+            self.currentlySelectedSchool = self.schooladministrator_set.first().school
+        else:
+            self.currentlySelectedSchool = None
+        self.save(update_fields=['currentlySelectedSchool'])
+
     # *****Get Methods*****
 
     def fullname_or_email(self):

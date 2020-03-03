@@ -39,7 +39,7 @@ def createTeam(request, eventID):
             formset.save() 
             if 'add_text' in request.POST:
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
-            return redirect(reverse('events:summary', kwargs = {'eventID':event.id}))
+            return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
     else:
         # Get default campus if only one campus for school
@@ -52,7 +52,21 @@ def createTeam(request, eventID):
         # Create form
         form = TeamForm(user=request.user, event=event, initial={'campus':defaultCampusID})
         formset = StudentInLineFormSet()
-    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event})
+    return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event})
+
+def teamPermissions(request, team):
+    if request.user.currentlySelectedSchool:
+        # If user is a school administrator can only edit the currently selected school
+        if request.user.currentlySelectedSchool != team.school:
+            return False
+
+    else:
+        # If not a school administrator allow editing individually entered teams
+        if team.mentorUser != request.user or team.school:
+            return False
+    
+    return True
+            
 
 @login_required
 def editTeam(request, teamID):
@@ -65,15 +79,8 @@ def editTeam(request, teamID):
         raise PermissionDenied("Registrtaion has closed for this event!")
 
     # Check administrator of this team
-    if request.user.currentlySelectedSchool:
-        # If user is a school administrator can only edit the currently selected school
-        if request.user.currentlySelectedSchool != team.school:
-            raise PermissionDenied("You are not an administrator of this team")
-
-    else:
-        # If not a school administrator allow editing individually entered teams
-        if team.mentorUser != request.user or team.school:
-            raise PermissionDenied("You are not an administrator of this team")
+    if not teamPermissions(request, team):
+        raise PermissionDenied("You are not an administrator of this team")
 
     StudentInLineFormSet = inlineformset_factory(Team,Student,form=StudentForm,extra=event.maxMembersPerTeam,max_num=event.maxMembersPerTeam,can_delete=True)
 
@@ -93,11 +100,11 @@ def editTeam(request, teamID):
             # Save student formset
             formset.save() 
 
-            return redirect(reverse('events:summary', kwargs = {"eventID":event.id}))
+            return redirect(reverse('events:details', kwargs = {"eventID":event.id}))
     else:
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = StudentInLineFormSet(instance=team)
-    return render(request, 'teams/addTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+    return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
 @login_required
 def deleteTeam(request, teamID): 
@@ -109,18 +116,11 @@ def deleteTeam(request, teamID):
         if team.event.registrationsCloseDate < datetime.datetime.now().date():
             raise PermissionDenied("Registrtaion has closed for this event!")
 
-            # Check administrator of this team
-        if request.user.currentlySelectedSchool:
-            # If user is a school administrator can only edit the currently selected school
-            if request.user.currentlySelectedSchool != team.school:
-                raise PermissionDenied("You are not an administrator of this team")
-
-        else:
-            # If not a school administrator allow editing individually entered teams
-            if team.mentorUser != request.user or team.school:
-                raise PermissionDenied("You are not an administrator of this team")
+        # Check administrator of this team
+        if not teamPermissions(request, team):
+            raise PermissionDenied("You are not an administrator of this team")
 
         # Delete team
         team.delete()
-        return HttpResponse(status=200)
+        return HttpResponse(status=204)
     return HttpResponseForbidden()

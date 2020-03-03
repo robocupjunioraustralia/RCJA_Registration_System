@@ -94,6 +94,16 @@ class Region(models.Model):
         verbose_name = 'Region'
         ordering = ['name']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'viewall', 'eventmanager', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
