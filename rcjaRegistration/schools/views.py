@@ -31,20 +31,20 @@ def create(request):
 
     return render(request, 'schools/createSchool.html', {'form': form})
 
-@login_required
-def createAJAX(request):
-    if request.method == 'POST':
-        form = SchoolForm(request.POST)
-        if form.is_valid(): 
-            newSchool = form.save()
-            return JsonResponse({'id':newSchool.id,'name':newSchool.name})
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': dict(form.errors.items())
-            },status=400)
-    else:
-        return HttpResponseForbidden()
+# @login_required
+# def createAJAX(request):
+#     if request.method == 'POST':
+#         form = SchoolForm(request.POST)
+#         if form.is_valid(): 
+#             newSchool = form.save()
+#             return JsonResponse({'id':newSchool.id,'name':newSchool.name})
+#         else:
+#             return JsonResponse({
+#                 'success': False,
+#                 'errors': dict(form.errors.items())
+#             },status=400)
+#     else:
+#         return HttpResponseForbidden()
 
 @login_required
 def setCurrentSchool(request, schoolID):

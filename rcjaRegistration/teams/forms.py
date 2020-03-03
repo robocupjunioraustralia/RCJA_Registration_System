@@ -34,9 +34,12 @@ class TeamForm(forms.ModelForm):
         self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
 
         # School field
-        self.fields['school'].initial = user.currentlySelectedSchool.id
         self.fields['school'].disabled = True
         self.fields['school'].widget = forms.HiddenInput()
+        if user.currentlySelectedSchool:
+            self.fields['school'].initial = user.currentlySelectedSchool.id
+        else:
+            self.fields['school'].initial = None
 
         # Event field
         self.fields['event'].initial = event.id
@@ -52,10 +55,13 @@ class TeamForm(forms.ModelForm):
         if not self.instance.pk:
 
             # Get required attributes
-            event = cleaned_data['event']
-            division = cleaned_data['division']
-            school = cleaned_data['school']
-            mentorUser = self.mentorUser
+            try:
+                event = cleaned_data['event']
+                division = cleaned_data['division']
+                school = cleaned_data['school']
+                mentorUser = self.mentorUser
+            except KeyError:
+                raise ValidationError('Required field is missing')
 
             # Create dict of attributes to filter teams by
             if school is not None:
@@ -82,7 +88,8 @@ class TeamForm(forms.ModelForm):
             try:
                 availableDivsion = AvailableDivision.objects.get(division=division, event=event)
             except AvailableDivision.DoesNotExist:
-                errors.append(ValidationError('Team division not valid'))
+                # This is probably redundant due to the queryset filtering in the init
+                raise ValidationError('Team division not valid')
 
             if availableDivsion.division_maxTeamsPerSchool is not None and Team.objects.filter(**teamFilterDict).filter(division=division).count() + 1 > availableDivsion.division_maxTeamsPerSchool:
                 errors.append(ValidationError('Max teams for school for this event division exceeded. Contact the organiser.'))

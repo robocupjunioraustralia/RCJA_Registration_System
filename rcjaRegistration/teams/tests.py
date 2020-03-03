@@ -89,24 +89,26 @@ def commonSetUp(obj): #copied from events, todo refactor
 
     login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
 
-class TestAddTeam(TestCase): #TODO more comprehensive tests
-    
+class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actually saved to db properly
     def setUp(self):
         commonSetUp(self)
-        
+
     def testOpenRegoDoesLoad(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertEqual(200, response.status_code)
 
-    def testClosedRegoReturnsError(self):
-        response = self.client.get(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}))
-        self.assertEqual(403, response.status_code)
+    def testClosedRegoReturnsError_get(self):
+        response = self.client.get(reverse('teams:create', kwargs={'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
 
     def testMaxSubmissionNumber(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response,'First name', self.newEvent.maxMembersPerTeam)
 
     def testWorkingTeamCreate(self):
+        numberTeams = Team.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -114,7 +116,6 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
-            "school":self.newSchool.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
@@ -122,9 +123,33 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload,follow=False)
-        self.assertEqual(302,response.status_code)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.newEvent.id}")
+        self.assertEqual(Team.objects.count(), numberTeams+1)
 
-    def testInvalidTeamCreate(self):
+    def testWorkingTeamCreate_addAnother(self):
+        numberTeams = Team.objects.count()
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            'add_text': 'blah',
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.newEvent.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.newEvent.id}/createTeam")
+        self.assertEqual(Team.objects.count(), numberTeams+1)
+
+    def testInvalidTeamCreate_badStudent(self):
+        numberTeams = Team.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -139,18 +164,51 @@ class TestAddTeam(TestCase): #TODO more comprehensive tests
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
-        self.assertEqual(200,response.status_code)
-        """TODO this tests fails for some reason 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Team.objects.count(), numberTeams)
 
-    def testTeamIsDeleted(self):
-        payload = {'teamID':self.newEventTeam.id}
-        response = self.client.post(reverse('teams:delete'),data=payload)
-        print(self.newEventTeam.id)
-        self.assertEqual(200,response.status_code)
-        self.assertEqual(self.newEventTeam,None)
-        """
+    def testInvalidTeamCreate_existingName(self):
+        Team.objects.create(event=self.newEvent, mentorUser=self.user, name='Test', division=self.division)
+        numberTeams = Team.objects.count()
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"Test",
+            "division":self.division.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"5",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team with this Event and Name already exists.')
+        self.assertEqual(Team.objects.count(), numberTeams)
 
-class TestEditTeam(TestCase):
+    def testInvalidTeamCreate_closed(self):
+        numberTeams = Team.objects.count()
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"Testnew",
+            "division":self.division.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"5",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}),data=payload)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertEqual(Team.objects.count(), numberTeams)
+
+class TestTeamEdit(TestCase):
     def setUp(self):
         commonSetUp(self)
 
@@ -158,14 +216,30 @@ class TestEditTeam(TestCase):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
   
-    def testClosedEditReturnsError(self):
-        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.oldEventTeam.id}))
-        self.assertEqual(403, response.status_code)    
-        """
-        def testEditLoadsPreviousData(self):
-            response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
-            #print(response)
-        self.assertEqual(response.context['form'].initial['student_set-0-lastName'], 'thisisastringfortesting')   """
+    def testClosedEditReturnsError_get(self):
+        response = self.client.get(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(403, response.status_code)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+
+    def testClosedEditReturnsError_post(self):
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            "student_set-0-firstName":"teststringhere",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}),data=payload)
+
+        self.assertEqual(403, response.status_code)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
 
     def testEditStudentSucceeds(self):
         payload = {
@@ -182,7 +256,7 @@ class TestEditTeam(TestCase):
             "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
-        response = self.client.post(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
 
         self.assertEquals(Student.objects.get(firstName="teststringhere").firstName,"teststringhere")
         self.assertEquals(302,response.status_code)
@@ -245,6 +319,172 @@ def newCommonSetUp(self):
             invoiceFromDetails='Test Details Text',
             invoiceFooterMessage='Test Footer Text',
         )
+
+class TestTeamEditPermissions(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+
+    def testLoginRequired(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+    
+        response = self.client.post(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/edit")
+        self.assertEqual(response.status_code, 302)
+
+    def testLoads_independent(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_independent(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testDenied_independent_teamHasSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testLoads_school(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user3)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_school_noSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testDenied_school_wrongSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school2, user=self.user3)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+class TestTeamDelete(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+
+    def testLoginRequired(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+    
+        response = self.client.delete(url, follow=True)
+        self.assertContains(response, "Login")
+
+        response = self.client.delete(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/delete")
+        self.assertEqual(response.status_code, 302)
+
+    def testGet_forbidden(self):
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def testPost_forbidden(self):
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+
+    def testDenied_independent(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team1.pk)
+
+    def testDenied_independent_teamHasSchool(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team3.pk)
+
+    def testDenied_school_noSchool(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team3.pk)
+
+    def testDenied_school_wrongSchool(self):
+        url = reverse('teams:delete', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school2, user=self.user3)
+    
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+        Team.objects.get(pk=self.team3.pk)
+
+    def testSuccess(self):
+        Team.objects.get(pk=self.team1.pk)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
+        self.assertRaises(Team.DoesNotExist, lambda: Team.objects.get(pk=self.team1.pk))
+
+    def testDenied_closed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.event.save()
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:delete', kwargs={'teamID':self.team1.id})
+        
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        Team.objects.get(pk=self.team1.pk)
+
 
 class TestTeamClean(TestCase):
     email1 = 'user1@user.com'
@@ -350,3 +590,147 @@ class TestTeamMethods(TestCase):
     def testGetState(self):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.assertEqual(self.team1.getState(), self.state1)
+
+class TestTeamCreationFormValidation_School(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.availableDivision = AvailableDivision.objects.create(division=self.division1, event=self.event)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, school=self.school2, name='Team 2', division=self.division1)
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        self.schoolAssertValue = self.school1
+
+    def testValidCreate(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+8",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 2)
+
+    def testInValidCreate_schoolEventMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        self.event.event_maxTeamsPerSchool = 1
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for school for this event exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_overallEventMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        self.event.event_maxTeamsForEvent = 2
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for this event exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_schoolDivisionMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        self.availableDivision.division_maxTeamsPerSchool = 1
+        self.availableDivision.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for school for this event division exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_overallDivisionMax(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        self.availableDivision.division_maxTeamsForDivision = 2
+        self.availableDivision.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division1.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Max teams for this event division exceeded. Contact the organiser.")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+        self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testInValidCreate_division(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+            "division":self.division2.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+
+    def testInValidCreate_divisionMissing(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+3",
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Required field is missing")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+
+class TestTeamCreationFormValidation_Independent(TestTeamCreationFormValidation_School):
+    def setUp(self):
+        newCommonSetUp(self)
+        self.availableDivision = AvailableDivision.objects.create(division=self.division1, event=self.event)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, school=self.school2, name='Team 2', division=self.division1)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        self.schoolAssertValue = None

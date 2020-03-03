@@ -107,7 +107,7 @@ class Invoice(CustomSaveDeleteModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
-        return reverse('invoices:detail', kwargs = {"invoiceID": self.id})
+        return reverse('invoices:details', kwargs = {"invoiceID": self.id})
 
     # Campus
 

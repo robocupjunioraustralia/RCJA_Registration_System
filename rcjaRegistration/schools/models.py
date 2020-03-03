@@ -101,17 +101,6 @@ class Campus(CustomSaveDeleteModel):
         verbose_name_plural = 'Campuses'
         ordering = ['school', 'name']
 
-    def clean(self, cleanDownstreamObjects=True):
-        errors = []
- 
-        # Check school change doesn't effect any attached administrators
-        cleanDownstream(self,'schooladministrator_set', 'campus', errors)
-        cleanDownstream(self,'team_set', 'campus', errors)
-    
-        # Raise any errors
-        if errors:
-            raise ValidationError(errors)
-
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):

@@ -119,21 +119,21 @@ class TestEventSummaryPage(TestCase):
         commonSetUp(self)
 
     def testPageLoad(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 200)
 
     def testTeamsLoad(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response, 'test old')
 
     def testOldEventNotRegisterable(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertContains(response,'Registration for this event has closed.')
         #print(response.content)
         #self.assert(response,'edit')
 
     def testCreationButtonsVisibleWhenRegoOpen(self):
-        response = self.client.get(reverse('events:summary', kwargs= {'eventID':self.newEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
 
 class TestEventClean(TestCase):
