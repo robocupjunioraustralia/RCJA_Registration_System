@@ -59,7 +59,7 @@ def index(request):
         'outstandingInvoices': outstandingInvoices,
         'invoices': invoices
     }
-    return render(request, 'events/eventList.html', context)
+    return render(request, 'events/dashboard.html', context)
 
 @login_required
 def details(request, eventID):
