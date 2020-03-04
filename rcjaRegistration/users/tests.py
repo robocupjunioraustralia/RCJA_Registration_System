@@ -302,3 +302,30 @@ class TestUserSave(TestCase):
         self.assertEqual(self.school1.region, self.region1)
         self.assertEqual(self.user.homeState, self.state2)
         self.assertEqual(self.user.homeRegion, self.region2)
+
+class TestTermsAndConditionsView(TestCase):
+    email = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+
+    def testPageLoads_loggedOut(self):
+        response = self.client.get(path=reverse('users:termsAndConditions'))
+        self.assertEqual(200,response.status_code)
+
+    def testPageLoads_loggedIn(self):
+        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
+        response = self.client.get(path=reverse('users:termsAndConditions'))
+        self.assertEqual(200,response.status_code)
+
+    def testCorrectTemplate_loggedOut(self):
+        response = self.client.get(reverse('users:termsAndConditions'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'termsAndConditions/termsAndConditionsNoAuth.html')
+
+    def testCorrectTemplate_loggedIn(self):
+        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
+        response = self.client.get(reverse('users:termsAndConditions'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'termsAndConditions/termsAndConditionsLoggedIn.html')

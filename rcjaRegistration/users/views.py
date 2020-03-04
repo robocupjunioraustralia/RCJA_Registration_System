@@ -85,4 +85,7 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 def termsAndConditions(request):
-    return render(request,'termsAndConditions/termsAndConditions.html') 
+    if request.user.is_authenticated:
+        return render(request,'termsAndConditions/termsAndConditionsLoggedIn.html')
+    else:
+        return render(request,'termsAndConditions/termsAndConditionsNoAuth.html') 
