@@ -56,6 +56,32 @@ def details(request, invoiceID):
     return render(request, 'invoices/details.html', context)
 
 @login_required
+def paypal(request, invoiceID):
+    # Get invoice
+    invoice = get_object_or_404(Invoice, pk=invoiceID)
+
+    # Check permissions
+    mentor = mentorInvoicePermissions(request, invoice)
+    if not mentor:
+        raise PermissionDenied("You do not have permission to view this invoice")
+
+    # Check paypal email is set for this state
+    if not invoice.paypalAvailable():
+        return HttpResponseForbidden('PayPal not enabled for this invoice')
+
+    # Set invoiced date
+    if mentor and invoice.invoicedDate is None:
+        invoice.invoicedDate = datetime.datetime.today()
+        invoice.save(update_fields=['invoicedDate'])
+
+    context = {
+        'invoice': invoice,
+        'paypalDescription': f"{invoice.invoiceNumber} - {invoice.event} - {invoice.school or 'Independent'} - {invoice.invoiceToUser}",
+    }
+
+    return render(request, 'invoices/paypal.html', context)
+
+@login_required
 def setInvoiceTo(request, invoiceID):
     if request.method == 'POST':
         invoice = get_object_or_404(Invoice, pk=invoiceID)

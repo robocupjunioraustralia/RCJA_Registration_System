@@ -1,0 +1,54 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> Pay with PayPal </title>
+
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>PayPal: {{invoice.event}}</h1>
+    </div>
+    <br>
+    <div>
+        <p>Please click the 'Buy Now' button below to make payment using PayPal.</p>
+        <p>Please note that your payment status in this system is entered manually so will not show as paid immediately,<b> please do not pay twice. </b></p>
+        <h3>Details</h3>
+        <p>Amount including PayPal fees: ${{ invoice.amountDuePaypal|floatformat:2 }}</p>
+        <p>PayPal description: {{ paypalDescription }}</p>
+        <p>Invoice number: {{ invoice.invoiceNumber }}</p>
+        <p>Paying to: {{ invoice.event.state.paypalEmail }}</p>
+
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+
+        <!-- Identify your business so that you can collect the payments. -->
+        <input type="hidden" name="business" value="{{ invoice.event.state.paypalEmail }}">
+
+        <!-- Specify a Buy Now button. -->
+        <input type="hidden" name="cmd" value="_xclick">
+
+        <!-- Specify details about the item that buyers will purchase. -->
+        <input type="hidden" name="item_name" value="{{ payPalDescription }}">
+        <input type="hidden" name="amount" value="{{ invoice.amountDuePaypal|floatformat:2 }}">
+        <input type="hidden" name="currency_code" value="AUD">
+        <input type="hidden" name="item_number" value="{{ invoice.invoiceNumber }}">
+        <input type="hidden" name="no_shipping" value="1">
+        <input type="hidden" name="country" value="AU">
+
+        <!-- Display the payment button. -->
+        <input type="image" name="submit" border="0"
+        src="https://www.paypalobjects.com/en_US/i/btn/btn_buynow_LG.gif"
+        alt="Buy Now">
+        <img alt="" border="0" width="1" height="1"
+        src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" >
+
+        </form>
+        <br>
+        <a href="{% url 'invoices:details' invoice.id %}" target="_blank"><button class = "ui button primary" > View invoice </button></a>
+        <a href="{% url 'invoices:summary' %}"><button class = "ui button secondary" > Cancel </button></a>
+    </div>
+</div>
+
+{% endblock %}
