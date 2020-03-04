@@ -1,0 +1,44 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block head %}
+<title> Terms and Conditions </title>
+{% include 'common/loginBase.html'%}
+<style type="text/css">
+
+  .scrollable-box {
+    max-height:45rem;
+    overflow:scroll;
+  }
+
+  .formbox {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="bg">
+  <div class = "layer">
+    <div class="logincontent">
+      <div class="ui center aligned container ">
+        <div class = "ui segment">
+          <h1> Terms and Conditions </h1>
+        </div>
+        <div class="twelve wide mobile six wide computer column ui segment formbox left-aligned-text scrollable-box">
+            {% include 'termsAndConditions/content.html'%}
+          </div>
+          <div class = "ui segment left-aligned-text">
+            <a href="/"><button class="ui large blue button"> Home </button></a>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
