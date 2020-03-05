@@ -8,16 +8,16 @@ from regions.models import State, Region
 
 # *****Regions*****
 
-class StateViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = State.objects.order_by('id')
-    serializer_class = StateSerializer
+# class StateViewSet(viewsets.ReadOnlyModelViewSet):
+#     queryset = State.objects.order_by('id')
+#     serializer_class = StateSerializer
 
-class RegionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Region.objects.order_by('id')
-    serializer_class = RegionSerializer
+# class RegionViewSet(viewsets.ReadOnlyModelViewSet):
+#     queryset = Region.objects.order_by('id')
+#     serializer_class = RegionSerializer
 
-# *****Events*****
+# # *****Events*****
 
-class EventViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Event.objects.order_by('id')
-    serializer_class = EventSerializer
+# class EventViewSet(viewsets.ReadOnlyModelViewSet):
+#     queryset = Event.objects.order_by('id')
+#     serializer_class = EventSerializer
