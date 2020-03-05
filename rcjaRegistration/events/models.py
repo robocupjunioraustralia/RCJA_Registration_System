@@ -4,18 +4,18 @@ from django.conf import settings
 
 # **********MODELS**********
 
-class Division(models.Model):
+class DivisionCategory(models.Model):
     # Foreign keys
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=60, unique=True)
-    description = models.CharField('Description', max_length=200, blank=True)
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = 'Division'
+        verbose_name = 'Division Category'
+        verbose_name_plural = 'Division Categories'
         ordering = ['name']
 
     # *****Permissions*****
@@ -27,6 +27,39 @@ class Division(models.Model):
             ]
         
         return []
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
+class Division(models.Model):
+    # Foreign keys
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=60, unique=True)
+    description = models.CharField('Description', max_length=200, blank=True)
+    category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Division'
+        ordering = ['name']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        return DivisionCategory.coordinatorPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -57,12 +90,7 @@ class Year(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return DivisionCategory.coordinatorPermissions(level)
 
     # *****Save & Delete Methods*****
 
