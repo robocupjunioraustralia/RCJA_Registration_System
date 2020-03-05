@@ -28,7 +28,7 @@
             <tbody>
                 {% for invoice in invoices %}
                     <tr id = "invoiceRow{{invoice.id}}">
-                        <td><a href="{% url 'invoices:details' invoice.id %}" target="_blank">View invoice</a></td>
+                        <td><a href="{% url 'invoices:details' invoice.id %}" target="_blank"><button class = "ui button primary" > View invoice </button></a></td>
                         <td><a href="{% url 'events:details' invoice.event.id %}">{{invoice.event}}</a></td> 
                         <td>
                             <span id = "invoice-to-{{invoice.id}}">{{invoice.invoiceToUser.fullname_or_email}}</span>
