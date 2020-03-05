@@ -76,9 +76,16 @@ def paypal(request, invoiceID):
         invoice.invoicedDate = datetime.datetime.today()
         invoice.save(update_fields=['invoicedDate'])
 
+    if invoice.campus:
+        schoolCampusString = f'{invoice.school}, {invoice.campus}'
+    elif invoice.school:
+        schoolCampusString = f'{invoice.school}'
+    else:
+        schoolCampusString = 'Independent'
+
     context = {
         'invoice': invoice,
-        'paypalDescription': f"{invoice.invoiceNumber} - {invoice.event} - {invoice.school or 'Independent'} - {invoice.invoiceToUser}",
+        'paypalDescription': f"{invoice.invoiceNumber} - {invoice.event} - {schoolCampusString} - {invoice.invoiceToUser}",
     }
 
     return render(request, 'invoices/paypal.html', context)
