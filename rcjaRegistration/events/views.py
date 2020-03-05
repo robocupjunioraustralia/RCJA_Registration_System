@@ -7,6 +7,7 @@ import datetime
 
 from .models import *
 from teams.models import Team
+from schools.models import Campus
 
 # Need to check if schooladministrator is None
 
@@ -79,6 +80,7 @@ def details(request, eventID):
         'event': event,
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
+        'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
         'today':datetime.date.today()
     }
     return render(request, 'events/details.html', context)   

@@ -19,7 +19,7 @@
                 <th> Event </th>
                 <th> Invoice to</th>
                 <th> School </th>
-                <th> Campus </th>
+                {% if showCampusColumn %}<th> Campus </th>{% endif %}
                 <th> PO Number </th>
                 <th> Invoice amount (incl GST)</th>
                 <th> Amount due (EFT) </th>
@@ -38,6 +38,7 @@
                             {% endif %}
                         </td>
                         <td>{{invoice.school}}</td>
+                        {% if showCampusColumn %}
                         <td>
                             {{invoice.campus}}
                             {% if invoice.campusInvoicingAvailable %}
@@ -45,6 +46,7 @@
                             <button onclick = showCampusModal({{invoice.id}}) class = "ui button primary"> Invoice by campus </button>
                             {% endif %}
                         </td>
+                        {% endif %}
                         <td >
                             <span id = "inv-po-{{invoice.id}}">{{invoice.purchaseOrderNumber}}</span>
                             <br>
