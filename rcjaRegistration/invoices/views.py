@@ -11,6 +11,7 @@ import datetime
 
 from .models import *
 from events.models import Division, Event
+from schools.models import Campus
 
 @login_required
 def summary(request):
@@ -19,6 +20,7 @@ def summary(request):
     context = {
         'user': request.user,
         'invoices': invoices,
+        'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
     }
 
     return render(request, 'invoices/summary.html', context)
@@ -74,9 +76,16 @@ def paypal(request, invoiceID):
         invoice.invoicedDate = datetime.datetime.today()
         invoice.save(update_fields=['invoicedDate'])
 
+    if invoice.campus:
+        schoolCampusString = f'{invoice.school}, {invoice.campus}'
+    elif invoice.school:
+        schoolCampusString = f'{invoice.school}'
+    else:
+        schoolCampusString = 'Independent'
+
     context = {
         'invoice': invoice,
-        'paypalDescription': f"{invoice.invoiceNumber} - {invoice.event} - {invoice.school or 'Independent'} - {invoice.invoiceToUser}",
+        'paypalDescription': f"{invoice.invoiceNumber} - {invoice.event} - {schoolCampusString} - {invoice.invoiceToUser}",
     }
 
     return render(request, 'invoices/paypal.html', context)

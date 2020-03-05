@@ -6,22 +6,31 @@ from .models import *
 
 # Register your models here.
 
+@admin.register(DivisionCategory)
+class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
 
 @admin.register(Division)
 class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
-        'description'
+        'category',
+        'description',
     ]
     search_fields = [
-        'name'
+        'name',
+        'category__name'
+    ]
+    list_filter = [
+        'category',
     ]
     actions = [
-        'export_as_csv'
+        'export_as_csv',
     ]
     exportFields = [
         'name',
-        'description'
+        'category',
+        'description',
     ]
 
 admin.site.register(Year)
