@@ -4,8 +4,6 @@ from coordination.adminPermissions import AdminPermissions
 
 from .models import *
 from regions.models import State
-from coordination.models import Coordinator
-from coordination.adminPermissions import reversePermisisons
 
 # Register your models here.
 
@@ -116,27 +114,28 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     # State based filtering
 
     def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
         from users.models import User
         return [
             {
                 'field': 'state',
-                'fieldModel': State,
-                'filterDict': {
-                    'coordinator__user': request.user,
-                    'coordinator__permissions__in': reversePermisisons(Event, ['add', 'change'])
-                }
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
+                )
             },
             {
                 'field': 'directEnquiriesTo',
-                'fieldModel': User,
-                'filterDict': {
-                    'homeState__coordinator__user': request.user,
-                    'homeState__coordinator__permissions__in': reversePermisisons(Event, ['add', 'change'])
-                }
+                'queryset': User.objects.filter(
+                    homeState__coordinator__user=request.user,
+                    homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
+                )
             }
         ]
 
     def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }

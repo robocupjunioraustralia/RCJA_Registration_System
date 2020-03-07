@@ -39,11 +39,21 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceMessage'
     ]
 
-    def stateFilteringAttributes(self, request):
-        from coordination.models import Coordinator
-        return {
-            'coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    # State based filtering
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        from users.models import User
+        return [
+            {
+                'field': 'treasurer',
+                'queryset': User.objects.filter(
+                    homeState__coordinator__user=request.user,
+                    homeState__coordinator__permissions__in=reversePermisisons(State, ['change'])
+                )
+            }
+        ]
+
 
 @admin.register(Region)
 class RegionAdmin(AdminPermissions, admin.ModelAdmin):
