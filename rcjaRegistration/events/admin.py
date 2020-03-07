@@ -38,6 +38,21 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'category',
         'description',
     ]
+    autocomplete_fields = [
+        'state',
+    ]
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        return [
+            {
+                'field': 'state',
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
+                )
+            }
+        ]
 
 admin.site.register(Year)
 
