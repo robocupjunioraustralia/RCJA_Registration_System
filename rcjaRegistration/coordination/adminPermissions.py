@@ -50,6 +50,8 @@ class FilteredFKForm(forms.ModelForm):
                     self.fields[fieldToFilter['field']].queryset = fieldToFilter['queryset']
                     # State based field must never be blank, even if super user can blank, because blank means global on some fields and only super user can make global objects
                     self.fields[fieldToFilter['field']].required = True
+                    if fieldToFilter['queryset'].count() == 1:
+                        self.fields[fieldToFilter['field']].initial = fieldToFilter['queryset'].first().id
                 except KeyError:
                     return
 
