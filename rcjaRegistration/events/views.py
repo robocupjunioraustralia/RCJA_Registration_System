@@ -34,6 +34,9 @@ def dashboard(request):
         team__in=usersTeams,
     ).order_by('startDate').distinct()
 
+    openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')
+    openForRegistrationWorkshops = openForRegistrationEvents.filter(eventType='workshop')
+
     # Filter open events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
@@ -56,7 +59,8 @@ def dashboard(request):
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0])
 
     context = {
-        'openForRegistrationEvents': openForRegistrationEvents,
+        'openForRegistrationCompetitions': openForRegistrationCompetitions,
+        'openForRegistrationWorkshops': openForRegistrationWorkshops,
         'currentEvents': currentEvents,
         'pastEvents': pastEvents,
         'outstandingInvoices': outstandingInvoices,

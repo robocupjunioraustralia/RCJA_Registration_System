@@ -53,10 +53,21 @@
    
     <div class="row">  
         {% if currentEvents or openForRegistrationEvents or pastEvents %}
+            {% if currentEvents %}
             {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
             <br>
-            {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration:" %}
+            {% endif %}
+
+            {% if openForRegistrationWorkshops %}
+            {% include "events/eventRow.html" with comps=openForRegistrationWorkshops rowHeading="Open for registration workshops:" %}
             <br>
+            {% endif %}
+
+            {% if openForRegistrationCompetitions %}
+            {% include "events/eventRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration competitions:" %}
+            <br>
+            {% endif %}
+
             {% if pastEvents %}
                 {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events:" %}
             {% endif %}
@@ -67,7 +78,7 @@
               <div class="header">
                 No Events
               </div>
-              <p> Sorry! No Events could be found. Check back later.</p>
+              <p> Sorry, no events found.</p>
             </div>
         </div>
     {% endif %}
