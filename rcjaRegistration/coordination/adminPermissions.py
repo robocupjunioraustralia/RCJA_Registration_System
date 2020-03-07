@@ -47,7 +47,7 @@ class FilteredFKForm(forms.ModelForm):
             for fieldToFilter in fieldsToFilter:
                 try:
                     # Filter based on state with appropriate permissions
-                    self.fields[fieldToFilter['field']].queryset = fieldToFilter['fieldModel'].objects.filter(**fieldToFilter['filterDict']).distinct()
+                    self.fields[fieldToFilter['field']].queryset = fieldToFilter['queryset']
                     # State based field must never be blank, even if super user can blank, because blank means global on some fields and only super user can make global objects
                     self.fields[fieldToFilter['field']].required = True
                 except KeyError:
