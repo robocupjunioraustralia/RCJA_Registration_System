@@ -15,21 +15,26 @@ class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
 class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
+        'state',
         'category',
         'description',
     ]
     search_fields = [
         'name',
+        'state__name',
+        'state__abbreviation',
         'category__name'
     ]
     list_filter = [
         'category',
+        'state',
     ]
     actions = [
         'export_as_csv',
     ]
     exportFields = [
         'name',
+        'state',
         'category',
         'description',
     ]
