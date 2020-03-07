@@ -42,6 +42,8 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'state',
     ]
 
+    # State based filtering
+
     def fieldsToFilter(self, request):
         from coordination.adminPermissions import reversePermisisons
         return [
@@ -52,6 +54,12 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                     coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
                 )
             }
+        ]
+
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return [
+            Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
         ]
 
 admin.site.register(Year)
@@ -155,7 +163,6 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
