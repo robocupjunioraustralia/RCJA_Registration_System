@@ -47,10 +47,7 @@ class FilteredFKForm(forms.ModelForm):
             for fieldToFilter in fieldsToFilter:
                 try:
                     # Filter based on state with appropriate permissions
-                    self.fields[fieldToFilter['field']].queryset = fieldToFilter['fieldModel'].objects.filter(
-                        coordinator__user=request.user,
-                        coordinator__permissions__in=reversePermisisons(fieldToFilter['objModel'], fieldToFilter['permissions'])
-                    )
+                    self.fields[fieldToFilter['field']].queryset = fieldToFilter['fieldModel'].objects.filter(**fieldToFilter['filterDict']).distinct()
                     # State based field must never be blank, even if super user can blank, because blank means global on some fields and only super user can make global objects
                     self.fields[fieldToFilter['field']].required = True
                 except KeyError:
@@ -75,7 +72,8 @@ class AdminPermissions:
 
     form = FilteredFKForm
 
-    fieldsToFilter = []
+    def fieldsToFilter(self, request):
+        return []
 
     # Add request and other attributes required for filtering foreign keys
     def get_form(self, request, obj=None, **kwargs):
@@ -84,7 +82,7 @@ class AdminPermissions:
         class AdminFormWithAttributes(AdminForm):
             def __new__(cls, *args, **kwargs):
                 kwargs['request'] = request
-                kwargs['fieldsToFilter'] = self.fieldsToFilter
+                kwargs['fieldsToFilter'] = self.fieldsToFilter(request)
                 return AdminForm(*args, **kwargs)
 
         return AdminFormWithAttributes
