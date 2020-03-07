@@ -65,7 +65,8 @@ def dashboard(request):
         'currentEvents': currentEvents,
         'pastEvents': pastEvents,
         'outstandingInvoices': outstandingInvoices,
-        'invoices': invoices
+        'invoices': invoices,
+        'currentState': currentState,
     }
     return render(request, 'events/dashboard.html', context)
 
