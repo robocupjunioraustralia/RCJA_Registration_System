@@ -79,28 +79,15 @@
             <i class="sidebar icon"></i>
             
         </a>
-        <div class = "ui large screen only grid menu-set">
-            <a class="item" href="/">
-                <i class="home icon"></i>
-                Dashboard
-            </a>  
-            <!-- <a class="item" href="{% url 'events:loggedInConstruction' %}">
-                <i class="calendar alternate icon"></i>
-                My Events
-            </a>  
-            <a class="item" href="{% url 'events:loggedInConstruction' %}">
-                <i class="users icon"></i>
-                My Teams
-            </a>  
-            <a class="item" href="{% url 'events:loggedInConstruction' %}">
-                <i class="user icon"></i>
-                My Students
-            </a>        -->
-            <a class="item" href="{% url 'invoices:summary' %}">
-                <i class="credit card icon"></i>
-                My Invoices
-            </a>                          
-        </div>
+        <a class="item ui large screen only" href="/">
+            <i class="home icon"></i>
+            Dashboard
+        </a>  
+
+        <a class="item ui large screen only" href="{% url 'invoices:summary' %}">
+            <i class="credit card icon"></i>
+            My Invoices
+        </a>                          
         <div class = "right menu">
             {% if user.is_staff %}
             <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
