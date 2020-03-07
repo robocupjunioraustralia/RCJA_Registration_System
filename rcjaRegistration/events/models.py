@@ -60,7 +60,23 @@ class Division(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return DivisionCategory.coordinatorPermissions(level)
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
 
     # *****Save & Delete Methods*****
 
