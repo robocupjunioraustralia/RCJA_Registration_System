@@ -34,6 +34,8 @@ def dashboard(request):
         team__in=usersTeams,
     ).order_by('startDate').distinct()
 
+    eventsAvailable = openForRegistrationEvents.exists()
+
     # Filter open events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
@@ -67,6 +69,7 @@ def dashboard(request):
         'outstandingInvoices': outstandingInvoices,
         'invoices': invoices,
         'currentState': currentState,
+        'eventsAvailable': eventsAvailable,
     }
     return render(request, 'events/dashboard.html', context)
 
