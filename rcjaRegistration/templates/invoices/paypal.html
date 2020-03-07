@@ -30,7 +30,7 @@
         <input type="hidden" name="cmd" value="_xclick">
 
         <!-- Specify details about the item that buyers will purchase. -->
-        <input type="hidden" name="item_name" value="{{ payPalDescription }}">
+        <input type="hidden" name="item_name" value="{{ paypalDescription }}">
         <input type="hidden" name="amount" value="{{ invoice.amountDuePaypal|floatformat:2 }}">
         <input type="hidden" name="currency_code" value="AUD">
         <input type="hidden" name="item_number" value="{{ invoice.invoiceNumber }}">
