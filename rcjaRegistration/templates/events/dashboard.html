@@ -91,9 +91,23 @@
               <div class="header">
                 No Events
               </div>
-              <p> Sorry, no events found.</p>
+              <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
             </div>
         </div>
+
+        <!-- This button should be refactored to reduce duplicated code (see above). -->
+        {% if not 'viewAll' in request.GET and eventsAvailable %}
+        <p>Currently viewing events from {{currentState}}.</p>
+        <div>
+            <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
+        </div>
+        {% else %}
+        <p>Currently viewing events from all states.</p>
+        <div>
+            <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
+        </div>
+        {% endif %}
+
     {% endif %}
     </div>
 
