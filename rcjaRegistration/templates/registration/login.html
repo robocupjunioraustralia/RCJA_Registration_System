@@ -54,10 +54,10 @@
                   <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
                 </form>
                 <br><br>
-
-                <a href="/accounts/signup"><button class="ui small teal button" style="max-width:40%;" type="" value="Sign Up"> Create account </button></a>
-                <a href="{% url 'password_reset' %}"><button class="ui small teal button" style="max-width:40%;" type="" value="Forgot password">Forgot password </button></a>
-
+                <div style="display:flex; justify-content: center;">
+                  <a href="/accounts/signup"><button class="ui small teal button" type="" value="Sign Up"> Create account </button></a>
+                  <a href="{% url 'password_reset' %}"><button class="ui small teal button" type="" value="Forgot password">Forgot password </button></a>
+                </div>
               </div>
             </div>
           </div>
