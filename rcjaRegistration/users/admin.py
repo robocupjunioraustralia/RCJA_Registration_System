@@ -149,11 +149,27 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     ]
     exportFieldsManyRelations = ['questionresponse_set']
 
+    # State based filtering
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        return [
+            {
+                'field': 'homeState',
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(User, ['add', 'change'])
+                )
+            }
+        ]
+
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
         return {
             'homeState__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
+
+    # Actions
 
     def setForcePasswordChange(self, request, queryset):
         queryset.update(forcePasswordChange=True)
