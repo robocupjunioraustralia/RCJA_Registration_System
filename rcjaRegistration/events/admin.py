@@ -113,6 +113,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
 
+    # State based filtering
+
     def fieldsToFilter(self, request):
         from users.models import User
         return [
