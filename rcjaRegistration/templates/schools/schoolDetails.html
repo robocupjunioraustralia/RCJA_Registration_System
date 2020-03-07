@@ -19,9 +19,10 @@
         <div class="ui center aligned grid ">
             <div class="twelve wide mobile six wide computer column ui">
                 <div class="form form-group left-aligned-text">
+                
                     <h1> School details </h1>
                     {% if form.errors %}
-
+                    
                     <!-- Error messaging -->
                     <div class="ui message left-aligned-text">
                         <div class="">
@@ -158,4 +159,44 @@
 </div>
 </div>
 
+
+<div class="ui modal firstTimePopup">
+    <div class="header">
+        Lorem Ipsum
+    </div>
+    <div class="image content">
+        <div class="description" id = "">
+        Lorem Ipsum
+    </div>
+    <div class="actions">
+
+
+        <button id = "confirm" class="ui positive right button">
+        I understand
+        </button>
+    </div>
+</div>
+
+<script>
+$(document).ready( () => {
+    if("True" === "{{request.user.currentlySelectedSchool.forceSchoolDetailsUpdate}}") {
+        if(getCookie("new_school_displayed") != "true") {
+                  $('.ui.modal.firstTimePopup').modal({
+                        closable  : false,
+                        onDeny    : () => true,
+                        onApprove : () => $('.ui.modal.poNumber').modal('hide')
+
+                    })
+            .modal('show'); 
+            document.cookie="new_school_displayed=true"
+        }
+    }
+
+})
+
+function getCookie(name) {
+    return (document.cookie.match('(^|;) *'+name+'=([^;]*)')||"")[2];
+}
+
+</script>
 {% endblock %}
