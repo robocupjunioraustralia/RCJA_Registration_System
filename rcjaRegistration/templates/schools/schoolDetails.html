@@ -18,6 +18,14 @@
     <div class="">
         <div class="ui center aligned grid ">
             <div class="twelve wide mobile six wide computer column ui">
+                    {% if request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
+                    <div class="ui warning message">
+                        <div class="Warning">
+                            <b> Security warning</b>
+                        </div>
+                        You have been redirected to this page because an admin has manually set your details to be reviewed. Please carefully confirm your details.
+                    </div>
+                    {% endif %}
                 <div class="form form-group left-aligned-text">
                 
                     <h1> School details </h1>
@@ -162,10 +170,11 @@
 
 <div class="ui modal firstTimePopup">
     <div class="header">
-        Lorem Ipsum
+        Security warning
     </div>
     <div class="image content">
         <div class="description" id = "">
+
         Lorem Ipsum
     </div>
     <div class="actions">
