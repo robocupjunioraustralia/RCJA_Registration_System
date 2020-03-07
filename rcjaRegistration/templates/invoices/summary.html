@@ -87,7 +87,7 @@
                 <label>Number</label>
                 <input name = "PONumber" class = "ui input"> </input>
             </div>
-          </form>
+         </form>
         </div>
     </div>
     <div class="actions">
@@ -95,7 +95,7 @@
         Cancel
         </div>
 
-        <button id = "confirm" class="ui positive right button">
+        <button id = "confirm-po" class="ui positive right button">
         Set Number
         </button>
     </div>
@@ -116,13 +116,24 @@
         Cancel
         </div>
 
-        <button id = "confirm" class="ui positive right button">
+        <button id = "confirm-campus" class="ui positive right button">
         Enable campus invoicing
         </button>
     </div>
 </div>
     
 <script> 
+
+$('.poNumber').keypress(function(e){
+    var code = e.keyCode || e.which;
+
+    if( code === 13 ) {
+        e.preventDefault();
+        $( "#confirm-po" ).click();
+    };
+});
+
+
     function showPOModal(invoiceNumber) {
         $('#invoiceNumber').val(invoiceNumber)
         $('.ui.modal.poNumber').modal({
