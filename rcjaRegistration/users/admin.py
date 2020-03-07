@@ -153,6 +153,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
 
     def fieldsToFilter(self, request):
         from coordination.adminPermissions import reversePermisisons
+        from regions.models import State
         return [
             {
                 'field': 'homeState',
