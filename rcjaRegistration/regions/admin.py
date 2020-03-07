@@ -54,6 +54,11 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return {
+            'coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
 
 @admin.register(Region)
 class RegionAdmin(AdminPermissions, admin.ModelAdmin):
