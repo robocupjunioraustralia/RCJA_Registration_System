@@ -18,6 +18,14 @@
   <div class = "">
     <div class="ui center aligned grid ">
       <div class = "twelve wide mobile six wide computer column ui">
+          {% if request.user.forceDetailsUpdate %}
+          <div class="ui warning message">
+              <div class="Warning">
+                  <b> Please update your details</b>
+              </div>
+              You have been redirected to this page because an admin has manually asked for your details to be updated. Please review the information below carefully.
+          </div>
+          {% endif %}
         <div class = "form form-group left-aligned-text">
         <h1> My details </h1>
             {% if form.errors %}
