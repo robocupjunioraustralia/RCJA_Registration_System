@@ -63,7 +63,6 @@
             <span style="width:3.5rem;overflow: hidden; text-overflow: ellipsis;">
             {{ user.fullname_or_email }}
             </span>
-                <i class="dropdown icon"></i>
                 <div class="menu">
                     <a href="{% url 'users:details' %}" class="item">My details</a>
                     {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
