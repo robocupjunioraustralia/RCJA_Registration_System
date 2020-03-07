@@ -38,6 +38,10 @@ def dashboard(request):
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
 
+    # Split competitions and workshops
+    openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')
+    openForRegistrationWorkshops = openForRegistrationEvents.filter(eventType='workshop')
+
     # Get current and past events
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
@@ -56,11 +60,13 @@ def dashboard(request):
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0])
 
     context = {
-        'openForRegistrationEvents': openForRegistrationEvents,
+        'openForRegistrationCompetitions': openForRegistrationCompetitions,
+        'openForRegistrationWorkshops': openForRegistrationWorkshops,
         'currentEvents': currentEvents,
         'pastEvents': pastEvents,
         'outstandingInvoices': outstandingInvoices,
-        'invoices': invoices
+        'invoices': invoices,
+        'currentState': currentState,
     }
     return render(request, 'events/dashboard.html', context)
 
