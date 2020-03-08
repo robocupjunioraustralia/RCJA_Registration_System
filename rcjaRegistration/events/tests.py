@@ -454,24 +454,27 @@ class TestEventMethods(TestCase):
         self.event.globalEvent = True
         self.assertEqual(str(self.event), "Event 1 2019")
 
+def newSetupEvent(self):
+    self.division1 = Division.objects.create(name='Division 1')
+    self.event = Event(
+        year=self.year,
+        state=self.newState,
+        name='Event 1',
+        maxMembersPerTeam=5,
+        event_defaultEntryFee = 4,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+        directEnquiriesTo = self.user
+    )
+    self.event.save()
+    self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+
 class TestAvailableDivisionClean(TestCase):
     def setUp(self):
         commonSetUp(self)
-        self.division1 = Division.objects.create(name='Division 1')
-        self.event = Event(
-            year=self.year,
-            state=self.newState,
-            name='Event 1',
-            maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
-            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
-            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
-            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
-            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
-            directEnquiriesTo = self.user     
-        )
-        self.event.save()
-        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        newSetupEvent(self)
 
     def testBillingEntryFeeAndTypeValidBlank(self):
         self.availableDivision.clean()
@@ -534,21 +537,45 @@ class TestAvailableDivisionClean(TestCase):
 class TestAvailableDivisionMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
-        self.division1 = Division.objects.create(name='Division 1')
-        self.event = Event(
-            year=self.year,
-            state=self.newState,
-            name='Event 1',
-            maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
-            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
-            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
-            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
-            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
-            directEnquiriesTo = self.user     
-        )
-        self.event.save()
-        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        newSetupEvent(self)
 
     def testGetState(self):
         self.assertEqual(self.availableDivision.getState(), self.newState)
+
+class TestDivisionClean(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+    
+    def testTeamDivisionValidation(self):
+        self.availableDivision.delete()
+        self.division1.state = self.state2
+        self.division1.clean()
+
+        Team.objects.create(event=self.event, division=self.division1, mentorUser=self.user, name='New Team 1')
+        self.assertRaises(ValidationError, self.division1.clean)
+
+    def testAvailableDivisionValidation(self):
+        self.division1.state = self.state2
+        self.assertRaises(ValidationError, self.division1.clean)
+
+class TestDivisionMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+
+    def testStrNoState(self):
+        self.assertEqual(str(self.division1), 'Division 1')
+
+    def testStrState(self):
+        self.division1.state = self.state2
+        self.assertEqual(str(self.division1), 'Division 1 (State 2)')
+    
+    def testGetState_noState(self):
+        self.assertEqual(self.division1.getState(), None)
+
+    def testGetState_state(self):
+        self.division1.state = self.state2
+        self.assertEqual(self.division1.getState(), self.state2)
