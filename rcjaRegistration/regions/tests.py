@@ -85,7 +85,7 @@ class TestStateMethods(TestCase):
         state2.save()
         self.assertEqual('NSW', state2.abbreviation)
 
-class TestAdmin(TestCase):
+class TestStateAdmin(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'

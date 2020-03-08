@@ -854,4 +854,5 @@ class TestSchoolAdmin(TestCase):
         }
         response = self.client.post(reverse('admin:schools_school_add'), data=payload)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')

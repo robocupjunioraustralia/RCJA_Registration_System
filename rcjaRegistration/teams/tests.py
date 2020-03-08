@@ -709,6 +709,7 @@ class TestTeamCreationFormValidation_School(TestCase):
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
 
