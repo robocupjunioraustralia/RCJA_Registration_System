@@ -147,11 +147,25 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'year',
         'state',
+        'globalEvent',
+        'eventType',
         'startDate',
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'directEnquiriesTo'
+        'directEnquiriesTo',
+        'maxMembersPerTeam',
+        'event_maxTeamsPerSchool',
+        'event_maxTeamsForEvent',
+        'entryFeeIncludesGST',
+        'event_billingType',
+        'event_defaultEntryFee',
+        'event_specialRateNumber',
+        'event_specialRateFee',
+        'paymentDueDate',
+        'eventDetails',
+        'location',
+        'additionalInvoiceMessage',
     ]
 
     formfield_overrides = {
