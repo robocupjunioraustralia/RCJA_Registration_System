@@ -8,6 +8,7 @@ from schools.models import School, SchoolAdministrator
 from teams.models import Team, Student
 from events.models import Event, Division, Year, AvailableDivision
 from users.models import User
+from coordination.models import Coordinator
 
 import datetime
 # Create your tests here.
@@ -579,3 +580,220 @@ class TestDivisionMethods(TestCase):
     def testGetState_state(self):
         self.division1.state = self.state2
         self.assertEqual(self.division1.getState(), self.state2)
+
+def adminSetUp(self):
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+    self.user3 = User.objects.create_user(email=self.email3, password=self.password)
+
+    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+
+    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
+
+    self.division0 = Division.objects.create(name='Division 0')
+    self.division1 = Division.objects.create(name='Division 1', state=self.state1)
+    self.division2 = Division.objects.create(name='Division 2', state=self.state2)
+
+class TestDivisionAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+
+    # Division filtering
+
+    def testListLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_division_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testChangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_division_change', args=(self.division1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testListContent_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_division_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Division 0')
+        self.assertContains(response, 'Division 1')
+        self.assertContains(response, 'Division 2')
+
+    def testDeleteLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_division_delete', args=(self.division1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testListNonStaff_denied(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_changelist'))
+        self.assertEqual(response.status_code, 302)
+
+    def testListLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testListContent_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Division 0')
+        self.assertContains(response, 'Division 1')
+        self.assertNotContains(response, 'Division 2')
+
+    def testChangeLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_change', args=(self.division1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testAddLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_add'))
+        self.assertEqual(response.status_code, 200)
+
+    def testDeleteLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_delete', args=(self.division1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testChangeDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_change', args=(self.division2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(reverse('admin:events_division_change', args=(self.division2.id,)), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+    def testViewLoads_viewonly_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_change', args=(self.division1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Save')
+
+    def testAddDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_add'))
+        self.assertEqual(response.status_code, 403)
+
+    def testDeleteDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_division_delete', args=(self.division1.id,)))
+        self.assertEqual(response.status_code, 403)
+
+    # Change Post
+
+    def testChangePostAllowed_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was changed successfully')
+
+        self.division1.refresh_from_db()
+        self.assertEqual(self.division1.name, 'Renamed 1')
+
+    def testChangePostDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 2',
+            'state': self.state2.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division2.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division2.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+    def testChangePostDenied_noState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 0',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division0.id,)), data=payload)
+        self.assertEqual(response.status_code, 403)
+
+    def testChangePostDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 403)
+
+    # Division FK filtering
+
+    # State field
+    def testStateFieldSuccess_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testStateFieldSuccess_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testStateFieldDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state2.id,
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testStateFieldBlankDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': '',
+        }
+        response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')

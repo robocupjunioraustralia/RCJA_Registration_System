@@ -1000,9 +1000,6 @@ class TestSchoolAdministratorAdmin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
-        self.admin1.refresh_from_db()
-        self.assertEqual(self.admin1.user, self.user1)
-
     def testChangePostDenied_viewPermission_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1012,9 +1009,6 @@ class TestSchoolAdministratorAdmin(TestCase):
         }
         response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
         self.assertEqual(response.status_code, 403)
-
-        self.admin1.refresh_from_db()
-        self.assertEqual(self.admin1.user, self.user1)
 
     # School FK filtering
 
