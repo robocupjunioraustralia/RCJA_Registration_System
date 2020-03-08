@@ -50,12 +50,20 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     def fieldsToFilter(self, request):
         from regions.models import State
+        from users.models import User
         return [
             {
                 'field': 'state',
                 'queryset': State.objects.filter(
                     coordinator__user=request.user,
                     coordinator__permissions='full'
+                )
+            },
+            {
+                'field': 'user',
+                'queryset': User.objects.filter(
+                    homeState__coordinator__user=request.user,
+                    homeState__coordinator__permissions='full'
                 )
             },
         ]
