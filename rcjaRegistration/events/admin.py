@@ -135,7 +135,6 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator
-
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }

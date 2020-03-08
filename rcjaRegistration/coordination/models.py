@@ -27,6 +27,23 @@ class Coordinator(CustomSaveDeleteModel):
         unique_together = ('user', 'state')
         ordering = ['state', 'user']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
     # *****Save & Delete Methods*****
 
     def postSave(self):
