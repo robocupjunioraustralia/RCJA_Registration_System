@@ -689,7 +689,7 @@ def adminSetUp(self):
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
     self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='New South Wales', abbreviation='NSW')
+    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
 
     self.region1 = Region.objects.create(name='Metro')
 

@@ -18,7 +18,7 @@ def commonSetUp(self):
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
     self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='New South Wales', abbreviation='NSW')
+    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
 
 class TestStateClean(TestCase):
     email1 = 'user1@user.com'
@@ -59,6 +59,7 @@ class TestStateMethods(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
@@ -110,7 +111,7 @@ class TestAdmin(TestCase):
         response = self.client.get(reverse('admin:regions_state_changelist'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Victoria')
-        self.assertContains(response, 'New South Wales')
+        self.assertContains(response, 'South Australia')
 
     def testStateDeleteLoads_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
@@ -134,7 +135,7 @@ class TestAdmin(TestCase):
         response = self.client.get(reverse('admin:regions_state_changelist'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Victoria')
-        self.assertNotContains(response, 'New South Wales')
+        self.assertNotContains(response, 'South Australia')
 
     def testStateChangeLoads_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
