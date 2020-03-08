@@ -49,6 +49,7 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return [
             {
                 'field': 'state',
+                'required': True,
                 'queryset': State.objects.filter(
                     coordinator__user=request.user,
                     coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
