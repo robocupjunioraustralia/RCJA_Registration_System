@@ -76,7 +76,13 @@ class User(AbstractUser):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager', 'schoolmanager', 'billingmanager']:
+        if level in ['full']:
+            return [
+                'add',
+                'view',
+                'change',
+            ]
+        elif level in ['viewall', 'eventmanager', 'schoolmanager', 'billingmanager']:
             return [
                 'view',
             ]
