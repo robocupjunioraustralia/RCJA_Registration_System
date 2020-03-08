@@ -200,8 +200,9 @@ class Event(CustomSaveDeleteModel):
             errors.append(ValidationError('Special billing rate only available for team billing'))
 
         # Validate division states
-        if self.divisions.exclude(Q(state=None) | Q(state=self.state)).exists():
-            errors.append(ValidationError('All division states must match event state'))
+        if self.pk:
+            if self.divisions.exclude(Q(state=None) | Q(state=self.state)).exists():
+                errors.append(ValidationError('All division states must match event state'))
 
         # Raise any errors
         if errors:
