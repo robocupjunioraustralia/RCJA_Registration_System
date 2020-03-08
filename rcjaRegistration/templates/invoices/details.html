@@ -151,8 +151,8 @@
       <div class="ui segment itemscard">
         <div class="content">
           <h3>Note:</h3>
-          {{ invoice.event.state.invoiceMessage|escape|linebreaks }}<br>
-          {{ invoice.event.additionalInvoiceMessage|escape|linebreaks }}<br>
+          {% if invoice.event.state.invoiceMessage %}{{ invoice.event.state.invoiceMessage|escape|linebreaks }}<br>{% endif %}
+          {% if invoice.event.additionalInvoiceMessage %}{{ invoice.event.additionalInvoiceMessage|escape|linebreaks }}<br>{% endif %}
           <strong>{{ invoiceSettings.invoiceFooterMessage|escape|linebreaks }}</strong>
         </div>
       </div>

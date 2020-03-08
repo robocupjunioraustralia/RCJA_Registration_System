@@ -18,6 +18,15 @@
   <div class = "">
     <div class="ui center aligned grid ">
       <div class = "twelve wide mobile six wide computer column ui">
+          {% if request.user.forceDetailsUpdate %}
+          <div class="ui warning message">
+              <div class="Warning">
+                  <b>Please confirm your details</b>
+              </div>
+              <p>You have been redirected to this page because an administrator has asked you to confirm you details.</p>
+              <p>Please review the information below carefully, you must do this before you can use the rest of the site.</p>
+          </div>
+          {% endif %}
         <div class = "form form-group left-aligned-text">
         <h1> My details </h1>
             {% if form.errors %}

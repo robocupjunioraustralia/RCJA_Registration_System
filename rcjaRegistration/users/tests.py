@@ -7,6 +7,7 @@ from django.http import HttpRequest
 from .models import User
 from schools.models import School, SchoolAdministrator
 from regions.models import State, Region
+from coordination.models import Coordinator
 
 @modify_settings(MIDDLEWARE={
     'remove': 'common.redirectsMiddleware.RedirectMiddleware',
@@ -302,3 +303,316 @@ class TestUserSave(TestCase):
         self.assertEqual(self.school1.region, self.region1)
         self.assertEqual(self.user.homeState, self.state2)
         self.assertEqual(self.user.homeRegion, self.region2)
+
+class TestTermsAndConditionsView(TestCase):
+    email = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        self.user = User.objects.create_user(email=self.email, password=self.password)
+
+    def testPageLoads_loggedOut(self):
+        response = self.client.get(path=reverse('users:termsAndConditions'))
+        self.assertEqual(200,response.status_code)
+
+    def testPageLoads_loggedIn(self):
+        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
+        response = self.client.get(path=reverse('users:termsAndConditions'))
+        self.assertEqual(200,response.status_code)
+
+    def testCorrectTemplate_loggedOut(self):
+        response = self.client.get(reverse('users:termsAndConditions'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'termsAndConditions/termsAndConditionsNoAuth.html')
+
+    def testCorrectTemplate_loggedIn(self):
+        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
+        response = self.client.get(reverse('users:termsAndConditions'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'termsAndConditions/termsAndConditionsLoggedIn.html')
+
+def adminSetUp(self):
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+
+    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+
+    self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
+    self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
+    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
+
+class TestUserAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+
+    def testUserListLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testUserChangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testUserListContent_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.email3)
+        self.assertContains(response, self.email2)
+
+    def testUserDeleteLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_delete', args=(self.user1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testUserListNonStaff_denied(self):
+        self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        response = self.client.get(reverse('admin:users_user_changelist'))
+        self.assertEqual(response.status_code, 302)
+
+    def testUserListLoads_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testUserListContent_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.email3)
+        self.assertNotContains(response, self.email2)
+        self.assertNotContains(response, self.emailsuper)
+
+    def testUserChangeLoads_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testUserChangeDenied_wrongState_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def testUserViewLoads_viewPermission_coordinator(self):
+        self.coord1.permissions = 'viewall'
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Save')
+
+    def testCoordinatorDeleteDenied_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_delete', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 403)
+
+    # Change Post
+
+    def testChangePostAllowed_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user3.email,
+            'homeState': self.user3.homeState.id,
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was changed successfully')
+
+    def testChangePostDenied_wrongState_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user2.email,
+            'homeState': self.user2.homeState.id,
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user2.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+    def testChangePostDenied_viewPermission_coordinator(self):
+        self.coord1.permissions = 'viewall'
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user3.email,
+            'homeState': self.user3.homeState.id,
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
+        self.assertEqual(response.status_code, 403)
+
+    # Add post
+
+    def testAddPostAllowed_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': 'new@new.com',
+            'password1': 'sldjghfsdkjfbn38',
+            'password2': 'sldjghfsdkjfbn38',
+            'homeState': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:users_user_add'), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(User.objects.filter(email='new@new.com').exists(), True)
+        self.assertContains(response, 'was added successfully. You may edit it again below.')
+
+    def testAddPostDenied_viewPermission_coordinator(self):
+        self.coord1.permissions = 'viewall'
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': 'new@new.com',
+            'password1': 'sldjghfsdkjfbn38',
+            'password2': 'sldjghfsdkjfbn38',
+            'homeState': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:users_user_add'), data=payload, follow=True)
+        self.assertEqual(response.status_code, 403)
+
+    # User FK filtering
+
+    # homeState field
+    def testHomeStateFieldSuccess_change_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user3.email,
+            'homeState': self.state1.id,
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testHomeStateFieldDenied_change_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user3.email,
+            'homeState': self.state2.id,
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testHomeStateFieldBlankDenied_change_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user3.email,
+            'homeState': '',
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
+    def testHomeStateFieldDenied_add_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': 'new@new.com',
+            'password1': 'sldjghfsdkjfbn38',
+            'password2': 'sldjghfsdkjfbn38',
+            'homeState': self.state2.id,
+        }
+        response = self.client.post(reverse('admin:users_user_add'), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    # Test inlines
+
+    def testCorrectInlines_change_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, "School administrator of")
+        self.assertContains(response, "Coordinator of")
+        self.assertContains(response, "Question Responses")
+
+    def testCorrectInlines_add_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_add'))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, "School administrator of")
+        self.assertNotContains(response, "Coordinator of")
+        self.assertNotContains(response, "Question Responses")
+
+    def testCorrectInlines_change_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, "School administrator of")
+        self.assertNotContains(response, "Coordinator of")
+        self.assertContains(response, "Question Responses")
+
+    def testCorrectInlines_add_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_add'))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, "School administrator of")
+        self.assertNotContains(response, "Coordinator of")
+        self.assertNotContains(response, "Question Responses")
+
+    # Test readonly fields on change page
+
+    def testCorrectReadonlyFields_change_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '<input type="checkbox" name="is_active"')
+        self.assertContains(response, '<input type="checkbox" name="is_staff"')
+        self.assertContains(response, '<input type="checkbox" name="is_superuser"')
+
+    def testCorrectReadonlyFields_change_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<input type="checkbox" name="is_active"')
+        self.assertNotContains(response, '<input type="checkbox" name="is_staff"')
+        self.assertNotContains(response, '<input type="checkbox" name="is_superuser"')

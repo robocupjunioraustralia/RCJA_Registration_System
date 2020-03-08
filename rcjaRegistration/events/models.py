@@ -4,18 +4,18 @@ from django.conf import settings
 
 # **********MODELS**********
 
-class Division(models.Model):
+class DivisionCategory(models.Model):
     # Foreign keys
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=60, unique=True)
-    description = models.CharField('Description', max_length=200, blank=True)
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = 'Division'
+        verbose_name = 'Division Category'
+        verbose_name_plural = 'Division Categories'
         ordering = ['name']
 
     # *****Permissions*****
@@ -41,6 +41,73 @@ class Division(models.Model):
 
     # *****Email methods*****
 
+class Division(models.Model):
+    # Foreign keys
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=60, unique=True)
+    description = models.CharField('Description', max_length=200, blank=True)
+    category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Division'
+        ordering = ['name']
+
+    def clean(self):
+        errors = []
+
+        # Check changing state won't cause conflict
+        if self.state:
+            if self.team_set.exclude(event__state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing teams in this division'))
+
+            if self.availabledivision_set.exclude(event__state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing available division for this division'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        if self.state:
+            return f'{self.name} ({self.state})'
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
 class Year(models.Model):
     # Fields and primary key
     year = models.PositiveIntegerField('Year', primary_key=True)
@@ -57,12 +124,7 @@ class Year(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return DivisionCategory.coordinatorPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -151,6 +213,11 @@ class Event(CustomSaveDeleteModel):
 
         if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.event_billingType != 'team':
             errors.append(ValidationError('Special billing rate only available for team billing'))
+
+        # Validate division states
+        if self.pk:
+            if self.divisions.exclude(Q(state=None) | Q(state=self.state)).exists():
+                errors.append(ValidationError('All division states must match event state'))
 
         # Raise any errors
         if errors:
@@ -252,6 +319,10 @@ class AvailableDivision(CustomSaveDeleteModel):
 
         if self.division_billingType == 'student' and self.event.eventType == 'workshop':
             errors.append(ValidationError('Student billing not available on workshops, use team billing which bills per attendee'))
+
+        # Validate division state
+        if self.division.state is not None and self.division.state != self.event.state:
+            errors.append(ValidationError('Division state must match event state'))
 
         # Raise any errors
         if errors:

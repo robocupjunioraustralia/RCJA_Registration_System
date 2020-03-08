@@ -64,7 +64,7 @@
             <thead>
                 <th>{% if event.boolWorkshop %}Attendee{% else %}Team Name{% endif %}</th>
                 <th> Division</th>
-                <th> Campus</th>
+                {% if showCampusColumn %}<th>Campus</th>{% endif %}
                 {% if not event.boolWorkshop %}<th> Students</th>{% endif %}
                 {% if event.registrationsCloseDate >= today %}
                 <th> Actions </th>
@@ -75,7 +75,7 @@
                 <tr id="teamRow{{team.id}}">
                     <td>{{team.name}}</td>
                     <td>{{team.division}}</td>
-                    <td>{{team.campus}}</td>
+                    {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
                     {% if not event.boolWorkshop %}<td>
                         {% for student in team.student_set.all %}
                         {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})

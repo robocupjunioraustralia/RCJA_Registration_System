@@ -1,10 +1,11 @@
+{% load static %}
 <div class="row">
     <h2> {{rowHeading}} </h2>
     <div class="ui special cards equal width grid" style="margin-left:1rem;">
         {% for event in comps %}
         <div class="card" style="max-width:19rem; cursor: pointer;" onclick="window.location='{% url 'events:details' event.id %}';">
             <div class="blurring dimmable image">
-                <img class="cardimage" src="/static/placeholderCity.png">
+                <img class="cardimage" src="{% static 'placeholderCity.png' %}">
             </div>
             <div class="content">
                 <span class="header">{{event}}</span>
@@ -37,7 +38,7 @@
                 <div class="header">
                     No Events
                 </div>
-                <p> Sorry! No Events could be found. Maybe Sign up for an event, or check back later.</p>
+                <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
             </div>
         </div>
         {% endfor %}

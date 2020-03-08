@@ -3,26 +3,65 @@ from common.admin import *
 from coordination.adminPermissions import AdminPermissions
 
 from .models import *
+from regions.models import State
 
 # Register your models here.
 
+@admin.register(DivisionCategory)
+class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
 
 @admin.register(Division)
 class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
-        'description'
+        'state',
+        'category',
+        'description',
     ]
     search_fields = [
-        'name'
+        'name',
+        'state__name',
+        'state__abbreviation',
+        'category__name'
+    ]
+    list_filter = [
+        'category',
+        'state',
     ]
     actions = [
-        'export_as_csv'
+        'export_as_csv',
     ]
     exportFields = [
         'name',
-        'description'
+        'state',
+        'category',
+        'description',
     ]
+    autocomplete_fields = [
+        'state',
+    ]
+
+    # State based filtering
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        return [
+            {
+                'field': 'state',
+                'required': True,
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
+                )
+            }
+        ]
+
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return [
+            Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
+        ]
 
 admin.site.register(Year)
 
@@ -32,6 +71,24 @@ class AvailableDivisionInline(admin.TabularInline):
     autocomplete_fields = [
         'division',
     ]
+
+    # Set parent obj on class so available to inline
+    def get_formset(self, request, obj=None, **kwargs):
+        self.parentObj = obj
+        return super().get_formset(request, obj, **kwargs)
+
+    # Override division fk dropdown to filter to state if not super user
+    def formfield_for_foreignkey(self, db_field, request, *args, **kwargs):
+        from django.forms import ModelChoiceField
+        if db_field.name == 'division':
+
+            if not request.user.is_superuser:
+                return ModelChoiceField(queryset=Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request)))
+            
+            if self.parentObj is not None:
+                return ModelChoiceField(queryset=Division.objects.filter(Q(state=self.parentObj.state) | Q(state=None)))
+
+        return super().formfield_for_foreignkey(db_field, request, *args, **kwargs)
 
 @admin.register(Event)
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -90,16 +147,52 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'year',
         'state',
+        'globalEvent',
+        'eventType',
         'startDate',
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'directEnquiriesTo'
+        'directEnquiriesTo',
+        'maxMembersPerTeam',
+        'event_maxTeamsPerSchool',
+        'event_maxTeamsForEvent',
+        'entryFeeIncludesGST',
+        'event_billingType',
+        'event_defaultEntryFee',
+        'event_specialRateNumber',
+        'event_specialRateFee',
+        'paymentDueDate',
+        'eventDetails',
+        'location',
+        'additionalInvoiceMessage',
     ]
 
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
+
+    # State based filtering
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        from users.models import User
+        return [
+            {
+                'field': 'state',
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
+                )
+            },
+            {
+                'field': 'directEnquiriesTo',
+                'queryset': User.objects.filter(
+                    homeState__coordinator__user=request.user,
+                    homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
+                )
+            }
+        ]
 
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator

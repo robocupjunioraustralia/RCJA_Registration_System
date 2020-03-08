@@ -9,21 +9,21 @@ from . import views
 
 # **********Routers**********
 
-Router = routers.DefaultRouter()
+# Router = routers.DefaultRouter()
 
-# *****Regions*****
+# # *****Regions*****
 
-Router.register(r'states',views.StateViewSet)
-Router.register(r'regions',views.RegionViewSet)
+# Router.register(r'states',views.StateViewSet)
+# Router.register(r'regions',views.RegionViewSet)
 
-# *****Events*****
+# # *****Events*****
 
-Router.register(r'events',views.EventViewSet)
+# Router.register(r'events',views.EventViewSet)
 
 
-# **********URL patterns**********
+# # **********URL patterns**********
 
-app_name = 'apiv1'
-urlpatterns = [
-    url(r'', include(Router.urls)),
-]
+# app_name = 'apiv1'
+# urlpatterns = [
+#     url(r'', include(Router.urls)),
+# ]

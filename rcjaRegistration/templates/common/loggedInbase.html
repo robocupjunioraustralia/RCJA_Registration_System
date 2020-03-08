@@ -63,7 +63,6 @@
             <span style="width:3.5rem;overflow: hidden; text-overflow: ellipsis;">
             {{ user.fullname_or_email }}
             </span>
-                <i class="dropdown icon"></i>
                 <div class="menu">
                     <a href="{% url 'users:details' %}" class="item">My details</a>
                     {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
@@ -75,27 +74,15 @@
         </div>      
     </div>
     <div class="ui top massive fixed menu">
-        <a class="item" onclick = "toggleSidebar()">
+        <a class="item" style="margin-right:1rem;" onclick = "toggleSidebar()">
             <i class="sidebar icon"></i>
             
         </a>
-        <div class = "ui large screen only grid menu-set">
+        <div class = "ui tablet only computer only grid menu-set">
             <a class="item" href="/">
                 <i class="home icon"></i>
                 Dashboard
             </a>  
-            <!-- <a class="item" href="{% url 'events:loggedInConstruction' %}">
-                <i class="calendar alternate icon"></i>
-                My Events
-            </a>  
-            <a class="item" href="{% url 'events:loggedInConstruction' %}">
-                <i class="users icon"></i>
-                My Teams
-            </a>  
-            <a class="item" href="{% url 'events:loggedInConstruction' %}">
-                <i class="user icon"></i>
-                My Students
-            </a>        -->
             <a class="item" href="{% url 'invoices:summary' %}">
                 <i class="credit card icon"></i>
                 My Invoices
@@ -127,7 +114,7 @@
             {% endif %}
             <div class="ui dropdown simple item" >
                 <i class="user circle icon"></i>
-                <span style="width:3.5rem; overflow: hidden; text-overflow: ellipsis;">
+                <span style="max-width:15vw; overflow: hidden; text-overflow: ellipsis;">
                 {{ user.fullname_or_email }}
                 </span>
                     <i class="dropdown icon"></i>
@@ -142,13 +129,13 @@
             </div>
         </div>             
     </div>
-    <div class="pusher">
+    <div class="pusher" style="padding-bottom:3rem;">
         <div style="margin-bottom:6rem;"> </div>
         {% block content %}
         {% endblock %} 
     </div>
 <div class="footer">
-  <p>RCJ Registration System. This site is in beta. View the source on <a href = "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System"> Github! </a></p>
+  <p>RCJA Registration System. This site is in beta. View the source on <a href = "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System"> GitHub. </a></p>
 </div></body>
 
 <style>
@@ -158,6 +145,7 @@
   bottom: 0;
   width: 100%;
   min-height:1rem;
+  margin-top:1rem;
   background-color: #c9c9c9;
   color: black;
   text-align: center;

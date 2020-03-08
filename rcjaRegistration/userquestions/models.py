@@ -48,6 +48,20 @@ class QuestionResponse(models.Model):
         ordering = ['question', 'user']
         unique_together = ('question', 'user')
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'viewall', 'eventmanager', 'schoolmanager', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.user.homeState
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****

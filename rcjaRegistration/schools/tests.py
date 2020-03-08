@@ -10,6 +10,7 @@ from .models import School, SchoolAdministrator, Campus
 from regions.models import State, Region
 from events.models import Year, Division, Event
 from invoices.models import Invoice
+from coordination.models import Coordinator
 
 import datetime
 
@@ -70,7 +71,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 #     validSubmitCode = 200
 #     inValidCreateCode = 400
 
-class TestSetCurrentSchool(TestCase):
+class TestCurrentlySelectedSchool(TestCase):
     email = 'user@user.com'
     email2 = 'user2@user.com'
     password = 'chdj48958DJFHJGKDFNM'
@@ -179,6 +180,15 @@ class TestSetCurrentSchool(TestCase):
         # Check still school 1
         self.user.refresh_from_db()
         self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+    def testCurrentlySelectedSchoolDelete(self):
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        self.school1.delete()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
 
 class TestEditSchoolDetails(TestCase):
     email = 'user@user.com'
@@ -680,3 +690,371 @@ class TestSchoolAdministratorMethods(TestCase):
 
     def testStr(self):
         self.assertEqual(str(self.admin1), self.email1)
+
+def adminSetUp(self):
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
+
+    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+
+    self.region1 = Region.objects.create(name='Metro')
+
+    self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
+    self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
+
+    self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
+    self.school2 = School.objects.create(name='School 2', abbreviation='SCH2', state=self.state2, region=self.region1)
+
+class TestSchoolAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+
+    # School filtering
+
+    def testSchoolListLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolChangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_change', args=(self.school1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testSchoolListContent_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'School 1')
+        self.assertContains(response, 'School 2')
+
+    def testSchoolDeleteLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_delete', args=(self.school1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolListNonStaff_denied(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_changelist'))
+        self.assertEqual(response.status_code, 302)
+
+    def testSchoolListLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolListContent_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'School 1')
+        self.assertNotContains(response, 'School 2')
+
+    def testSchoolChangeLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_change', args=(self.school1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testSchoolAddLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_add'))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolDeleteLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_delete', args=(self.school1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolChangeDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_change', args=(self.school2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def testSchoolViewLoads_viewonly_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_change', args=(self.school1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Save')
+
+    def testSchoolAddDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_add'))
+        self.assertEqual(response.status_code, 403)
+
+    def testSchoolDeleteDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_school_delete', args=(self.school1.id,)))
+        self.assertEqual(response.status_code, 403)
+
+    # School FK filtering
+
+    def testStateFieldSucces_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        payload = {
+            'name': 'School 3',
+            'abbreviation': 'SCH3',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'campus_set-TOTAL_FORMS': 0,
+            'campus_set-INITIAL_FORMS': 0,
+            'campus_set-MIN_NUM_FORMS': 0,
+            'campus_set-MAX_NUM_FORMS': 1000,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 1000,
+        }
+        response = self.client.post(reverse('admin:schools_school_add'), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testStateFieldSucces_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'School 3',
+            'abbreviation': 'SCH3',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'campus_set-TOTAL_FORMS': 0,
+            'campus_set-INITIAL_FORMS': 0,
+            'campus_set-MIN_NUM_FORMS': 0,
+            'campus_set-MAX_NUM_FORMS': 1000,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 1000,
+        }
+        response = self.client.post(reverse('admin:schools_school_add'), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testStateFieldDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'School 3',
+            'abbreviation': 'SCH3',
+            'state': self.state2.id,
+            'region': self.region1.id,
+            'campus_set-TOTAL_FORMS': 0,
+            'campus_set-INITIAL_FORMS': 0,
+            'campus_set-MIN_NUM_FORMS': 0,
+            'campus_set-MAX_NUM_FORMS': 1000,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 1000,
+        }
+        response = self.client.post(reverse('admin:schools_school_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+class TestSchoolAdministratorAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+        self.admin1 = SchoolAdministrator.objects.create(user=self.user1, school=self.school1)
+        self.admin2 = SchoolAdministrator.objects.create(user=self.user2, school=self.school2)
+
+    # School filtering
+
+    def testSchoolAdministratorListLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolAdministratorChangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testSchoolAdministratorListContent_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'School 1')
+        self.assertContains(response, 'School 2')
+
+    def testSchoolAdministratorDeleteLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_delete', args=(self.admin1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolAdministratorListNonStaff_denied(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_changelist'))
+        self.assertEqual(response.status_code, 302)
+
+    def testSchoolAdministratorListLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolAdministratorListContent_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'School 1')
+        self.assertNotContains(response, 'School 2')
+
+    def testSchoolAdministratorChangeLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testSchoolAdministratorAddLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_add'))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolAdministratorDeleteLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_delete', args=(self.admin1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testSchoolAdministratorChangeDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_change', args=(self.admin2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def testSchoolAdministratorViewLoads_viewonly_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Save')
+
+    def testSchoolAdministratorAddDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_add'))
+        self.assertEqual(response.status_code, 403)
+
+    def testSchoolAdministratorDeleteDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:schools_schooladministrator_delete', args=(self.admin1.id,)))
+        self.assertEqual(response.status_code, 403)
+
+    # Change Post
+
+    def testChangePostAllowed_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user3.id,
+            'school': self.school1.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was changed successfully')
+
+        self.admin1.refresh_from_db()
+        self.assertEqual(self.admin1.user, self.user3)
+
+    def testChangePostDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user2.id,
+            'school': self.school2.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin2.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin2.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+    def testChangePostDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user3.id,
+            'school': self.school1.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
+        self.assertEqual(response.status_code, 403)
+
+    # School FK filtering
+
+    # User field
+    def testUserFieldSuccess_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        payload = {
+            'user': self.user3.id,
+            'school': self.school1.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testUserFieldSuccess_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user3.id,
+            'school': self.school1.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testUserFieldDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user2.id,
+            'school': self.school1.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    # State field
+
+    def testStateFieldDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user3.id,
+            'school': self.school2.id,
+        }
+        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+

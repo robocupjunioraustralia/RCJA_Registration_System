@@ -40,7 +40,7 @@
               <div class="header">
                 Invoices
               </div>
-              <p>All good. No actions required!</p>
+              <p>All payments are up to date, no action required.</p>
             </div>
         </div>   
         {% endif %}
@@ -52,11 +52,35 @@
     <br>
    
     <div class="row">  
-        {% if currentEvents or openForRegistrationEvents or pastEvents %}
+        {% if currentEvents or openForRegistrationWorkshops or openForRegistrationCompetitions or pastEvents %}
+            {% if currentEvents %}
             {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
             <br>
-            {% include "events/eventRow.html" with comps=openForRegistrationEvents rowHeading="Open for registration:" %}
+            {% endif %}
+
+            {% if openForRegistrationWorkshops %}
+            {% include "events/eventRow.html" with comps=openForRegistrationWorkshops rowHeading="Open for registration workshops:" %}
             <br>
+            {% endif %}
+
+            {% if openForRegistrationCompetitions %}
+            {% include "events/eventRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration competitions:" %}
+            <br>
+            {% endif %}
+
+            {% if not 'viewAll' in request.GET %}
+            <p>Currently viewing events from {{currentState}}.</p>
+            <div>
+                <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
+            </div>
+            {% else %}
+            <p>Currently viewing events from all states.</p>
+            <div>
+                <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
+            </div>
+            {% endif %}
+            <br>
+
             {% if pastEvents %}
                 {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events:" %}
             {% endif %}
@@ -67,18 +91,25 @@
               <div class="header">
                 No Events
               </div>
-              <p> Sorry! No Events could be found. Check back later.</p>
+              <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
             </div>
         </div>
-    {% endif %}
-    </div>
 
-    {% if not 'viewAll' in request.GET %}
-    <br>
-    <div>
-        <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
-    </div>
+        <!-- This button should be refactored to reduce duplicated code (see above). -->
+        {% if not 'viewAll' in request.GET and eventsAvailable %}
+        <p>Currently viewing events from {{currentState}}.</p>
+        <div>
+            <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
+        </div>
+        {% else %}
+        <p>Currently viewing events from all states.</p>
+        <div>
+            <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
+        </div>
+        {% endif %}
+
     {% endif %}
+    </div>
 
 </div>
 {% endblock %}
