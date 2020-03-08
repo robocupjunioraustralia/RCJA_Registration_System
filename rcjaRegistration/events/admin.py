@@ -72,6 +72,15 @@ class AvailableDivisionInline(admin.TabularInline):
         'division',
     ]
 
+    # Override division fk dropdown to filter to state if not super user
+    def formfield_for_foreignkey(self, db_field, request, *args, **kwargs):
+        if db_field.name == 'division' and not request.user.is_superuser:
+            
+            from django.forms import ModelChoiceField
+            return ModelChoiceField(queryset=Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request)))
+
+        return super().formfield_for_foreignkey(db_field, request, *args, **kwargs)
+
 @admin.register(Event)
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
