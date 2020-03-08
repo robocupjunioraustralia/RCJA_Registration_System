@@ -28,10 +28,16 @@ class Team(CustomSaveDeleteModel):
         unique_together = ('event', 'name')
         ordering = ['event', 'school', 'division', 'name']
 
-    def clean(self, cleanDownstreamObjects=True):
+    def clean(self):
+        checkRequiredFieldsNotNone(self, ['event', 'division'])
+
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
             raise(ValidationError('Campus school must match school'))
+
+        # Check division is from correct state
+        if self.division.state is not None and self.division.state != self.event.state:
+            raise(ValidationError('Division state must match event state'))
 
     # *****Permissions*****
     @classmethod

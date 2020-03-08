@@ -57,6 +57,21 @@ class Division(models.Model):
         verbose_name = 'Division'
         ordering = ['name']
 
+    def clean(self):
+        errors = []
+
+        # Check changing state won't cause conflict
+        if self.state:
+            if self.team_set.exclude(event__state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing teams in this division'))
+
+            if self.availabledivision_set.exclude(event__state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing available division for this division'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
