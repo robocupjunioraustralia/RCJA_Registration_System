@@ -25,6 +25,7 @@ class SchoolAdministratorInline(admin.TabularInline):
         'school',
         'campus',
     ]
+    # Don't need to make read only here (unlike on the School admin) because only accessible to super users
 
 class CoordinatorInline(admin.TabularInline):
     from coordination.models import Coordinator

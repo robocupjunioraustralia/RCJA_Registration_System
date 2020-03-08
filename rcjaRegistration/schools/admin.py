@@ -16,10 +16,14 @@ class SchoolAdministratorInline(admin.TabularInline):
         'user',
         'campus',
     ]
-    autocomplete_fields = [
-        'user',
-        'campus',
-    ]
+
+    # Need to prevent editing through inline because no user filtering
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class CampusInline(admin.TabularInline):
     model = Campus
