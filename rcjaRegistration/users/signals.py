@@ -9,7 +9,7 @@ from .models import User
 # If this is not set to None as necessary then a user's permission will not be revoked.
 @receiver(post_delete, sender=SchoolAdministrator)
 def SchoolAdministrator_post_delete(sender, instance, **kwargs):
-    if instance.user.currentlySelectedSchool == instance.school:
+    if instance.user.currentlySelectedSchool == instance.school or instance.user.currentlySelectedSchool is None:
         instance.user.setCurrentlySelectedSchool()
 
 # User post save
