@@ -164,6 +164,14 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     ]
     exportFieldsManyRelations = ['questionresponse_set']
 
+    # Set forceDetailsUpdate if a field is blank
+    def save_model(self, request, obj, form, change):
+        for field in ['first_name', 'last_name', 'mobileNumber', 'homeState', 'homeRegion']:
+            if getattr(obj, field) is None:
+                obj.forceDetailsUpdate = True
+        
+        super().save_model(request, obj, form, change)
+
     # State based filtering
 
     def fieldsToFilter(self, request):
@@ -209,7 +217,6 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         return [
             QuestionResponseInline,
         ]
-
 
     # Actions
 

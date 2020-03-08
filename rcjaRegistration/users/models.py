@@ -95,18 +95,6 @@ class User(AbstractUser):
 
     # *****Save & Delete Methods*****
 
-    def save(self, skipPrePostSave=False, *args, **kwargs):
-        # Run custom pre save actions
-        for field in ['first_name', 'last_name', 'mobileNumber', 'homeState', 'homeRegion']:
-            if getattr(self, field) is None:
-                self.forceDetailsUpdate = True
-
-        # Save object
-        super().save(*args, **kwargs)
-
-        # Run custom post save actions
-
-
     # *****Methods*****
 
     # Reset forcePasswordChange
