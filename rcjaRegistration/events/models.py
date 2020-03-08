@@ -85,6 +85,8 @@ class Division(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
+        if self.state:
+            return f'{self.name} ({self.state})'
         return self.name
 
     # *****CSV export methods*****
@@ -197,6 +199,10 @@ class Event(CustomSaveDeleteModel):
         if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.event_billingType != 'team':
             errors.append(ValidationError('Special billing rate only available for team billing'))
 
+        # Validate division states
+        if self.divisions.exclude(Q(state=None) | Q(state=self.state)).exists():
+            errors.append(ValidationError('All division states must match event state'))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
@@ -297,6 +303,10 @@ class AvailableDivision(CustomSaveDeleteModel):
 
         if self.division_billingType == 'student' and self.event.eventType == 'workshop':
             errors.append(ValidationError('Student billing not available on workshops, use team billing which bills per attendee'))
+
+        # Validate division state
+        if self.division.state is not None and self.division.state != self.event.state:
+            errors.append(ValidationError('Division state must match event state'))
 
         # Raise any errors
         if errors:
