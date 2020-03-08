@@ -79,6 +79,13 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                 )
             },
             {
+                'field': 'division',
+                'queryset': Division.objects.filter(
+                    Q(state__coordinator__user=request.user)  | Q(state=None),
+                    Q(state__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])) | Q(state=None)
+                )
+            },
+            {
                 'field': 'mentorUser',
                 'queryset': User.objects.filter(
                     homeState__coordinator__user=request.user,

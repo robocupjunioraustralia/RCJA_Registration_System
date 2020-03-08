@@ -15,24 +15,53 @@ class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
 class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
+        'state',
         'category',
         'description',
     ]
     search_fields = [
         'name',
+        'state__name',
+        'state__abbreviation',
         'category__name'
     ]
     list_filter = [
         'category',
+        'state',
     ]
     actions = [
         'export_as_csv',
     ]
     exportFields = [
         'name',
+        'state',
         'category',
         'description',
     ]
+    autocomplete_fields = [
+        'state',
+    ]
+
+    # State based filtering
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        return [
+            {
+                'field': 'state',
+                'required': True,
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
+                )
+            }
+        ]
+
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return [
+            Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
+        ]
 
 admin.site.register(Year)
 
@@ -42,6 +71,24 @@ class AvailableDivisionInline(admin.TabularInline):
     autocomplete_fields = [
         'division',
     ]
+
+    # Set parent obj on class so available to inline
+    def get_formset(self, request, obj=None, **kwargs):
+        self.parentObj = obj
+        return super().get_formset(request, obj, **kwargs)
+
+    # Override division fk dropdown to filter to state if not super user
+    def formfield_for_foreignkey(self, db_field, request, *args, **kwargs):
+        from django.forms import ModelChoiceField
+        if db_field.name == 'division':
+
+            if not request.user.is_superuser:
+                return ModelChoiceField(queryset=Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request)))
+            
+            if self.parentObj is not None:
+                return ModelChoiceField(queryset=Division.objects.filter(Q(state=self.parentObj.state) | Q(state=None)))
+
+        return super().formfield_for_foreignkey(db_field, request, *args, **kwargs)
 
 @admin.register(Event)
 class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):

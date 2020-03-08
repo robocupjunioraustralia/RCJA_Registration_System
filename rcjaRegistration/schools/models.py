@@ -139,7 +139,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
         unique_together = ('school', 'user')
         ordering = ['user']
 
-    def clean(self, cleanDownstreamObjects=True):
+    def clean(self):
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
             raise(ValidationError('Campus school must match school'))

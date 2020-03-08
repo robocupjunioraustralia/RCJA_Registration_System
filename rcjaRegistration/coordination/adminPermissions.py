@@ -72,7 +72,11 @@ class AdminPermissions:
 
         # Filter based on state coordinator
         if hasattr(self, 'stateFilteringAttributes'):
-            qs = qs.filter(**self.stateFilteringAttributes(request))
+            filteringAttributes = self.stateFilteringAttributes(request)
+            if isinstance(filteringAttributes, list):
+                qs = qs.filter(*filteringAttributes)
+            else:
+                qs = qs.filter(**filteringAttributes)
 
         return qs
 

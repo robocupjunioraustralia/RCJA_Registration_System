@@ -313,6 +313,7 @@ def newCommonSetUp(self):
         self.division1 = Division.objects.create(name='Division 1')
         self.division2 = Division.objects.create(name='Division 2')
         self.division3 = Division.objects.create(name='Division 3')
+        self.division4 = Division.objects.create(name='Division 4', state=self.state2)
 
         self.invoiceSettings = InvoiceGlobalSettings.objects.create(
             invoiceFromName='From Name',
@@ -485,7 +486,6 @@ class TestTeamDelete(TestCase):
         self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
         Team.objects.get(pk=self.team1.pk)
 
-
 class TestTeamClean(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -510,6 +510,11 @@ class TestTeamClean(TestCase):
         self.team2.campus = self.campus1
 
         self.assertRaises(ValidationError, self.team2.clean)
+
+    def testDivisionWrongState(self):
+        self.team1.division = self.division4
+
+        self.assertRaises(ValidationError, self.team1.clean)     
 
 class TestInvoiceMethods(TestCase):
     email1 = 'user1@user.com'
