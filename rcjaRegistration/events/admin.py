@@ -72,12 +72,21 @@ class AvailableDivisionInline(admin.TabularInline):
         'division',
     ]
 
+    # Set parent obj on class so available to inline
+    def get_formset(self, request, obj=None, **kwargs):
+        self.parentObj = obj
+        return super().get_formset(request, obj, **kwargs)
+
     # Override division fk dropdown to filter to state if not super user
     def formfield_for_foreignkey(self, db_field, request, *args, **kwargs):
-        if db_field.name == 'division' and not request.user.is_superuser:
+        from django.forms import ModelChoiceField
+        if db_field.name == 'division':
+
+            if not request.user.is_superuser:
+                return ModelChoiceField(queryset=Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request)))
             
-            from django.forms import ModelChoiceField
-            return ModelChoiceField(queryset=Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request)))
+            if self.parentObj is not None:
+                return ModelChoiceField(queryset=Division.objects.filter(Q(state=self.parentObj.state) | Q(state=None)))
 
         return super().formfield_for_foreignkey(db_field, request, *args, **kwargs)
 
