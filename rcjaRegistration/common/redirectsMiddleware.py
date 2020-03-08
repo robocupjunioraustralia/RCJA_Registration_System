@@ -13,12 +13,16 @@ class RedirectMiddleware:
 
             # Check redirect conditions in this order
             redirectTo = None
-            if request.user.forcePasswordChange:
-                redirectTo = reverse('password_change')
-            elif request.user.forceDetailsUpdate:
-                redirectTo = reverse('users:details')
-            elif request.user.currentlySelectedSchool and request.user.currentlySelectedSchool.forceSchoolDetailsUpdate:
-                redirectTo = reverse('schools:details')
+            from schools.models import School
+            try:
+                if request.user.forcePasswordChange:
+                    redirectTo = reverse('password_change')
+                elif request.user.forceDetailsUpdate:
+                    redirectTo = reverse('users:details')
+                elif request.user.currentlySelectedSchool and request.user.currentlySelectedSchool.forceSchoolDetailsUpdate:
+                    redirectTo = reverse('schools:details')
+            except School.DoesNotExist:
+                pass # If school just deleted don't attempt redirection
 
             neverRedirect = [
                 reverse('users:termsAndConditions'),
