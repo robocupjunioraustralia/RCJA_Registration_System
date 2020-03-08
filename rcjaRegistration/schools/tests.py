@@ -782,13 +782,13 @@ class TestSchoolAdmin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Save')
 
-    def testSchoolAddDenied_noPermission_coordinator(self):
+    def testSchoolAddDenied_viewPermission_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:schools_school_add'))
         self.assertEqual(response.status_code, 403)
 
-    def testSchoolDeleteDenied_noPermission_coordinator(self):
+    def testSchoolDeleteDenied_viewPermission_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:schools_school_delete', args=(self.school1.id,)))
