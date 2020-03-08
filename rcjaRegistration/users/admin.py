@@ -181,6 +181,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         return [
             {
                 'field': 'homeState',
+                'required': True,
                 'queryset': State.objects.filter(
                     coordinator__user=request.user,
                     coordinator__permissions='full',
