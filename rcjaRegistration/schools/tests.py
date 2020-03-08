@@ -70,7 +70,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 #     validSubmitCode = 200
 #     inValidCreateCode = 400
 
-class TestSetCurrentSchool(TestCase):
+class TestCurrentlySelectedSchool(TestCase):
     email = 'user@user.com'
     email2 = 'user2@user.com'
     password = 'chdj48958DJFHJGKDFNM'
@@ -179,6 +179,15 @@ class TestSetCurrentSchool(TestCase):
         # Check still school 1
         self.user.refresh_from_db()
         self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+    def testCurrentlySelectedSchoolDelete(self):
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        self.school1.delete()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
 
 class TestEditSchoolDetails(TestCase):
     email = 'user@user.com'
