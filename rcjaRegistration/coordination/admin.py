@@ -46,13 +46,6 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'position',
     ]
 
-    # Don't allow editing user after initial creation, because previously selected user's permissions aren't reset
-    def get_readonly_fields(self, request, obj=None):
-        alwaysReadOnly = []
-        if obj:
-            return alwaysReadOnly + ['user']
-        return alwaysReadOnly
-
     # State based filtering
 
     def fieldsToFilter(self, request):

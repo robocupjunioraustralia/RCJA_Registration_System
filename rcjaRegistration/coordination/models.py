@@ -45,22 +45,29 @@ class Coordinator(CustomSaveDeleteModel):
         return self.state
 
     # *****Save & Delete Methods*****
-
+    def preSave(self):
+        if self.pk:
+            self.previousUser = Coordinator.objects.get(pk=self.pk).user
+    
     def postSave(self):
-        self.updateUserPermissions()
+        Coordinator.updateUserPermissions(user=self.user)
+
+        if hasattr(self, 'previousUser',) and self.user != self.previousUser:
+            Coordinator.updateUserPermissions(user=self.previousUser)
 
     def postDelete(self):
-        self.updateUserPermissions()
+        Coordinator.updateUserPermissions(user=self.user)
 
     # *****Methods*****
 
-    def updateUserPermissions(self):
+    @classmethod
+    def updateUserPermissions(cls, user):
         # Get coordinator objects for this user
-        coordinators = Coordinator.objects.filter(user=self.user)
+        coordinators = Coordinator.objects.filter(user=user)
 
         # Staff flag
-        self.user.is_staff = self.user.is_superuser or coordinators.exists()
-        self.user.save()
+        user.is_staff = user.is_superuser or coordinators.exists()
+        user.save()
 
         # Permissions
 
@@ -76,8 +83,8 @@ class Coordinator(CustomSaveDeleteModel):
         # Add permissions to user
         from django.contrib.auth.models import Permission
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
-        self.user.user_permissions.clear()
-        self.user.user_permissions.add(*permissionObjects)
+        user.user_permissions.clear()
+        user.user_permissions.add(*permissionObjects)
 
     def checkPermission(self, obj, permission):
         return True if permission in obj.coordinatorPermissions(self.permissions) else False
