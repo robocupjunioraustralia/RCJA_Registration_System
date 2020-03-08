@@ -525,6 +525,12 @@ class TestAvailableDivisionClean(TestCase):
         self.availableDivision.division_entryFee = 50
         self.assertRaises(ValidationError, self.availableDivision.clean)
 
+    def testStateValidation(self):
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.division2 = Division.objects.create(name='Division 2', state=self.state2)
+        self.availableDivision.division=self.division2
+        self.assertRaises(ValidationError, self.availableDivision.clean)
+
 class TestAvailableDivisionMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
