@@ -531,6 +531,21 @@ class TestUserAdmin(TestCase):
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
+    def testHomeStateFieldBlankDenied_change_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'email': self.user3.email,
+            'homeState': '',
+            'questionresponse_set-TOTAL_FORMS': 0,
+            'questionresponse_set-INITIAL_FORMS': 0,
+            'questionresponse_set-MIN_NUM_FORMS': 0,
+            'questionresponse_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
     def testHomeStateFieldDenied_add_coordinator(self):
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
