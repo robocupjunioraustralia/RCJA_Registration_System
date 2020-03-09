@@ -63,6 +63,54 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
         ]
 
+@admin.register(Venue)
+class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+    list_display = [
+        'name',
+        'state',
+        'address',
+    ]
+    search_fields = [
+        'name',
+        'state__name',
+        'state__abbreviation',
+        'address',
+    ]
+    list_filter = [
+        'state',
+    ]
+    actions = [
+        'export_as_csv',
+    ]
+    exportFields = [
+        'name',
+        'state',
+        'address',
+    ]
+    autocomplete_fields = [
+        'state',
+    ]
+
+    # State based filtering
+
+    def fieldsToFilter(self, request):
+        from coordination.adminPermissions import reversePermisisons
+        return [
+            {
+                'field': 'state',
+                'queryset': State.objects.filter(
+                    coordinator__user=request.user,
+                    coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
+                )
+            }
+        ]
+
+    def stateFilteringAttributes(self, request):
+        from coordination.models import Coordinator
+        return {
+            'state__coordinator__in': Coordinator.objects.filter(user=request.user)
+        }
+
 admin.site.register(Year)
 
 class AvailableDivisionInline(admin.TabularInline):
@@ -101,7 +149,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'directEnquiriesTo'
+        'venue',
+        'directEnquiriesTo',
     ]
     fieldsets = (
         (None, {
@@ -117,12 +166,13 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
         }),
         ('Details', {
-            'fields': ('directEnquiriesTo', 'eventDetails', 'location', 'additionalInvoiceMessage')
+            'fields': ('directEnquiriesTo', 'venue','eventDetails', 'additionalInvoiceMessage')
         }),
     )
     autocomplete_fields = [
         'state',
         'directEnquiriesTo',
+        'venue',
     ]
     inlines = [
         AvailableDivisionInline,
@@ -139,6 +189,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'directEnquiriesTo__first_name',
         'directEnquiriesTo__last_name',
         'directEnquiriesTo__email',
+        'venue__name',
+        'venue__address',
     ]
     actions = [
         'export_as_csv'
@@ -153,6 +205,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
+        'venue'
         'directEnquiriesTo',
         'maxMembersPerTeam',
         'event_maxTeamsPerSchool',
@@ -190,6 +243,13 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                 'queryset': User.objects.filter(
                     homeState__coordinator__user=request.user,
                     homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
+                )
+            },
+            {
+                'field': 'venue',
+                'queryset': Venue.objects.filter(
+                    state__coordinator__user=request.user,
+                    state__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
                 )
             }
         ]
