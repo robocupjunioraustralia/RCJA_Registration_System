@@ -910,7 +910,7 @@ class TestVenueAdmin(TestCase):
 
     def testChangeLoads_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:events_venue_change', args=(self.division1.id,)))
+        response = self.client.get(reverse('admin:events_venue_change', args=(self.venue1.id,)))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Save')
 
