@@ -593,6 +593,7 @@ class TestDivisionClean(TestCase):
         self.division1.clean()
 
     def testSuccessValidation_state(self):
+        self.availableDivision.delete()
         self.division1.state = self.state2
         self.division1.clean()
 
