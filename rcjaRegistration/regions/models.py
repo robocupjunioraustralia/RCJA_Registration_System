@@ -72,12 +72,12 @@ class State(CustomSaveDeleteModel):
     def treasurerName(self):
         return self.treasurer.fullname_or_email()
     treasurerName.short_description = 'Treasurer'
-    treasurerName.admin_order_by = 'treasurer'
+    treasurerName.admin_order_field = 'treasurer'
 
     def treasurerEmail(self):
         return self.treasurer.email
     treasurerEmail.short_description = 'Treasurer email'
-    treasurerEmail.admin_order_by = 'treasurer__email'
+    treasurerEmail.admin_order_field = 'treasurer__email'
 
     def __str__(self):
         return self.name
