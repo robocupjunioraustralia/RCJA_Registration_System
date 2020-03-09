@@ -150,7 +150,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'registrationsOpenDate',
         'registrationsCloseDate',
         'venue',
-        'directEnquiriesTo',
+        'directEnquiriesToName',
     ]
     fieldsets = (
         (None, {
@@ -205,8 +205,9 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'endDate',
         'registrationsOpenDate',
         'registrationsCloseDate',
-        'venue'
-        'directEnquiriesTo',
+        'venue',
+        'directEnquiriesToName',
+        'directEnquiriesToEmail',
         'maxMembersPerTeam',
         'event_maxTeamsPerSchool',
         'event_maxTeamsForEvent',

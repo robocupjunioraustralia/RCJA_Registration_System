@@ -9,7 +9,8 @@ from .models import *
 @admin.register(Coordinator)
 class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'user',
+        'userName',
+        'userEmail',
         'state',
         'permissions',
         'position'
@@ -40,7 +41,8 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'export_as_csv'
     ]
     exportFields = [
-        'user',
+        'userName',
+        'userEmail',
         'state',
         'permissions',
         'position',
