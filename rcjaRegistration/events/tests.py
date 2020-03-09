@@ -6,7 +6,7 @@ from django.http import HttpRequest
 from regions.models import State,Region
 from schools.models import School, SchoolAdministrator
 from teams.models import Team, Student
-from events.models import Event, Division, Year, AvailableDivision
+from events.models import Event, Division, Year, AvailableDivision, Venue
 from users.models import User
 from coordination.models import Coordinator
 
@@ -293,6 +293,7 @@ class TestEventClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.division1 = Division.objects.create(name='Division 1')
+        self.division2 = Division.objects.create(name='Division 2', state=self.newState)
         self.event = Event(
             year=self.year,
             state=self.newState,
@@ -305,6 +306,9 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
+        self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
     # Dates validation
 
@@ -398,6 +402,42 @@ class TestEventClean(TestCase):
         self.availableDivision.division_entryFee = 50
         self.availableDivision.save()
 
+        self.assertRaises(ValidationError, self.event.clean)
+
+    # Test state validations
+
+    def testVenueStateSuccess(self):
+        self.event.venue = self.venue1
+        self.event.clean()
+
+    def testVenueFailureWrongVenueState(self):
+        self.event.venue = self.venue2
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testAvailableDivisionSuccessNoPk(self):
+        self.assertEqual(self.event.pk, None)
+        self.event.clean()
+
+    def testAvailableDivisionSuccessExistingEvent(self):
+        self.event.save()
+        self.assertNotEqual(self.event.pk, None)
+
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division2)
+        self.event.clean()
+
+    def testAvailableDivision_StateChangeSuccess(self):
+        self.event.save()
+        self.assertNotEqual(self.event.pk, None)
+
+        self.event.state = self.state2
+        self.event.clean()
+
+    def testAvailableDivision_StateChangeFailure(self):
+        self.event.save()
+        self.assertNotEqual(self.event.pk, None)
+
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division2)
+        self.event.state = self.state2
         self.assertRaises(ValidationError, self.event.clean)
 
 class TestEventMethods(TestCase):
