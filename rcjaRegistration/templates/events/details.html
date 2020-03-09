@@ -41,8 +41,11 @@
         </ul>
         <h3>Event details</h3>
         <p> {{ event.eventDetails|escape|linebreaks }} </p>
+        {% if event.venue %}
         <h3>Location</h3>
-        <p> {{ event.location|escape|linebreaks }} </p>
+        <p> {{ event.venue.name }} </p>
+        {% if event.venue.address %}<p>{{ event.venue.address|escape|linebreaks }}</p>{% endif %}
+        {% endif %}
     </div><br>
 
     <div class="row">

@@ -217,7 +217,6 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'event_specialRateFee',
         'paymentDueDate',
         'eventDetails',
-        'location',
         'additionalInvoiceMessage',
     ]
 
