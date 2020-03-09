@@ -328,12 +328,12 @@ class Event(CustomSaveDeleteModel):
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
     directEnquiriesToName.short_description = 'Direct enquiries to'
-    directEnquiriesToName.admin_order_field = 'user'   
+    directEnquiriesToName.admin_order_field = 'directEnquiriesTo'   
 
     def directEnquiriesToEmail(self):
         return self.directEnquiriesTo.email
     directEnquiriesToEmail.short_description = 'Direct enquiries to email'
-    directEnquiriesToEmail.admin_order_field = 'user__email'
+    directEnquiriesToEmail.admin_order_field = 'directEnquiriesTo__email'
 
     def get_absolute_url(self):
         from django.urls import reverse
