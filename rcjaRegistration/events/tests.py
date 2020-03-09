@@ -457,6 +457,10 @@ class TestEventMethods(TestCase):
             directEnquiriesTo = self.user     
         )
 
+        self.user.first_name = 'First'
+        self.user.last_name = 'Last'
+        self.user.save()
+
     def testGetState(self):
         self.assertEqual(self.event.getState(), self.newState)
 
@@ -494,6 +498,12 @@ class TestEventMethods(TestCase):
     def testStr_global(self):
         self.event.globalEvent = True
         self.assertEqual(str(self.event), "Event 1 2019")
+
+    def testDirectEnquiriesToName(self):
+        self.assertEqual(self.event.directEnquiriesToName(), 'First Last')
+
+    def testDirectEnquiriesToEmail(self):
+        self.assertEqual(self.event.directEnquiriesToEmail(), self.username)
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')

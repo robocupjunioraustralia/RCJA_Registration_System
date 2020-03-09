@@ -31,6 +31,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'abbreviation',
         'treasurerName',
+        'treasurerEmail',
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',

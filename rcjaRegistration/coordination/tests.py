@@ -49,6 +49,29 @@ class TestUpdateUserPermissions(TestCase):
         self.assertEqual(self.user2.is_staff, True)
         self.assertEqual(self.user2.is_superuser, False)
 
+class TestCoordinatorMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
+    
+    def testGetState(self):
+        self.assertEqual(self.coord1.getState(), self.state1)
+
+    def testUserName(self):
+        self.assertEqual(self.coord1.userName(), 'First Last')
+
+    def testUserEmail(self):
+        self.assertEqual(self.coord1.userEmail(), self.email1)
+
 class TestCoordinatorAdmin(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'

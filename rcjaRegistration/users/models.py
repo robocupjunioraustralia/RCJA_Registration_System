@@ -116,7 +116,9 @@ class User(AbstractUser):
         return self.get_full_name() or self.email
 
     def __str__(self):
-        return self.fullname_or_email()
+        if self.get_full_name():
+            return f"{self.get_full_name()} ({self.email})"
+        return self.email
 
     # *****CSV export methods*****
 

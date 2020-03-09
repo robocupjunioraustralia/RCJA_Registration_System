@@ -71,6 +71,9 @@ class TestStateMethods(TestCase):
     def testTreasurerName(self):
         self.assertEqual(self.user1.fullname_or_email(), self.state1.treasurerName())
 
+    def testTreasurerEmail(self):
+        self.assertEqual(self.user1.email, self.state1.treasurerEmail())
+
     def testStr(self):
         self.assertEqual('Victoria', str(self.state1))
 
