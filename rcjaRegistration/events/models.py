@@ -108,6 +108,67 @@ class Division(models.Model):
 
     # *****Email methods*****
 
+class Venue(models.Model):
+    # Foreign keys
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=40)
+    address = models.TextField('Address', blank=True)
+    
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Venue'
+        ordering = ['name']
+        unique_together = ('name', 'state')
+
+    def clean(self):
+        errors = []
+
+        # Check changing state won't cause conflict
+        if self.event_set.exclude(state=self.state).exists():
+            errors.append(ValidationError('State not compatible with existing events with this venue'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        if level in ['full', 'eventmanager']:
+            return [
+                'add',
+                'view',
+                'change',
+                'delete'
+            ]
+        elif level in ['viewall', 'billingmanager']:
+            return [
+                'view',
+            ]
+        
+        return []
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return f'{self.name} ({self.state})'
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
 class Year(models.Model):
     # Fields and primary key
     year = models.PositiveIntegerField('Year', primary_key=True)
@@ -176,8 +237,8 @@ class Event(CustomSaveDeleteModel):
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
+    venue = models.ForeignKey(Venue, verbose_name='Venue', on_delete=models.PROTECT, null=True, blank=True)
     eventDetails = models.TextField('Event details', blank=True)
-    location = models.TextField('Location', blank=True)
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True, help_text='This appears below the state based invoice message on the invoice.')
 
     # Available divisions
@@ -218,6 +279,10 @@ class Event(CustomSaveDeleteModel):
         if self.pk:
             if self.divisions.exclude(Q(state=None) | Q(state=self.state)).exists():
                 errors.append(ValidationError('All division states must match event state'))
+
+        # Validate venue state
+        if self.venue and self.venue.state != self.state:
+            errors.append(ValidationError('Venue must be from same state as event'))
 
         # Raise any errors
         if errors:
