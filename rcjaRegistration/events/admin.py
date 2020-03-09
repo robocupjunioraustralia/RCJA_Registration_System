@@ -237,13 +237,13 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                     coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
                 )
             },
-            {
-                'field': 'directEnquiriesTo',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
-                )
-            },
+            # { # See GitHub issue #276
+            #     'field': 'directEnquiriesTo',
+            #     'queryset': User.objects.filter(
+            #         homeState__coordinator__user=request.user,
+            #         homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
+            #     )
+            # },
             {
                 'field': 'venue',
                 'queryset': Venue.objects.filter(
