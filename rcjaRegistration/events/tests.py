@@ -588,7 +588,14 @@ class TestDivisionClean(TestCase):
         commonSetUp(self)
         newSetupEvent(self)
         self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
-    
+
+    def testSuccessValidation_noState(self):
+        self.division1.clean()
+
+    def testSuccessValidation_state(self):
+        self.division1.state = self.state2
+        self.division1.clean()
+
     def testTeamDivisionValidation(self):
         self.availableDivision.delete()
         self.division1.state = self.state2
@@ -621,6 +628,38 @@ class TestDivisionMethods(TestCase):
         self.division1.state = self.state2
         self.assertEqual(self.division1.getState(), self.state2)
 
+def createVenues(self):
+    self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
+    self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
+
+class TestVenueClean(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        createVenues(self)
+
+    def testSuccess(self):
+        self.venue1.clean()
+    
+    def testIncompatibleEvent(self):
+        self.event.venue = self.venue1
+        self.event.save()
+        self.venue1.clean()
+
+        self.venue1.state = self.state2
+        self.assertRaises(ValidationError, self.venue1.clean)
+
+class TestVenueMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        createVenues(self)
+
+    def testGetState(self):
+        self.assertEqual(self.venue1.getState(), self.newState)
+
 def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
     self.user2 = User.objects.create_user(email=self.email2, password=self.password)
@@ -634,6 +673,9 @@ def adminSetUp(self):
     self.division0 = Division.objects.create(name='Division 0')
     self.division1 = Division.objects.create(name='Division 1', state=self.state1)
     self.division2 = Division.objects.create(name='Division 2', state=self.state2)
+
+    self.venue1 = Venue.objects.create(name='Venue 1', state=self.state1)
+    self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
 class TestDivisionAdmin(TestCase):
     email1 = 'user1@user.com'
