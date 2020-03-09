@@ -85,12 +85,19 @@ def details(request, eventID):
     
     teams = teams.prefetch_related('student_set')
 
+    # Get billing type label
+    if event.boolWorkshop():
+        billingTypeLabel = 'attendee'
+    else:
+        billingTypeLabel = event.event_billingType
+
     context = {
         'event': event,
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
         'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
-        'today':datetime.date.today()
+        'today':datetime.date.today(),
+        'billingTypeLabel': billingTypeLabel,
     }
     return render(request, 'events/details.html', context)   
 
