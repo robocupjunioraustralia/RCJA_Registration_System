@@ -121,9 +121,9 @@ class Venue(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=40)
+    name = models.CharField('Name', max_length=60)
     address = models.TextField('Address', blank=True)
-    
+
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Venue'
