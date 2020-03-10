@@ -174,12 +174,15 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Team settings', {
+            'description': "More options will be available after you click save",
             'fields': ('maxMembersPerTeam',)
         }),
         ('Billing settings', {
+            'description': "More options will be available after you click save",
             'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee')
         }),
         ('Details', {
+            'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
         }),
     )
