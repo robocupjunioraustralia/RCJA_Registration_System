@@ -68,9 +68,7 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     @classmethod
     def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
-        from users.models import User
-        from schools.models import School, Campus
-        from events.models import Event, Division
+        from events.models import Event
         return [
             {
                 'field': 'event',
