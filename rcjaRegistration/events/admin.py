@@ -241,14 +241,22 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
 
+    # Message user during save
     def save_model(self, request, obj, form, change):
         if obj.pk:
             if obj.venue is None:
                 self.message_user(request, f"{obj}: You haven't added a venue yet, we recommend adding a venue.", messages.WARNING)
-            if not obj.divisions.exists():
-                self.message_user(request, f"{obj}: You haven't added any divisions yet, people won't be able to register.", messages.WARNING)
         
         super().save_model(request, obj, form, change)
+
+    # Message user regarding divisions during inline save
+    def save_formset(self, request, form, formset, change):
+        # Don't want to display error on add page because inlines not shown so impossible to add divisions
+        if change:
+            if len(formset.cleaned_data) == 0:
+                self.message_user(request, f"{form.instance}: You haven't added any divisions yet, people won't be able to register.", messages.WARNING)
+
+        super().save_formset(request, form, formset, change)
 
     # State based filtering
 
