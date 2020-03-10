@@ -118,12 +118,12 @@ class BaseAdminPermissions:
 
     def get_autocomplete_fields(self, request):
         autocompleteFields = super().get_autocomplete_fields(request)
-            
+
         for fieldToFilter in self.fieldsToFilterObj(request, self.obj):
             if self.obj is not None or fieldToFilter.get('filterNone', False):
                 field = fieldToFilter['field']
                 while field in autocompleteFields: autocompleteFields.remove(field)
-        
+
         return autocompleteFields
 
     # Permissions
