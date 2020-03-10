@@ -157,7 +157,7 @@ class Venue(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.name} ({self.state})'
+        return self.name
 
     # *****CSV export methods*****
 
