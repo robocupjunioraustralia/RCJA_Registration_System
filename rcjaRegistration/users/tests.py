@@ -511,6 +511,7 @@ class TestUserAdmin(TestCase):
         }
         response = self.client.post(reverse('admin:users_user_add'), data=payload, follow=True)
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(User.objects.filter(email='new@new.com').exists(), False)
 
     # User FK filtering
 
