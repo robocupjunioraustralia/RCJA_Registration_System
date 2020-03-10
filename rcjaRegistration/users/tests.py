@@ -459,7 +459,7 @@ class TestUserAdmin(TestCase):
         response = self.client.post(reverse('admin:users_user_change', args=(self.user2.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload, follow=True)
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user2.id,)), data=payload, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
