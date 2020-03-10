@@ -211,10 +211,10 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         # Only superuser can edit inlines on admin
         if request.user.is_superuser:
             return [
-            SchoolAdministratorInline,
-            CoordinatorInline,
-            QuestionResponseInline,
-        ]
+                SchoolAdministratorInline,
+                CoordinatorInline,
+                QuestionResponseInline,
+            ]
         return [
             SchoolAdministratorInline,
             QuestionResponseInline,
