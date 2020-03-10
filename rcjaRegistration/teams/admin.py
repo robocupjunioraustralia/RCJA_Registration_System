@@ -42,9 +42,10 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
         'name',
         'event',
         'division',
-        'mentorUser',
+        'mentorUserName',
         'school',
         'campus',
+        'homeState',
     ]
     fieldsets = (
         (None, {
@@ -106,9 +107,11 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
         'name',
         'event',
         'division',
-        'mentorUser',
+        'mentorUserName',
+        'mentorUserEmail',
         'school',
         'campus',
+        'homeState',
     ]
 
     form = TeamForm

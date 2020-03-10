@@ -142,7 +142,8 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 @admin.register(SchoolAdministrator)
 class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'user',
+        'userName',
+        'userEmail',
         'school',
         'campus'
     ]
@@ -170,7 +171,8 @@ class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.
         'export_as_csv'
     ]
     exportFields = [
-        'user',
+        'userName',
+        'userEmail',
         'school',
         'campus',
     ]

@@ -107,6 +107,22 @@ class Team(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    def homeState(self):
+        if self.school:
+            return self.school.state
+        return self.mentorUser.homeState
+    homeState.short_description = 'Home state'
+
+    def mentorUserName(self):
+        return self.mentorUser.fullname_or_email()
+    mentorUserName.short_description = 'Mentor'
+    mentorUserName.admin_order_field = 'mentorUser'
+
+    def mentorUserEmail(self):
+        return self.mentorUser.email
+    mentorUserEmail.short_description = 'Mentor email'
+    mentorUserEmail.admin_order_field = 'mentorUser__email'
+
     # Returns true if campus based invoicing enabled for this school for this event
     def campusInvoicingEnabled(self):
         if not self.school:

@@ -173,6 +173,16 @@ class SchoolAdministrator(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    def userName(self):
+        return self.user.fullname_or_email()
+    userName.short_description = 'User'
+    userName.admin_order_field = 'user'
+
+    def userEmail(self):
+        return self.user.email
+    userEmail.short_description = 'User email'
+    userEmail.admin_order_field = 'user__email'
+
     def __str__(self):
         return f'{self.user.fullname_or_email()}'
 

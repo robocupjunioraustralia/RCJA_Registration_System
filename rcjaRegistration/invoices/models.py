@@ -105,6 +105,16 @@ class Invoice(CustomSaveDeleteModel):
 
     # *****Get Methods*****
 
+    def invoiceToUserName(self):
+        return self.invoiceToUser.fullname_or_email()
+    invoiceToUserName.short_description = 'Mentor'
+    invoiceToUserName.admin_order_field = 'invoiceToUser'
+
+    def invoiceToUserEmail(self):
+        return self.invoiceToUser.email
+    invoiceToUserEmail.short_description = 'Mentor email'
+    invoiceToUserEmail.admin_order_field = 'invoiceToUser__email'
+
     @classmethod
     def invoicesForUser(cls, user):
         return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
