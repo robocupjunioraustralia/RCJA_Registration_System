@@ -1,29 +1,11 @@
 from django.contrib import admin
 from common.admin import *
 from coordination.adminPermissions import AdminPermissions
+from .adminInlines import SchoolAdministratorInline
 
 from .models import *
 
 # Register your models here.
-
-class SchoolAdministratorInline(admin.TabularInline):
-    model = SchoolAdministrator
-    extra = 0
-    verbose_name = "Administrator"
-    verbose_name_plural = "Administrators"
-    # Define fields to define order
-    fields = [
-        'user',
-        'campus',
-    ]
-
-    # Need to prevent editing through inline because no user filtering
-    def has_change_permission(self, request, obj=None):
-        return False
-    def has_add_permission(self, request, obj=None):
-        return False
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 class CampusInline(admin.TabularInline):
     model = Campus
@@ -158,7 +140,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return alwaysReadOnly
 
 @admin.register(SchoolAdministrator)
-class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'user',
         'school',
@@ -193,6 +175,11 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
         'campus',
     ]
 
+    add_fields = [
+        'school',
+        'user',
+    ]
+
     # State based filtering
 
     @classmethod
@@ -220,6 +207,16 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
                     school__state__coordinator__user=request.user,
                     school__state__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
                 )
+            }
+        ]
+
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return [
+            {
+                'field': 'campus',
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
+                'filterNone': True,
             }
         ]
 
