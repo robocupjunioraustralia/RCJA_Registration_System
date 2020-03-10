@@ -52,14 +52,6 @@ class User_QuestionResponse_Filter(admin.SimpleListFilter):
         except (ValueError,TypeError):
             return queryset
 
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-
-class Filtered_UserChangeForm(FilteredFKForm, UserChangeForm):
-    pass
-
-class Filtered_UserCreationForm(FilteredFKForm, UserCreationForm):
-    pass
-
 @admin.register(User)
 class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     """Define admin model for custom User model with no email field."""
@@ -175,7 +167,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from coordination.adminPermissions import reversePermisisons
         from regions.models import State
         return [
@@ -188,9 +180,6 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
                 )
             }
         ]
-
-    form = Filtered_UserChangeForm
-    add_form = Filtered_UserCreationForm
 
     def stateFilteringAttributes(self, request):
         from coordination.models import Coordinator

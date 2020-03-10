@@ -50,7 +50,7 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from regions.models import State
         from users.models import User
         return [

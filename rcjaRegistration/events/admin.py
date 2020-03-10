@@ -44,7 +44,7 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -93,7 +93,7 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -227,7 +227,7 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         return [

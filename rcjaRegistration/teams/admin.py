@@ -65,7 +65,7 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         from schools.models import School, Campus
@@ -157,7 +157,7 @@ class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    def fieldsToFilterRequest(self, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
