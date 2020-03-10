@@ -1,7 +1,4 @@
 from django.contrib import admin
-# from common.admin import *
-
-from django import forms
 
 from .models import *
 
@@ -34,32 +31,6 @@ def reversePermisisons(obj, permissions):
             if permission in obj.coordinatorPermissions(level[0]):
                 levels.append(level[0])
     return levels
-
-class FilteredFKForm(forms.ModelForm):
-    # Fitler foreign keys for state permissions
-    def __init__(self, *args, **kwargs):
-        request = kwargs.pop('request')
-        fieldsToFilterRequest = kwargs.pop('fieldsToFilterRequest')
-        super().__init__(*args, **kwargs)
-
-        # Don't filter if super user
-        if not request.user.is_superuser:
-            for fieldToFilter in fieldsToFilterRequest:
-                try:
-                    # Filter based on state with appropriate permissions
-                    self.fields[fieldToFilter['field']].queryset = fieldToFilter['queryset']
-
-                    # Set required if specified
-                    try:
-                        self.fields[fieldToFilter['field']].required = fieldToFilter['required']
-                    except KeyError:
-                        pass
-
-                    # Try and set the default to save admins time
-                    if fieldToFilter['queryset'].count() == 1:
-                        self.fields[fieldToFilter['field']].initial = fieldToFilter['queryset'].first().id
-                except KeyError:
-                    return
 
 class BaseAdminPermissions:
     def get_queryset(self, request):
