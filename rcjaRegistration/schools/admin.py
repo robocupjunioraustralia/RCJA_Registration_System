@@ -188,26 +188,12 @@ class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.
         from users.models import User
         return [
             {
-                'field': 'user',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
-                )
-            },
-            {
                 'field': 'school',
                 'queryset': School.objects.filter(
                     state__coordinator__user=request.user,
                     state__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
                 )
             },
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(
-                    school__state__coordinator__user=request.user,
-                    school__state__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
-                )
-            }
         ]
 
     @classmethod

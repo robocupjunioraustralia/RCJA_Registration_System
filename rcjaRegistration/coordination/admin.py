@@ -62,13 +62,6 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                     coordinator__permissions='full'
                 )
             },
-            {
-                'field': 'user',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions='full'
-                )
-            },
         ]
 
     @classmethod

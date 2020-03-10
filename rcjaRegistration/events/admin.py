@@ -126,15 +126,6 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
     ]
 
     @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'division',
-                'queryset': Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request))
-            }
-        ]
-
-    @classmethod
     def fieldsToFilterObj(cls, request, obj):
         return [
             {
@@ -200,7 +191,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     inlines = [
         AvailableDivisionInline,
     ]
-    add_inlines = [
+    add_inlines = [ # Don't include available divisions here so the divisions will be fitlered when shown
     ]
     list_filter = [
         'state',
@@ -273,20 +264,6 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
                     coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
                 )
             },
-            # { # See GitHub issue #276
-            #     'field': 'directEnquiriesTo',
-            #     'queryset': User.objects.filter(
-            #         homeState__coordinator__user=request.user,
-            #         homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
-            #     )
-            # },
-            {
-                'field': 'venue',
-                'queryset': Venue.objects.filter(
-                    state__coordinator__user=request.user,
-                    state__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
-                )
-            }
         ]
 
     @classmethod

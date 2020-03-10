@@ -1012,8 +1012,8 @@ class TestSchoolAdministratorAdmin(TestCase):
 
     # School FK filtering
 
-    # User field
-    def testUserFieldSuccess_superuser(self):
+    # State field
+    def testStateFieldSuccess_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
         payload = {
             'user': self.user3.id,
@@ -1022,7 +1022,7 @@ class TestSchoolAdministratorAdmin(TestCase):
         response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
 
-    def testUserFieldSuccess_coordinator(self):
+    def testStateFieldSuccess_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
@@ -1031,20 +1031,6 @@ class TestSchoolAdministratorAdmin(TestCase):
         }
         response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
-
-    def testUserFieldDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user2.id,
-            'school': self.school1.id,
-        }
-        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Please correct the error below.')
-        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
-
-    # State field
 
     def testStateFieldDenied_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
