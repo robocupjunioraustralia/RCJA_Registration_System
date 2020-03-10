@@ -247,7 +247,7 @@ class Event(CustomSaveDeleteModel):
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+        checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
 
         # Check close and end date after start dates
         if self.startDate > self.endDate:
