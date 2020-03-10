@@ -65,7 +65,8 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         from schools.models import School, Campus
@@ -108,7 +109,8 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -157,7 +159,8 @@ class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -169,7 +172,8 @@ class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'team__event__state__coordinator__in': Coordinator.objects.filter(user=request.user)

@@ -167,7 +167,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from regions.models import State
         return [
@@ -181,7 +182,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'homeState__coordinator__in': Coordinator.objects.filter(user=request.user)

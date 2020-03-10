@@ -68,7 +68,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from regions.models import State
         return [
@@ -81,7 +82,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -123,7 +125,8 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -135,7 +138,8 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -191,7 +195,8 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         return [
@@ -218,7 +223,8 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)

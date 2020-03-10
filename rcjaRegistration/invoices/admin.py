@@ -84,7 +84,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)

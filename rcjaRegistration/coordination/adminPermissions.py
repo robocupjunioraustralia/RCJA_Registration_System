@@ -82,10 +82,12 @@ class BaseAdminPermissions:
 
     # Foreign key filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         return []
 
-    def fieldsToFilterObj(self, request, obj):
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
         return []
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

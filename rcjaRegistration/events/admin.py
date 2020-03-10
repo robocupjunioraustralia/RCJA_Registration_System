@@ -44,7 +44,8 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -57,7 +58,8 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return [
             Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
@@ -93,7 +95,8 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -105,7 +108,8 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -120,7 +124,8 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
         'division',
     ]
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         return [
             {
                 'field': 'division',
@@ -128,7 +133,8 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
             }
         ]
 
-    def fieldsToFilterObj(self, request, obj):
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
         return [
             {
                 'field': 'division',
@@ -226,7 +232,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilterRequest(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         return [
@@ -253,7 +260,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
