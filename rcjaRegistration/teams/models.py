@@ -29,7 +29,7 @@ class Team(CustomSaveDeleteModel):
         ordering = ['event', 'school', 'division', 'name']
 
     def clean(self):
-        checkRequiredFieldsNotNone(self, ['event', 'division', 'mentorUser'])
+        checkRequiredFieldsNotNone(self, ['event', 'division'])
 
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
