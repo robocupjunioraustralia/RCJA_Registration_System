@@ -1,6 +1,7 @@
 from django.contrib import admin
 from common.admin import *
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from django.contrib import messages
 
 from .models import *
 from regions.models import State
@@ -138,13 +139,13 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
         return [
             {
                 'field': 'division',
-                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else None # Doesn't matter what is returned because haven't set filterNone, so will fall back to fieldsToFilterRequest
+                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so will never fallback to None
+                'filterNone': True
             }
         ]
 
-
 @admin.register(Event)
-class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'eventType',
@@ -171,7 +172,24 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
         }),
         ('Details', {
-            'fields': ('directEnquiriesTo', 'venue','eventDetails', 'additionalInvoiceMessage')
+            'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
+        }),
+    )
+    add_fieldsets = (
+        (None, {
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+        }),
+        ('Dates', {
+            'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Team settings', {
+            'fields': ('maxMembersPerTeam',)
+        }),
+        ('Billing settings', {
+            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee')
+        }),
+        ('Details', {
+            'fields': ('directEnquiriesTo',)
         }),
     )
     autocomplete_fields = [
@@ -181,6 +199,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     inlines = [
         AvailableDivisionInline,
+    ]
+    add_inlines = [
     ]
     list_filter = [
         'state',
@@ -230,6 +250,15 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
 
+    def save_model(self, request, obj, form, change):
+        if obj.pk:
+            if obj.venue is None:
+                self.message_user(request, f"{obj}: You haven't added a venue yet, we recommend adding a venue.", messages.WARNING)
+            if not obj.divisions.exists():
+                self.message_user(request, f"{obj}: You haven't added any divisions yet, people won't be able to register.", messages.WARNING)
+        
+        super().save_model(request, obj, form, change)
+
     # State based filtering
 
     @classmethod
@@ -266,3 +295,13 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
+
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return [
+            {
+                'field': 'venue',
+                'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so will never fallback to None
+                'filterNone': True
+            }
+        ]
