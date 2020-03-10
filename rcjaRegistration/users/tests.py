@@ -584,7 +584,7 @@ class TestUserAdmin(TestCase):
         response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
         self.assertEqual(response.status_code, 200)
 
-        self.assertNotContains(response, "School administrator of")
+        self.assertContains(response, "School administrator of")
         self.assertNotContains(response, "Coordinator of")
         self.assertContains(response, "Question Responses")
 

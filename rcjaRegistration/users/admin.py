@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 
 from common.admin import ExportCSVMixin
-from coordination.adminPermissions import AdminPermissions, FilteredFKForm
+from coordination.adminPermissions import AdminPermissions
 
 from .models import User
 
@@ -25,7 +25,15 @@ class SchoolAdministratorInline(admin.TabularInline):
         'school',
         'campus',
     ]
-    # Don't need to make read only here (unlike on the School admin) because only accessible to super users
+    show_change_link = True
+
+    # Need to make read only because don't filter the school field (and can't easily filter the campus field)
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class CoordinatorInline(admin.TabularInline):
     from coordination.models import Coordinator
@@ -208,6 +216,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
             QuestionResponseInline,
         ]
         return [
+            SchoolAdministratorInline,
             QuestionResponseInline,
         ]
 
