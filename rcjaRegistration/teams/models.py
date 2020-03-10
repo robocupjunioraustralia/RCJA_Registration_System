@@ -36,7 +36,7 @@ class Team(CustomSaveDeleteModel):
             raise(ValidationError('Campus school must match school'))
 
         # Check division is from correct state
-        if self.division.state != self.event.state:
+        if self.division.state is not None and self.division.state != self.event.state:
             raise(ValidationError('Division state must match event state'))
 
     # *****Permissions*****
