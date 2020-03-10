@@ -106,6 +106,11 @@ class DifferentAddFieldsMixin:
             return self.add_fields
         return super().get_fields(request, obj)
 
+    def get_inlines(self, request, obj):
+        if not obj and hasattr(self, 'add_inlines'):
+            return self.add_inlines
+        return super().get_inlines(request, obj)
+
     def response_add(self, request, obj, post_url_continue=None):
         """
         Determine the HttpResponse for the add_view stage. It mostly defers to
