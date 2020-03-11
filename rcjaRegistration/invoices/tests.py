@@ -981,7 +981,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50 - 80, 2))
         self.assertEqual(self.invoice.amountGST(), round((12 * 50 - 80)*0.1, 2))
-        self.assertEqual(self.invoice.invoiceInclGST(), round((12 * 50 - 80)*1.1, 2))
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round((12 * 50 - 80)*1.1, 2))
 
     def testAvailableDivisionRateTeam(self):
         AvailableDivision.objects.create(
