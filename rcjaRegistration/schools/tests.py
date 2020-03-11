@@ -684,12 +684,21 @@ class TestSchoolAdministratorMethods(TestCase):
     def setUp(self):
         schoolSetUp(self)
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
 
     def testGetState(self):
         self.assertEqual(self.admin1.getState(), self.state1)
 
     def testStr(self):
         self.assertEqual(str(self.admin1), self.email1)
+
+    def testUserName(self):
+        self.assertEqual(self.admin1.userName(), 'First Last')
+
+    def testUserEmail(self):
+        self.assertEqual(self.admin1.userEmail(), self.email1)
 
 def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)

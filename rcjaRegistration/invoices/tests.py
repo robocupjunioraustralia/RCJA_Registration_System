@@ -1102,6 +1102,9 @@ class TestInvoiceMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         createCammpuses(self)
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
 
     def testGetState(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
@@ -1118,6 +1121,14 @@ class TestInvoiceMethods(TestCase):
     def testStr_independent(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): user1@user.com")
+
+    def testInvoiceToUserName(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.invoiceToUserName(), 'First Last')
+
+    def testInvoiceToUserEmail(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.invoiceToUserEmail(), self.email1)
 
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
