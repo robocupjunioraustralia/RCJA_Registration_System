@@ -609,9 +609,9 @@ class TestTeamMethods(TestCase):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team 1', division=self.division1)
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team 2', school=self.school2, division=self.division1)
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team 3', school=self.school3, division=self.division1)
-        self.user1.first_name = 'First'
-        self.user1.last_name = 'Last'
-        self.user1.save()
+        self.user2.first_name = 'First'
+        self.user2.last_name = 'Last'
+        self.user2.save()
 
     def testGetState(self):
         self.assertEqual(self.team1.getState(), self.state1)
@@ -626,7 +626,7 @@ class TestTeamMethods(TestCase):
         self.assertEqual(self.team1.mentorUserName(), 'First Last')
 
     def testMentorUserEmail(self):
-        self.assertEqual(self.team1.mentorUserEmail(), self.email1)
+        self.assertEqual(self.team1.mentorUserEmail(), self.email2)
 
 class TestTeamCreationFormValidation_School(TestCase):
     email1 = 'user1@user.com'
