@@ -23,12 +23,11 @@ class TeamForm(forms.ModelForm):
 
         # Check school is selected if mentor is admin of more than one school
         if mentorUser and mentorUser.schooladministrator_set.count() > 1 and school is None:
-            errors.append(ValidationError(f'School must not be blank because {mentorUser.get_full_name()} is an administrator of multiple schools. Please select a school.'))
+            errors.append(ValidationError(f'School must not be blank because {mentorUser.fullname_or_email()} is an administrator of multiple schools. Please select a school.'))
 
         # Check school is set if previously set and mentor still an admin of school
-        if mentorUser and self.instance and self.instance.school and not school:
-            errors.append(ValidationError(f"Can't remove {self.instance.school} from this team while {self.instance.mentorUser.get_full_name()} is still an admin of this school."))
-
+        if self.instance and self.instance.school and not school:
+            errors.append(ValidationError(f"Can't remove {self.instance.school} from this team while {self.instance.mentorUser.fullname_or_email()} is still an admin of this school."))
 
         # Raise any errors
         if errors:
