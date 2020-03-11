@@ -965,12 +965,23 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
-    def testSpecialRate(self):
+    def testSpecialRateInclGST(self):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 - 80, 2))
+
+    def testSpecialRateExclGST(self):
+        self.event.entryFeeIncludesGST = False
+
+        self.event.event_specialRateNumber = 4
+        self.event.event_specialRateFee = 30
+        self.event.save()
+
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50 - 80, 2))
+        self.assertEqual(self.invoice.invoiceGST(), round((12 * 50 - 80)*0.1, 2))
+        self.assertEqual(self.invoice.invoiceInclGST(), round((12 * 50 - 80)*1.1, 2))
 
     def testAvailableDivisionRateTeam(self):
         AvailableDivision.objects.create(
@@ -1120,7 +1131,7 @@ class TestInvoiceMethods(TestCase):
 
     def testStr_independent(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): user1@user.com")
+        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): First Last")
 
     def testInvoiceToUserName(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
