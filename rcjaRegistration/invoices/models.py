@@ -351,7 +351,7 @@ class Invoice(CustomSaveDeleteModel):
         elif self.school:
             return f'{self.event}: {self.school}'
         else:
-            return f'{self.event}: {self.invoiceToUser}'
+            return f'{self.event}: {self.invoiceToUser.fullname_or_email()}'
 
     # *****CSV export methods*****
 
