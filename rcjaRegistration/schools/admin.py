@@ -1,29 +1,11 @@
 from django.contrib import admin
 from common.admin import *
 from coordination.adminPermissions import AdminPermissions
+from .adminInlines import SchoolAdministratorInline
 
 from .models import *
 
 # Register your models here.
-
-class SchoolAdministratorInline(admin.TabularInline):
-    model = SchoolAdministrator
-    extra = 0
-    verbose_name = "Administrator"
-    verbose_name_plural = "Administrators"
-    # Define fields to define order
-    fields = [
-        'user',
-        'campus',
-    ]
-
-    # Need to prevent editing through inline because no user filtering
-    def has_change_permission(self, request, obj=None):
-        return False
-    def has_add_permission(self, request, obj=None):
-        return False
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 class CampusInline(admin.TabularInline):
     model = Campus
@@ -68,7 +50,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from regions.models import State
         return [
@@ -81,7 +64,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -123,7 +107,8 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -135,7 +120,8 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -154,9 +140,10 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return alwaysReadOnly
 
 @admin.register(SchoolAdministrator)
-class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'user',
+        'userName',
+        'userEmail',
         'school',
         'campus'
     ]
@@ -184,24 +171,24 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
         'export_as_csv'
     ]
     exportFields = [
-        'user',
+        'userName',
+        'userEmail',
         'school',
         'campus',
     ]
 
+    add_fields = [
+        'school',
+        'user',
+    ]
+
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         return [
-            {
-                'field': 'user',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
-                )
-            },
             {
                 'field': 'school',
                 'queryset': School.objects.filter(
@@ -209,16 +196,20 @@ class SchoolAdministratorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixi
                     state__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
                 )
             },
+        ]
+
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return [
             {
                 'field': 'campus',
-                'queryset': Campus.objects.filter(
-                    school__state__coordinator__user=request.user,
-                    school__state__coordinator__permissions__in=reversePermisisons(SchoolAdministrator, ['add', 'change'])
-                )
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
+                'filterNone': True,
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'school__state__coordinator__in': Coordinator.objects.filter(user=request.user)

@@ -27,7 +27,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'invoiceNumber',
         'detailURL',
-        'invoiceToUser',
+        'invoiceToUserName',
         'event',
         'school',
         'campus',
@@ -37,7 +37,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     readonly_fields = [
         'event',
-        'invoiceToUser',
+        'invoiceToUserName',
+        'invoiceToUserEmail',
         'school',
         'campus',
         'invoiceNumber',
@@ -71,7 +72,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     exportFields = [
         'event',
-        'invoiceToUser',
+        'invoiceToUserName',
+        'invoiceToUserEmail',
         'school',
         'campus',
         'invoiceNumber',
@@ -84,7 +86,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)

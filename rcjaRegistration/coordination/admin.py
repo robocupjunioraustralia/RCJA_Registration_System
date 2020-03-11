@@ -50,7 +50,8 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from regions.models import State
         from users.models import User
         return [
@@ -61,16 +62,10 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                     coordinator__permissions='full'
                 )
             },
-            {
-                'field': 'user',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions='full'
-                )
-            },
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user),
             'state__coordinator__permissions': 'full',

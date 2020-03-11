@@ -1,6 +1,7 @@
 from django.contrib import admin
 from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from django.contrib import messages
 
 from .models import *
 from regions.models import State
@@ -44,7 +45,8 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -57,7 +59,8 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return [
             Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
@@ -93,7 +96,8 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         return [
             {
@@ -105,7 +109,8 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -113,33 +118,25 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
 admin.site.register(Year)
 
-class AvailableDivisionInline(admin.TabularInline):
+class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
     model = AvailableDivision
     extra = 0
     autocomplete_fields = [
         'division',
     ]
 
-    # Set parent obj on class so available to inline
-    def get_formset(self, request, obj=None, **kwargs):
-        self.parentObj = obj
-        return super().get_formset(request, obj, **kwargs)
-
-    # Override division fk dropdown to filter to state if not super user
-    def formfield_for_foreignkey(self, db_field, request, *args, **kwargs):
-        from django.forms import ModelChoiceField
-        if db_field.name == 'division':
-
-            if not request.user.is_superuser:
-                return ModelChoiceField(queryset=Division.objects.filter(*DivisionAdmin.stateFilteringAttributes(self, request)))
-            
-            if self.parentObj is not None:
-                return ModelChoiceField(queryset=Division.objects.filter(Q(state=self.parentObj.state) | Q(state=None)))
-
-        return super().formfield_for_foreignkey(db_field, request, *args, **kwargs)
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return [
+            {
+                'field': 'division',
+                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so will never fallback to None
+                'filterNone': True
+            }
+        ]
 
 @admin.register(Event)
-class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'eventType',
@@ -166,7 +163,27 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
         }),
         ('Details', {
-            'fields': ('directEnquiriesTo', 'venue','eventDetails', 'additionalInvoiceMessage')
+            'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
+        }),
+    )
+    add_fieldsets = (
+        (None, {
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+        }),
+        ('Dates', {
+            'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Team settings', {
+            'description': "More options will be available after you click save",
+            'fields': ('maxMembersPerTeam',)
+        }),
+        ('Billing settings', {
+            'description': "More options will be available after you click save",
+            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee')
+        }),
+        ('Details', {
+            'description': "More options will be available after you click save",
+            'fields': ('directEnquiriesTo',)
         }),
     )
     autocomplete_fields = [
@@ -176,6 +193,8 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     inlines = [
         AvailableDivisionInline,
+    ]
+    add_inlines = [ # Don't include available divisions here so the divisions will be fitlered when shown
     ]
     list_filter = [
         'state',
@@ -225,9 +244,27 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
 
+    # Message user during save
+    def save_model(self, request, obj, form, change):
+        if obj.pk:
+            if obj.venue is None:
+                self.message_user(request, f"{obj}: You haven't added a venue yet, we recommend adding a venue.", messages.WARNING)
+        
+        super().save_model(request, obj, form, change)
+
+    # Message user regarding divisions during inline save
+    def save_formset(self, request, form, formset, change):
+        # Don't want to display error on add page because inlines not shown so impossible to add divisions
+        if change:
+            if len(formset.cleaned_data) == 0:
+                self.message_user(request, f"{form.instance}: You haven't added any divisions yet, people won't be able to register.", messages.WARNING)
+
+        super().save_formset(request, form, formset, change)
+
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from users.models import User
         return [
@@ -238,24 +275,21 @@ class EventAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                     coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
                 )
             },
-            # { # See GitHub issue #276
-            #     'field': 'directEnquiriesTo',
-            #     'queryset': User.objects.filter(
-            #         homeState__coordinator__user=request.user,
-            #         homeState__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
-            #     )
-            # },
-            {
-                'field': 'venue',
-                'queryset': Venue.objects.filter(
-                    state__coordinator__user=request.user,
-                    state__coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
-                )
-            }
         ]
 
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'state__coordinator__in': Coordinator.objects.filter(user=request.user)
         }
+
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return [
+            {
+                'field': 'venue',
+                'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so will never fallback to None
+                'filterNone': True
+            }
+        ]

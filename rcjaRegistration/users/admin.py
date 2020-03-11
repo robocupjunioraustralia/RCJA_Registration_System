@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 
 from common.admin import ExportCSVMixin
-from coordination.adminPermissions import AdminPermissions, FilteredFKForm
+from coordination.adminPermissions import AdminPermissions
 
 from .models import User
 
@@ -25,7 +25,15 @@ class SchoolAdministratorInline(admin.TabularInline):
         'school',
         'campus',
     ]
-    # Don't need to make read only here (unlike on the School admin) because only accessible to super users
+    show_change_link = True
+
+    # Need to make read only because don't filter the school field (and can't easily filter the campus field)
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class CoordinatorInline(admin.TabularInline):
     from coordination.models import Coordinator
@@ -51,14 +59,6 @@ class User_QuestionResponse_Filter(admin.SimpleListFilter):
             return queryset.filter(questionresponse__response = True, questionresponse__question__id = int(self.value()))
         except (ValueError,TypeError):
             return queryset
-
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-
-class Filtered_UserChangeForm(FilteredFKForm, UserChangeForm):
-    pass
-
-class Filtered_UserCreationForm(FilteredFKForm, UserCreationForm):
-    pass
 
 @admin.register(User)
 class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
@@ -175,7 +175,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         from coordination.adminPermissions import reversePermisisons
         from regions.models import State
         return [
@@ -189,10 +190,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
             }
         ]
 
-    form = Filtered_UserChangeForm
-    add_form = Filtered_UserCreationForm
-
-    def stateFilteringAttributes(self, request):
+    @classmethod
+    def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
         return {
             'homeState__coordinator__in': Coordinator.objects.filter(user=request.user)
@@ -212,11 +211,12 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         # Only superuser can edit inlines on admin
         if request.user.is_superuser:
             return [
-            SchoolAdministratorInline,
-            CoordinatorInline,
-            QuestionResponseInline,
-        ]
+                CoordinatorInline,
+                SchoolAdministratorInline,
+                QuestionResponseInline,
+            ]
         return [
+            SchoolAdministratorInline,
             QuestionResponseInline,
         ]
 

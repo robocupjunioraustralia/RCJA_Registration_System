@@ -4,6 +4,29 @@ from django.conf import settings
 
 # **********MODELS**********
 
+def eventCoordinatorEditPermisisons(level):
+    if level in ['full', 'eventmanager']:
+        return [
+            'add',
+            'view',
+            'change',
+            'delete'
+        ]
+    elif level in ['viewall', 'billingmanager']:
+        return [
+            'view',
+        ]
+    
+    return []
+
+def eventCoordinatorViewPermissions(level):
+    if level in ['full', 'viewall', 'eventmanager']:
+        return [
+            'view',
+        ]
+
+    return []
+
 class DivisionCategory(models.Model):
     # Foreign keys
     # Creation and update time
@@ -21,12 +44,7 @@ class DivisionCategory(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -75,19 +93,7 @@ class Division(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -115,9 +121,9 @@ class Venue(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=40)
+    name = models.CharField('Name', max_length=60)
     address = models.TextField('Address', blank=True)
-    
+
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Venue'
@@ -138,19 +144,7 @@ class Venue(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -163,7 +157,7 @@ class Venue(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.name} ({self.state})'
+        return self.name
 
     # *****CSV export methods*****
 
@@ -185,7 +179,7 @@ class Year(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return DivisionCategory.coordinatorPermissions(level)
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -253,7 +247,7 @@ class Event(CustomSaveDeleteModel):
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+        checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
 
         # Check close and end date after start dates
         if self.startDate > self.endDate:
@@ -291,19 +285,7 @@ class Event(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -406,19 +388,7 @@ class AvailableDivision(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):

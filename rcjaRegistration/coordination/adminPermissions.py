@@ -1,7 +1,4 @@
 from django.contrib import admin
-# from common.admin import *
-
-from django import forms
 
 from .models import *
 
@@ -35,33 +32,7 @@ def reversePermisisons(obj, permissions):
                 levels.append(level[0])
     return levels
 
-class FilteredFKForm(forms.ModelForm):
-    # Fitler foreign keys for state permissions
-    def __init__(self, *args, **kwargs):
-        request = kwargs.pop('request')
-        fieldsToFilter = kwargs.pop('fieldsToFilter')
-        super().__init__(*args, **kwargs)
-
-        # Don't filter if super user
-        if not request.user.is_superuser:
-            for fieldToFilter in fieldsToFilter:
-                try:
-                    # Filter based on state with appropriate permissions
-                    self.fields[fieldToFilter['field']].queryset = fieldToFilter['queryset']
-
-                    # Set required if specified
-                    try:
-                        self.fields[fieldToFilter['field']].required = fieldToFilter['required']
-                    except KeyError:
-                        pass
-
-                    # Try and set the default to save admins time
-                    if fieldToFilter['queryset'].count() == 1:
-                        self.fields[fieldToFilter['field']].initial = fieldToFilter['queryset'].first().id
-                except KeyError:
-                    return
-
-class AdminPermissions:
+class BaseAdminPermissions:
     def get_queryset(self, request):
         # Get base queryset
         qs = super().get_queryset(request)
@@ -82,22 +53,51 @@ class AdminPermissions:
 
     # Foreign key filtering
 
-    form = FilteredFKForm
-
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         return []
 
-    # Add request and other attributes required for filtering foreign keys
-    def get_form(self, request, obj=None, **kwargs):
-        AdminForm = super().get_form(request, obj, **kwargs)
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return []
 
-        class AdminFormWithAttributes(AdminForm):
-            def __new__(cls, *args, **kwargs):
-                kwargs['request'] = request
-                kwargs['fieldsToFilter'] = self.fieldsToFilter(request)
-                return AdminForm(*args, **kwargs)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Filter by object
+        for fieldToFilter in self.fieldsToFilterObj(request, self.obj):
+            if db_field.name == fieldToFilter['field']:
+                if self.obj is not None or fieldToFilter.get('filterNone', False):
+                    kwargs['queryset'] = fieldToFilter['queryset']
+                    return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-        return AdminFormWithAttributes
+        # Filter by state
+        if not request.user.is_superuser:
+            for fieldToFilter in self.fieldsToFilterRequest(request):
+                if db_field.name == fieldToFilter['field']:
+
+                    kwargs['queryset'] = fieldToFilter['queryset']
+
+                    # Set required if specified
+                    try:
+                        if fieldToFilter['required']:
+                            kwargs['required'] = True # Do with an if statement because never want to override to make false
+                    except KeyError:
+                        pass
+
+                    # Try and set the default to save admins time
+                    if fieldToFilter['queryset'].count() == 1:
+                        kwargs['initial'] = fieldToFilter['queryset'].first().id
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_autocomplete_fields(self, request):
+        autocompleteFields = super().get_autocomplete_fields(request)
+
+        for fieldToFilter in self.fieldsToFilterObj(request, self.obj):
+            if self.obj is not None or fieldToFilter.get('filterNone', False):
+                field = fieldToFilter['field']
+                while field in autocompleteFields: autocompleteFields.remove(field)
+
+        return autocompleteFields
 
     # Permissions
 
@@ -116,14 +116,8 @@ class AdminPermissions:
     def checkStatePermissions(self, request, obj, permission):
         return checkStatePermissions(request, obj, permission)
 
-    def has_add_permission(self, request, obj=None):
-        # Check django permissions and editing allowed
-        if not (super().has_add_permission(request) and self.checkModelEditingAllowed(obj)):
-            return False
+    # Add permisison only needed for inline, defined there
 
-        # Check state permissions
-        return self.checkStatePermissions(request, obj, 'add')
-    
     def has_view_permission(self, request, obj=None):
         # Check django permissions
         if not super().has_view_permission(request, obj=obj):
@@ -159,3 +153,22 @@ class AdminPermissions:
 
         # Check state permissions
         return self.checkStatePermissions(request, obj, 'delete')
+
+class AdminPermissions(BaseAdminPermissions):
+    def get_form(self, request, obj=None, **kwargs):
+        self.obj = obj
+        return super().get_form(request, obj, **kwargs)
+
+class InlineAdminPermissions(BaseAdminPermissions):
+    # Set parent obj on class so available to inline
+    def get_formset(self, request, obj=None, **kwargs):
+        self.obj = obj
+        return super().get_formset(request, obj, **kwargs)
+
+    def has_add_permission(self, request, obj):
+        # Check django permissions and editing allowed
+        if not (super().has_add_permission(request, obj) and self.checkModelEditingAllowed(obj)):
+            return False
+
+        # Check state permissions
+        return self.checkStatePermissions(request, obj, 'add')

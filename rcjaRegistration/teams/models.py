@@ -2,6 +2,7 @@ from django.db import models
 from common.models import *
 
 from invoices.models import Invoice
+from schools.models import SchoolAdministrator
 
 # **********MODELS**********
 
@@ -29,15 +30,28 @@ class Team(CustomSaveDeleteModel):
         ordering = ['event', 'school', 'division', 'name']
 
     def clean(self):
+        errors = []
         checkRequiredFieldsNotNone(self, ['event', 'division'])
 
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
-            raise(ValidationError('Campus school must match school'))
+            errors.append(ValidationError('Campus school must match school'))
 
         # Check division is from correct state
         if self.division.state is not None and self.division.state != self.event.state:
-            raise(ValidationError('Division state must match event state'))
+            errors.append(ValidationError('Division state must match event state'))
+
+        # Check mentor is admin of this team's school
+        # Check not None because set after clean in frontend forms
+        if getattr(self, 'mentorUser', None) and getattr(self, 'school', None):
+            # Check not the current values in case mentor removed as admin of school after the event
+            if not self.pk or self.mentorUser != Team.objects.get(pk=self.pk).mentorUser or self.school != Team.objects.get(pk=self.pk).school:
+                if not SchoolAdministrator.objects.filter(user=self.mentorUser, school=self.school).exists():
+                    errors.append(ValidationError(f"{self.mentorUser.get_full_name()} is not an administrator of {self.school}"))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
@@ -92,6 +106,22 @@ class Team(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def homeState(self):
+        if self.school:
+            return self.school.state
+        return self.mentorUser.homeState
+    homeState.short_description = 'Home state'
+
+    def mentorUserName(self):
+        return self.mentorUser.fullname_or_email()
+    mentorUserName.short_description = 'Mentor'
+    mentorUserName.admin_order_field = 'mentorUser'
+
+    def mentorUserEmail(self):
+        return self.mentorUser.email
+    mentorUserEmail.short_description = 'Mentor email'
+    mentorUserEmail.admin_order_field = 'mentorUser__email'
 
     # Returns true if campus based invoicing enabled for this school for this event
     def campusInvoicingEnabled(self):

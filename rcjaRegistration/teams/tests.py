@@ -280,17 +280,18 @@ class TestTeamEdit(TestCase):
 
 def newCommonSetUp(self):
         self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
-        self.user3 = User.objects.create_user(email=self.email3, password=self.password)
-        self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True)
 
         self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
         self.state2 = State.objects.create(treasurer=self.user1, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
+        self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
+        self.user3 = User.objects.create_user(email=self.email3, password=self.password)
+        self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
+
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
         self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region1)
 
         self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
         self.campus2 = Campus.objects.create(school=self.school1, name='Campus 2')
@@ -503,18 +504,32 @@ class TestTeamClean(TestCase):
 
     def testCampusValid(self):
         self.team1.campus = self.campus1
-
         self.assertEqual(self.team1.clean(), None)
 
     def testCampusWrongSchool(self):
         self.team2.campus = self.campus1
-
         self.assertRaises(ValidationError, self.team2.clean)
 
     def testDivisionWrongState(self):
         self.team1.division = self.division4
-
         self.assertRaises(ValidationError, self.team1.clean)     
+
+    def testCheckMentorIsAdminOfSchool_noSchool(self):
+        self.team3 = Team(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1)
+        self.assertEqual(self.team3.clean(), None)
+
+    def testCheckMentorIsAdminOfSchool(self):
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        self.team3 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
+        self.assertEqual(self.team3.clean(), None)
+
+    def testCheckMentorIsAdminOfSchool_existing(self):
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
+        self.assertEqual(self.team3.clean(), None)
+
+    def testCheckMentorIsAdminOfSchool_notAdmin(self):
+        self.team3 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
+        self.assertRaises(ValidationError, self.team3.clean)
 
 class TestInvoiceMethods(TestCase):
     email1 = 'user1@user.com'
@@ -591,10 +606,27 @@ class TestTeamMethods(TestCase):
 
     def setUp(self):
         newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team 2', school=self.school2, division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team 3', school=self.school3, division=self.division1)
+        self.user2.first_name = 'First'
+        self.user2.last_name = 'Last'
+        self.user2.save()
 
     def testGetState(self):
-        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.assertEqual(self.team1.getState(), self.state1)
+
+    def testHomeState_school(self):
+        self.assertEqual(self.team3.homeState(), self.state2)
+
+    def testHomeState_school(self):
+        self.assertEqual(self.team1.homeState(), self.state1)
+    
+    def testMentorUserName(self):
+        self.assertEqual(self.team1.mentorUserName(), 'First Last')
+
+    def testMentorUserEmail(self):
+        self.assertEqual(self.team1.mentorUserEmail(), self.email2)
 
 class TestTeamCreationFormValidation_School(TestCase):
     email1 = 'user1@user.com'
@@ -739,3 +771,422 @@ class TestTeamCreationFormValidation_Independent(TestTeamCreationFormValidation_
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, school=self.school2, name='Team 2', division=self.division1)
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         self.schoolAssertValue = None
+
+def createEventsAndTeams(self):
+    self.event1 = Event.objects.create(
+        year=self.year,
+        state=self.state1,
+        name='Event 1',
+        maxMembersPerTeam=5,
+        entryFeeIncludesGST=True,
+        event_billingType='team',
+        event_defaultEntryFee = 50,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        directEnquiriesTo = self.user1,
+    )
+    self.event2 = Event.objects.create(
+        year=self.year,
+        state=self.state2,
+        name='Event 2',
+        maxMembersPerTeam=5,
+        entryFeeIncludesGST=True,
+        event_billingType='team',
+        event_defaultEntryFee = 50,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        directEnquiriesTo = self.user1,
+    )
+    self.team1 = Team.objects.create(event=self.event1, mentorUser=self.user2, name='Team 1', division=self.division1)
+    self.team2 = Team.objects.create(event=self.event2, mentorUser=self.user2, name='Team 2', division=self.division1)
+
+class TestTeamAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    email_superUser = emailsuper
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        createEventsAndTeams(self)
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+
+    def testListLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testChangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_change', args=(self.team1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testListContent_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team 1')
+        self.assertContains(response, 'Team 2')
+
+    def testDeleteLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_delete', args=(self.team1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testListNonStaff_denied(self):
+        self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_changelist'))
+        self.assertEqual(response.status_code, 302)
+
+    def testListLoads_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testListContent_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team 1')
+        self.assertNotContains(response, 'Team 2')
+
+    def testChangeLoads_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_change', args=(self.team1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testChangeDenied_wrongState_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_change', args=(self.team2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def testViewLoads_viewPermission_coordinator(self):
+        self.coord1.permissions = 'viewall'
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_change', args=(self.team1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Save')
+
+    # Form contents
+
+    def testChangeContent(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_change', args=(self.team1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Campus:')
+        self.assertNotContains(response, 'You can select campus after you have clicked save.')
+
+    def testAddContent(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:teams_team_add'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Campus:')
+        self.assertContains(response, 'You can select campus after you have clicked save.')
+
+    # Change Post
+
+    def testChangePostAllowed_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team1.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was changed successfully')
+
+        self.team1.refresh_from_db()
+        self.assertEqual(self.team1.name, 'Renamed 1')
+
+    def testChangePostDenied_wrongState_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 2',
+            'event': self.event2.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team2.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team2.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+        self.team2.refresh_from_db()
+        self.assertEqual(self.team2.name, 'Team 2')
+
+    def testChangePostDenied_viewPermission_coordinator(self):
+        self.coord1.permissions = 'viewall'
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team1.id,)), data=payload)
+        self.assertEqual(response.status_code, 403)
+
+        self.team1.refresh_from_db()
+        self.assertEqual(self.team1.name, 'Team 1')
+
+    # Add post
+
+    def testAddPostAllowed_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_add'), data=payload, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Team.objects.filter(name='New Team').exists(), True)
+        self.assertContains(response, 'was added successfully. You may edit it again below.')
+
+    def testAddPostDenied_viewPermission_coordinator(self):
+        self.coord1.permissions = 'viewall'
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_add'), data=payload, follow=True)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Team.objects.filter(name='New Team').exists(), False)
+
+    # Event FK filtering
+
+    # homeState field
+    def testEventFieldSuccess_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testEventFieldDenied_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'event': self.event2.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testEventFieldBlankDenied_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'event': '',
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(self.team1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
+    # Test admin validation
+
+    def testMultipleSchoolsDenied_schoolBlank(self):
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school1)
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school2)
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_add'), data=payload, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, f"School must not be blank because {self.user2.fullname_or_email()} is an administrator of multiple schools. Please select a school.")
+
+        self.assertEqual(Team.objects.filter(name='New Team').exists(), False)
+
+    def testMultipleSchoolsSuccess_schoolNotBlank(self):
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school1)
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school2)
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': self.school1.id,
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_add'), data=payload, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was added successfully. You may edit it again below.')
+
+        self.assertEqual(Team.objects.filter(name='New Team').exists(), True)
+
+    def testNotAdminOfSchool(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': self.school1.id,
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_add'), data=payload, follow=True)
+
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, f"is not an administrator of")
+
+        self.assertEqual(Team.objects.filter(name='New Team').exists(), False)
+
+    def testRemoveSchoolDenied(self):
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school1)
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school2)
+        team3 = Team.objects.create(name='Team 3', event=self.event1, division=self.division1, mentorUser=self.user2, school=self.school1)
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_change', args=(team3.id,)), data=payload, follow=True)
+
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, f"remove {self.school1} from this team while {self.user2.fullname_or_email()} is still an admin of this school.")
+
+        team3.refresh_from_db()
+        self.assertEqual(team3.school, self.school1)
+
+    # Test auto school set
+    def testMultipleSchoolsSuccess_schoolNotBlank(self):
+        SchoolAdministrator.objects.create(user=self.user2, school=self.school1)
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'New Team',
+            'event': self.event1.id,
+            'division': self.division1.id,
+            'mentorUser': self.user2.id,
+            'school': '',
+            'campus': '',
+            'student_set-TOTAL_FORMS': 0,
+            'student_set-INITIAL_FORMS': 0,
+            'student_set-MIN_NUM_FORMS': 0,
+            'student_set-MAX_NUM_FORMS': 0,
+        }
+        response = self.client.post(reverse('admin:teams_team_add'), data=payload, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was added successfully. You may edit it again below.')
+        self.assertContains(response, f'{self.school1} automatically added to New Team')
+
+        self.assertEqual(Team.objects.filter(name='New Team').exists(), True)
+        self.assertEqual(Team.objects.get(name='New Team').school, self.school1)

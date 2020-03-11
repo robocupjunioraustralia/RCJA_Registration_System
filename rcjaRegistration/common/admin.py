@@ -92,5 +92,41 @@ class ExportCSVMixin:
     export_as_csv.short_description = "Export selected"
     export_as_csv.allowed_permissions = ('change',)
 
+class DifferentAddFieldsMixin:
+    """
+    Adapted from Django UserAdmin methods.
+    """
+    def get_fieldsets(self, request, obj=None):
+        if not obj and hasattr(self, 'add_fieldsets'):
+            return self.add_fieldsets
+        return super().get_fieldsets(request, obj)
+
+    def get_fields(self, request, obj=None):
+        if not obj and hasattr(self, 'add_fields'):
+            return self.add_fields
+        return super().get_fields(request, obj)
+
+    def get_inlines(self, request, obj):
+        if not obj and hasattr(self, 'add_inlines'):
+            return self.add_inlines
+        return super().get_inlines(request, obj)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """
+        Determine the HttpResponse for the add_view stage. It mostly defers to
+        its superclass implementation but is customized because the User model
+        has a slightly different workflow.
+        """
+        # We should allow further modification of the user just added i.e. the
+        # 'Save' button should behave like the 'Save and continue editing'
+        # button except in two scenarios:
+        # * The user has pressed the 'Save and add another' button
+        # * We are adding a user in a popup
+        from django.contrib.admin.options import IS_POPUP_VAR
+        if '_addanother' not in request.POST and IS_POPUP_VAR not in request.POST:
+            request.POST = request.POST.copy()
+            request.POST['_continue'] = 1
+        return super().response_add(request, obj, post_url_continue)
+
 # Disable key-value store admin
 admin.site.unregister(keyvaluestore.admin.KeyValueStore)
