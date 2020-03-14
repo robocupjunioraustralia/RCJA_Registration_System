@@ -1,8 +1,6 @@
 from django.db import models
 from common.models import *
 
-from invoices.models import Invoice
-from schools.models import SchoolAdministrator
 from events.models import BaseEventAttendance
 
 # **********MODELS**********

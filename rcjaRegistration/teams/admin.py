@@ -60,6 +60,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'export_as_csv'
     ]
     exportFields = [
+        'name',
         'event',
         'division',
         'mentorUserName',
