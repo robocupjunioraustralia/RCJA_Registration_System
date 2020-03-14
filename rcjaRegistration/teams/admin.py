@@ -127,16 +127,14 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from coordination.adminPermissions import reversePermisisons
+        from events.admin import EventAdmin
         from events.models import Event
         return [
             {
                 'field': 'event',
-                'queryset': Event.objects.filter(
-                    state__coordinator__user=request.user,
-                    state__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])
-                )
-            },
+                'fieldModel': Event,
+                'fieldAdmin': EventAdmin,
+            }
         ]
 
     @classmethod
@@ -149,12 +147,7 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
             }
         ]
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        return {
-            'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'event__state__coordinator'
 
 @admin.register(Student)
 class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -201,20 +194,12 @@ class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from coordination.adminPermissions import reversePermisisons
         return [
             {
                 'field': 'team',
-                'queryset': Team.objects.filter(
-                    event__state__coordinator__user=request.user,
-                    event__state__coordinator__permissions__in=reversePermisisons(Student, ['add', 'change'])
-                )
+                'fieldModel': Team,
+                'fieldAdmin': TeamAdmin,
             }
         ]
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        return {
-            'team__event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'team__event__state__coordinator'

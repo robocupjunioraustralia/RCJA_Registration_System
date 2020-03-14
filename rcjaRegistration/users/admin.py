@@ -177,25 +177,19 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from coordination.adminPermissions import reversePermisisons
+        from regions.admin import StateAdmin
         from regions.models import State
         return [
             {
                 'field': 'homeState',
                 'required': True,
-                'queryset': State.objects.filter(
-                    coordinator__user=request.user,
-                    coordinator__permissions='full',
-                )
+                'permissions': ['full'],
+                'fieldModel': State,
+                'fieldAdmin': StateAdmin,
             }
         ]
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        return {
-            'homeState__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'homeState__coordinator'
 
     # Only superuser can change permissions on users
     def get_readonly_fields(self, request, obj=None):

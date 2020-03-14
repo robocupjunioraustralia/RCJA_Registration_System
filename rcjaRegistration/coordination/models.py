@@ -19,7 +19,7 @@ class Coordinator(CustomSaveDeleteModel):
         ('billingmanager', 'Billing manager'),
         ('full','Full'))
     permissions = models.CharField('Permissions', max_length=20, choices=permissionsOptions)
-    position = models.CharField('Position', max_length=50) # if want to tie permissions to this will need to set options. Without considerable work user will get permissions of most permissive state.
+    position = models.CharField('Position', max_length=50)
 
     # *****Meta and clean*****
     class Meta:
