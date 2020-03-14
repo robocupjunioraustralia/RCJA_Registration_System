@@ -7,7 +7,7 @@ from django.conf import settings
 class Coordinator(CustomSaveDeleteModel):
     # Foreign keys
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
-    state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE)
+    state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE, null=True, blank=True)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -24,7 +24,7 @@ class Coordinator(CustomSaveDeleteModel):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Coordinator'
-        unique_together = ('user', 'state')
+        unique_together = ('user', 'state', 'permissions')
         ordering = ['state', 'user']
 
     # *****Permissions*****
