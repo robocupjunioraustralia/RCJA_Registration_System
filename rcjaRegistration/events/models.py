@@ -446,7 +446,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         # Check not None because set after clean in frontend forms
         if getattr(self, 'mentorUser', None) and getattr(self, 'school', None):
             # Check not the current values in case mentor removed as admin of school after the event
-            if not self.pk or self.mentorUser != Team.objects.get(pk=self.pk).mentorUser or self.school != Team.objects.get(pk=self.pk).school:
+            if not self.pk or self.mentorUser != BaseEventAttendance.objects.get(pk=self.pk).mentorUser or self.school != BaseEventAttendance.objects.get(pk=self.pk).school:
                 if not SchoolAdministrator.objects.filter(user=self.mentorUser, school=self.school).exists():
                     errors.append(ValidationError(f"{self.mentorUser.get_full_name()} is not an administrator of {self.school}"))
 
