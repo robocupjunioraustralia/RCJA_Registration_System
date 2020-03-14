@@ -356,8 +356,6 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
         'mentorUser__email',
         'event__name',
         'division__name',
-        'student__firstName',
-        'student__lastName',
     ]
     actions = [
         'export_as_csv'

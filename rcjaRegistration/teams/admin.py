@@ -54,6 +54,8 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
 
     search_fields = BaseWorkshopAttendanceAdmin.search_fields + [
         'name',
+        'student__firstName',
+        'student__lastName',
     ]
 
     actions = [

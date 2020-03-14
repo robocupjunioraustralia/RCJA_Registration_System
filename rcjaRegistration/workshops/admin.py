@@ -59,6 +59,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
     search_fields = BaseWorkshopAttendanceAdmin.search_fields + [
         'firstName',
         'lastName',
+        'email',
     ]
 
     actions = [
