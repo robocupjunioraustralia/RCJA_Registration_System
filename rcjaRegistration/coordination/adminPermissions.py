@@ -53,16 +53,16 @@ class BaseAdminPermissions:
         if hasattr(querysetAdminClass, 'stateFilterLookup'):
             filterString = querysetAdminClass.stateFilterLookup
 
-            # Check for global coordinator
-            if Coordinator.objects.filter(user=request.user, state=None).exists():
-                filteringAttributes = {
-                    f'{filterString}__permissions__in': permissions,
-                }       
-            else:
-                filteringAttributes = {
-                    f'{filterString}__in': Coordinator.objects.filter(user=request.user),
-                    f'{filterString}__permissions__in': permissions,
-                }
+            # Check for global coordinator and permissions for this model
+            for coordinator in Coordinator.objects.filter(user=request.user, state=None).filter():
+                if coordinator.checkPermission(self.model, 'view') or coordinator.checkPermission(self.model, 'change'):                
+                    return queryset
+
+            filteringAttributes = {
+                f'{filterString}__in': Coordinator.objects.filter(user=request.user),
+                f'{filterString}__permissions__in': permissions,
+            }
+
             return queryset.filter(**filteringAttributes)
         
         return queryset
