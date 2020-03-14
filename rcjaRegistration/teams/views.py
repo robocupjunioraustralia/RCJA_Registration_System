@@ -13,6 +13,7 @@ import datetime
 
 @login_required
 def createTeam(request, eventID):
+    raise PermissionDenied("Under construction")
     event = get_object_or_404(Event, pk=eventID)
 
     StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.maxMembersPerTeam, max_num=event.maxMembersPerTeam, can_delete=False)
