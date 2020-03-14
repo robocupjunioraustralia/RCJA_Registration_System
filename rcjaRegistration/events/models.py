@@ -210,7 +210,7 @@ class Event(CustomSaveDeleteModel):
     # Fields
     name = models.CharField('Name', max_length=50)
     eventTypeChoices = (('competition', 'Competition'), ('workshop', 'Workshop'))
-    eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, default='competition', help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
+    eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
 
     # Dates
     startDate = models.DateField('Event start date')

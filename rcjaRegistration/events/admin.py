@@ -171,7 +171,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     add_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name')
+        }),
+        ('Event type', {
+            'description': "Please choose carefully, this can't be changed after the event is created",
+            'fields': ('eventType',)
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -189,6 +193,14 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('directEnquiriesTo',)
         }),
     )
+
+    # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
+    readonly_fields = [
+        'eventType',
+    ]
+    add_readonly_fields = [
+    ]
+
     autocomplete_fields = [
         'state',
         'directEnquiriesTo',
