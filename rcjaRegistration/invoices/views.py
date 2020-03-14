@@ -122,7 +122,7 @@ def setCampusInvoice(request, invoiceID):
         # Create campus invoices for campuses that have teams entered in this event
         # This invoice object remains for teams without a campus
         from schools.models import Campus
-        for campus in Campus.objects.filter(school=invoice.school, team__event=invoice.event).distinct():
+        for campus in Campus.objects.filter(school=invoice.school, baseeventattendance__event=invoice.event).distinct():
             Invoice.objects.create(
                 event=invoice.event,
                 invoiceToUser=invoice.invoiceToUser,

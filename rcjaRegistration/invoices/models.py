@@ -215,7 +215,7 @@ class Invoice(CustomSaveDeleteModel):
 
     def standardRateDivisions(self):
         from events.models import Division
-        return Division.objects.filter(team__in=self.standardRateTeams()).distinct()
+        return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
     def invoiceItems(self):
         from events.models import AvailableDivision
