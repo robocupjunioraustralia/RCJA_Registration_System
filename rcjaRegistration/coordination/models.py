@@ -24,8 +24,24 @@ class Coordinator(CustomSaveDeleteModel):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Coordinator'
-        unique_together = ('user', 'state', 'permissions')
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'permissions'], condition=Q(state=None), name='user_permissions'),
+            models.UniqueConstraint(fields=['user', 'state', 'permissions'], name='user_state_permissions'),
+        ]
         ordering = ['state', 'user']
+
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['user', 'permissions', 'position'])
+
+        # Check only one global coordinator per permission and user
+        if Coordinator.objects.filter(user=self.user, permissions=self.permissions, state=self.state).exclude(pk=self.pk).exists():
+            errors.append(ValidationError('Already coordinator for this user and permission level'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
