@@ -15,6 +15,9 @@ import datetime
 def createTeam(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
+    if not event.eventType == 'competition':
+        return HttpResponseNotFound('Teams cannot be created for this event type')
+
     StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.maxMembersPerTeam, max_num=event.maxMembersPerTeam, can_delete=False)
 
     # Check registrations open
@@ -66,7 +69,6 @@ def teamPermissions(request, team):
             return False
     
     return True
-            
 
 @login_required
 def editTeam(request, teamID):
