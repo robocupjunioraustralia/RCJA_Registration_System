@@ -475,19 +475,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
