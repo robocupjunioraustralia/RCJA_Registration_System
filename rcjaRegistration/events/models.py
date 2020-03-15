@@ -434,6 +434,11 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         errors = []
         checkRequiredFieldsNotNone(self, ['event', 'division'])
 
+        # Check correct event type for child
+        # eventTypeMapping must be defined on child or defaults to validation errror
+        if getattr(self, 'eventTypeMapping', None) != self.event.eventType:
+            errors.append(ValidationError('This event attendance is incompatible with this event type'))
+
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
             errors.append(ValidationError('Campus school must match school'))

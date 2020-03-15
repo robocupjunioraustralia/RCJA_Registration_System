@@ -30,6 +30,8 @@ class WorkshopAttendee(BaseEventAttendance):
         verbose_name = 'Workshop attendee'
         ordering = ['event', 'school', 'division', 'lastName']
 
+    eventTypeMapping = 'workshop'
+
     def clean(self):
         super().clean()
         errors = []

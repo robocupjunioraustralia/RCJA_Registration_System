@@ -16,6 +16,8 @@ class Team(BaseEventAttendance):
         verbose_name = 'Team'
         ordering = ['event', 'school', 'division', 'name']
 
+    eventTypeMapping = 'competition'
+
     def clean(self):
         super().clean()
         errors = []
