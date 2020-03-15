@@ -105,6 +105,14 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
 
+    def testWorkshopReturnsError_get(self):
+        self.newEvent.eventType = 'workshop'
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:create', kwargs={'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Teams cannot be created for this event type', status_code=403)
+
     def testMaxSubmissionNumber(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
@@ -625,7 +633,7 @@ class TestTeamMethods(TestCase):
 
     def testHomeState_school(self):
         self.assertEqual(self.team1.homeState(), self.state1)
-    
+
     def testMentorUserName(self):
         self.assertEqual(self.team1.mentorUserName(), 'First Last')
 
