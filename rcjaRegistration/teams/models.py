@@ -21,7 +21,7 @@ class HardwarePlatform(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        eventCoordinatorViewPermissions(level)
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -52,7 +52,7 @@ class SoftwarePlatform(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        eventCoordinatorViewPermissions(level)
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -131,7 +131,7 @@ class Student(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
