@@ -303,6 +303,13 @@ class Event(CustomSaveDeleteModel):
     # *****Save & Delete Methods*****
 
     def preSave(self):
+        # Set workshop prices
+        if self.workshopTeacherEntryFee is None:
+            self.workshopTeacherEntryFee = self.event_defaultEntryFee
+
+        if self.workshopStudentEntryFee is None:
+            self.workshopStudentEntryFee = self.event_defaultEntryFee
+
         if self.eventType == 'workshop':
             # Set maxMembersPerTeam to 0 if eventType is workshop
             self.maxMembersPerTeam = 0

@@ -128,6 +128,17 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
         'division',
     ]
 
+    def get_exclude(self, request, obj=None):
+        if obj:
+            if obj.eventType == 'workshop':
+                return [
+                    'division_maxTeamsPerSchool',
+                    'division_maxTeamsForDivision',
+                    'division_billingType',
+                    'division_entryFee',
+                ]
+        return super().get_exclude(request, obj)
+
     @classmethod
     def fieldsToFilterObj(cls, request, obj):
         return [
@@ -152,7 +163,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         'venue',
         'directEnquiriesToName',
     ]
-    fieldsets = (
+    competition_fieldsets = (
         (None, {
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
         }),
@@ -169,6 +180,20 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
         }),
     )
+    workshop_fieldsets = (
+        (None, {
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+        }),
+        ('Dates', {
+            'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Billing settings', {
+            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate')
+        }),
+        ('Details', {
+            'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
+        }),
+    )
     add_fieldsets = (
         (None, {
             'fields': ('year', ('state', 'globalEvent'), 'name')
@@ -180,13 +205,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
-        ('Team settings', {
-            'description': "More options will be available after you click save",
-            'fields': ('maxMembersPerTeam',)
-        }),
         ('Billing settings', {
             'description': "More options will be available after you click save",
-            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee')
+            'fields': ('entryFeeIncludesGST', 'event_defaultEntryFee')
         }),
         ('Details', {
             'description': "More options will be available after you click save",
@@ -258,6 +279,18 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
+
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            return self.add_fieldsets
+
+        if obj.eventType == 'workshop':
+            return self.workshop_fieldsets
+
+        if obj.eventType == 'competition':
+            return self.competition_fieldsets
+
+        return super().get_fieldsets(request, obj)
 
     # Message user during save
     def save_model(self, request, obj, form, change):
