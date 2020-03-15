@@ -76,7 +76,6 @@ class BaseAdminPermissions:
 
         return self.filterQuerysetByState(queryset, self, request, permissions)
 
-
     # Foreign key filtering
 
     @classmethod
