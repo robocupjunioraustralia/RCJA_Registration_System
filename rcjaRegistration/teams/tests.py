@@ -686,6 +686,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+8",
             "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 302)
@@ -816,6 +818,9 @@ class TestTeamCreationFormValidation_Independent(TestTeamCreationFormValidation_
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user2, school=self.school2, name='Team 2', division=self.division1)
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         self.schoolAssertValue = None
+
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
 
 def createEventsAndTeams(self):
     self.event1 = Event.objects.create(
