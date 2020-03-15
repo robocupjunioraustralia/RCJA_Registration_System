@@ -674,6 +674,9 @@ class TestTeamCreationFormValidation_School(TestCase):
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         self.schoolAssertValue = self.school1
 
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
+
     def testValidCreate(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         payload = {
@@ -700,6 +703,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+3",
             "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
@@ -719,6 +724,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+3",
             "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
@@ -738,6 +745,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+3",
             "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
@@ -757,6 +766,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+3",
             "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
@@ -773,6 +784,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+3",
             "division":self.division2.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
@@ -787,6 +800,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             "student_set-MIN_NUM_FORMS":0,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
             "name":"Team+3",
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
