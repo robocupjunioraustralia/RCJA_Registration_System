@@ -8,6 +8,7 @@ import datetime
 from .models import *
 from teams.models import Team
 from schools.models import Campus
+from workshops.models import WorkshopAttendee
 
 # Need to check if schooladministrator is None
 
@@ -77,13 +78,27 @@ def dashboard(request):
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
-    # filter teams
+    # Get team and workshop attendee filter dict
     if request.user.currentlySelectedSchool:
-        teams = Team.objects.filter(school=request.user.currentlySelectedSchool, event=event)
+        filterDict = {
+            'school': request.user.currentlySelectedSchool,
+            'event': event,
+        }
     else:
-        teams = Team.objects.filter(event=event, mentorUser=request.user, school=None)
-    
-    teams = teams.prefetch_related('student_set')
+        filterDict = {
+            'mentorUser': request.user,
+            'school': None,
+            'event': event,
+        }
+
+    # Filter team or workshop attendee
+    if event.boolWorkshop():
+        teams = Team.objects.none()
+        workshopAttendees = WorkshopAttendee.objects.filter(**filterDict)
+    else:
+        teams = Team.objects.filter(**filterDict)
+        teams = teams.prefetch_related('student_set')
+        workshopAttendees = WorkshopAttendee.objects.none()
 
     # Get billing type label
     if event.boolWorkshop():
@@ -95,7 +110,8 @@ def details(request, eventID):
         'event': event,
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
-        'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
+        'workshopAttendees': workshopAttendees,
+        'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'today':datetime.date.today(),
         'billingTypeLabel': billingTypeLabel,
     }
