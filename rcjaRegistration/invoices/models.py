@@ -372,6 +372,15 @@ class InvoicePayment(models.Model):
         verbose_name = 'Payment'
         ordering = ['invoice', 'datePaid']
 
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        return Invoice.coordinatorPermissions(level)
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.invoice.event.state
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
