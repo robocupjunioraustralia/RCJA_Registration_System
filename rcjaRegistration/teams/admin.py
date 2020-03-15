@@ -9,6 +9,14 @@ from events.admin import BaseWorkshopAttendanceAdmin
 
 # Register your models here.
 
+@admin.register(HardwarePlatform)
+class HardwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
+
+@admin.register(SoftwarePlatform)
+class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
+
 class StudentInline(admin.TabularInline):
     model = Student
     extra = 0
