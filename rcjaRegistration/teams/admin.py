@@ -84,6 +84,8 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'hardwarePlatform',
+        'softwarePlatform',
     ]
 
     eventTypeMapping = 'competition'
