@@ -9,7 +9,7 @@ from regions.models import State, Region
 from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
-from .models import Team, Student
+from .models import Team, Student, HardwarePlatform, SoftwarePlatform
 
 import datetime
 # Create your tests here.
@@ -95,6 +95,8 @@ def commonSetUp(obj): #copied from events, todo refactor
 class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actually saved to db properly
     def setUp(self):
         commonSetUp(self)
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
 
     def testOpenRegoDoesLoad(self):
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
@@ -127,6 +129,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
@@ -147,6 +151,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'add_text': 'blah',
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
@@ -168,6 +174,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"test",
@@ -188,6 +196,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"Test",
             "division":self.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"5",
@@ -208,6 +218,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"Testnew",
             "division":self.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"5",
@@ -241,6 +253,8 @@ class TestTeamEdit(TestCase):
             "name":"test+team",
             "division":self.division.id,
             "school":self.newSchool.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"teststringhere",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
@@ -261,6 +275,8 @@ class TestTeamEdit(TestCase):
             "name":"test+team",
             "division":self.division.id,
             "school":self.newSchool.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"teststringhere",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
@@ -280,6 +296,8 @@ class TestTeamEdit(TestCase):
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             "student_set-0-firstName":"test2",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"test",
@@ -832,6 +850,9 @@ class TestTeamAdmin(TestCase):
         self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
         self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
 
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
+
     def testListLoads_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
         response = self.client.get(reverse('admin:teams_team_changelist'))
@@ -919,6 +940,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -943,6 +966,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -970,6 +995,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -991,6 +1018,8 @@ class TestTeamAdmin(TestCase):
             'division': self.division1.id,
             'mentorUser': self.user2.id,
             'school': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1035,6 +1064,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1052,6 +1083,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1071,6 +1104,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1095,6 +1130,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1120,6 +1157,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': self.school1.id,
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1141,6 +1180,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': self.school1.id,
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1166,6 +1207,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
@@ -1191,6 +1234,8 @@ class TestTeamAdmin(TestCase):
             'mentorUser': self.user2.id,
             'school': '',
             'campus': '',
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
             'student_set-TOTAL_FORMS': 0,
             'student_set-INITIAL_FORMS': 0,
             'student_set-MIN_NUM_FORMS': 0,
