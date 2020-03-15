@@ -36,6 +36,12 @@ class WorkshopAttendee(BaseEventAttendance):
         super().clean()
         errors = []
 
+        # Check student fields are filled out
+        if self.attendeeType == 'student':
+            for field in ['yearLevel', 'gender', 'birthday']:
+                if not getattr(self, field, None):
+                    errors.append('{} must not be blank for student attendee'.format(self._meta.get_field(field).verbose_name))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
