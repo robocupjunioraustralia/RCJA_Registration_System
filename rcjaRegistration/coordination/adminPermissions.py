@@ -88,18 +88,21 @@ class BaseAdminPermissions:
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Filter by object
+        objectFiltering = False
         for fieldToFilter in self.fieldsToFilterObj(request, self.obj):
             if db_field.name == fieldToFilter['field']:
                 if self.obj is not None or fieldToFilter.get('filterNone', False):
-                    kwargs['queryset'] = fieldToFilter['queryset']
-                    return super().formfield_for_foreignkey(db_field, request, **kwargs)
+                    queryset = fieldToFilter['queryset']
+                    kwargs['queryset'] = queryset
+                    objectFiltering = True
 
         # Filter by state
         if not request.user.is_superuser:
             for fieldToFilter in self.fieldsToFilterRequest(request):
                 if db_field.name == fieldToFilter['field']:
 
-                    queryset = fieldToFilter['fieldModel'].objects.all()
+                    if not objectFiltering:
+                        queryset = fieldToFilter['fieldModel'].objects.all()
 
                     # Use defined permissions if present, else default to add and change on current model
                     defaultPermissions = reversePermisisons(self.model, ['add', 'change'])
@@ -116,8 +119,8 @@ class BaseAdminPermissions:
                     except KeyError:
                         pass
 
-                    # Try and set the default to save admins time
-                    if queryset.count() == 1:
+                    # Try and set the default to save admins time, but not if objectFiltering because might not be the ideal default
+                    if queryset.count() == 1 and not objectFiltering:
                         kwargs['initial'] = queryset.first().id
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
