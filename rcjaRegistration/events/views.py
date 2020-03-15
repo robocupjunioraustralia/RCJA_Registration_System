@@ -16,9 +16,9 @@ def dashboard(request):
     # Events
     # Get user event filtering attributes
     if request.user.currentlySelectedSchool:
-        usersTeams = Team.objects.filter(school=request.user.currentlySelectedSchool)
+        usersEventAttendances = BaseEventAttendance.objects.filter(school=request.user.currentlySelectedSchool)
     else:
-        usersTeams = Team.objects.filter(mentorUser=request.user, school=None)
+        usersEventAttendances = BaseEventAttendance.objects.filter(mentorUser=request.user, school=None)
 
     # Current state
     if request.user.currentlySelectedSchool:
@@ -31,7 +31,7 @@ def dashboard(request):
         registrationsOpenDate__lte=datetime.datetime.today(),
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
-        baseeventattendance__in=usersTeams,
+        baseeventattendance__in=usersEventAttendances,
     ).order_by('startDate').distinct()
 
     eventsAvailable = openForRegistrationEvents.exists()
@@ -47,12 +47,12 @@ def dashboard(request):
     # Get current and past events
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
-        baseeventattendance__in=usersTeams,
+        baseeventattendance__in=usersEventAttendances,
     ).distinct().order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
-        baseeventattendance__in=usersTeams,
+        baseeventattendance__in=usersEventAttendances,
     ).order_by('-startDate').distinct()
 
     # Invoices
