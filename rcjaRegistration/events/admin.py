@@ -376,7 +376,7 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
     def save_model(self, request, obj, form, change):
         if not obj.pk and obj.school is None and obj.mentorUser.schooladministrator_set.count() == 1:
             obj.school = obj.mentorUser.schooladministrator_set.first().school
-            self.message_user(request, f"{obj.mentorUser.get_full_name()}'s school ({obj.school}) automatically added to {obj}", messages.SUCCESS)
+            self.message_user(request, f"{obj.mentorUser.fullname_or_email()}'s school ({obj.school}) automatically added to {obj}", messages.SUCCESS)
         
         super().save_model(request, obj, form, change)
 

@@ -185,7 +185,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Team with this Event and Name already exists.')
+        self.assertContains(response, 'Team with this name in this event already exists')
         self.assertEqual(Team.objects.count(), numberTeams)
 
     def testInvalidTeamCreate_closed(self):
@@ -1186,7 +1186,7 @@ class TestTeamAdmin(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'was added successfully. You may edit it again below.')
-        self.assertContains(response, f'{self.school1} automatically added to New Team')
+        self.assertContains(response, f"(School 1) automatically added to New Team")
 
         self.assertEqual(Team.objects.filter(name='New Team').exists(), True)
         self.assertEqual(Team.objects.get(name='New Team').school, self.school1)

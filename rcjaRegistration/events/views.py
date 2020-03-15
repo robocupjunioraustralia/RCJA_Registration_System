@@ -18,7 +18,7 @@ def dashboard(request):
     if request.user.currentlySelectedSchool:
         usersTeams = Team.objects.filter(school=request.user.currentlySelectedSchool)
     else:
-        usersTeams = request.user.baseeventattendance_set.filter(school=None)
+        usersTeams = Team.objects.filter(mentorUser=request.user, school=None)
 
     # Current state
     if request.user.currentlySelectedSchool:
@@ -81,7 +81,7 @@ def details(request, eventID):
     if request.user.currentlySelectedSchool:
         teams = Team.objects.filter(school=request.user.currentlySelectedSchool, event=event)
     else:
-        teams = request.user.baseeventattendance_set.filter(event=event, school=None)
+        teams = Team.objects.filter(event=event, mentorUser=request.user, school=None)
     
     teams = teams.prefetch_related('student_set')
 
