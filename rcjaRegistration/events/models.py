@@ -225,12 +225,18 @@ class Event(CustomSaveDeleteModel):
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
+    paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
+
+    # Team billing settings
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
     event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
     event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
-    paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
+
+    # Workshop billing settings
+    workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
+    workshopStudentEntryFee = models.PositiveIntegerField('Student entry fee', null=True)
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
