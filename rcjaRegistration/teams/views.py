@@ -12,22 +12,11 @@ from .forms import TeamForm, StudentForm
 from .models import Student, Team
 from events.models import Event
 
+from events.views import eventAttendancePermissions
+
 import datetime
 
 # Create your views here.
-
-def teamPermissions(request, team):
-    if request.user.currentlySelectedSchool:
-        # If user is a school administrator can only edit the currently selected school
-        if request.user.currentlySelectedSchool != team.school:
-            return False
-
-    else:
-        # If not a school administrator allow editing individually entered teams
-        if team.mentorUser != request.user or team.school:
-            return False
-    
-    return True
 
 class CreateEditTeam(LoginRequiredMixin, View):
     def common(self, request, event, team=None):
@@ -40,7 +29,7 @@ class CreateEditTeam(LoginRequiredMixin, View):
             raise PermissionDenied("Registrtaion has closed for this event!")
 
         # Check administrator of this team
-        if team and not teamPermissions(request, team):
+        if team and not eventAttendancePermissions(request, team):
             raise PermissionDenied("You are not an administrator of this team")
 
         self.StudentInLineFormSet = inlineformset_factory(
@@ -123,7 +112,7 @@ def deleteTeam(request, teamID):
             raise PermissionDenied("Registrtaion has closed for this event!")
 
         # Check administrator of this team
-        if not teamPermissions(request, team):
+        if not eventAttendancePermissions(request, team):
             raise PermissionDenied("You are not an administrator of this team")
 
         # Delete team

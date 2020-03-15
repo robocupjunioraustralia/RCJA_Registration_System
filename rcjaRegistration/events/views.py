@@ -105,3 +105,15 @@ def details(request, eventID):
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 
 
+def eventAttendancePermissions(request, eventAttendance):
+    if request.user.currentlySelectedSchool:
+        # If user is a school administrator can only edit the currently selected school
+        if request.user.currentlySelectedSchool != eventAttendance.school:
+            return False
+
+    else:
+        # If not a school administrator allow editing individually entered eventAttendances
+        if eventAttendance.mentorUser != request.user or eventAttendance.school:
+            return False
+    
+    return True
