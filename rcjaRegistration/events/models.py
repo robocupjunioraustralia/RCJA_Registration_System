@@ -84,7 +84,7 @@ class Division(models.Model):
         # Check changing state won't cause conflict
         if self.state:
             if self.baseeventattendance_set.exclude(event__state=self.state).exists():
-                errors.append(ValidationError('State not compatible with existing teams in this division'))
+                errors.append(ValidationError('State not compatible with existing event attendances in this division'))
 
             if self.availabledivision_set.exclude(event__state=self.state).exists():
                 errors.append(ValidationError('State not compatible with existing available division for this division'))
@@ -219,7 +219,7 @@ class Event(CustomSaveDeleteModel):
     registrationsCloseDate = models.DateField('Registration close date')
 
     # Team details
-    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', help_text="Resets to 0 for workshops")
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=5)
     event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
@@ -228,7 +228,7 @@ class Event(CustomSaveDeleteModel):
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
     event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
-    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams/ students specified will be billed at this rate. Subsequent teams/ students will be billed at the default rate. Leave blank for no special rate.")
+    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
     event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
