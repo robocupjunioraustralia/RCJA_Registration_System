@@ -13,6 +13,7 @@ from events.admin import BaseWorkshopAttendanceAdmin
 class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
     list_display = [
         'attendeeFullName',
+        'attendeeType',
         'event',
         'division',
         'mentorUserName',
@@ -30,11 +31,11 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details', {
             'fields': ('attendeeType', 'firstName', 'lastName')
         }),
-        ('Optional details', {
-            'fields': ('email',)
-        }),
         ('Required details for students', {
             'fields': ('yearLevel', 'gender', 'birthday')
+        }),
+        ('Optional details', {
+            'fields': ('email',)
         }),
     )
     add_fieldsets = (
@@ -48,11 +49,11 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details', {
             'fields': ('attendeeType', 'firstName', 'lastName')
         }),
-        ('Optional details', {
-            'fields': ('email',)
-        }),
         ('Required details for students', {
             'fields': ('yearLevel', 'gender', 'birthday')
+        }),
+        ('Optional details', {
+            'fields': ('email',)
         }),
     )
 
@@ -68,6 +69,11 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
     exportFields = [
         'firstName',
         'lastName',
+        'email',
+        'attendeeType',
+        'yearLevel',
+        'gender',
+        'birthday',
         'event',
         'division',
         'mentorUserName',
