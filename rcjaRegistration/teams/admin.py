@@ -42,6 +42,9 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         ('School', {
             'fields': ('mentorUser', 'school', 'campus',)
         }),
+        ('Details', {
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
+        }),
     )
     add_fieldsets = (
         (None, {
@@ -53,6 +56,9 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         ('School', {
             'description': "Select this team's mentor.<br>If they are a mentor for one school that school will be autofilled. If they are mentor of more than one school you will need to select the school. Leave school blank if independent.<br>You can select campus after you have clicked save.",
             'fields': ('mentorUser', 'school',)
+        }),
+        ('Details', {
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
     )
 
