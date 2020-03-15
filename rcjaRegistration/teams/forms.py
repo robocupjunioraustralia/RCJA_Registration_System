@@ -23,7 +23,7 @@ class StudentForm(forms.ModelForm):
 class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division', 'name', 'campus', 'school', 'event']
+        fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
 
     # Validate that this team can be created, not exceeding a school or global team maximum
     def clean(self):

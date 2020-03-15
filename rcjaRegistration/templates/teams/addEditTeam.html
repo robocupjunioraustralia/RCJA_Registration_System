@@ -91,16 +91,27 @@
                
               <div class="three fields">
                 <div class = "field">
-                  <label>{% if event.boolWorkshop %}Attendee name:{% else %}Team name:{% endif %}</label>
-                    {{form.name|attr:"placeholder:Name"}}
+                  <label>Team name:</label>
+                    {{form.name|attr:"placeholder:Team name"}}
                 </div>
                 <div class = "field">
-                  <label> Division: </label>
-                    {{ form.division|attr:"placeholder:Division"|attr:"class:ui dropdown"}} 
+                  <label>Division:</label>
+                    {{ form.division|attr:"class:ui dropdown"}} 
                 </div>
                 <div class = "field">
-                  <label> Campus: </label>
-                    {{ form.campus|attr:"placeholder:Campus"|attr:"class:ui dropdown"}} 
+                  <label>Campus:</label>
+                    {{ form.campus|attr:"class:ui dropdown"}} 
+                </div>
+              </div>
+
+              <div class="two fields">
+                <div class = "field">
+                  <label>Hardware platform:</label>
+                    {{form.hardwarePlatform|attr:"class:ui dropdown"}}
+                </div>
+                <div class = "field">
+                  <label>Software platform:</label>
+                    {{ form.softwarePlatform|attr:"class:ui dropdown"}} 
                 </div>
               </div>
 
@@ -124,6 +135,7 @@
 
                   </div>
                 {% endif %}
+
                 <div class = "two fields">
                   <div class = "field">
                     <label> {{studentform.firstName.label_tag}} </label>
