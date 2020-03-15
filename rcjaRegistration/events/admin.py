@@ -276,6 +276,16 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
 
         super().save_formset(request, form, formset, change)
 
+    # Filter in team and workshop autocompletes
+    def get_search_results(self, request, queryset, search_term):
+        if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
+            queryset = queryset.filter(eventType='competition')
+
+        if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
+            queryset = queryset.filter(eventType='workshop')
+
+        return super().get_search_results(request, queryset, search_term)
+
     # State based filtering
 
     @classmethod
