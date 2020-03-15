@@ -1,31 +1,56 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Student,Team
 from django.core.exceptions import ValidationError, PermissionDenied
-from .forms import TeamForm,StudentForm
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
-from events.models import Event
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.urls import reverse
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .forms import TeamForm, StudentForm
+
+from .models import Student, Team
+from events.models import Event
+
 import datetime
 
 # Create your views here.
 
-@login_required
-def createTeam(request, eventID):
-    event = get_object_or_404(Event, pk=eventID)
+class CreateTeam(LoginRequiredMixin, View):
+    def common(self, request, eventID):
+        event = get_object_or_404(Event, pk=eventID)
 
-    if not event.eventType == 'competition':
-        return HttpResponseNotFound('Teams cannot be created for this event type')
+        if not event.eventType == 'competition':
+            return HttpResponseNotFound('Teams cannot be created for this event type')
 
-    StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.maxMembersPerTeam, max_num=event.maxMembersPerTeam, can_delete=False)
+        self.StudentInLineFormSet = inlineformset_factory(Team, Student, form=StudentForm, extra=event.maxMembersPerTeam, max_num=event.maxMembersPerTeam, can_delete=False)
 
-    # Check registrations open
-    if event.registrationsCloseDate < datetime.datetime.now().date():
-        raise PermissionDenied("Registrtaion has closed for this event")
+        # Check registrations open
+        if event.registrationsCloseDate < datetime.datetime.now().date():
+            raise PermissionDenied("Registrtaion has closed for this event")
+        
+        return event
 
-    if request.method == 'POST':
-        formset = StudentInLineFormSet(request.POST)
+    def get(self, request, eventID):
+        event = self.common(request, eventID)
+
+        # Get default campus if only one campus for school
+        if request.user.currentlySelectedSchool:
+            campuses = request.user.currentlySelectedSchool.campus_set.all()
+            defaultCampusID = campuses.first().id if campuses.count() == 1 else None
+        else:
+            defaultCampusID = None
+
+        # Create form
+        form = TeamForm(user=request.user, event=event, initial={'campus':defaultCampusID})
+        formset = self.StudentInLineFormSet()
+
+        return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event})
+
+    def post(self, request, eventID):
+        event = self.common(request, eventID)
+
+        formset = self.StudentInLineFormSet(request.POST)
         form = TeamForm(request.POST, user=request.user, event=event)
         form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
@@ -44,18 +69,7 @@ def createTeam(request, eventID):
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
-    else:
-        # Get default campus if only one campus for school
-        if request.user.currentlySelectedSchool:
-            campuses = request.user.currentlySelectedSchool.campus_set.all()
-            defaultCampusID = campuses.first().id if campuses.count() == 1 else None
-        else:
-            defaultCampusID = None
-
-        # Create form
-        form = TeamForm(user=request.user, event=event, initial={'campus':defaultCampusID})
-        formset = StudentInLineFormSet()
-    return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event})
+        return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event})
 
 def teamPermissions(request, team):
     if request.user.currentlySelectedSchool:
