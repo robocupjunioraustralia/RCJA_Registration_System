@@ -1,12 +1,76 @@
 from django.db import models
 from common.models import *
 
-from events.models import BaseEventAttendance
+from events.models import BaseEventAttendance, eventCoordinatorEditPermisisons, eventCoordinatorViewPermissions
 
 # **********MODELS**********
 
+class HardwarePlatform(models.Model):
+    # Foreign keys
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=50)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Hardware Platform'
+        ordering = ['name']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        eventCoordinatorViewPermissions(level)
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
+class SoftwarePlatform(models.Model):
+    # Foreign keys
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=50)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Software Platform'
+        ordering = ['name']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        eventCoordinatorViewPermissions(level)
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
 class Team(BaseEventAttendance):
     # Foreign keys
+    hardwarePlatform = models.ForeignKey(HardwarePlatform, verbose_name='Hardware platform', on_delete=models.PROTECT)
+    softwarePlatform = models.ForeignKey(SoftwarePlatform, verbose_name='Software platform', on_delete=models.PROTECT)
 
     # Fields
     name = models.CharField('Name', max_length=50)
@@ -33,7 +97,6 @@ class Team(BaseEventAttendance):
     # *****Permissions*****
 
     # *****Save & Delete Methods*****
-
 
     # *****Methods*****
 
@@ -68,19 +131,7 @@ class Student(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
