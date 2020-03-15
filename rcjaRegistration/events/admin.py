@@ -405,7 +405,8 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
             {
                 'field': 'event',
                 'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
-                'filterNone': True
+                'filterNone': True,
+                'useAutocomplete': True,
             }
         ]
 
