@@ -401,6 +401,11 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
                 'field': 'campus',
                 'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
                 'filterNone': True,
+            },
+            {
+                'field': 'event',
+                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
+                'filterNone': True
             }
         ]
 

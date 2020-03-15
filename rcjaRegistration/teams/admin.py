@@ -72,6 +72,8 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'homeState',
     ]
 
+    eventTypeMapping = 'competition'
+
 @admin.register(Student)
 class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
