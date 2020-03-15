@@ -234,6 +234,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
 class TestTeamEdit(TestCase):
     def setUp(self):
         commonSetUp(self)
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
 
     def testOpenEditDoesLoad(self):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
