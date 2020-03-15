@@ -69,8 +69,8 @@ class SoftwarePlatform(models.Model):
 
 class Team(BaseEventAttendance):
     # Foreign keys
-    hardwarePlatform = models.ForeignKey(HardwarePlatform, verbose_name='Hardware platform', on_delete=models.PROTECT)
-    softwarePlatform = models.ForeignKey(SoftwarePlatform, verbose_name='Software platform', on_delete=models.PROTECT)
+    hardwarePlatform = models.ForeignKey(HardwarePlatform, verbose_name='Hardware platform', on_delete=models.PROTECT, null=True)
+    softwarePlatform = models.ForeignKey(SoftwarePlatform, verbose_name='Software platform', on_delete=models.PROTECT, null=True)
 
     # Fields
     name = models.CharField('Name', max_length=50)

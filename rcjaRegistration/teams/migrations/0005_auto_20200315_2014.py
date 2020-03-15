@@ -40,11 +40,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='team',
             name='hardwarePlatform',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='teams.HardwarePlatform', verbose_name='Hardware platform'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='teams.HardwarePlatform', verbose_name='Hardware platform'),
         ),
         migrations.AddField(
             model_name='team',
             name='softwarePlatform',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='teams.SoftwarePlatform', verbose_name='Software platform'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='teams.SoftwarePlatform', verbose_name='Software platform'),
         ),
     ]
