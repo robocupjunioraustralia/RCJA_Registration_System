@@ -33,7 +33,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         )
 
     def get(self, request, eventID=None, teamID=None):
-        if teamID:
+        if teamID is not None:
             team = get_object_or_404(Team, pk=teamID)
             event = team.event
         else:
@@ -48,7 +48,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
     def post(self, request, eventID=None, teamID=None):
-        if teamID:
+        if teamID is not None:
             team = get_object_or_404(Team, pk=teamID)
             event = team.event
         else:
