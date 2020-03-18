@@ -47,7 +47,7 @@
           <div>
             <h1>{{event}}</h1>
             {% if attendee %}
-            <h2> Editing: {{attendee.name}} </h2>
+            <h2> Editing: {{attendee.attendeeFullName}} </h2>
             {% else %}
             <h2>Add a new attendee</h2> 
             {% endif %}
@@ -105,13 +105,13 @@
                 </div>
               </div>
 
-              <h2>Email is optional, enables more features:</h2>
+              <h3>Email is optional, enables more features:</h3>
               <div class = "field">
                 <label>Email:</label>
                   {{form.email|attr:"placeholder:Email"}}
               </div>
 
-              <h2>Required for student attendees:</h2>
+              <h3>Required for student attendees:</h3>
               <div class="three fields">
                 <div class = "field">
                   <label>Year level:</label>
