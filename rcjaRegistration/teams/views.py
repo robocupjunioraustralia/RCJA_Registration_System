@@ -20,7 +20,7 @@ import datetime
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
-    def common(self, request, event, team=None):
+    def common(self, request, event, team):
         super().common(request, event, team)
 
         self.StudentInLineFormSet = inlineformset_factory(
@@ -32,7 +32,13 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             can_delete = team is not None,
         )
 
-    def perform_get(self, request, event, team=None):
+    def get(self, request, eventID=None, teamID=None):
+        if teamID:
+            team = get_object_or_404(Team, pk=teamID)
+            event = team.event
+        else:
+            event = get_object_or_404(Event, pk=eventID)
+            team = None
         self.common(request, event, team)
 
         # Get form
@@ -41,7 +47,13 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
-    def perform_post(self, request, event, team=None):
+    def post(self, request, eventID=None, teamID=None):
+        if teamID:
+            team = get_object_or_404(Team, pk=teamID)
+            event = team.event
+        else:
+            event = get_object_or_404(Event, pk=eventID)
+            team = None
         self.common(request, event, team)
 
         newTeam = team is None
@@ -75,26 +87,6 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         # Default to displaying the form again if form not valid
         return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
-
-class Create(CreateEditTeam):
-    def get(self, request, eventID):
-        event = get_object_or_404(Event, pk=eventID)
-        return self.perform_get(request, event)
-
-    def post(self, request, eventID):
-        event = get_object_or_404(Event, pk=eventID)
-        return self.perform_post(request, event)
-
-class Details(CreateEditTeam):
-    def get(self, request, teamID):
-        team = get_object_or_404(Team, pk=teamID)
-        event = team.event
-        return self.perform_get(request, event, team)
-
-    def post(self, request, teamID):
-        team = get_object_or_404(Team, pk=teamID)
-        event = team.event
-        return self.perform_post(request, event, team)
 
     def delete(self, request, teamID):
         return super().delete(request, teamID)

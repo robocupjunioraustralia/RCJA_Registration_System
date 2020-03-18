@@ -138,7 +138,7 @@ def eventAttendancePermissions(request, eventAttendance):
     return True
 
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
-    def common(self, request, event, obj=None):
+    def common(self, request, event, obj):
         # Check is correct event type
         if event.eventType != self.eventType:
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
