@@ -47,7 +47,7 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
 
         form = WorkshopAttendeeForm(request.POST, instance=attendee, user=request.user, event=event)
 
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             # Create attendee object but don't save so can set foreign keys
             attendee = form.save(commit=False)
             attendee.mentorUser = request.user
