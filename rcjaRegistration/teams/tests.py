@@ -464,20 +464,6 @@ class TestTeamDelete(TestCase):
         self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}")
         self.assertEqual(response.status_code, 302)
 
-    # def testGet_forbidden(self):
-    #     login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    #     url = reverse('teams:details', kwargs={'teamID':self.team1.id})
-        
-    #     response = self.client.get(url)
-    #     self.assertEqual(response.status_code, 403)
-
-    # def testPost_forbidden(self):
-    #     login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    #     url = reverse('teams:details', kwargs={'teamID':self.team1.id})
-
-    #     response = self.client.post(url)
-    #     self.assertEqual(response.status_code, 403)
-
     def testDenied_independent(self):
         url = reverse('teams:details', kwargs={'teamID':self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
