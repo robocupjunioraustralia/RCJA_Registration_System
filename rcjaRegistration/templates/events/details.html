@@ -63,7 +63,7 @@
     <br>
 
     <div>
-    {% if event.boolWorkshop %}
+    {% if workshopAttendees %}
 
     <table id="attendeeTable" class="ui celled table">
             <thead>
@@ -91,7 +91,7 @@
             </tbody>
         </table>
 
-    {% else %}
+    {% elif teams %}
 
     <table id="teamTable" class="ui celled table">
         <thead>
