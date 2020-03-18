@@ -271,6 +271,22 @@ class TestEditSchoolDetails(TestCase):
         self.assertEqual(response.status_code, 302)
         School.objects.get(name='New name')
 
+    def testMissingManagementFormData(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+
+        payload = {
+            "name":"New name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+        }
+
+        response = self.client.post(url, data=payload)
+        self.assertEquals(response.status_code, 400)
+        self.assertContains(response, 'Form data missing', status_code=400)
+
     def testChangeName_failure(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
