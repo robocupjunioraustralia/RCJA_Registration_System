@@ -52,6 +52,7 @@
     <div class="row">
         {% if event.registrationsCloseDate >= today %}
             {% if event.boolWorkshop %}
+            <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
             {% else %}
             <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">Add team</button></a>
             {% endif %}
@@ -81,8 +82,8 @@
                     {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
                     {% if event.registrationsCloseDate >= today %}
                     <td>
-                        <a href="{% url 'teams:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
-                        <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'teams:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
+                        <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
+                        <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
                     </td>
                     {% endif %}
                 </tr>
