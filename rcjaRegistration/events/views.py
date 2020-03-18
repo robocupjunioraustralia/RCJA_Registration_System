@@ -2,6 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError, PermissionDenied
 
 import datetime
 
@@ -133,3 +136,26 @@ def eventAttendancePermissions(request, eventAttendance):
             return False
     
     return True
+
+class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
+    def common(self, request, event, obj=None):
+        # Check is correct event type
+        if event.eventType != self.eventType:
+            raise PermissionDenied('Teams/ attendees cannot be created for this event type')
+
+        # Check registrations open
+        if event.registrationsCloseDate < datetime.datetime.now().date():
+            raise PermissionDenied("Registrtaion has closed for this event!")
+
+        # Check administrator of this obj
+        if obj and not eventAttendancePermissions(request, obj):
+            raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+    def delete(self, request, objID):
+        obj = get_object_or_404(BaseEventAttendance, pk=objID)
+        event = obj.event
+        self.common(request, event, obj)
+
+        # Delete team
+        obj.delete()
+        return HttpResponse(status=204)
