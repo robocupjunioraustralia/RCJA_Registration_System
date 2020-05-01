@@ -241,7 +241,7 @@ class Invoice(CustomSaveDeleteModel):
             'totalInclGST': totalInclGST,
         }
 
-    def invoiceItems(self):
+    def competitionInvoiceItems(self):
         from events.models import AvailableDivision
         from teams.models import Student
         invoiceItems = []
@@ -288,6 +288,15 @@ class Invoice(CustomSaveDeleteModel):
         
             invoiceItems.append(self.invoiceItem(division.name, "", quantity, unitCost, unit))
 
+        return invoiceItems
+
+    def invoiceItems(self):
+        if self.event.eventType == 'workshop':
+            pass
+
+        elif self.event.eventType == 'competition':
+            invoiceItems = self.competitionInvoiceItems()
+        
         return invoiceItems
 
     # Totals
