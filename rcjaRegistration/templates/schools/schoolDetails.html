@@ -74,6 +74,10 @@
                             <label> Region: </label>
                             {{form.region}}
                         </div>
+                        <div class="field">
+                            <label> Postcode: </label>
+                            {{form.postcode}}
+                        </div>
 
                         <!-- Campus -->
                         <h1>Campuses</h1>
@@ -96,10 +100,14 @@
                                 </ul>
                             </div>
                             {% endif %}
-                            <div class="two fields">
+                            <div class="three fields">
                                 <div class="field">
                                     <label> {{campusForm.name.label_tag}}</label>
                                     {{campusForm.name}}
+                                </div>
+                                <div class="field">
+                                    <label> {{campusForm.postcode.label_tag}}</label>
+                                    {{campusForm.postcode}}
                                 </div>
                                 {% if campusFormset.can_delete %}
                                 <div class="field">
