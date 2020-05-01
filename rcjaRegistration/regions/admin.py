@@ -42,12 +42,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        return {
-            'coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'coordinator'
 
 @admin.register(Region)
 class RegionAdmin(AdminPermissions, admin.ModelAdmin):

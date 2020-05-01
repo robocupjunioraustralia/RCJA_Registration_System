@@ -194,3 +194,16 @@ class TestCoordinatorAdmin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testStateFieldBlankDenied_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'user': self.user3.id,
+            'state': '',
+            'permissions': 'full',
+            'position': 'Thing',
+        }
+        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')

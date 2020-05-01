@@ -47,23 +47,30 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from coordination.adminPermissions import reversePermisisons
+        from regions.admin import StateAdmin
+        from regions.models import State
         return [
             {
                 'field': 'state',
                 'required': True,
-                'queryset': State.objects.filter(
-                    coordinator__user=request.user,
-                    coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
-                )
+                'fieldModel': State,
+                'fieldAdmin': StateAdmin,
             }
         ]
 
     @classmethod
     def stateFilteringAttributes(cls, request):
         from coordination.models import Coordinator
+        from coordination.adminPermissions import reversePermisisons
+
+        # Check for global coordinator
+        if Coordinator.objects.filter(user=request.user, state=None).exists():
+            return [Q(state__coordinator__permissions__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)]
+
+        # Default to filtering by state
         return [
-            Q(state__coordinator__in= Coordinator.objects.filter(user=request.user)) | Q(state=None)
+            Q(state__coordinator__in = Coordinator.objects.filter(user=request.user)) | Q(state=None),
+            Q(state__coordinator__permissions__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)
         ]
 
 @admin.register(Venue)
@@ -98,23 +105,17 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from coordination.adminPermissions import reversePermisisons
+        from regions.admin import StateAdmin
+        from regions.models import State
         return [
             {
                 'field': 'state',
-                'queryset': State.objects.filter(
-                    coordinator__user=request.user,
-                    coordinator__permissions__in=reversePermisisons(Division, ['add', 'change'])
-                )
+                'fieldModel': State,
+                'fieldAdmin': StateAdmin,
             }
         ]
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        return {
-            'state__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'state__coordinator'
 
 admin.site.register(Year)
 
@@ -265,24 +266,17 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from coordination.adminPermissions import reversePermisisons
-        from users.models import User
+        from regions.admin import StateAdmin
+        from regions.models import State
         return [
             {
                 'field': 'state',
-                'queryset': State.objects.filter(
-                    coordinator__user=request.user,
-                    coordinator__permissions__in=reversePermisisons(Event, ['add', 'change'])
-                )
-            },
+                'fieldModel': State,
+                'fieldAdmin': StateAdmin,
+            }
         ]
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        return {
-            'state__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'state__coordinator'
 
     @classmethod
     def fieldsToFilterObj(cls, request, obj):

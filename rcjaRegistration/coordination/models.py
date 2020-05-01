@@ -7,7 +7,7 @@ from django.conf import settings
 class Coordinator(CustomSaveDeleteModel):
     # Foreign keys
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
-    state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE)
+    state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE, null=True, blank=True)
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -19,13 +19,29 @@ class Coordinator(CustomSaveDeleteModel):
         ('billingmanager', 'Billing manager'),
         ('full','Full'))
     permissions = models.CharField('Permissions', max_length=20, choices=permissionsOptions)
-    position = models.CharField('Position', max_length=50) # if want to tie permissions to this will need to set options. Without considerable work user will get permissions of most permissive state.
+    position = models.CharField('Position', max_length=50)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Coordinator'
-        unique_together = ('user', 'state')
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'permissions'], condition=Q(state=None), name='user_permissions'),
+            models.UniqueConstraint(fields=['user', 'state', 'permissions'], name='user_state_permissions'),
+        ]
         ordering = ['state', 'user']
+
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['user', 'permissions', 'position'])
+
+        # Check only one global coordinator per permission and user
+        if Coordinator.objects.filter(user=self.user, permissions=self.permissions, state=self.state).exclude(pk=self.pk).exists():
+            errors.append(ValidationError('Already coordinator for this user and permission level'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
