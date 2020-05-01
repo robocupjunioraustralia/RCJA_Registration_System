@@ -248,7 +248,6 @@ class Invoice(CustomSaveDeleteModel):
 
         # Special rate entries
         numberSpecialRateTeams = self.specialRateTeams().count()
-        maxNumberSpecialRateTeams = self.event.event_specialRateNumber
         if numberSpecialRateTeams:
 
             # Get values
@@ -256,6 +255,7 @@ class Invoice(CustomSaveDeleteModel):
             quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
             unitCost = self.event.event_specialRateFee
 
+            maxNumberSpecialRateTeams = self.event.event_specialRateNumber
             name = f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}"
             description = 'This is measured across all campuses from this school'
 
