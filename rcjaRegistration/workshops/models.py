@@ -52,9 +52,7 @@ class WorkshopAttendee(BaseEventAttendance):
 
         # Validate year level
         if self.attendeeType == 'student':
-            try:
-                int(self.yearLevel)
-            except ValueError:
+            if not re.match(r"(^[0-9]+$)", self.yearLevel):
                 errors.append(ValidationError('Year level must be a number'))
         
         else:
