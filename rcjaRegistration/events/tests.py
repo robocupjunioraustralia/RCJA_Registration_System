@@ -6,7 +6,7 @@ from django.http import HttpRequest
 from regions.models import State,Region
 from schools.models import School, SchoolAdministrator
 from teams.models import Team, Student
-from events.models import Event, Division, Year, AvailableDivision
+from events.models import Event, Division, Year, AvailableDivision, Venue
 from users.models import User
 from coordination.models import Coordinator
 
@@ -293,6 +293,7 @@ class TestEventClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.division1 = Division.objects.create(name='Division 1')
+        self.division2 = Division.objects.create(name='Division 2', state=self.newState)
         self.event = Event(
             year=self.year,
             state=self.newState,
@@ -305,6 +306,9 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
+        self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
     # Dates validation
 
@@ -400,6 +404,42 @@ class TestEventClean(TestCase):
 
         self.assertRaises(ValidationError, self.event.clean)
 
+    # Test state validations
+
+    def testVenueStateSuccess(self):
+        self.event.venue = self.venue1
+        self.event.clean()
+
+    def testVenueFailureWrongVenueState(self):
+        self.event.venue = self.venue2
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testAvailableDivisionSuccessNoPk(self):
+        self.assertEqual(self.event.pk, None)
+        self.event.clean()
+
+    def testAvailableDivisionSuccessExistingEvent(self):
+        self.event.save()
+        self.assertNotEqual(self.event.pk, None)
+
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division2)
+        self.event.clean()
+
+    def testAvailableDivision_StateChangeSuccess(self):
+        self.event.save()
+        self.assertNotEqual(self.event.pk, None)
+
+        self.event.state = self.state2
+        self.event.clean()
+
+    def testAvailableDivision_StateChangeFailure(self):
+        self.event.save()
+        self.assertNotEqual(self.event.pk, None)
+
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division2)
+        self.event.state = self.state2
+        self.assertRaises(ValidationError, self.event.clean)
+
 class TestEventMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
@@ -416,6 +456,10 @@ class TestEventMethods(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
+
+        self.user.first_name = 'First'
+        self.user.last_name = 'Last'
+        self.user.save()
 
     def testGetState(self):
         self.assertEqual(self.event.getState(), self.newState)
@@ -454,6 +498,12 @@ class TestEventMethods(TestCase):
     def testStr_global(self):
         self.event.globalEvent = True
         self.assertEqual(str(self.event), "Event 1 2019")
+
+    def testDirectEnquiriesToName(self):
+        self.assertEqual(self.event.directEnquiriesToName(), 'First Last')
+
+    def testDirectEnquiriesToEmail(self):
+        self.assertEqual(self.event.directEnquiriesToEmail(), self.username)
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')
@@ -548,7 +598,15 @@ class TestDivisionClean(TestCase):
         commonSetUp(self)
         newSetupEvent(self)
         self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
-    
+
+    def testSuccessValidation_noState(self):
+        self.division1.clean()
+
+    def testSuccessValidation_state(self):
+        self.availableDivision.delete()
+        self.division1.state = self.state2
+        self.division1.clean()
+
     def testTeamDivisionValidation(self):
         self.availableDivision.delete()
         self.division1.state = self.state2
@@ -581,6 +639,38 @@ class TestDivisionMethods(TestCase):
         self.division1.state = self.state2
         self.assertEqual(self.division1.getState(), self.state2)
 
+def createVenues(self):
+    self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
+    self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
+
+class TestVenueClean(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        createVenues(self)
+
+    def testSuccess(self):
+        self.venue1.clean()
+    
+    def testIncompatibleEvent(self):
+        self.event.venue = self.venue1
+        self.event.save()
+        self.venue1.clean()
+
+        self.venue1.state = self.state2
+        self.assertRaises(ValidationError, self.venue1.clean)
+
+class TestVenueMethods(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        createVenues(self)
+
+    def testGetState(self):
+        self.assertEqual(self.venue1.getState(), self.newState)
+
 def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
     self.user2 = User.objects.create_user(email=self.email2, password=self.password)
@@ -594,6 +684,9 @@ def adminSetUp(self):
     self.division0 = Division.objects.create(name='Division 0')
     self.division1 = Division.objects.create(name='Division 1', state=self.state1)
     self.division2 = Division.objects.create(name='Division 2', state=self.state2)
+
+    self.venue1 = Venue.objects.create(name='Venue 1', state=self.state1)
+    self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
 class TestDivisionAdmin(TestCase):
     email1 = 'user1@user.com'
@@ -794,6 +887,197 @@ class TestDivisionAdmin(TestCase):
             'state': '',
         }
         response = self.client.post(reverse('admin:events_division_change', args=(self.division1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
+class TestVenueAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+
+    # Venue filtering
+
+    def testListLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testChangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_change', args=(self.venue1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testListContent_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Venue 1')
+        self.assertContains(response, 'Venue 2')
+
+    def testDeleteLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_delete', args=(self.venue1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testListNonStaff_denied(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_changelist'))
+        self.assertEqual(response.status_code, 302)
+
+    def testListLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_changelist'))
+        self.assertEqual(response.status_code, 200)
+
+    def testListContent_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Venue 1')
+        self.assertNotContains(response, 'Venue 2')
+
+    def testChangeLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_change', args=(self.venue1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Save')
+
+    def testAddLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_add'))
+        self.assertEqual(response.status_code, 200)
+
+    def testDeleteLoads_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_delete', args=(self.venue1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testChangeDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_change', args=(self.venue2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get(reverse('admin:events_venue_change', args=(self.venue2.id,)), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+    def testViewLoads_viewonly_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_change', args=(self.venue1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Save')
+
+    def testAddDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_add'))
+        self.assertEqual(response.status_code, 403)
+
+    def testDeleteDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:events_venue_delete', args=(self.venue1.id,)))
+        self.assertEqual(response.status_code, 403)
+
+    # Change Post
+
+    def testChangePostAllowed_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'was changed successfully')
+
+        self.venue1.refresh_from_db()
+        self.assertEqual(self.venue1.name, 'Renamed 1')
+
+    def testChangePostDenied_wrongState_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 2',
+            'state': self.state2.id,
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue2.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue2.id,)), data=payload, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
+
+    def testChangePostDenied_viewPermission_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload)
+        self.assertEqual(response.status_code, 403)
+
+    # Venue FK filtering
+
+    # State field
+    def testStateFieldSuccess_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testStateFieldSuccess_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state1.id,
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testStateFieldDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': self.state2.id,
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testStateFieldBlankDenied_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        payload = {
+            'name': 'Renamed 1',
+            'state': '',
+        }
+        response = self.client.post(reverse('admin:events_venue_change', args=(self.venue1.id,)), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')

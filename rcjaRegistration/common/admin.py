@@ -92,5 +92,84 @@ class ExportCSVMixin:
     export_as_csv.short_description = "Export selected"
     export_as_csv.allowed_permissions = ('change',)
 
+class DifferentAddFieldsMixin:
+    """
+    Adapted from Django UserAdmin methods.
+    """
+    def get_fieldsets(self, request, obj=None):
+        if not obj and hasattr(self, 'add_fieldsets'):
+            return self.add_fieldsets
+        return super().get_fieldsets(request, obj)
+
+    def get_fields(self, request, obj=None):
+        if not obj and hasattr(self, 'add_fields'):
+            return self.add_fields
+        return super().get_fields(request, obj)
+
+    def get_inlines(self, request, obj):
+        if not obj and hasattr(self, 'add_inlines'):
+            return self.add_inlines
+        return super().get_inlines(request, obj)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """
+        Determine the HttpResponse for the add_view stage. It mostly defers to
+        its superclass implementation but is customized because the User model
+        has a slightly different workflow.
+        """
+        # We should allow further modification of the user just added i.e. the
+        # 'Save' button should behave like the 'Save and continue editing'
+        # button except in two scenarios:
+        # * The user has pressed the 'Save and add another' button
+        # * We are adding a user in a popup
+        from django.contrib.admin.options import IS_POPUP_VAR
+        if '_addanother' not in request.POST and IS_POPUP_VAR not in request.POST:
+            request.POST = request.POST.copy()
+            request.POST['_continue'] = 1
+        return super().response_add(request, obj, post_url_continue)
+
 # Disable key-value store admin
 admin.site.unregister(keyvaluestore.admin.KeyValueStore)
+
+# Axes admin overrides
+
+import axes.admin
+from axes.admin import AccessLogAdmin as AxesAccessLogAdmin
+from axes.admin import AccessAttemptAdmin as AxesAccessAttempAdmin
+from axes.models import AccessLog, AccessAttempt
+
+admin.site.unregister(axes.admin.AccessLog)
+admin.site.unregister(axes.admin.AccessAttempt)
+
+@admin.register(AccessLog)
+class AccessLogAdmin(AxesAccessLogAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+@admin.register(AccessAttempt)
+class AccessAttempAdmin(AxesAccessAttempAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+
+# Token admin overrides
+
+from rest_framework.authtoken.admin import TokenAdmin as RestTokenAdmin
+from rest_framework.authtoken.models import Token
+import rest_framework
+
+admin.site.unregister(rest_framework.authtoken.admin.Token)
+
+@admin.register(Token)
+class TokenAdmin(RestTokenAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    list_display = ['user', 'created']

@@ -9,7 +9,8 @@ from .models import *
 @admin.register(Coordinator)
 class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'user',
+        'userName',
+        'userEmail',
         'state',
         'permissions',
         'position'
@@ -40,7 +41,8 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'export_as_csv'
     ]
     exportFields = [
-        'user',
+        'userName',
+        'userEmail',
         'state',
         'permissions',
         'position',
@@ -48,28 +50,19 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
+        from regions.admin import StateAdmin
         from regions.models import State
-        from users.models import User
         return [
             {
                 'field': 'state',
-                'queryset': State.objects.filter(
-                    coordinator__user=request.user,
-                    coordinator__permissions='full'
-                )
-            },
-            {
-                'field': 'user',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions='full'
-                )
-            },
+                'required': True,
+                'permissions': ['full'],
+                'fieldModel': State,
+                'fieldAdmin': StateAdmin,
+            }
         ]
 
-    def stateFilteringAttributes(self, request):
-        return {
-            'state__coordinator__in': Coordinator.objects.filter(user=request.user),
-            'state__coordinator__permissions': 'full',
-        }
+    stateFilteringPermissions = ['full']
+    stateFilterLookup = 'state__coordinator'

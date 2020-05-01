@@ -430,6 +430,10 @@ class TestUserAdmin(TestCase):
             'questionresponse_set-INITIAL_FORMS': 0,
             'questionresponse_set-MIN_NUM_FORMS': 0,
             'questionresponse_set-MAX_NUM_FORMS': 0,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 0,
         }
         response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
@@ -447,11 +451,15 @@ class TestUserAdmin(TestCase):
             'questionresponse_set-INITIAL_FORMS': 0,
             'questionresponse_set-MIN_NUM_FORMS': 0,
             'questionresponse_set-MAX_NUM_FORMS': 0,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 0,
         }
         response = self.client.post(reverse('admin:users_user_change', args=(self.user2.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
 
-        response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload, follow=True)
+        response = self.client.post(reverse('admin:users_user_change', args=(self.user2.id,)), data=payload, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
@@ -467,6 +475,10 @@ class TestUserAdmin(TestCase):
             'questionresponse_set-INITIAL_FORMS': 0,
             'questionresponse_set-MIN_NUM_FORMS': 0,
             'questionresponse_set-MAX_NUM_FORMS': 0,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 0,
         }
         response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
         self.assertEqual(response.status_code, 403)
@@ -499,6 +511,7 @@ class TestUserAdmin(TestCase):
         }
         response = self.client.post(reverse('admin:users_user_add'), data=payload, follow=True)
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(User.objects.filter(email='new@new.com').exists(), False)
 
     # User FK filtering
 
@@ -512,6 +525,10 @@ class TestUserAdmin(TestCase):
             'questionresponse_set-INITIAL_FORMS': 0,
             'questionresponse_set-MIN_NUM_FORMS': 0,
             'questionresponse_set-MAX_NUM_FORMS': 0,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 0,
         }
         response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
@@ -525,6 +542,10 @@ class TestUserAdmin(TestCase):
             'questionresponse_set-INITIAL_FORMS': 0,
             'questionresponse_set-MIN_NUM_FORMS': 0,
             'questionresponse_set-MAX_NUM_FORMS': 0,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 0,
         }
         response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
         self.assertEqual(response.status_code, 200)
@@ -540,6 +561,10 @@ class TestUserAdmin(TestCase):
             'questionresponse_set-INITIAL_FORMS': 0,
             'questionresponse_set-MIN_NUM_FORMS': 0,
             'questionresponse_set-MAX_NUM_FORMS': 0,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 0,
         }
         response = self.client.post(reverse('admin:users_user_change', args=(self.user3.id,)), data=payload)
         self.assertEqual(response.status_code, 200)
@@ -584,7 +609,7 @@ class TestUserAdmin(TestCase):
         response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
         self.assertEqual(response.status_code, 200)
 
-        self.assertNotContains(response, "School administrator of")
+        self.assertContains(response, "School administrator of")
         self.assertNotContains(response, "Coordinator of")
         self.assertContains(response, "Question Responses")
 

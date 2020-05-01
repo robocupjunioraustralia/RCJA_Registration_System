@@ -140,6 +140,7 @@ class SchoolAdministrator(CustomSaveDeleteModel):
         ordering = ['user']
 
     def clean(self):
+        checkRequiredFieldsNotNone(self, ['school', 'user'])
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
             raise(ValidationError('Campus school must match school'))
@@ -171,6 +172,16 @@ class SchoolAdministrator(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def userName(self):
+        return self.user.fullname_or_email()
+    userName.short_description = 'User'
+    userName.admin_order_field = 'user'
+
+    def userEmail(self):
+        return self.user.email
+    userEmail.short_description = 'User email'
+    userEmail.admin_order_field = 'user__email'
 
     def __str__(self):
         return f'{self.user.fullname_or_email()}'

@@ -965,12 +965,23 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
-    def testSpecialRate(self):
+    def testSpecialRateInclGST(self):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 - 80, 2))
+
+    def testSpecialRateExclGST(self):
+        self.event.entryFeeIncludesGST = False
+
+        self.event.event_specialRateNumber = 4
+        self.event.event_specialRateFee = 30
+        self.event.save()
+
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50 - 80, 2))
+        self.assertEqual(self.invoice.amountGST(), round((12 * 50 - 80)*0.1, 2))
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round((12 * 50 - 80)*1.1, 2))
 
     def testAvailableDivisionRateTeam(self):
         AvailableDivision.objects.create(
@@ -1102,6 +1113,9 @@ class TestInvoiceMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         createCammpuses(self)
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
 
     def testGetState(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
@@ -1117,7 +1131,15 @@ class TestInvoiceMethods(TestCase):
 
     def testStr_independent(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): user1@user.com")
+        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): First Last")
+
+    def testInvoiceToUserName(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.invoiceToUserName(), 'First Last')
+
+    def testInvoiceToUserEmail(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.invoiceToUserEmail(), self.email1)
 
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'

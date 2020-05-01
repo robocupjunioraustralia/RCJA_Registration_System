@@ -1,8 +1,11 @@
 from django.contrib import admin
 from common.admin import *
 from coordination.adminPermissions import AdminPermissions
+from django import forms
+from django.contrib import messages
 
 from .models import *
+from schools.models import Campus
 
 # Register your models here.
 
@@ -10,17 +13,62 @@ class StudentInline(admin.TabularInline):
     model = Student
     extra = 0
 
+class TeamForm(forms.ModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        errors = []
+
+        mentorUser = cleaned_data.get('mentorUser', None)
+        school = cleaned_data.get('school', None)
+
+        # Check school is selected if mentor is admin of more than one school
+        if mentorUser and mentorUser.schooladministrator_set.count() > 1 and school is None:
+            errors.append(ValidationError(f'School must not be blank because {mentorUser.fullname_or_email()} is an administrator of multiple schools. Please select a school.'))
+
+        # Check school is set if previously set and mentor still an admin of school
+        if self.instance and self.instance.school and not school:
+            errors.append(ValidationError(f"Can't remove {self.instance.school} from this team while {self.instance.mentorUser.fullname_or_email()} is still an admin of this school."))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+        return cleaned_data
 
 @admin.register(Team)
-class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'event',
         'division',
-        'mentorUser',
+        'mentorUserName',
         'school',
         'campus',
+        'homeState',
     ]
+    fieldsets = (
+        (None, {
+            'fields': ('name',)
+        }),
+        ('Event', {
+            'fields': ('event', 'division')
+        }),
+        ('School', {
+            'fields': ('mentorUser', 'school', 'campus',)
+        }),
+    )
+    add_fieldsets = (
+        (None, {
+            'fields': ('name',)
+        }),
+        ('Event', {
+            'fields': ('event', 'division')
+        }),
+        ('School', {
+            'description': "Select this team's mentor.<br>If they are a mentor for one school that school will be autofilled. If they are mentor of more than one school you will need to select the school. Leave school blank if independent.<br>You can select campus after you have clicked save.",
+            'fields': ('mentorUser', 'school',)
+        }),
+    )
     autocomplete_fields = [
         'event',
         'division',
@@ -58,61 +106,48 @@ class TeamAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'event',
         'division',
-        'mentorUser',
+        'mentorUserName',
+        'mentorUserEmail',
         'school',
         'campus',
+        'homeState',
     ]
+
+    form = TeamForm
+
+    # Set school and campus to that of mentor if only one option
+    def save_model(self, request, obj, form, change):
+        if not obj.pk and obj.school is None and obj.mentorUser.schooladministrator_set.count() == 1:
+            obj.school = obj.mentorUser.schooladministrator_set.first().school
+            self.message_user(request, f"{obj.school} automatically added to {obj}", messages.SUCCESS)
+        
+        super().save_model(request, obj, form, change)
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
-        from coordination.adminPermissions import reversePermisisons
-        from users.models import User
-        from schools.models import School, Campus
-        from events.models import Event, Division
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
+        from events.admin import EventAdmin
+        from events.models import Event
         return [
             {
                 'field': 'event',
-                'queryset': Event.objects.filter(
-                    state__coordinator__user=request.user,
-                    state__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])
-                )
-            },
-            {
-                'field': 'division',
-                'queryset': Division.objects.filter(
-                    Q(state__coordinator__user=request.user)  | Q(state=None),
-                    Q(state__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])) | Q(state=None)
-                )
-            },
-            {
-                'field': 'mentorUser',
-                'queryset': User.objects.filter(
-                    homeState__coordinator__user=request.user,
-                    homeState__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])
-                )
-            },
-            {
-                'field': 'school',
-                'queryset': School.objects.filter(
-                    state__coordinator__user=request.user,
-                    state__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])
-                )
-            },
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(
-                    school__state__coordinator__user=request.user,
-                    school__state__coordinator__permissions__in=reversePermisisons(Team, ['add', 'change'])
-                )
+                'fieldModel': Event,
+                'fieldAdmin': EventAdmin,
             }
         ]
 
-    def stateFilteringAttributes(self, request):
-        from coordination.models import Coordinator
-        return {
-            'event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    @classmethod
+    def fieldsToFilterObj(cls, request, obj):
+        return [
+            {
+                'field': 'campus',
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
+                'filterNone': True,
+            }
+        ]
+
+    stateFilterLookup = 'event__state__coordinator'
 
 @admin.register(Student)
 class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -157,20 +192,14 @@ class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # State based filtering
 
-    def fieldsToFilter(self, request):
-        from coordination.adminPermissions import reversePermisisons
+    @classmethod
+    def fieldsToFilterRequest(cls, request):
         return [
             {
                 'field': 'team',
-                'queryset': Team.objects.filter(
-                    event__state__coordinator__user=request.user,
-                    event__state__coordinator__permissions__in=reversePermisisons(Student, ['add', 'change'])
-                )
+                'fieldModel': Team,
+                'fieldAdmin': TeamAdmin,
             }
         ]
 
-    def stateFilteringAttributes(self, request):
-        from coordination.models import Coordinator
-        return {
-            'team__event__state__coordinator__in': Coordinator.objects.filter(user=request.user)
-        }
+    stateFilterLookup = 'team__event__state__coordinator'

@@ -21,8 +21,8 @@
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h3>
         <h3>Payment</h3>
         <p>
-            This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {% if event.event_billingType == 'team' %}team{% else %}student{% endif %}.
-            {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} teams that your school enters, measured across all campuses.{% endif %}
+            This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
+            {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.{% endif %}
             {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
             {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team limit per school for this event.{% endif %}
             {% if event.event_maxTeamsForEvent %}<br>There is a {{ event.event_maxTeamsForEvent }} team overall limit for this event.{% endif %}
@@ -39,10 +39,14 @@
             </li>
             {% endfor %}
         </ul>
+        {% if event.details %}
         <h3>Event details</h3>
         <p> {{ event.eventDetails|escape|linebreaks }} </p>
-        <h3>Location</h3>
-        <p> {{ event.location|escape|linebreaks }} </p>
+        {% endif %}
+        {% if event.venue %}
+        <h3>Location: {{ event.venue.name }}</h3>
+        {% if event.venue.address %}<p>{{ event.venue.address|escape|linebreaks }}</p>{% endif %}
+        {% endif %}
     </div><br>
 
     <div class="row">

@@ -49,6 +49,29 @@ class TestUpdateUserPermissions(TestCase):
         self.assertEqual(self.user2.is_staff, True)
         self.assertEqual(self.user2.is_superuser, False)
 
+class TestCoordinatorMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
+    
+    def testGetState(self):
+        self.assertEqual(self.coord1.getState(), self.state1)
+
+    def testUserName(self):
+        self.assertEqual(self.coord1.userName(), 'First Last')
+
+    def testUserEmail(self):
+        self.assertEqual(self.coord1.userEmail(), self.email1)
+
 class TestCoordinatorAdmin(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -172,41 +195,15 @@ class TestCoordinatorAdmin(TestCase):
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
-    # User field
-    def testUserFieldSucces_superuser(self):
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': self.state1.id,
-            'permissions': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
-
-    def testUserFieldSucces_coordinator(self):
+    def testStateFieldBlankDenied_coordinator(self):
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'user': self.user3.id,
-            'state': self.state1.id,
-            'permissions': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
-
-    def testUserFieldDenied_coordinator(self):
-        self.user3.homeState = self.state2
-        self.user3.save()
-
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': self.state1.id,
+            'state': '',
             'permissions': 'full',
             'position': 'Thing',
         }
         response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the error below.')
-        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+        self.assertContains(response, 'This field is required.')

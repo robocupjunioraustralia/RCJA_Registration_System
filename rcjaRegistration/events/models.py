@@ -4,6 +4,29 @@ from django.conf import settings
 
 # **********MODELS**********
 
+def eventCoordinatorEditPermisisons(level):
+    if level in ['full', 'eventmanager']:
+        return [
+            'add',
+            'view',
+            'change',
+            'delete'
+        ]
+    elif level in ['viewall', 'billingmanager']:
+        return [
+            'view',
+        ]
+    
+    return []
+
+def eventCoordinatorViewPermissions(level):
+    if level in ['full', 'viewall', 'eventmanager']:
+        return [
+            'view',
+        ]
+
+    return []
+
 class DivisionCategory(models.Model):
     # Foreign keys
     # Creation and update time
@@ -21,12 +44,7 @@ class DivisionCategory(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -75,19 +93,7 @@ class Division(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -102,6 +108,55 @@ class Division(models.Model):
     def __str__(self):
         if self.state:
             return f'{self.name} ({self.state})'
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
+class Venue(models.Model):
+    # Foreign keys
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=60)
+    address = models.TextField('Address', blank=True)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Venue'
+        ordering = ['name']
+        unique_together = ('name', 'state')
+
+    def clean(self):
+        errors = []
+
+        # Check changing state won't cause conflict
+        if self.event_set.exclude(state=self.state).exists():
+            errors.append(ValidationError('State not compatible with existing events with this venue'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        return eventCoordinatorEditPermisisons(level)
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
         return self.name
 
     # *****CSV export methods*****
@@ -124,7 +179,7 @@ class Year(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return DivisionCategory.coordinatorPermissions(level)
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -176,8 +231,8 @@ class Event(CustomSaveDeleteModel):
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
+    venue = models.ForeignKey(Venue, verbose_name='Venue', on_delete=models.PROTECT, null=True, blank=True)
     eventDetails = models.TextField('Event details', blank=True)
-    location = models.TextField('Location', blank=True)
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True, help_text='This appears below the state based invoice message on the invoice.')
 
     # Available divisions
@@ -192,7 +247,7 @@ class Event(CustomSaveDeleteModel):
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+        checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
 
         # Check close and end date after start dates
         if self.startDate > self.endDate:
@@ -219,6 +274,10 @@ class Event(CustomSaveDeleteModel):
             if self.divisions.exclude(Q(state=None) | Q(state=self.state)).exists():
                 errors.append(ValidationError('All division states must match event state'))
 
+        # Validate venue state
+        if self.venue and self.venue.state != self.state:
+            errors.append(ValidationError('Venue must be from same state as event'))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
@@ -226,19 +285,7 @@ class Event(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -259,6 +306,16 @@ class Event(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def directEnquiriesToName(self):
+        return self.directEnquiriesTo.fullname_or_email()
+    directEnquiriesToName.short_description = 'Direct enquiries to'
+    directEnquiriesToName.admin_order_field = 'directEnquiriesTo'   
+
+    def directEnquiriesToEmail(self):
+        return self.directEnquiriesTo.email
+    directEnquiriesToEmail.short_description = 'Direct enquiries to email'
+    directEnquiriesToEmail.admin_order_field = 'directEnquiriesTo__email'
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -331,19 +388,7 @@ class AvailableDivision(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        if level in ['full', 'eventmanager']:
-            return [
-                'add',
-                'view',
-                'change',
-                'delete'
-            ]
-        elif level in ['viewall', 'billingmanager']:
-            return [
-                'view',
-            ]
-        
-        return []
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):

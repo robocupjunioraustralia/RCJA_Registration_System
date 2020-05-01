@@ -11,7 +11,7 @@ class State(CustomSaveDeleteModel):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=20, unique=True)
+    name = models.CharField('Name', max_length=30, unique=True)
     abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
@@ -72,6 +72,12 @@ class State(CustomSaveDeleteModel):
     def treasurerName(self):
         return self.treasurer.fullname_or_email()
     treasurerName.short_description = 'Treasurer'
+    treasurerName.admin_order_field = 'treasurer'
+
+    def treasurerEmail(self):
+        return self.treasurer.email
+    treasurerEmail.short_description = 'Treasurer email'
+    treasurerEmail.admin_order_field = 'treasurer__email'
 
     def __str__(self):
         return self.name

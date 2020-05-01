@@ -684,12 +684,21 @@ class TestSchoolAdministratorMethods(TestCase):
     def setUp(self):
         schoolSetUp(self)
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
 
     def testGetState(self):
         self.assertEqual(self.admin1.getState(), self.state1)
 
     def testStr(self):
-        self.assertEqual(str(self.admin1), self.email1)
+        self.assertEqual(str(self.admin1), 'First Last')
+
+    def testUserName(self):
+        self.assertEqual(self.admin1.userName(), 'First Last')
+
+    def testUserEmail(self):
+        self.assertEqual(self.admin1.userEmail(), self.email1)
 
 def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
@@ -1012,8 +1021,8 @@ class TestSchoolAdministratorAdmin(TestCase):
 
     # School FK filtering
 
-    # User field
-    def testUserFieldSuccess_superuser(self):
+    # State field
+    def testStateFieldSuccess_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
         payload = {
             'user': self.user3.id,
@@ -1022,7 +1031,7 @@ class TestSchoolAdministratorAdmin(TestCase):
         response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
 
-    def testUserFieldSuccess_coordinator(self):
+    def testStateFieldSuccess_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
@@ -1031,20 +1040,6 @@ class TestSchoolAdministratorAdmin(TestCase):
         }
         response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
         self.assertEqual(response.status_code, 302)
-
-    def testUserFieldDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user2.id,
-            'school': self.school1.id,
-        }
-        response = self.client.post(reverse('admin:schools_schooladministrator_change', args=(self.admin1.id,)), data=payload)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Please correct the error below.')
-        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
-
-    # State field
 
     def testStateFieldDenied_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
