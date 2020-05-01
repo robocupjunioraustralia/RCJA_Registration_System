@@ -217,6 +217,30 @@ class Invoice(CustomSaveDeleteModel):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
+    def invoiceItem(self, name, description, quantity, unitCost, unit=None):
+        # Calculate totals
+        if self.event.entryFeeIncludesGST:
+            totalInclGST = quantity * unitCost
+            totalExclGST = totalInclGST / 1.1
+            gst = totalInclGST - totalExclGST
+
+        else:
+            totalExclGST = quantity * unitCost
+            gst = 0.1 * totalExclGST
+            totalInclGST = totalExclGST * 1.1
+
+        return {
+            'name': name,
+            'description': description,
+            'quantity': quantity,
+            'quantityString': quantity,
+            'unitCost': unitCost,
+            'unit': unit,
+            'totalExclGST': totalExclGST,
+            'gst': gst,
+            'totalInclGST': totalInclGST,
+        }
+
     def invoiceItems(self):
         from events.models import AvailableDivision
         from teams.models import Student
@@ -232,27 +256,10 @@ class Invoice(CustomSaveDeleteModel):
             quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
             unitCost = self.event.event_specialRateFee
 
-            # Calculate totals
-            if self.event.entryFeeIncludesGST:
-                totalInclGST = quantity * unitCost
-                totalExclGST = totalInclGST / 1.1
-                gst = totalInclGST - totalExclGST
+            name = f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}"
+            description = 'This is measured across all campuses from this school'
 
-            else:
-                totalExclGST = quantity * unitCost
-                gst = 0.1 * totalExclGST
-                totalInclGST = totalExclGST * 1.1
-
-            invoiceItems.append({
-                'name': f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}",
-                'description': 'This is measured across all campuses from this school',
-                'quantity': quantity,
-                'quantityString': quantityString,
-                'unitCost': unitCost,
-                'totalExclGST': totalExclGST,
-                'gst': gst,
-                'totalInclGST': totalInclGST,
-            })
+            invoiceItems.append(self.invoiceItem(name, description, quantity, unitCost, 'team'))
 
         # Standard rate entries
         for division in self.standardRateDivisions():
@@ -266,44 +273,21 @@ class Invoice(CustomSaveDeleteModel):
 
             # Get unit cost, use availableDivision value if present, otherwise use value from event
             unitCost = self.event.event_defaultEntryFee
-            quantityMethod = self.event.event_billingType
+            unit = self.event.event_billingType
             if availableDivision and availableDivision.division_entryFee is not None:
                 unitCost = availableDivision.division_entryFee
-                quantityMethod = availableDivision.division_billingType
+                unit = availableDivision.division_billingType
 
             # Get quantity
             quantity = 0
-            if quantityMethod == 'team':
+            if unit == 'team':
                 quantity = teams.count()
 
-            elif quantityMethod == 'student':
+            elif unit == 'student':
                 quantity = Student.objects.filter(team__in=teams).count()
-
-            # Calculate totals
-            if self.event.entryFeeIncludesGST:
-                totalInclGST = quantity * unitCost
-                totalExclGST = totalInclGST / 1.1
-                gst = totalInclGST - totalExclGST
-
-            else:
-                totalExclGST = quantity * unitCost
-                gst = 0.1 * totalExclGST
-                totalInclGST = totalExclGST * 1.1
-
-            # Quantity string
-            quantityString = f"{quantity} {quantityMethod if quantity <= 1 else quantityMethod + 's'}"
-
-            invoiceItems.append({
-                'name': division.name,
-                'description': '',
-                'quantity': quantity,
-                'quantityString': quantityString,
-                'unitCost': unitCost,
-                'totalExclGST': totalExclGST,
-                'gst': gst,
-                'totalInclGST': totalInclGST,
-            })
         
+            invoiceItems.append(self.invoiceItem(division.name, "", quantity, unitCost, unit))
+
         return invoiceItems
 
     # Totals
