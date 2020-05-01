@@ -300,6 +300,9 @@ class Invoice(CustomSaveDeleteModel):
         return round(sum([item['gst'] for item in self.invoiceItems()]), 2)
     amountGST.short_description = 'GST'
 
+    def totalQuantity(self):
+        return sum([item['quantity'] for item in self.invoiceItems()])
+
     # Invoice amount
 
     def invoiceAmountExclGST(self):
