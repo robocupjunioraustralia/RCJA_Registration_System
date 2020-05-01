@@ -150,20 +150,35 @@ class Invoice(CustomSaveDeleteModel):
 
     # Teams
 
-    # Queryset of teams covered by this invoice
-    def allTeams(self):
-        from teams.models import Team
-        if self.campusInvoicingEnabled():
+    # Filter for all items covered by this ivoice
+    def allItemsFilterFields(self, ignoreCampus=False):
+        if self.campusInvoicingEnabled() and not ignoreCampus:
             # Filter by school and campus
-            return Team.objects.filter(event=self.event, school=self.school, campus=self.campus)
+            return {
+                'event': self.event,
+                'school': self.school,
+                'campus': self.campus
+            }
 
         elif self.school:
             # If school but campuses not enableed filter by school
-            return Team.objects.filter(event=self.event, school=self.school)
+            return {
+                'event': self.event,
+                'school': self.school
+            }
 
         else:
             # If no school filter by user
-            return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
+            return {
+                'event': self.event,
+                'mentorUser': self.invoiceToUser,
+                'school': None
+            }
+
+    # Queryset of teams covered by this invoice
+    def allTeams(self):
+        from teams.models import Team
+        return Team.objects.filter(**self.allItemsFilterFields())
 
     # Special rate teams
 
@@ -177,24 +192,8 @@ class Invoice(CustomSaveDeleteModel):
         if not numberSpecialRateTeams:
             return Team.objects.none()
 
-        # Get filter dict for teams for this school or mentor if independent
-        if self.school:
-            # If school
-            teamFilterDict = {
-                'event': self.event,
-                'school': self.school,
-            }
-
-        else:
-            # If no school filter by user
-            teamFilterDict = {
-                'event': self.event,
-                'mentorUser': self.invoiceToUser,
-                'school': None,
-            }
-
         # Get special rate teams for this school for this invoice
-        specialRateTeams = Team.objects.filter(**teamFilterDict).order_by('creationDateTime')[:numberSpecialRateTeams]
+        specialRateTeams = Team.objects.filter(**self.allItemsFilterFields(ignoreCampus=True)).order_by('creationDateTime')[:numberSpecialRateTeams]
 
         return specialRateTeams
 
@@ -240,6 +239,39 @@ class Invoice(CustomSaveDeleteModel):
             'gst': gst,
             'totalInclGST': totalInclGST,
         }
+
+    def workshopInvoiceItems(self):
+        from workshops.models import WorkshopAttendee
+        invoiceItems = []
+
+        # All workshop attendees for this invoice        
+        attendees = WorkshopAttendee.objects.filter(**self.allItemsFilterFields())
+
+        # Get details
+        teacherUnitCost = self.event.workshopTeacherEntryFee
+        studentUnitCost = self.event.workshopStudentEntryFee
+
+        # Get divisions
+        from events.models import Division
+        divisions = Division.objects.filter(baseeventattendance__in=attendees).distinct()
+
+        # Create invoice items
+        for division in divisions:
+            # Split teacher and student
+
+            # Teachers
+            teacherAttedees = attendees.filter(division=division, attendeeType='teacher').count()
+            if teacherAttedees > 0:
+                name = f'{division.name} - teacher'
+                invoiceItems.append(self.invoiceItem(name, "", teacherAttedees, teacherUnitCost))
+
+            # Students
+            studentAttedees = attendees.filter(division=division, attendeeType='student').count()
+            if studentAttedees > 0:
+                name = f'{division.name} - student'
+                invoiceItems.append(self.invoiceItem(name, "", studentAttedees, studentUnitCost))
+        
+        return invoiceItems
 
     def competitionInvoiceItems(self):
         from events.models import AvailableDivision
@@ -291,11 +323,13 @@ class Invoice(CustomSaveDeleteModel):
         return invoiceItems
 
     def invoiceItems(self):
+        invoiceItems = []
+
         if self.event.eventType == 'workshop':
-            pass
+            invoiceItems += self.workshopInvoiceItems()
 
         elif self.event.eventType == 'competition':
-            invoiceItems = self.competitionInvoiceItems()
+            invoiceItems += self.competitionInvoiceItems()
         
         return invoiceItems
 
