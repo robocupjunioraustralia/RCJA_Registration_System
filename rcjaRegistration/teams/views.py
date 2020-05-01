@@ -86,7 +86,11 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             return HttpResponseBadRequest('Form data missing')
 
         # Default to displaying the form again if form not valid
-        return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        try:
+            return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        except ValidationError:
+            # To catch missing management data
+            return HttpResponseBadRequest('Form data missing')
 
     def delete(self, request, teamID):
         return super().delete(request, teamID)
