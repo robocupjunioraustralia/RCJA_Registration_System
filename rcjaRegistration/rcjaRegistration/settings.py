@@ -21,7 +21,14 @@ env = environ.Env(
     DEBUG=(bool, False),
     SENDGRID_API_KEY=(str, 'API_KEY'),
     ALLOWED_HOSTS=(list, ['127.0.0.1', 'localhost']),
-    STATIC_ROOT=(str, os.path.join(BASE_DIR, "static"))
+    STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
+    USE_SQLLITE_DB=(bool, False),
+    AWS_ACCESS_KEY_ID=(str, 'AWS_ACCESS_KEY_ID'),
+    AWS_SECRET_ACCESS_KEY=(str, 'AWS_SECRET_ACCESS_KEY'),
+    STATIC_BUCKET=(str, 'STATIC_BUCKET'),
+    PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
+    PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
+    DEV_SETTINGS=(bool, False),
 )
 
 # Quick-start development settings - unsuitable for production
@@ -35,7 +42,7 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
-DEV = False
+DEV_SETTINGS = env('DEV_SETTINGS')
 
 # Application definition
 
@@ -60,6 +67,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'keyvaluestore',
     'axes',
+    'storages',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -120,15 +128,23 @@ AXES_COOLOFF_TIME = 1
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
-    'default': env.db(),
-}
+if env('USE_SQLLITE_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': env.db(),
+    }
 
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-if DEV:
+if DEV_SETTINGS and DEBUG:
     AUTH_PASSWORD_VALIDATORS = []
 else:
     AUTH_PASSWORD_VALIDATORS = [
@@ -161,7 +177,7 @@ PWNED_VALIDATOR_ERROR_FAIL = "We could not validate the safety of this password.
 PWNED_VALIDATOR_FAIL_SAFE = False
 
 # Dev only
-if DEV:
+if DEV_SETTINGS:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 PASSWORD_RESET_TIMEOUT_DAYS = 1 # 1 day
@@ -186,8 +202,7 @@ DEFAULT_RENDERER_CLASSES = (
     'rest_framework.renderers.JSONRenderer',
 )
 
-# This should really test if debug is True
-if DEV and DEBUG:
+if DEV_SETTINGS and DEBUG:
     DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
         'rest_framework.renderers.BrowsableAPIRenderer',
     )
@@ -223,15 +238,50 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 #https://stackoverflow.com/questions/44160666/valueerror-missing-staticfiles-manifest-entry-for-favicon-ico
-TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
-STATIC_URL = '/static/'
-STATIC_ROOT = env('STATIC_ROOT')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
-STATICFILES_STORAGE = (
-    'django.contrib.staticfiles.storage.StaticFilesStorage'
-    if TESTING
-    else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-)
 
 LOGIN_REDIRECT_URL = '/'
+
+# AWS SETTINGS
+
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+AWS_DEFAULT_ACL = None
+
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+# Static
+STATIC_ROOT = env('STATIC_ROOT')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
+
+STATIC_BUCKET = env('STATIC_BUCKET')
+STATIC_DOMAIN = f'{STATIC_BUCKET}.s3.amazonaws.com'
+
+AWS_STATIC_LOCATION = ''
+
+if STATIC_BUCKET != 'STATIC_BUCKET' and AWS_ACCESS_KEY_ID != 'AWS_ACCESS_KEY_ID':
+    STATICFILES_STORAGE = 'rcjaRegistration.storageBackends.StaticStorage'
+    STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_BUCKET}/"
+else:
+    TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
+    STATIC_URL = '/static/'
+    STATICFILES_STORAGE = (
+        'django.contrib.staticfiles.storage.StaticFilesStorage'
+        if TESTING
+        else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    )
+
+
+# Public
+PUBLIC_BUCKET = env('PUBLIC_BUCKET')
+PUBLIC_DOMAIN = f'{PUBLIC_BUCKET}.s3.amazonaws.com'
+DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PublicMediaStorage'
+AWS_PUBLIC_MEDIA_LOCATION = ''
+
+# Private
+PRIVATE_BUCKET = env('PRIVATE_BUCKET')
+PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
+PRIVATE_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+AWS_PRIVATE_MEDIA_LOCATION = ''
