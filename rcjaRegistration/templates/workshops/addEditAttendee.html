@@ -105,14 +105,7 @@
                 </div>
               </div>
 
-              <h3>Email is optional, enables more features:</h3>
-              <div class = "field">
-                <label>Email:</label>
-                  {{form.email|attr:"placeholder:Email"}}
-              </div>
-
-              <h3>Required for student attendees:</h3>
-              <div class="three fields">
+              <div class="two fields">
                 <div class = "field">
                   <label>Year level:</label>
                     {{form.yearLevel|attr:"placeholder:Year level"}}
@@ -121,10 +114,18 @@
                   <label>Gender:</label>
                     {{form.gender|attr:"class:ui dropdown"}}
                 </div>
-                <div class = "field">
-                  <label>Birthday:</label>
-                    {{form.birthday|attr:"type:date"}}
-                </div>
+              </div>
+
+              <h3>Required for teacher attendees:</h3>
+              <div class = "field">
+                <label>Email:</label>
+                  {{form.email|attr:"placeholder:Email"}}
+              </div>
+
+              <h3>Required for student attendees:</h3>
+              <div class = "field">
+                <label>Birthday:</label>
+                  {{form.birthday|attr:"type:date"}}
               </div>
 
 

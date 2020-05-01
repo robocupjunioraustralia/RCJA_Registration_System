@@ -29,12 +29,12 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Required details', {
-            'fields': ('attendeeType', 'firstName', 'lastName')
+            'fields': ('attendeeType', 'firstName', 'lastName', 'yearLevel', 'gender')
         }),
         ('Required details for students', {
-            'fields': ('yearLevel', 'gender', 'birthday')
+            'fields': ('birthday',)
         }),
-        ('Optional details', {
+        ('Optional details for teachers', {
             'fields': ('email',)
         }),
     )
@@ -47,12 +47,12 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school',)
         }),
         ('Required details', {
-            'fields': ('attendeeType', 'firstName', 'lastName')
+            'fields': ('attendeeType', 'firstName', 'lastName', 'yearLevel', 'gender')
         }),
         ('Required details for students', {
-            'fields': ('yearLevel', 'gender', 'birthday')
+            'fields': ('birthday',)
         }),
-        ('Optional details', {
+        ('Optional details for teachers', {
             'fields': ('email',)
         }),
     )

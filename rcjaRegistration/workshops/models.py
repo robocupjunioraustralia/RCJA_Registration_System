@@ -3,6 +3,8 @@ from common.models import *
 
 from events.models import BaseEventAttendance
 
+import re
+
 # **********MODELS**********
 
 class WorkshopAttendee(BaseEventAttendance):
@@ -15,14 +17,14 @@ class WorkshopAttendee(BaseEventAttendance):
     # Compulsory for all attendee types
     firstName = models.CharField('First name', max_length=50)
     lastName = models.CharField('Last name', max_length=50)
+    yearLevel = models.CharField('Year level', max_length=10)
+    genderOptions = (('male','Male'),('female','Female'),('other','Other'))
+    gender = models.CharField('Gender', choices=genderOptions, max_length=10)
 
-    # Optional for all
+    # Required for teachers
     email = models.EmailField('Email', blank=True)
 
-    # Only required for students
-    yearLevel = models.PositiveIntegerField('Year level', null=True, blank=True)
-    genderOptions = (('male','Male'),('female','Female'),('other','Other'))
-    gender = models.CharField('Gender', choices=genderOptions, max_length=10, blank=True)
+    # Required for students
     birthday = models.DateField('Birthday', null=True, blank=True)
 
     # *****Meta and clean*****
@@ -38,9 +40,26 @@ class WorkshopAttendee(BaseEventAttendance):
 
         # Check student fields are filled out
         if self.attendeeType == 'student':
-            for field in ['yearLevel', 'gender', 'birthday']:
+            for field in ['birthday']:
                 if not getattr(self, field, None):
-                    errors.append('{} must not be blank for student attendee'.format(self._meta.get_field(field).verbose_name))
+                    errors.append(ValidationError('{} must not be blank for student attendee'.format(self._meta.get_field(field).verbose_name)))
+
+        # Check teacher fields filled out
+        if self.attendeeType == 'teacher':
+            for field in ['email']:
+                if not getattr(self, field, None):
+                    errors.append(ValidationError('{} must not be blank for teacher attendee'.format(self._meta.get_field(field).verbose_name)))
+
+        # Validate year level
+        if self.attendeeType == 'student':
+            try:
+                int(self.yearLevel)
+            except ValueError:
+                errors.append(ValidationError('Year level must be a number'))
+        
+        else:
+            if not re.match(r"(^[0-9,-]+$)", self.yearLevel):
+                errors.append(ValidationError('Year level can contain numbers, comma and hyphen'))
 
         # Raise any errors
         if errors:
