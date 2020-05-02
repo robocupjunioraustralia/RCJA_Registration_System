@@ -81,7 +81,7 @@
               <div class="three fields">
                 <div class = "field">
                   <label>Type:</label>
-                    {{form.attendeeType|attr:"class:ui dropdown"}}
+                    {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
                 </div>
                 <div class = "field">
                   <label>Division:</label>
@@ -116,18 +116,20 @@
                 </div>
               </div>
 
-              <h3>Required for teacher attendees:</h3>
-              <div class = "field">
-                <label>Email:</label>
-                  {{form.email|attr:"placeholder:Email"}}
+              <div id="teacherOnlyFields"> 
+                <h3>Required for teacher attendees:</h3>
+                <div class = "field">
+                  <label>Email:</label>
+                    {{form.email|attr:"placeholder:Email"}}
+                </div>
               </div>
-
-              <h3>Required for student attendees:</h3>
-              <div class = "field">
-                <label>Birthday:</label>
-                  {{form.birthday|attr:"type:date"}}
+              <div id="studentOnlyFields">
+                <h3>Required for student attendees:</h3>
+                <div class = "field">
+                  <label>Birthday:</label>
+                    {{form.birthday|attr:"type:date"}}
+                </div>
               </div>
-
 
               <input class="primary ui button" type="submit" value="Save" />
               {% if not attendee %}
@@ -141,4 +143,20 @@
     </div>
   </div>
 </div>
+
+<script>
+$('#attendeeType').change(function() {
+  if(this.value === "teacher") {
+    $("#studentOnlyFields").hide("slow")
+    $("#teacherOnlyFields").show("slow")
+  }
+  if(this.value === "student") {
+    $("#studentOnlyFields").show("slow")
+    $("#teacherOnlyFields").hide()
+  }
+  console.log(this.value)
+  //yearlevel placeholder text
+})
+
+</script>
 {% endblock %}
