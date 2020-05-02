@@ -110,12 +110,11 @@
                   <label>Year level:</label>
                     {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
                       <div class="ui pointing above label" id = "teacherHelpText" style="display:none">
-                        Teachers: Enter comma separated year levels (e.g. 9,10,11), or - for none
+                        Teachers: Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)
                       </div>
-                       <div class="ui pointing above label" id = "studentHelpText" style="display:none">
-                        Students: Enter a numbered year level 
+                      <div class="ui pointing above label" id = "studentHelpText" style="display:none">
+                        Students: Enter a year level
                       </div>
-                      
                 </div>
                 <div class = "field">
                   <label>Gender:</label>
@@ -124,14 +123,12 @@
               </div>
 
               <div id="teacherOnlyFields" style="display:none"> 
-                <h3>Required for teacher attendees:</h3>
                 <div class = "field">
                   <label>Email:</label>
                     {{form.email|attr:"placeholder:Email"}}
                 </div>
               </div>
               <div id="studentOnlyFields"style="display:none">
-                <h3>Required for student attendees:</h3>
                 <div class = "field">
                   <label>Birthday:</label>
                     {{form.birthday|attr:"type:date"}}
