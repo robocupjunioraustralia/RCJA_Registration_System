@@ -47,7 +47,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceAmountInclGST',
         'amountDueInclGST',
         'amountDuePaypal',
-        'amountPaid',     
+        'amountPaid',
     ]
     list_filter = [
         'event__state',
