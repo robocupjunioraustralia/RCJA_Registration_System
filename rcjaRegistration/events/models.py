@@ -228,7 +228,7 @@ class Event(CustomSaveDeleteModel):
     event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
-    # Team billing settings
+    # Competition billing settings
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
     event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")

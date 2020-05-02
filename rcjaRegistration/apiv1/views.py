@@ -1,5 +1,11 @@
 from django.shortcuts import render
-from common.views import *
+
+from django.core.exceptions import ValidationError
+from rest_framework.permissions import BasePermission, IsAuthenticated, SAFE_METHODS
+from rest_framework import status, viewsets
+from rest_framework.response import Response
+
+from django.db.models.deletion import ProtectedError
 
 from .serializers import *
 
@@ -8,16 +14,12 @@ from regions.models import State, Region
 
 # *****Regions*****
 
-# class StateViewSet(viewsets.ReadOnlyModelViewSet):
-#     queryset = State.objects.order_by('id')
-#     serializer_class = StateSerializer
+class StateViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = State.objects.order_by('id')
+    serializer_class = StateSerializer
 
-# class RegionViewSet(viewsets.ReadOnlyModelViewSet):
-#     queryset = Region.objects.order_by('id')
-#     serializer_class = RegionSerializer
+# *****Events*****
 
-# # *****Events*****
-
-# class EventViewSet(viewsets.ReadOnlyModelViewSet):
-#     queryset = Event.objects.order_by('id')
-#     serializer_class = EventSerializer
+class EventViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Event.objects.order_by('id')
+    serializer_class = EventSerializer
