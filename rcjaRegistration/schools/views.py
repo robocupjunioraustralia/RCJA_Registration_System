@@ -5,7 +5,7 @@ from django.template import loader
 from django.contrib.auth import authenticate, login
 from .forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdministratorForm
 from django.http import JsonResponse
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
@@ -90,51 +90,63 @@ def details(request):
         form = SchoolEditForm(request.POST, instance=school)
         campusFormset = CampusInlineFormset(request.POST, instance=school)
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user})
-        if form.is_valid() and campusFormset.is_valid() and schoolAdministratorFormset.is_valid():
-            # Save school
-            school = form.save(commit=False)
-            school.forceSchoolDetailsUpdate = False
-            school.save()
 
-            # Save campus formset
-            # Need commit=False to do manual deletion to catch protected errors
-            campuses = campusFormset.save(commit=False)
+        try:
+            if form.is_valid() and campusFormset.is_valid() and schoolAdministratorFormset.is_valid():
+                # Save school
+                school = form.save(commit=False)
+                school.forceSchoolDetailsUpdate = False
+                school.save()
 
-            for campus in campusFormset.deleted_objects:
-                try:
-                    campus.delete()
-                except ProtectedError:
-                    pass
-            
-            for campus in campuses:
-                campus.save()
+                # Save campus formset
+                # Need commit=False to do manual deletion to catch protected errors
+                campuses = campusFormset.save(commit=False)
 
-            # Save administrators formset
-            # Need commit=False to do manual deletion to catch protected errors
-            administrators = schoolAdministratorFormset.save(commit=False)
+                for campus in campusFormset.deleted_objects:
+                    try:
+                        campus.delete()
+                    except ProtectedError:
+                        pass
+                
+                for campus in campuses:
+                    campus.save()
 
-            for administrator in schoolAdministratorFormset.deleted_objects:
-                try:
-                    administrator.delete()
-                except ProtectedError:
-                    pass
+                # Save administrators formset
+                # Need commit=False to do manual deletion to catch protected errors
+                administrators = schoolAdministratorFormset.save(commit=False)
 
-            for administrator in administrators:
-                administrator.save()
+                for administrator in schoolAdministratorFormset.deleted_objects:
+                    try:
+                        administrator.delete()
+                    except ProtectedError:
+                        pass
 
-            # Handle new administrator
-            if form.cleaned_data['addAdministratorEmail']:
-                from users.models import User
-                # Need to do this rather than use get_or_create because need to do case insentitve get
-                try:
-                    newUser = User.objects.get(email__iexact=form.cleaned_data['addAdministratorEmail'])
-                except User.DoesNotExist:
-                    newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'], forceDetailsUpdate=True)
-                SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
+                for administrator in administrators:
+                    administrator.save()
 
-            return redirect('/')
+                # Handle new administrator
+                if form.cleaned_data['addAdministratorEmail']:
+                    from users.models import User
+                    # Need to do this rather than use get_or_create because need to do case insentitve get
+                    try:
+                        newUser = User.objects.get(email__iexact=form.cleaned_data['addAdministratorEmail'])
+                    except User.DoesNotExist:
+                        newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'], forceDetailsUpdate=True)
+                    SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
+
+                return redirect('/')
+
+        except ValidationError:
+            # To catch missing management data
+            return HttpResponseBadRequest('Form data missing')
+
     else:
         form = SchoolEditForm(instance=school)
         campusFormset = CampusInlineFormset(instance=school)
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
-    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
+    
+    try:
+        return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
+    except ValidationError:
+        # To catch missing management data
+        return HttpResponseBadRequest('Form data missing')

@@ -150,20 +150,35 @@ class Invoice(CustomSaveDeleteModel):
 
     # Teams
 
-    # Queryset of teams covered by this invoice
-    def allTeams(self):
-        from teams.models import Team
-        if self.campusInvoicingEnabled():
+    # Filter for all items covered by this ivoice
+    def allItemsFilterFields(self, ignoreCampus=False):
+        if self.campusInvoicingEnabled() and not ignoreCampus:
             # Filter by school and campus
-            return Team.objects.filter(event=self.event, school=self.school, campus=self.campus)
+            return {
+                'event': self.event,
+                'school': self.school,
+                'campus': self.campus
+            }
 
         elif self.school:
             # If school but campuses not enableed filter by school
-            return Team.objects.filter(event=self.event, school=self.school)
+            return {
+                'event': self.event,
+                'school': self.school
+            }
 
         else:
             # If no school filter by user
-            return Team.objects.filter(event=self.event, mentorUser=self.invoiceToUser, school=None)
+            return {
+                'event': self.event,
+                'mentorUser': self.invoiceToUser,
+                'school': None
+            }
+
+    # Queryset of teams covered by this invoice
+    def allTeams(self):
+        from teams.models import Team
+        return Team.objects.filter(**self.allItemsFilterFields())
 
     # Special rate teams
 
@@ -177,24 +192,8 @@ class Invoice(CustomSaveDeleteModel):
         if not numberSpecialRateTeams:
             return Team.objects.none()
 
-        # Get filter dict for teams for this school or mentor if independent
-        if self.school:
-            # If school
-            teamFilterDict = {
-                'event': self.event,
-                'school': self.school,
-            }
-
-        else:
-            # If no school filter by user
-            teamFilterDict = {
-                'event': self.event,
-                'mentorUser': self.invoiceToUser,
-                'school': None,
-            }
-
         # Get special rate teams for this school for this invoice
-        specialRateTeams = Team.objects.filter(**teamFilterDict).order_by('creationDateTime')[:numberSpecialRateTeams]
+        specialRateTeams = Team.objects.filter(**self.allItemsFilterFields(ignoreCampus=True)).order_by('creationDateTime')[:numberSpecialRateTeams]
 
         return specialRateTeams
 
@@ -215,16 +214,72 @@ class Invoice(CustomSaveDeleteModel):
 
     def standardRateDivisions(self):
         from events.models import Division
-        return Division.objects.filter(team__in=self.standardRateTeams()).distinct()
+        return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItems(self):
+    def invoiceItem(self, name, description, quantity, unitCost, unit=None):
+        # Calculate totals
+        if self.event.entryFeeIncludesGST:
+            totalInclGST = quantity * unitCost
+            totalExclGST = totalInclGST / 1.1
+            gst = totalInclGST - totalExclGST
+
+        else:
+            totalExclGST = quantity * unitCost
+            gst = 0.1 * totalExclGST
+            totalInclGST = totalExclGST * 1.1
+
+        return {
+            'name': name,
+            'description': description,
+            'quantity': quantity,
+            'quantityString': quantity,
+            'unitCost': unitCost,
+            'unit': unit,
+            'totalExclGST': totalExclGST,
+            'gst': gst,
+            'totalInclGST': totalInclGST,
+        }
+
+    def workshopInvoiceItems(self):
+        from workshops.models import WorkshopAttendee
+        invoiceItems = []
+
+        # All workshop attendees for this invoice        
+        attendees = WorkshopAttendee.objects.filter(**self.allItemsFilterFields())
+
+        # Get details
+        teacherUnitCost = self.event.workshopTeacherEntryFee
+        studentUnitCost = self.event.workshopStudentEntryFee
+
+        # Get divisions
+        from events.models import Division
+        divisions = Division.objects.filter(baseeventattendance__in=attendees).distinct()
+
+        # Create invoice items
+        for division in divisions:
+            # Split teacher and student
+
+            # Teachers
+            teacherAttedees = attendees.filter(division=division, attendeeType='teacher').count()
+            if teacherAttedees > 0:
+                name = f'{division.name} - teacher'
+                invoiceItems.append(self.invoiceItem(name, "", teacherAttedees, teacherUnitCost))
+
+            # Students
+            studentAttedees = attendees.filter(division=division, attendeeType='student').count()
+            if studentAttedees > 0:
+                name = f'{division.name} - student'
+                invoiceItems.append(self.invoiceItem(name, "", studentAttedees, studentUnitCost))
+        
+        return invoiceItems
+
+    def competitionInvoiceItems(self):
         from events.models import AvailableDivision
         from teams.models import Student
         invoiceItems = []
 
         # Special rate entries
         numberSpecialRateTeams = self.specialRateTeams().count()
-        maxNumberSpecialRateTeams = self.event.event_specialRateNumber
         if numberSpecialRateTeams:
 
             # Get values
@@ -232,27 +287,11 @@ class Invoice(CustomSaveDeleteModel):
             quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
             unitCost = self.event.event_specialRateFee
 
-            # Calculate totals
-            if self.event.entryFeeIncludesGST:
-                totalInclGST = quantity * unitCost
-                totalExclGST = totalInclGST / 1.1
-                gst = totalInclGST - totalExclGST
+            maxNumberSpecialRateTeams = self.event.event_specialRateNumber
+            name = f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}"
+            description = 'This is measured across all campuses from this school'
 
-            else:
-                totalExclGST = quantity * unitCost
-                gst = 0.1 * totalExclGST
-                totalInclGST = totalExclGST * 1.1
-
-            invoiceItems.append({
-                'name': f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}",
-                'description': 'This is measured across all campuses from this school',
-                'quantity': quantity,
-                'quantityString': quantityString,
-                'unitCost': unitCost,
-                'totalExclGST': totalExclGST,
-                'gst': gst,
-                'totalInclGST': totalInclGST,
-            })
+            invoiceItems.append(self.invoiceItem(name, description, quantity, unitCost, 'team'))
 
         # Standard rate entries
         for division in self.standardRateDivisions():
@@ -266,43 +305,31 @@ class Invoice(CustomSaveDeleteModel):
 
             # Get unit cost, use availableDivision value if present, otherwise use value from event
             unitCost = self.event.event_defaultEntryFee
-            quantityMethod = self.event.event_billingType
+            unit = self.event.event_billingType
             if availableDivision and availableDivision.division_entryFee is not None:
                 unitCost = availableDivision.division_entryFee
-                quantityMethod = availableDivision.division_billingType
+                unit = availableDivision.division_billingType
 
             # Get quantity
             quantity = 0
-            if quantityMethod == 'team':
+            if unit == 'team':
                 quantity = teams.count()
 
-            elif quantityMethod == 'student':
+            elif unit == 'student':
                 quantity = Student.objects.filter(team__in=teams).count()
+        
+            invoiceItems.append(self.invoiceItem(division.name, "", quantity, unitCost, unit))
 
-            # Calculate totals
-            if self.event.entryFeeIncludesGST:
-                totalInclGST = quantity * unitCost
-                totalExclGST = totalInclGST / 1.1
-                gst = totalInclGST - totalExclGST
+        return invoiceItems
 
-            else:
-                totalExclGST = quantity * unitCost
-                gst = 0.1 * totalExclGST
-                totalInclGST = totalExclGST * 1.1
+    def invoiceItems(self):
+        invoiceItems = []
 
-            # Quantity string
-            quantityString = f"{quantity} {quantityMethod if quantity <= 1 else quantityMethod + 's'}"
+        if self.event.eventType == 'workshop':
+            invoiceItems += self.workshopInvoiceItems()
 
-            invoiceItems.append({
-                'name': division.name,
-                'description': '',
-                'quantity': quantity,
-                'quantityString': quantityString,
-                'unitCost': unitCost,
-                'totalExclGST': totalExclGST,
-                'gst': gst,
-                'totalInclGST': totalInclGST,
-            })
+        elif self.event.eventType == 'competition':
+            invoiceItems += self.competitionInvoiceItems()
         
         return invoiceItems
 
@@ -315,6 +342,9 @@ class Invoice(CustomSaveDeleteModel):
     def amountGST(self):
         return round(sum([item['gst'] for item in self.invoiceItems()]), 2)
     amountGST.short_description = 'GST'
+
+    def totalQuantity(self):
+        return sum([item['quantity'] for item in self.invoiceItems()])
 
     # Invoice amount
 
@@ -371,6 +401,15 @@ class InvoicePayment(models.Model):
     class Meta:
         verbose_name = 'Payment'
         ordering = ['invoice', 'datePaid']
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        return Invoice.coordinatorPermissions(level)
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.invoice.event.state
 
     # *****Save & Delete Methods*****
 

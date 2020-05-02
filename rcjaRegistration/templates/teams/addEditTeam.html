@@ -3,18 +3,10 @@
 
 {% block head %}
 
-{% if event.boolWorkshop %}
-  {% if team %}
-  <title> Edit attendee </title>
-  {% else %}
-  <title> Add attendee </title>
-  {% endif %}
+{% if team %}
+<title> Edit team </title>
 {% else %}
-  {% if team %}
-  <title> Edit team </title>
-  {% else %}
-  <title> Add team </title>
-  {% endif %}
+<title> Add team </title>
 {% endif %}
 
 
@@ -53,17 +45,15 @@
       <div class = "twelve wide mobile eight wide computer column ui">
         <div class = "form form-group left-aligned-text">
           <div>
-            <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}}</h1>
-            {% if not event.boolWorkshop %}
-              {% if team %}
-              <h2> Editing: Team {{team.name}} </h2>
-              {% else %}
-                <h2>Add a new team</h2> 
-              {% endif %}
+            <h1>{{event}}</h1>
+            {% if team %}
+            <h2> Editing: Team {{team.name}} </h2>
+            {% else %}
+            <h2>Add a new team</h2> 
             {% endif %}
-            {% if form.errors %}
 
             <!-- Error messaging -->
+            {% if form.errors %}
             <div class="ui message left-aligned-text">
               <div class="">
                 <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
@@ -87,25 +77,38 @@
               {{ form.school }}
               {{ form.event }}
                 
-              <h2>{% if event.boolWorkshop %}Attendee details{% else %}Team details{% endif %}</h2>
+              <h2>Team details</h2>
                
               <div class="three fields">
                 <div class = "field">
-                  <label>{% if event.boolWorkshop %}Attendee name:{% else %}Team name:{% endif %}</label>
-                    {{form.name|attr:"placeholder:Name"}}
+                  <label>Team name:</label>
+                    {{form.name|attr:"placeholder:Team name"}}
                 </div>
                 <div class = "field">
-                  <label> Division: </label>
-                    {{ form.division|attr:"placeholder:Division"|attr:"class:ui dropdown"}} 
+                  <label>Division:</label>
+                    {{ form.division|attr:"class:ui dropdown"}} 
                 </div>
                 <div class = "field">
-                  <label> Campus: </label>
-                    {{ form.campus|attr:"placeholder:Campus"|attr:"class:ui dropdown"}} 
+                  <label>Campus:</label>
+                    {{ form.campus|attr:"class:ui dropdown"}} 
+                </div>
+              </div>
+
+              <h2>Platform</h2>
+
+              <div class="two fields">
+                <div class = "field">
+                  <label>Hardware platform:</label>
+                    {{form.hardwarePlatform|attr:"class:ui dropdown"}}
+                </div>
+                <div class = "field">
+                  <label>Software platform:</label>
+                    {{ form.softwarePlatform|attr:"class:ui dropdown"}} 
                 </div>
               </div>
 
               <!-- Students -->
-              {% if not event.boolWorkshop %}<h2>Students</h2>{% endif %}
+              <h2>Students</h2>
               {% for studentform in formset %}
                 {{studentform.id|attr:"type:hidden"}}
               <div class = "ui segment">
@@ -124,6 +127,7 @@
 
                   </div>
                 {% endif %}
+
                 <div class = "two fields">
                   <div class = "field">
                     <label> {{studentform.firstName.label_tag}} </label>
@@ -163,7 +167,7 @@
                 {% endfor %}
               <input class="primary ui button" type="submit" value="Save" />
               {% if not team %}
-              <input class="primary ui button" type="submit" name="add_text" value="+ Add Another" />
+              <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
               {% endif %}    
               <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
             </form>

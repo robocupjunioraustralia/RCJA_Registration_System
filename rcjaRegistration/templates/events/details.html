@@ -51,51 +51,81 @@
 
     <div class="row">
         {% if event.registrationsCloseDate >= today %}
-        <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">
             {% if event.boolWorkshop %}
-            Add workshop attendee
+            <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
             {% else %}
-            Add team
+            <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">Add team</button></a>
             {% endif %}
-        </button> </a>
         {% else %}
         <h5> Registration for this event has closed. If you need to make modifications, please contact your event supervisor. </h5>
         {% endif %}
     </div>
     <br>
+
     <div>
-        <table id="eventTable" class="ui celled table">
+    {% if workshopAttendees %}
+
+    <table id="attendeeTable" class="ui celled table">
             <thead>
-                <th>{% if event.boolWorkshop %}Attendee{% else %}Team Name{% endif %}</th>
+                <th>Attendee name</th>
+                <th>Type</th>
                 <th> Division</th>
                 {% if showCampusColumn %}<th>Campus</th>{% endif %}
-                {% if not event.boolWorkshop %}<th> Students</th>{% endif %}
-                {% if event.registrationsCloseDate >= today %}
-                <th> Actions </th>
-                {% endif %}
+                {% if event.registrationsCloseDate >= today %}<th>Actions</th>{% endif %}
             </thead>
             <tbody>
-                {% for team in teams %}
-                <tr id="teamRow{{team.id}}">
-                    <td>{{team.name}}</td>
-                    <td>{{team.division}}</td>
-                    {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
-                    {% if not event.boolWorkshop %}<td>
-                        {% for student in team.student_set.all %}
-                        {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
-                        {% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </td>{% endif %}
+                {% for workshopAttendee in workshopAttendees %}
+                <tr id="attendeeRow{{workshopAttendee.id}}">
+                    <td>{{workshopAttendee.attendeeFullName}}</td>
+                    <td>{{workshopAttendee.attendeeType}}</td>
+                    <td>{{workshopAttendee.division}}</td>
+                    {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
                     {% if event.registrationsCloseDate >= today %}
                     <td>
-                        <a href="{% url 'teams:edit' team.id %}"><button class="ui primary button">Edit/View Details</button></a>
-                        <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:delete' team.id %}')" class="ui negative button">Delete</button>
+                        <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
+                        <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
                     </td>
                     {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+    {% elif teams %}
+
+    <table id="teamTable" class="ui celled table">
+        <thead>
+            <th>Team name</th>
+            <th> Division</th>
+            {% if showCampusColumn %}<th>Campus</th>{% endif %}
+            <th>Students</th>
+            {% if event.registrationsCloseDate >= today %}<th>Actions</th>{% endif %}
+        </thead>
+        <tbody>
+            {% for team in teams %}
+            <tr id="teamRow{{team.id}}">
+                <td>{{team.name}}</td>
+                <td>{{team.division}}</td>
+                {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
+                <td>
+                    {% for student in team.student_set.all %}
+                    {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
+                    {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                {% if event.registrationsCloseDate >= today %}
+                <td>
+                    <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">Edit/View Details</button></a>
+                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:details' team.id %}')" class="ui negative button">Delete</button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% endif %}
+
     </div>
     <br>
 </div>
@@ -127,9 +157,9 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('#eventTable').DataTable();
-    });
+    // $(document).ready(function () {
+    //     $('#teamTable').DataTable();
+    // });
     function showModal() {
         $('.ui.modal').modal('show');
     }

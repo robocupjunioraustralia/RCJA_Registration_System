@@ -1,42 +1,28 @@
 from django.contrib import admin
 from common.admin import *
 from coordination.adminPermissions import AdminPermissions
-from django import forms
 from django.contrib import messages
 
 from .models import *
-from schools.models import Campus
+
+from events.admin import BaseWorkshopAttendanceAdmin
 
 # Register your models here.
+
+@admin.register(HardwarePlatform)
+class HardwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
+
+@admin.register(SoftwarePlatform)
+class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
 
 class StudentInline(admin.TabularInline):
     model = Student
     extra = 0
 
-class TeamForm(forms.ModelForm):
-    def clean(self):
-        cleaned_data = super().clean()
-        errors = []
-
-        mentorUser = cleaned_data.get('mentorUser', None)
-        school = cleaned_data.get('school', None)
-
-        # Check school is selected if mentor is admin of more than one school
-        if mentorUser and mentorUser.schooladministrator_set.count() > 1 and school is None:
-            errors.append(ValidationError(f'School must not be blank because {mentorUser.fullname_or_email()} is an administrator of multiple schools. Please select a school.'))
-
-        # Check school is set if previously set and mentor still an admin of school
-        if self.instance and self.instance.school and not school:
-            errors.append(ValidationError(f"Can't remove {self.instance.school} from this team while {self.instance.mentorUser.fullname_or_email()} is still an admin of this school."))
-
-        # Raise any errors
-        if errors:
-            raise ValidationError(errors)
-
-        return cleaned_data
-
 @admin.register(Team)
-class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class TeamAdmin(BaseWorkshopAttendanceAdmin):
     list_display = [
         'name',
         'event',
@@ -56,6 +42,9 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
         ('School', {
             'fields': ('mentorUser', 'school', 'campus',)
         }),
+        ('Details', {
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
+        }),
     )
     add_fieldsets = (
         (None, {
@@ -68,37 +57,21 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
             'description': "Select this team's mentor.<br>If they are a mentor for one school that school will be autofilled. If they are mentor of more than one school you will need to select the school. Leave school blank if independent.<br>You can select campus after you have clicked save.",
             'fields': ('mentorUser', 'school',)
         }),
+        ('Details', {
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
+        }),
     )
-    autocomplete_fields = [
-        'event',
-        'division',
-        'mentorUser',
-        'school',
-        'campus',
-    ]
+
     inlines = [
         StudentInline
     ]
-    list_filter = [
-        'event',
-        'division',
-    ]
-    search_fields = [
+
+    search_fields = BaseWorkshopAttendanceAdmin.search_fields + [
         'name',
-        'school__state__name',
-        'school__state__abbreviation',
-        'school__region__name',
-        'school__name',
-        'school__abbreviation',
-        'campus__name',
-        'mentorUser__first_name',
-        'mentorUser__last_name',
-        'mentorUser__email',
-        'event__name',
-        'division__name',
         'student__firstName',
         'student__lastName',
     ]
+
     actions = [
         'export_as_csv'
     ]
@@ -111,43 +84,11 @@ class TeamAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Exp
         'school',
         'campus',
         'homeState',
+        'hardwarePlatform',
+        'softwarePlatform',
     ]
 
-    form = TeamForm
-
-    # Set school and campus to that of mentor if only one option
-    def save_model(self, request, obj, form, change):
-        if not obj.pk and obj.school is None and obj.mentorUser.schooladministrator_set.count() == 1:
-            obj.school = obj.mentorUser.schooladministrator_set.first().school
-            self.message_user(request, f"{obj.school} automatically added to {obj}", messages.SUCCESS)
-        
-        super().save_model(request, obj, form, change)
-
-    # State based filtering
-
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from events.admin import EventAdmin
-        from events.models import Event
-        return [
-            {
-                'field': 'event',
-                'fieldModel': Event,
-                'fieldAdmin': EventAdmin,
-            }
-        ]
-
-    @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
-                'filterNone': True,
-            }
-        ]
-
-    stateFilterLookup = 'event__state__coordinator'
+    eventTypeMapping = 'competition'
 
 @admin.register(Student)
 class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):

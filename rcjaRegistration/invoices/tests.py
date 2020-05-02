@@ -49,6 +49,7 @@ def commonSetUp(self):
             year=self.year,
             state=self.state1,
             name='Test event 1',
+            eventType='competition',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',

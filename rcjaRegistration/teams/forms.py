@@ -1,8 +1,11 @@
 from django import forms
+from django.core.exceptions import ValidationError
+
 from .models import Student, Team
 from events.models import AvailableDivision
-from django.forms import modelformset_factory, inlineformset_factory
-from django.core.exceptions import ValidationError
+
+from events.forms import BaseEventAttendanceFormInitMixin
+
 import datetime
 
 class StudentForm(forms.ModelForm):
@@ -16,35 +19,10 @@ class StudentForm(forms.ModelForm):
         input_formats=('%Y-%m-%d', )
         )
     
-class TeamForm(forms.ModelForm):
+class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division', 'name', 'campus', 'school', 'event']
-
-    # Override init to filter division and campus, set school and event
-    def __init__(self, *args, user, event, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Filter division to available divisions
-        from events.models import Division
-        self.fields['division'].queryset = Division.objects.filter(event=event)
-
-        # Filter campus to user's campuses
-        from schools.models import Campus
-        self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
-
-        # School field
-        self.fields['school'].disabled = True
-        self.fields['school'].widget = forms.HiddenInput()
-        if user.currentlySelectedSchool:
-            self.fields['school'].initial = user.currentlySelectedSchool.id
-        else:
-            self.fields['school'].initial = None
-
-        # Event field
-        self.fields['event'].initial = event.id
-        self.fields['event'].disabled = True
-        self.fields['event'].widget = forms.HiddenInput()
+        fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
 
     # Validate that this team can be created, not exceeding a school or global team maximum
     def clean(self):

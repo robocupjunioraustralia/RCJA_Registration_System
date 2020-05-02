@@ -1,0 +1,180 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+{% if attendee %}
+<title> Edit attendee </title>
+{% else %}
+<title> Add attendee </title>
+{% endif %}
+
+
+<style type="text/css">
+  body {
+    background-color: white;
+  }
+  .column {
+    max-width: 100%;
+  }
+
+  .formbox {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  .bg {
+      /* Full height */
+    height: 100%; 
+    width:auto;
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    /*background-color: #CCE2FF;*/
+  }
+  .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+  <div class = "">
+    <div class="ui center aligned grid ">
+      <div class = "twelve wide mobile eight wide computer column ui">
+        <div class = "form form-group left-aligned-text">
+          <div>
+            <h1>{{event}}</h1>
+            {% if attendee %}
+            <h2> Editing: {{attendee.attendeeFullName}} </h2>
+            {% else %}
+            <h2>Add a new attendee</h2> 
+            {% endif %}
+
+            <!-- Error messaging -->
+            {% if form.errors %}
+            <div class="ui message left-aligned-text">
+              <div class="">
+                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                {{ form.non_field_errors }}
+                
+                <ul>
+                  {% for field in form %}
+                    {% if field.errors %}
+                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                  {% endfor %}
+                
+                </ul>
+              </div>
+            </div>
+            <!-- /Error messaging -->
+            {% endif %}
+          
+            <form method="post" class = "ui form">
+              {% csrf_token %}
+              {{ form.school }}
+              {{ form.event }}
+                
+              <h2>Attendee details</h2>
+
+              <div class="three fields">
+                <div class = "field">
+                  <label>Type:</label>
+                    {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
+                </div>
+                <div class = "field">
+                  <label>Division:</label>
+                    {{ form.division|attr:"class:ui dropdown"}} 
+                </div>
+                <div class = "field">
+                  <label>Campus:</label>
+                    {{ form.campus|attr:"class:ui dropdown"}} 
+                </div>
+              </div>
+
+              <!-- Name -->
+              <div class="two fields">
+                <div class = "field">
+                  <label>First name:</label>
+                    {{form.firstName|attr:"placeholder:First name"}}
+                </div>
+                <div class = "field">
+                  <label>Last name:</label>
+                    {{form.lastName|attr:"placeholder:Last name"}}
+                </div>
+              </div>
+
+              <div class="two fields">
+                <div class = "field">
+                  <label>Year level:</label>
+                    {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
+                      <div class="ui pointing above label" id = "teacherHelpText" style="display:none">
+                        Teachers: Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)
+                      </div>
+                      <div class="ui pointing above label" id = "studentHelpText" style="display:none">
+                        Students: Enter a year level
+                      </div>
+                </div>
+                <div class = "field">
+                  <label>Gender:</label>
+                    {{form.gender|attr:"class:ui dropdown"}}
+                </div>
+              </div>
+
+              <div id="teacherOnlyFields" style="display:none"> 
+                <div class = "field">
+                  <label>Email:</label>
+                    {{form.email|attr:"placeholder:Email"}}
+                </div>
+              </div>
+              <div id="studentOnlyFields"style="display:none">
+                <div class = "field">
+                  <label>Birthday:</label>
+                    {{form.birthday|attr:"type:date"}}
+                </div>
+              </div>
+
+              <input class="primary ui button" type="submit" value="Save" />
+              {% if not attendee %}
+              <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
+              {% endif %}    
+              <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  attendeeTypeHandler($('#attendeeType').val());
+  console.log('loaded');
+});
+
+$('#attendeeType').change(function() {
+  attendeeTypeHandler(this.value);
+  });
+
+const attendeeTypeHandler = (newDisplayString) => {
+    if( newDisplayString === "teacher") {
+    $("#studentOnlyFields").hide("slow");
+    $("#teacherOnlyFields").show("slow");
+  
+    $("#studentHelpText").hide("slow");
+    $("#teacherHelpText").show("slow");
+
+  }
+  if( newDisplayString=== "student") {
+    $("#studentOnlyFields").show("slow");
+    $("#teacherOnlyFields").hide("slow");
+
+    $("#studentHelpText").show("slow");
+    $("#teacherHelpText").hide("slow");
+  }
+}
+
+</script>
+{% endblock %}

@@ -7,8 +7,7 @@ from django.db.models.functions import Concat
 
 # **********CUSTOM CLASSES**********
 
-class CustomSaveDeleteModel(models.Model):
-
+class SaveDeleteMixin:
     # *****Save*****
     # Save override to provide for arhived object protection
 
@@ -67,6 +66,10 @@ class CustomSaveDeleteModel(models.Model):
         if not skipPrePostDelete:
             self.postDelete()
 
+    class Meta:
+        abstract = True
+
+class CustomSaveDeleteModel(SaveDeleteMixin, models.Model):
     class Meta:
         abstract = True
 

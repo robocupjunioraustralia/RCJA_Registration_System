@@ -184,6 +184,19 @@ class TestEditDetails(TestCase):
         self.assertEqual(302,response.status_code)
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
+    def testMissingManagementFormData(self):
+        payload = {
+            "first_name":"Admin",
+            "last_name":"User",
+            "mobileNumber":123,
+            "email":"admon@admon.com",
+            'homeState': self.newState.id,
+            'homeRegion': self.newRegion.id,
+        }
+        response = self.client.post(path=reverse('users:details'),data=payload)
+        self.assertEquals(response.status_code, 400)
+        self.assertContains(response, 'Form data missing', status_code=400)
+
     def testInvalidEditFails(self):
         payload = {
             'questionresponse_set-TOTAL_FORMS':0,

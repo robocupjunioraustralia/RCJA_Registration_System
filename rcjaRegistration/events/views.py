@@ -2,12 +2,16 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError, PermissionDenied
 
 import datetime
 
 from .models import *
 from teams.models import Team
 from schools.models import Campus
+from workshops.models import WorkshopAttendee
 
 # Need to check if schooladministrator is None
 
@@ -16,9 +20,9 @@ def dashboard(request):
     # Events
     # Get user event filtering attributes
     if request.user.currentlySelectedSchool:
-        usersTeams = Team.objects.filter(school=request.user.currentlySelectedSchool)
+        usersEventAttendances = BaseEventAttendance.objects.filter(school=request.user.currentlySelectedSchool)
     else:
-        usersTeams = request.user.team_set.filter(school=None)
+        usersEventAttendances = BaseEventAttendance.objects.filter(mentorUser=request.user, school=None)
 
     # Current state
     if request.user.currentlySelectedSchool:
@@ -31,7 +35,7 @@ def dashboard(request):
         registrationsOpenDate__lte=datetime.datetime.today(),
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
-        team__in=usersTeams,
+        baseeventattendance__in=usersEventAttendances,
     ).order_by('startDate').distinct()
 
     eventsAvailable = openForRegistrationEvents.exists()
@@ -47,12 +51,12 @@ def dashboard(request):
     # Get current and past events
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
-        team__in=usersTeams,
+        baseeventattendance__in=usersEventAttendances,
     ).distinct().order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
-        team__in=usersTeams,
+        baseeventattendance__in=usersEventAttendances,
     ).order_by('-startDate').distinct()
 
     # Invoices
@@ -77,13 +81,27 @@ def dashboard(request):
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
-    # filter teams
+    # Get team and workshop attendee filter dict
     if request.user.currentlySelectedSchool:
-        teams = Team.objects.filter(school=request.user.currentlySelectedSchool, event=event)
+        filterDict = {
+            'school': request.user.currentlySelectedSchool,
+            'event': event,
+        }
     else:
-        teams = request.user.team_set.filter(event=event, school=None)
-    
-    teams = teams.prefetch_related('student_set')
+        filterDict = {
+            'mentorUser': request.user,
+            'school': None,
+            'event': event,
+        }
+
+    # Filter team or workshop attendee
+    if event.boolWorkshop():
+        teams = Team.objects.none()
+        workshopAttendees = WorkshopAttendee.objects.filter(**filterDict)
+    else:
+        teams = Team.objects.filter(**filterDict)
+        teams = teams.prefetch_related('student_set')
+        workshopAttendees = WorkshopAttendee.objects.none()
 
     # Get billing type label
     if event.boolWorkshop():
@@ -95,7 +113,8 @@ def details(request, eventID):
         'event': event,
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
-        'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
+        'workshopAttendees': workshopAttendees,
+        'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'today':datetime.date.today(),
         'billingTypeLabel': billingTypeLabel,
     }
@@ -105,3 +124,38 @@ def details(request, eventID):
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 
 
+def eventAttendancePermissions(request, eventAttendance):
+    if request.user.currentlySelectedSchool:
+        # If user is a school administrator can only edit the currently selected school
+        if request.user.currentlySelectedSchool != eventAttendance.school:
+            return False
+
+    else:
+        # If not a school administrator allow editing individually entered eventAttendances
+        if eventAttendance.mentorUser != request.user or eventAttendance.school:
+            return False
+    
+    return True
+
+class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
+    def common(self, request, event, obj):
+        # Check is correct event type
+        if event.eventType != self.eventType:
+            raise PermissionDenied('Teams/ attendees cannot be created for this event type')
+
+        # Check registrations open
+        if event.registrationsCloseDate < datetime.datetime.now().date():
+            raise PermissionDenied("Registrtaion has closed for this event!")
+
+        # Check administrator of this obj
+        if obj and not eventAttendancePermissions(request, obj):
+            raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+    def delete(self, request, objID):
+        obj = get_object_or_404(BaseEventAttendance, pk=objID)
+        event = obj.event
+        self.common(request, event, obj)
+
+        # Delete team
+        obj.delete()
+        return HttpResponse(status=204)

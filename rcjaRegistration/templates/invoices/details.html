@@ -89,10 +89,13 @@
                   {% endif %}
                 </td>
                 <td class="text-right">
-                  <span class="mono">${{ invoiceItem.unitCost|floatformat:2 }}</span>
+                  <span class="mono">
+                    ${{ invoiceItem.unitCost }}
+                    {% if invoiceItem.unit %} per {{ invoiceItem.unit }} {% endif %}
+                  </span>
                 </td>
                 <td class="text-right">
-                  <span class="mono">{{ invoiceItem.quantityString }}</span>
+                  <span class="mono">{{ invoiceItem.quantity }}</span>
                 </td>
                 <td class="text-right">
                   <span class="mono">${{ invoiceItem.totalExclGST|floatformat:2 }}</span>
@@ -109,7 +112,8 @@
             <tfoot class="full-width">
               <tr>
                 <th> Total: </th>
-                <th colspan="2"></th>
+                <th colspan="1"></th>
+                <th colspan="1"> {{ invoice.totalQuantity }} </th>
                 <th colspan="1"> ${{ invoice.invoiceAmountExclGST|floatformat:2 }} </th>
                 <th colspan="1"> ${{ invoice.amountGST|floatformat:2 }} </th>
                 <th colspan="1"> ${{ invoice.invoiceAmountInclGST|floatformat:2 }} </th>

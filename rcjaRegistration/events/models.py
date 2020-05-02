@@ -2,6 +2,9 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+from invoices.models import Invoice
+from schools.models import SchoolAdministrator
+
 # **********MODELS**********
 
 def eventCoordinatorEditPermisisons(level):
@@ -80,8 +83,8 @@ class Division(models.Model):
 
         # Check changing state won't cause conflict
         if self.state:
-            if self.team_set.exclude(event__state=self.state).exists():
-                errors.append(ValidationError('State not compatible with existing teams in this division'))
+            if self.baseeventattendance_set.exclude(event__state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing event attendances in this division'))
 
             if self.availabledivision_set.exclude(event__state=self.state).exists():
                 errors.append(ValidationError('State not compatible with existing available division for this division'))
@@ -207,7 +210,7 @@ class Event(CustomSaveDeleteModel):
     # Fields
     name = models.CharField('Name', max_length=50)
     eventTypeChoices = (('competition', 'Competition'), ('workshop', 'Workshop'))
-    eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, default='competition', help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
+    eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
 
     # Dates
     startDate = models.DateField('Event start date')
@@ -216,18 +219,24 @@ class Event(CustomSaveDeleteModel):
     registrationsCloseDate = models.DateField('Registration close date')
 
     # Team details
-    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', help_text="Resets to 0 for workshops")
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=5)
     event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
+    paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
+
+    # Team billing settings
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
-    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams/ students specified will be billed at this rate. Subsequent teams/ students will be billed at the default rate. Leave blank for no special rate.")
+    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
     event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
-    paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
+
+    # Workshop billing settings
+    workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
+    workshopStudentEntryFee = models.PositiveIntegerField('Student entry fee', null=True)
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
@@ -294,6 +303,13 @@ class Event(CustomSaveDeleteModel):
     # *****Save & Delete Methods*****
 
     def preSave(self):
+        # Set workshop prices
+        if self.workshopTeacherEntryFee is None:
+            self.workshopTeacherEntryFee = self.event_defaultEntryFee
+
+        if self.workshopStudentEntryFee is None:
+            self.workshopStudentEntryFee = self.event_defaultEntryFee
+
         if self.eventType == 'workshop':
             # Set maxMembersPerTeam to 0 if eventType is workshop
             self.maxMembersPerTeam = 0
@@ -402,6 +418,125 @@ class AvailableDivision(CustomSaveDeleteModel):
 
     def __str__(self):
         return str(self.division)
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
+class BaseEventAttendance(SaveDeleteMixin, models.Model):
+    # Foreign keys
+    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
+    division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
+
+    # User and school foreign keys
+    mentorUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT)
+    school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
+    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
+
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
+    # Fields
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Base attendance'
+
+    def clean(self):
+        errors = []
+        checkRequiredFieldsNotNone(self, ['event', 'division'])
+
+        # Check correct event type for child
+        # eventTypeMapping must be defined on child or defaults to validation errror
+        if getattr(self, 'eventTypeMapping', None) != self.event.eventType:
+            errors.append(ValidationError('This event attendance is incompatible with this event type'))
+
+        # Check campus school matches school on this object
+        if self.campus and self.campus.school != self.school:
+            errors.append(ValidationError('Campus school must match school'))
+
+        # Check division is from correct state
+        if self.division.state is not None and self.division.state != self.event.state:
+            errors.append(ValidationError('Division state must match event state'))
+
+        # Check mentor is admin of this object's school
+        # Check not None because set after clean in frontend forms
+        if getattr(self, 'mentorUser', None) and getattr(self, 'school', None):
+            # Check not the current values in case mentor removed as admin of school after the event
+            if not self.pk or self.mentorUser != BaseEventAttendance.objects.get(pk=self.pk).mentorUser or self.school != BaseEventAttendance.objects.get(pk=self.pk).school:
+                if not SchoolAdministrator.objects.filter(user=self.mentorUser, school=self.school).exists():
+                    errors.append(ValidationError(f"{self.mentorUser.get_full_name()} is not an administrator of {self.school}"))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        return eventCoordinatorEditPermisisons(level)
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.event.state
+
+    # *****Save & Delete Methods*****
+
+    def postSave(self):
+        # Create invoice
+        if self.campusInvoicingEnabled():
+            # Get or create invoice with matching campus
+            Invoice.objects.get_or_create(
+                school=self.school,
+                campus=self.campus,
+                event=self.event,
+                defaults={'invoiceToUser': self.mentorUser}
+            )
+
+        elif self.school:
+            # Ignore campus and only look for matching school
+            Invoice.objects.get_or_create(
+                school=self.school,
+                event=self.event,
+                defaults={'invoiceToUser': self.mentorUser}
+            )
+
+        else:
+            # Get invoice for this user for independent entry
+            Invoice.objects.get_or_create(
+                invoiceToUser=self.mentorUser,
+                event=self.event,
+                school=None
+            )
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def homeState(self):
+        if self.school:
+            return self.school.state
+        return self.mentorUser.homeState
+    homeState.short_description = 'Home state'
+
+    def mentorUserName(self):
+        return self.mentorUser.fullname_or_email()
+    mentorUserName.short_description = 'Mentor'
+    mentorUserName.admin_order_field = 'mentorUser'
+
+    def mentorUserEmail(self):
+        return self.mentorUser.email
+    mentorUserEmail.short_description = 'Mentor email'
+    mentorUserEmail.admin_order_field = 'mentorUser__email'
+
+    # Returns true if campus based invoicing enabled for this school for this event
+    def campusInvoicingEnabled(self):
+        if not self.school:
+            return False
+
+        # Check if at least one invoice has campus field set
+        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
     # *****CSV export methods*****
 

@@ -5,7 +5,8 @@ from django.template import loader
 from django.contrib.auth import authenticate, login
 from .forms import UserForm, UserSignupForm
 from django.http import JsonResponse
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.urls import reverse
 
@@ -50,20 +51,31 @@ def details(request):
         else:
             redirectTo = '/'
 
-        if form.is_valid() and questionFormset.is_valid():
-            # Save user
-            user = form.save(commit=False)
-            user.forceDetailsUpdate = False
-            user.save()
+        try:
+            if form.is_valid() and questionFormset.is_valid():
+                # Save user
+                user = form.save(commit=False)
+                user.forceDetailsUpdate = False
+                user.save()
 
-            # Save question response questionFormset
-            questionFormset.save() 
+                # Save question response questionFormset
+                questionFormset.save() 
 
-            return redirect(redirectTo)
+                return redirect(redirectTo)
+
+        except ValidationError:
+            # To catch missing management data
+            return HttpResponseBadRequest('Form data missing')
+
     else:
         form = UserForm(instance=request.user)
         questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
+    
+    try:
+        return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
+    except ValidationError:
+        # To catch missing management data
+        return HttpResponseBadRequest('Form data missing')
 
 def signup(request):
     if request.method == 'POST':
