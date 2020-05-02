@@ -108,7 +108,7 @@
               <div class="two fields">
                 <div class = "field">
                   <label>Year level:</label>
-                    {{form.yearLevel|attr:"placeholder:Year level"}}
+                    {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
                       <div class="ui pointing above label" id = "teacherHelpText" style="display:none">
                         Teachers: Enter comma separated year levels (e.g. 9,10,11), or - for none
                       </div>
@@ -152,25 +152,32 @@
 </div>
 
 <script>
+$(document).ready(function() {
+  attendeeTypeHandler($('#attendeeType').val());
+  console.log('loaded');
+});
+
 $('#attendeeType').change(function() {
-  if(this.value === "teacher") {
-    $("#studentOnlyFields").hide("slow")
-    $("#teacherOnlyFields").show("slow")
+  attendeeTypeHandler(this.value);
+  });
+
+const attendeeTypeHandler = (newDisplayString) => {
+    if( newDisplayString === "teacher") {
+    $("#studentOnlyFields").hide("slow");
+    $("#teacherOnlyFields").show("slow");
   
-    $("#studentHelpText").hide("slow")
-    $("#teacherHelpText").show("slow")
+    $("#studentHelpText").hide("slow");
+    $("#teacherHelpText").show("slow");
 
   }
-  if(this.value === "student") {
-    $("#studentOnlyFields").show("slow")
-    $("#teacherOnlyFields").hide("slow")
+  if( newDisplayString=== "student") {
+    $("#studentOnlyFields").show("slow");
+    $("#teacherOnlyFields").hide("slow");
 
-    $("#studentHelpText").show("slow")
-    $("#teacherHelpText").hide("slow")
-
-
+    $("#studentHelpText").show("slow");
+    $("#teacherHelpText").hide("slow");
   }
-})
+}
 
 </script>
 {% endblock %}
