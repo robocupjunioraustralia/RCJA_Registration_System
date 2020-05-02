@@ -6,10 +6,12 @@ from rest_framework import routers
 
 from . import views
 
+from common.apiPermissions import ReadOnly
 
 # **********Routers**********
 
 Router = routers.DefaultRouter()
+Router.get_api_root_view().cls.permission_classes = (ReadOnly,)
 
 # # *****Regions*****
 
