@@ -81,7 +81,7 @@
               <div class="three fields">
                 <div class = "field">
                   <label>Type:</label>
-                    {{form.attendeeType|attr:"class:ui dropdown"}}
+                    {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
                 </div>
                 <div class = "field">
                   <label>Division:</label>
@@ -108,7 +108,14 @@
               <div class="two fields">
                 <div class = "field">
                   <label>Year level:</label>
-                    {{form.yearLevel|attr:"placeholder:Year level"}}
+                    {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
+                      <div class="ui pointing above label" id = "teacherHelpText" style="display:none">
+                        Teachers: Enter comma separated year levels (e.g. 9,10,11), or - for none
+                      </div>
+                       <div class="ui pointing above label" id = "studentHelpText" style="display:none">
+                        Students: Enter a numbered year level 
+                      </div>
+                      
                 </div>
                 <div class = "field">
                   <label>Gender:</label>
@@ -116,18 +123,20 @@
                 </div>
               </div>
 
-              <h3>Required for teacher attendees:</h3>
-              <div class = "field">
-                <label>Email:</label>
-                  {{form.email|attr:"placeholder:Email"}}
+              <div id="teacherOnlyFields" style="display:none"> 
+                <h3>Required for teacher attendees:</h3>
+                <div class = "field">
+                  <label>Email:</label>
+                    {{form.email|attr:"placeholder:Email"}}
+                </div>
               </div>
-
-              <h3>Required for student attendees:</h3>
-              <div class = "field">
-                <label>Birthday:</label>
-                  {{form.birthday|attr:"type:date"}}
+              <div id="studentOnlyFields"style="display:none">
+                <h3>Required for student attendees:</h3>
+                <div class = "field">
+                  <label>Birthday:</label>
+                    {{form.birthday|attr:"type:date"}}
+                </div>
               </div>
-
 
               <input class="primary ui button" type="submit" value="Save" />
               {% if not attendee %}
@@ -141,4 +150,34 @@
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function() {
+  attendeeTypeHandler($('#attendeeType').val());
+  console.log('loaded');
+});
+
+$('#attendeeType').change(function() {
+  attendeeTypeHandler(this.value);
+  });
+
+const attendeeTypeHandler = (newDisplayString) => {
+    if( newDisplayString === "teacher") {
+    $("#studentOnlyFields").hide("slow");
+    $("#teacherOnlyFields").show("slow");
+  
+    $("#studentHelpText").hide("slow");
+    $("#teacherHelpText").show("slow");
+
+  }
+  if( newDisplayString=== "student") {
+    $("#studentOnlyFields").show("slow");
+    $("#teacherOnlyFields").hide("slow");
+
+    $("#studentHelpText").show("slow");
+    $("#teacherHelpText").hide("slow");
+  }
+}
+
+</script>
 {% endblock %}
