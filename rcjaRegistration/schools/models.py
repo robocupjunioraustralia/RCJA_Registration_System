@@ -2,6 +2,8 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+import re
+
 # **********MODELS**********
 
 class School(CustomSaveDeleteModel):
@@ -15,6 +17,7 @@ class School(CustomSaveDeleteModel):
     # Details
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True) # Needed because null on initial data import
     region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True)
+    postcode = models.CharField('Postcode', max_length=4, null=True, blank=True)
     # Flags
     forceSchoolDetailsUpdate = models.BooleanField('Force details update', default=False)
 
@@ -44,6 +47,14 @@ class School(CustomSaveDeleteModel):
         # TODO: use regex to catch similar
         if self.name.upper() == 'INDEPENDENT':
             errors.append(ValidationError('Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.'))
+
+        # Validate postcode
+        if self.postcode is not None:
+            if not re.match(r"(^[0-9]+$)", self.postcode):
+                errors.append(ValidationError('Postcode must be numeric'))
+
+            if len(self.postcode) < 4:
+                errors.append(ValidationError('Postcode too short'))
 
         # Raise any errors
         if errors:
@@ -94,12 +105,28 @@ class Campus(CustomSaveDeleteModel):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=100, unique=True)
+    postcode = models.CharField('Postcode', max_length=4, null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Campus'
         verbose_name_plural = 'Campuses'
         ordering = ['school', 'name']
+
+    def clean(self):
+        errors = []
+
+        # Validate postcode
+        if self.postcode is not None:
+            if not re.match(r"(^[0-9]+$)", self.postcode):
+                errors.append(ValidationError('Postcode must be numeric'))
+
+            if len(self.postcode) < 4:
+                errors.append(ValidationError('Postcode too short'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod

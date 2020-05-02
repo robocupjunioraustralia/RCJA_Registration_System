@@ -29,6 +29,7 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'region__name',
         'name',
         'abbreviation',
+        'postcode',
     ]
     autocomplete_fields = [
         'state'
@@ -48,6 +49,28 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'region'
     ]
 
+    # Set forceDetailsUpdate if a field is blank
+    def save_model(self, request, obj, form, change):
+        for field in ['postcode']:
+            if getattr(obj, field) is None:
+                obj.forceSchoolDetailsUpdate = True
+        
+        # For existing campuses
+        if obj.campus_set.filter(postcode=None).exists():
+            obj.forceSchoolDetailsUpdate = True
+
+        super().save_model(request, obj, form, change)
+
+    # For newly added or changed campuses
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if not getattr(instance, 'postcode', True) and not instance.school.forceSchoolDetailsUpdate: # Use true as default because school administrator instances will be included here and have no postcode field
+                instance.school.forceSchoolDetailsUpdate = True
+                instance.school.save(update_fields=['forceSchoolDetailsUpdate'])
+
+        super().save_formset(request, form, formset, change)
+
     # State based filtering
 
     @classmethod
@@ -63,6 +86,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         ]
 
     stateFilterLookup = 'state__coordinator'
+
+    # Actions
 
     def setForceDetailsUpdate(self, request, queryset):
         queryset.update(forceSchoolDetailsUpdate=True)
@@ -86,6 +111,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'school__region__name',
         'school__name',
         'school__abbreviation',
+        'postcode',
     ]
     autocomplete_fields = [
         'school'

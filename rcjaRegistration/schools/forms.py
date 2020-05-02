@@ -6,7 +6,13 @@ from django import forms
 class SchoolForm(ModelForm):
     class Meta:
         model = School
-        fields = ['name','abbreviation','region','state']
+        fields = ['name', 'abbreviation', 'state', 'region', 'postcode']
+
+    # Make fields required
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['postcode']:
+            self.fields[field].required = True
 
 class SchoolEditForm(SchoolForm):
     addAdministratorEmail = forms.EmailField(required=False)
@@ -14,7 +20,13 @@ class SchoolEditForm(SchoolForm):
 class CampusForm(ModelForm):
     class Meta:
         model = Campus
-        fields = ['name']
+        fields = ['name', 'postcode']
+
+    # Make fields required
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['postcode']:
+            self.fields[field].required = True
 
 class SchoolAdministratorForm(ModelForm):
     class Meta:
