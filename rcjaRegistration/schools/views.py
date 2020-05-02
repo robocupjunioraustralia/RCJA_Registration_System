@@ -144,4 +144,9 @@ def details(request):
         form = SchoolEditForm(instance=school)
         campusFormset = CampusInlineFormset(instance=school)
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
-    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
+    
+    try:
+        return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
+    except ValidationError:
+        # To catch missing management data
+        return HttpResponseBadRequest('Form data missing')

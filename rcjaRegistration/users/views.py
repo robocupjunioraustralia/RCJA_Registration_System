@@ -70,7 +70,12 @@ def details(request):
     else:
         form = UserForm(instance=request.user)
         questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
+    
+    try:
+        return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
+    except ValidationError:
+        # To catch missing management data
+        return HttpResponseBadRequest('Form data missing')
 
 def signup(request):
     if request.method == 'POST':
