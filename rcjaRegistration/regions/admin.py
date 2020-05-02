@@ -17,6 +17,23 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'bankAccountNumber',
         'paypalEmail'
     ]
+    fields = [
+        'name',
+        'abbreviation',
+        'treasurer',
+        'bankAccountName',
+        'bankAccountBSB',
+        'bankAccountNumber',
+        'paypalEmail',
+        'defaultEventDetails',
+        'invoiceMessage',
+        ('defaultEventImage', 'defaultEventImageOriginalFileName', 'defaultEventImageFilesize', 'defaultEventImageTag'),
+    ]
+    readonly_fields = [
+        'defaultEventImageOriginalFileName',
+        'defaultEventImageFilesize',
+        'defaultEventImageTag',
+    ]
     search_fields = [
         'name',
         'abbreviation'

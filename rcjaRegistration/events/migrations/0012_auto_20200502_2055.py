@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='event',
             name='eventBannerImage',
-            field=models.ImageField(blank=True, null=True, storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_to=events.models.generateUUIDFilename, verbose_name='Banner image'),
+            field=models.ImageField(blank=True, null=True, storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_to=events.models.Event.generateUUIDFilename, verbose_name='Banner image'),
         ),
         migrations.AddField(
             model_name='event',

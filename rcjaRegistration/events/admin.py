@@ -82,6 +82,17 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'state',
         'address',
     ]
+    fields = [
+        'state',
+        'name',
+        'address',
+        ('venueImage', 'venueImageOriginalFileName', 'venueImageFilesize', 'venueImageTag'),
+    ]
+    readonly_fields = [
+        'venueImageOriginalFileName',
+        'venueImageFilesize',
+        'venueImageTag',
+    ]
     search_fields = [
         'name',
         'state__name',
@@ -165,7 +176,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     competition_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'bannerImageTag'))
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'))
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -182,7 +193,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     workshop_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'bannerImageTag'))
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'))
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -215,12 +226,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         }),
     )
 
-    # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
     readonly_fields = [
-        'eventType',
+        'eventType', # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
         'eventBannerImageOriginalFileName',
         'bannerImageFilesize',
-        'bannerImageTag',
+        'effectiveBannerImageTag',
     ]
     add_readonly_fields = [
     ]

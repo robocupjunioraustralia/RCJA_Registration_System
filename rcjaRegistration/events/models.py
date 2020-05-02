@@ -134,6 +134,14 @@ class Venue(models.Model):
     name = models.CharField('Name', max_length=60)
     address = models.TextField('Address', blank=True)
 
+    def generateUUIDFilename(self, filename):
+        self.venueImageOriginalFileName = filename
+        extension = filename.rsplit('.', 1)[1]
+        newFilename = f'VenueImage_{str(uuid.uuid4())}.{extension}'
+        return newFilename
+    venueImage = models.ImageField('Venue image', storage=PublicMediaStorage(), upload_to=generateUUIDFilename, null=True, blank=True)
+    venueImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
+
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Venue'
@@ -165,6 +173,16 @@ class Venue(models.Model):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    # Image methods
+
+    def venueImageFilesize(self):
+        return formatFilesize(self.venueImage.size)
+    venueImageFilesize.short_description = 'Size'
+
+    def venueImageTag(self):
+        return format_html('<img src="{}" height="200" />', self.venueImage.url)
+    venueImageTag.short_description = 'Preview'
 
     def __str__(self):
         return self.name
@@ -358,16 +376,22 @@ class Event(CustomSaveDeleteModel):
     def effectiveBannerImageURL(self):
         if self.eventBannerImage:
             return self.eventBannerImage.url
+        elif self.venue and self.venue.venueImage:
+            return self.venue.venueImage.url
+        elif self.state and self.state.defaultEventImage:
+            return self.state.defaultEventImage.url
         else:
             return static("placeholderCity.png")
+
+    def effectiveBannerImageTag(self):
+        return format_html('<img src="{}" height="200" />', self.effectiveBannerImageURL())
+    effectiveBannerImageTag.short_description = 'Preview'
+
+    # Image methods
 
     def bannerImageFilesize(self):
         return formatFilesize(self.eventBannerImage.size)
     bannerImageFilesize.short_description = 'Size'
-
-    def bannerImageTag(self):
-        return format_html('<img src="{}" height="200" />', self.eventBannerImage.url)
-    bannerImageTag.short_description = 'Preview'
 
     def __str__(self):
         if not self.globalEvent:
