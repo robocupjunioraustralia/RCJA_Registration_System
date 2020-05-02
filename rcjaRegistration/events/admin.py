@@ -165,7 +165,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     competition_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'bannerImageTag'))
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -182,7 +182,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     workshop_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'bannerImageTag'))
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -218,6 +218,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
     readonly_fields = [
         'eventType',
+        'eventBannerImageOriginalFileName',
+        'bannerImageFilesize',
+        'bannerImageTag',
     ]
     add_readonly_fields = [
     ]

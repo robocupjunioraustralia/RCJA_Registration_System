@@ -2,6 +2,12 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+import uuid
+from django.utils.html import format_html
+
+from rcjaRegistration.storageBackends import PublicMediaStorage
+from django.templatetags.static import static
+
 from invoices.models import Invoice
 from schools.models import SchoolAdministrator
 
@@ -197,6 +203,12 @@ class Year(models.Model):
 
     # *****Email methods*****
 
+def generateUUIDFilename(self, filename):
+    self.eventBannerImageOriginalFileName = filename
+    extension = filename.rsplit('.', 1)[1]
+    newfilename = f'EventBannerImage_{str(uuid.uuid4())}.{extension}'
+    return newfilename
+
 class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
@@ -211,6 +223,8 @@ class Event(CustomSaveDeleteModel):
     name = models.CharField('Name', max_length=50)
     eventTypeChoices = (('competition', 'Competition'), ('workshop', 'Workshop'))
     eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
+    eventBannerImage = models.ImageField('Banner image', storage=PublicMediaStorage(), upload_to=generateUUIDFilename, null=True, blank=True)
+    eventBannerImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # Dates
     startDate = models.DateField('Event start date')
@@ -339,6 +353,26 @@ class Event(CustomSaveDeleteModel):
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    def effectiveBannerImageURL(self):
+        if self.eventBannerImage:
+            return self.eventBannerImage.url
+        else:
+            return static("placeholderCity.png")
+
+    def bannerImageFilesize(self):
+        def sizeof_fmt(num, suffix='B'):
+            for unit in ['','K','M','G','T','P','E','Z']:
+                if abs(num) < 1024.0:
+                    return "%3.1f%s%s" % (num, unit, suffix)
+                num /= 1024.0
+            return "%.1f%s%s" % (num, 'Yi', suffix)
+        return sizeof_fmt(self.eventBannerImage.size)
+    bannerImageFilesize.short_description = 'Size'
+
+    def bannerImageTag(self):
+        return format_html('<img src="{}" height="200" />', self.eventBannerImage.url)
+    bannerImageTag.short_description = 'Preview'
 
     def __str__(self):
         if not self.globalEvent:

@@ -5,7 +5,7 @@
         {% for event in comps %}
         <div class="card" style="max-width:19rem; cursor: pointer;" onclick="window.location='{% url 'events:details' event.id %}';">
             <div class="blurring dimmable image">
-                <img class="cardimage" src="{% static 'placeholderCity.png' %}">
+                <img class="cardimage" style="object-fit: cover;" src="{{ event.effectiveBannerImageURL }}">
             </div>
             <div class="content">
                 <span class="header">{{event}}</span>
