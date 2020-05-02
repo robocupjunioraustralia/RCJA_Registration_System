@@ -109,6 +109,13 @@
                 <div class = "field">
                   <label>Year level:</label>
                     {{form.yearLevel|attr:"placeholder:Year level"}}
+                      <div class="ui pointing above label" id = "teacherHelpText" style="display:none">
+                        Teachers: Enter comma separated year levels (e.g. 9,10,11), or - for none
+                      </div>
+                       <div class="ui pointing above label" id = "studentHelpText" style="display:none">
+                        Students: Enter a numbered year level 
+                      </div>
+                      
                 </div>
                 <div class = "field">
                   <label>Gender:</label>
@@ -116,14 +123,14 @@
                 </div>
               </div>
 
-              <div id="teacherOnlyFields"> 
+              <div id="teacherOnlyFields" style="display:none"> 
                 <h3>Required for teacher attendees:</h3>
                 <div class = "field">
                   <label>Email:</label>
                     {{form.email|attr:"placeholder:Email"}}
                 </div>
               </div>
-              <div id="studentOnlyFields">
+              <div id="studentOnlyFields"style="display:none">
                 <h3>Required for student attendees:</h3>
                 <div class = "field">
                   <label>Birthday:</label>
@@ -149,12 +156,20 @@ $('#attendeeType').change(function() {
   if(this.value === "teacher") {
     $("#studentOnlyFields").hide("slow")
     $("#teacherOnlyFields").show("slow")
+  
+    $("#studentHelpText").hide("slow")
+    $("#teacherHelpText").show("slow")
+
   }
   if(this.value === "student") {
     $("#studentOnlyFields").show("slow")
-    $("#teacherOnlyFields").hide()
+    $("#teacherOnlyFields").hide("slow")
+
+    $("#studentHelpText").show("slow")
+    $("#teacherHelpText").hide("slow")
+
+
   }
-  //yearlevel placeholder text
 })
 
 </script>
