@@ -17,7 +17,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         '__str__',
         'abbreviation',
         'state',
-        'region'
+        'region',
+        'postcode',
     ]
     list_filter = [
         'state',
@@ -46,7 +47,8 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'abbreviation',
         'state',
-        'region'
+        'region',
+        'postcode',
     ]
 
     # Set forceDetailsUpdate if a field is blank
@@ -99,6 +101,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'school',
+        'postcode',
     ]
     list_filter = [
         'school__state',
@@ -122,6 +125,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     exportFields = [
         'name',
         'school',
+        'postcode',
     ]
 
     # State based filtering

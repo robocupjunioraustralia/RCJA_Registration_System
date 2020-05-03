@@ -23,6 +23,7 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     autocomplete_fields = [
         'user',
+        'state',
     ]
     list_filter = [
         'state',
