@@ -67,7 +67,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     # Filter autocompletes to valid options
     def get_search_results(self, request, queryset, search_term):
         from coordination.adminPermissions import reversePermisisons
-        for url in ['events/event/', 'coordination/coordinator/']:
+        for url in ['users/user/', 'coordination/coordinator/']:
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = self.filterQuerysetByState(queryset, request, ['full'])
 
