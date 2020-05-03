@@ -4,7 +4,7 @@ from .models import *
 
 from django.contrib.auth import get_permission_codename
 
-def checkStatePermissions(request, obj, permission):
+def commonCheckStatePermissions(request, obj):
     # First check super user
     if request.user.is_superuser:
         return True
@@ -17,12 +17,25 @@ def checkStatePermissions(request, obj, permission):
     if not hasattr(obj, 'getState'):
         return True
 
+    return False
+
+def checkStatePermissions(request, obj, permission):
+    if commonCheckStatePermissions(request, obj):
+        return True
+
     # Check state level permission for object
     for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
         if coordinator.checkPermission(obj, permission):
             return True
 
     return False
+
+def checkStatePermissionsLevels(request, obj, permisisonLevels):
+    if commonCheckStatePermissions(request, obj):
+        return True
+
+    # Check coordinator object
+    return Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user, permissions__in=permisisonLevels).exists()
 
 def reversePermisisons(obj, permissions):
     levels = []
@@ -149,6 +162,9 @@ class BaseAdminPermissions:
 
     def checkStatePermissions(self, request, obj, permission):
         return checkStatePermissions(request, obj, permission)
+
+    def checkStatePermissionsLevels(self, request, obj, permisisonLevels):
+        return checkStatePermissionsLevels(request, obj, permisisonLevels)
 
     # Add permisison only needed for inline, defined there
 

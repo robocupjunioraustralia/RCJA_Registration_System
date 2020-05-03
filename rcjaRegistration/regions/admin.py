@@ -6,6 +6,17 @@ from .models import *
 
 # Register your models here.
 
+class CoordinatorInline(admin.TabularInline):
+    from coordination.models import Coordinator
+    model = Coordinator
+    extra = 0
+    verbose_name = "State coordinator"
+    verbose_name_plural = "State Coordinators"
+    show_change_link = True
+    autocomplete_fields = [
+        'user',
+    ]
+
 @admin.register(State)
 class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -39,6 +50,19 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'defaultEventDetails',
         'invoiceMessage'
     ]
+    inlines = [
+    ]
+
+    def get_inlines(self, request, obj):
+        if obj is None:
+            return []
+
+        # User must have full permissions to view coordinators
+        if self.checkStatePermissionsLevels(request, obj, ['full']):
+            return self.inlines + [
+                CoordinatorInline,
+            ]
+        return self.inlines
 
     # State based filtering
 
