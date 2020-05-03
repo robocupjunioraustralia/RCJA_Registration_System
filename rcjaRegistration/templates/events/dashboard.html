@@ -29,7 +29,13 @@
               <div class="header">
                 Invoices
               </div>
-               <a href = "{% url 'invoices:summary' %}"> <span>There are {{ outstandingInvoices }} invoices requiring your attention.</span> </a>
+               <a href = "{% url 'invoices:summary' %}"> <span>
+                   {% if outstandingInvoices == 1 %}
+                   There is {{ outstandingInvoices }} invoice requiring your attention.
+                   {% else %}
+                   There are {{ outstandingInvoices }} invoices requiring your attention.
+                   {% endif %}
+                </span></a>
             </div>
         </div>  
         {% else %}

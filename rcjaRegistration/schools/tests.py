@@ -592,12 +592,23 @@ class TestSchoolClean(TestCase):
     def setUp(self):
         schoolSetUp(self)
 
-    def testValid(self):
+    def testValidNoPostcode(self):
         school2 = School(
             name='School 2',
             abbreviation='sch2',
             state=self.state1,
             region=self.region1
+        )
+
+        self.assertEqual(school2.clean(), None)
+
+    def testValidPostcode(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1,
+            postcode='1234',
         )
 
         self.assertEqual(school2.clean(), None)
@@ -647,6 +658,26 @@ class TestSchoolClean(TestCase):
         )
         self.assertRaises(ValidationError, school2.clean)    
 
+    def testInvalidPostcode(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1,
+            postcode='ab12',
+        )
+        self.assertRaises(ValidationError, school2.clean)  
+
+    def testTooShortPostcode(self):
+        school2 = School(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.state1,
+            region=self.region1,
+            postcode='12',
+        )
+        self.assertRaises(ValidationError, school2.clean)  
+
 class TestSchoolMethods(TestCase):
     email1 = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'
@@ -676,6 +707,47 @@ def setupCampusAndAdministrators(self):
     self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
     self.admin1 = SchoolAdministrator.objects.create(school=self.school1, campus=self.campus1, user=self.user1)
     self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+
+class TestCampusClean(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+
+    def testValidNoPostcode(self):
+        campus2 = Campus(
+            name='Campus 2',
+            school=self.school1,
+        )
+
+        self.assertEqual(campus2.clean(), None)
+
+    def testValidPostcode(self):
+        campus2 = Campus(
+            name='Campus 2',
+            school=self.school1,
+            postcode='1234',
+        )
+
+        self.assertEqual(campus2.clean(), None)
+
+    def testInvalidPostcode(self):
+        campus2 = Campus(
+            name='Campus 2',
+            school=self.school1,
+            postcode='12ah',
+        )
+        self.assertRaises(ValidationError, campus2.clean)  
+
+    def testTooShortPostcode(self):
+        campus2 = Campus(
+            name='Campus 2',
+            school=self.school1,
+            postcode='12',
+        )
+        self.assertRaises(ValidationError, campus2.clean)  
 
 class TestCampusMethods(TestCase):
     email1 = 'user@user.com'

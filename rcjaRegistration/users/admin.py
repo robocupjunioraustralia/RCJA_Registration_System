@@ -202,7 +202,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         if obj is None:
             return []
 
-        # Only superuser can edit inlines on admin
+        # Only superuser can view and edit CoordinatorInline (because queryset not filtered)
+        # Other inlines are read only
         if request.user.is_superuser:
             return [
                 CoordinatorInline,

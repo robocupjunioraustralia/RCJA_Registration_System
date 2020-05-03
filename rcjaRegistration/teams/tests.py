@@ -530,8 +530,16 @@ class TestTeamClean(TestCase):
 
     def setUp(self):
         newCommonSetUp(self)
-        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
-        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school2, name='Team 2', division=self.division1)
+        self.team1 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 1', division=self.division1)
+        self.team2 = Team(event=self.event, mentorUser=self.user1, school=self.school2, name='Team 2', division=self.division1)
+        self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        self.schoolAdmin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+
+    def testWrongEventType(self):
+        self.event.eventType = 'workshop'
+        self.event.save()
+
+        self.assertRaises(ValidationError, self.team1.clean)
 
     def testNoCampus(self):
         self.assertEqual(self.team1.clean(), None)
@@ -553,15 +561,16 @@ class TestTeamClean(TestCase):
         self.assertEqual(self.team3.clean(), None)
 
     def testCheckMentorIsAdminOfSchool(self):
-        SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
         self.team3 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
         self.assertEqual(self.team3.clean(), None)
 
     def testCheckMentorIsAdminOfSchool_existing(self):
+        self.schoolAdmin1.delete()
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
         self.assertEqual(self.team3.clean(), None)
 
     def testCheckMentorIsAdminOfSchool_notAdmin(self):
+        self.schoolAdmin1.delete()
         self.team3 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
         self.assertRaises(ValidationError, self.team3.clean)
 
@@ -653,7 +662,7 @@ class TestTeamMethods(TestCase):
     def testHomeState_school(self):
         self.assertEqual(self.team3.homeState(), self.state2)
 
-    def testHomeState_school(self):
+    def testHomeState_noSchool(self):
         self.assertEqual(self.team1.homeState(), self.state1)
 
     def testMentorUserName(self):
