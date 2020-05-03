@@ -103,7 +103,7 @@ class Coordinator(CustomSaveDeleteModel):
         user.user_permissions.add(*permissionObjects)
 
     def checkPermission(self, obj, permission):
-        return True if permission in obj.coordinatorPermissions(self.permissions) else False
+        return permission in obj.coordinatorPermissions(self.permissions)
 
     # *****Get Methods*****
 
