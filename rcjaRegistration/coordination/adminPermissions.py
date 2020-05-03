@@ -4,7 +4,7 @@ from .models import *
 
 from django.contrib.auth import get_permission_codename
 
-def checkStatePermissions(request, obj, permission):
+def commonCheckStatePermissions(request, obj):
     # First check super user
     if request.user.is_superuser:
         return True
@@ -17,12 +17,25 @@ def checkStatePermissions(request, obj, permission):
     if not hasattr(obj, 'getState'):
         return True
 
+    return False
+
+def checkStatePermissions(request, obj, permission):
+    if commonCheckStatePermissions(request, obj):
+        return True
+
     # Check state level permission for object
     for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
         if coordinator.checkPermission(obj, permission):
             return True
 
     return False
+
+def checkStatePermissionsLevels(request, obj, permisisonLevels):
+    if commonCheckStatePermissions(request, obj):
+        return True
+
+    # Check coordinator object
+    return Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user, permissions__in=permisisonLevels).exists()
 
 def reversePermisisons(obj, permissions):
     levels = []
@@ -33,37 +46,37 @@ def reversePermisisons(obj, permissions):
     return levels
 
 class BaseAdminPermissions:
-    def filterQuerysetByState(self, queryset, querysetAdminClass, request, permissions):
+    @classmethod
+    def filterQuerysetByState(cls, queryset, request, permisisonLevels):
         # Return complete queryset if super user
         if request.user.is_superuser:
             return queryset
 
         # Filter based on state coordinator
         # Use filter function as first priority
-        if hasattr(querysetAdminClass, 'stateFilteringAttributes'):
-            filteringAttributes = querysetAdminClass.stateFilteringAttributes(request)
+        if hasattr(cls, 'stateFilteringAttributes'):
+            filteringAttributes = cls.stateFilteringAttributes(request)
             if isinstance(filteringAttributes, list):
                 queryset = queryset.filter(*filteringAttributes)
             else:
                 queryset = queryset.filter(**filteringAttributes)
 
-            return queryset
+            return queryset.distinct()
 
         # User filter string as second priority
-        if hasattr(querysetAdminClass, 'stateFilterLookup'):
-            filterString = querysetAdminClass.stateFilterLookup
+        if hasattr(cls, 'stateFilterLookup'):
+            filterString = cls.stateFilterLookup
 
             # Check for global coordinator and permissions for this model
-            for coordinator in Coordinator.objects.filter(user=request.user, state=None).filter():
-                if coordinator.checkPermission(self.model, 'view') or coordinator.checkPermission(self.model, 'change'):                
-                    return queryset
+            for coordinator in Coordinator.objects.filter(user=request.user, state=None, permissions__in=permisisonLevels).filter():
+                return queryset
 
             filteringAttributes = {
                 f'{filterString}__in': Coordinator.objects.filter(user=request.user),
-                f'{filterString}__permissions__in': permissions,
+                f'{filterString}__permissions__in': permisisonLevels,
             }
 
-            return queryset.filter(**filteringAttributes)
+            return queryset.filter(**filteringAttributes).distinct()
         
         return queryset
 
@@ -74,7 +87,7 @@ class BaseAdminPermissions:
         defaultPermissions = reversePermisisons(self.model, ['view', 'change'])
         permissions = getattr(self, 'stateFilteringPermissions', defaultPermissions)
 
-        return self.filterQuerysetByState(queryset, self, request, permissions)
+        return self.filterQuerysetByState(queryset, request, permissions)
 
     # Foreign key filtering
 
@@ -108,16 +121,14 @@ class BaseAdminPermissions:
                     defaultPermissions = reversePermisisons(self.model, ['add', 'change'])
                     permissions = fieldToFilter.get('permissions', defaultPermissions)
                     
-                    queryset = self.filterQuerysetByState(queryset, fieldToFilter['fieldAdmin'], request, permissions)
+                    queryset = fieldToFilter['fieldAdmin'].filterQuerysetByState(queryset, request, permissions)
 
                     kwargs['queryset'] = queryset
 
                     # Set required if specified
-                    try:
-                        if fieldToFilter['required']:
-                            kwargs['required'] = True # Do with an if statement because never want to override to make false
-                    except KeyError:
-                        pass
+                    # Do with an if statement because never want to override to make false
+                    if fieldToFilter.get('required', False):
+                        kwargs['required'] = True
 
                     # Try and set the default to save admins time, but not if objectFiltering because might not be the ideal default
                     if queryset.count() == 1 and not objectFiltering:
@@ -151,6 +162,9 @@ class BaseAdminPermissions:
 
     def checkStatePermissions(self, request, obj, permission):
         return checkStatePermissions(request, obj, permission)
+
+    def checkStatePermissionsLevels(self, request, obj, permisisonLevels):
+        return checkStatePermissionsLevels(request, obj, permisisonLevels)
 
     # Add permisison only needed for inline, defined there
 

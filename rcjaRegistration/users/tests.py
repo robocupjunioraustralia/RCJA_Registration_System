@@ -597,7 +597,21 @@ class TestUserAdmin(TestCase):
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
-    # Test inlines
+class TestUserAdminInlinesAndFields(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+
+        self.region1 = Region.objects.create(name='Test Region', description='test desc')
+        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+        self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user3)
 
     def testCorrectInlines_change_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
@@ -634,6 +648,28 @@ class TestUserAdmin(TestCase):
         self.assertNotContains(response, "School administrator of")
         self.assertNotContains(response, "Coordinator of")
         self.assertNotContains(response, "Question Responses")
+
+    def testSchoolAdministratorInlineReadonly_coordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, "schooladministrator_set-0")
+        self.assertNotContains(response, "Change selected School")
+        self.assertNotContains(response, "schooladministrator_set-0-school-container")
+        self.assertNotContains(response, '<a href="#">Add another School administrator of</a>')
+        self.assertNotContains(response, "schooladministrator_set-0-DELETE")
+
+    def testSchoolAdministratorInlineReadonly_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user3.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, "schooladministrator_set-0")
+        self.assertNotContains(response, "Change selected School")
+        self.assertNotContains(response, "schooladministrator_set-0-school-container")
+        self.assertNotContains(response, '<a href="#">Add another School administrator of</a>')
+        self.assertNotContains(response, "schooladministrator_set-0-DELETE")
 
     # Test readonly fields on change page
 
