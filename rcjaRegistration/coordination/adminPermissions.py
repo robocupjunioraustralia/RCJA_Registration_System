@@ -113,11 +113,9 @@ class BaseAdminPermissions:
                     kwargs['queryset'] = queryset
 
                     # Set required if specified
-                    try:
-                        if fieldToFilter['required']:
-                            kwargs['required'] = True # Do with an if statement because never want to override to make false
-                    except KeyError:
-                        pass
+                    # Do with an if statement because never want to override to make false
+                    if fieldToFilter.get('required', False):
+                        kwargs['required'] = True
 
                     # Try and set the default to save admins time, but not if objectFiltering because might not be the ideal default
                     if queryset.count() == 1 and not objectFiltering:
