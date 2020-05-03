@@ -47,7 +47,7 @@ class BaseAdminPermissions:
             else:
                 queryset = queryset.filter(**filteringAttributes)
 
-            return queryset
+            return queryset.distinct()
 
         # User filter string as second priority
         if hasattr(querysetAdminClass, 'stateFilterLookup'):
@@ -63,7 +63,7 @@ class BaseAdminPermissions:
                 f'{filterString}__permissions__in': permissions,
             }
 
-            return queryset.filter(**filteringAttributes)
+            return queryset.filter(**filteringAttributes).distinct()
         
         return queryset
 
