@@ -5,8 +5,6 @@ from django.conf import settings
 # **********MODELS**********
 
 class State(CustomSaveDeleteModel):
-    # Foreign keys
-    treasurer = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Treasurer', on_delete=models.PROTECT, related_name='+')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -68,16 +66,6 @@ class State(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
-
-    def treasurerName(self):
-        return self.treasurer.fullname_or_email()
-    treasurerName.short_description = 'Treasurer'
-    treasurerName.admin_order_field = 'treasurer'
-
-    def treasurerEmail(self):
-        return self.treasurer.email
-    treasurerEmail.short_description = 'Treasurer email'
-    treasurerEmail.admin_order_field = 'treasurer__email'
 
     def __str__(self):
         return self.name

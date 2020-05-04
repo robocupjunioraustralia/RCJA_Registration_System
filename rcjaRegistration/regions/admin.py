@@ -22,7 +22,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
-        'treasurerName',
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
@@ -33,7 +32,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'abbreviation'
     ]
     autocomplete_fields = [
-        'treasurer',
     ]
     actions = [
         'export_as_csv'
@@ -41,8 +39,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     exportFields = [
         'name',
         'abbreviation',
-        'treasurerName',
-        'treasurerEmail',
+
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
