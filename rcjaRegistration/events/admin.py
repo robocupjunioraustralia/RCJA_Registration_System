@@ -226,6 +226,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     def get_readonly_fields(self, request, obj):
         readonly_fields = super().get_readonly_fields(request, obj)
 
+        if obj is None:
+            return readonly_fields
+
         # Make status read only if can't unpublish
         if obj.status == 'published' and (obj.baseeventattendance_set.exists() or obj.invoice_set.exists()):
             readonly_fields = readonly_fields + ['status']

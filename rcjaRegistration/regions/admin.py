@@ -70,6 +70,9 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     def get_readonly_fields(self, request, obj):
         readonly_fields = super().get_readonly_fields(request, obj)
 
+        if obj is None:
+            return readonly_fields
+
         # Restrict changing of type fields
         if not request.user.is_superuser:
             readonly_fields = readonly_fields + ['typeRegistration', 'typeWebsite']
@@ -87,6 +90,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             return self.inlines + [
                 CoordinatorInline,
             ]
+
         return self.inlines
 
     # Filter autocompletes to valid options
