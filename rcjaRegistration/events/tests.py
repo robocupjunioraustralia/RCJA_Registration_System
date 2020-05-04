@@ -200,26 +200,26 @@ class TestEventDetailsPage_school(TestCase):
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
 
     def testUsesCorrectTemplate(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/details.html')
 
     def testEventTitlePresent(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
-        self.assertContains(response, 'test old')
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new yes reg')
 
     def testTeamNamePresent(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertContains(response, 'test new team')
 
-    def testOldEventNotRegisterable(self):
+    def testOldEventPermissionDenied(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
-        self.assertContains(response,'Registration for this event has closed.')
-        self.assertNotContains(response, 'Add team')
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response,'This event is unavailable', status_code=403)
 
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
