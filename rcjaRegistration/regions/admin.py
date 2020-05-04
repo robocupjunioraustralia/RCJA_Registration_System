@@ -10,9 +10,22 @@ class CoordinatorInline(admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0
-    verbose_name = "State coordinator"
-    verbose_name_plural = "State Coordinators"
+    verbose_name = "Coordinator"
+    verbose_name_plural = "Coordinators"
     show_change_link = True
+    autocomplete_fields = [
+        'user',
+    ]
+
+class CommitteeMemberInline(admin.TabularInline):
+    from publicwebsite.models import CommitteeMember
+    model = CommitteeMember
+    extra = 0
+    show_change_link = True
+    fields = [
+        'user',
+        'position',
+    ]
     autocomplete_fields = [
         'user',
     ]
@@ -65,6 +78,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceMessage'
     ]
     inlines = [
+        CommitteeMemberInline,
     ]
 
     def get_readonly_fields(self, request, obj):
