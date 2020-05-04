@@ -46,6 +46,7 @@ class VenueSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     availabledivision_set = AvailableDivisionSerializer(read_only=True, many=True)
     venue = VenueSerializer(read_only=True)
+    registrationURL = serializers.CharField(label='Registration URL', source='get_absolute_url')
 
     class Meta:
         model = Event
@@ -81,6 +82,7 @@ class EventSerializer(serializers.ModelSerializer):
             'venue',
             'eventDetails',
             'additionalInvoiceMessage',
+            'registrationURL',
             # Divisions
             'availabledivision_set',
         ]
