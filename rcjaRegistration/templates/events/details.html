@@ -50,14 +50,16 @@
     </div><br>
 
     <div class="row">
-        {% if event.registrationsCloseDate >= today %}
+        {% if event.registrationsCloseDate >= today and event.status == 'published' %}
             {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
             {% else %}
             <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">Add team</button></a>
             {% endif %}
+        {% elif event.status == 'published' %}
+        <h5> Registration for this event has closed. If you need to make modifications, please contact the event coordinator. </h5>
         {% else %}
-        <h5> Registration for this event has closed. If you need to make modifications, please contact your event supervisor. </h5>
+        <h5> Event is not published. </h5>
         {% endif %}
     </div>
     <br>

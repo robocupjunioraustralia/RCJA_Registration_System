@@ -32,6 +32,7 @@ def dashboard(request):
 
     # Get open events
     openForRegistrationEvents = Event.objects.filter(
+        status='published',
         registrationsOpenDate__lte=datetime.datetime.today(),
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
@@ -77,6 +78,13 @@ def dashboard(request):
     }
     return render(request, 'events/dashboard.html', context)
 
+def coordinatorEventDetailsPermissions(request, event):
+    from coordination.adminPermissions import checkStatePermissions
+    return checkStatePermissions(request, event, 'view')
+
+def mentorEventDetailsPermissions_currentEvent(request, event):
+    return event.status == 'published' and event.endDate >= datetime.date.today() and event.registrationsOpenDate <= datetime.date.today()
+
 @login_required
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
@@ -93,6 +101,9 @@ def details(request, eventID):
             'school': None,
             'event': event,
         }
+
+    if not (coordinatorEventDetailsPermissions(request, event) or mentorEventDetailsPermissions_currentEvent(request, event) or BaseEventAttendance.objects.filter(**filterDict).exists()):
+        raise PermissionDenied("This event is unavailable")
 
     # Filter team or workshop attendee
     if event.boolWorkshop():
@@ -145,7 +156,10 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
 
         # Check registrations open
         if event.registrationsCloseDate < datetime.datetime.now().date():
-            raise PermissionDenied("Registrtaion has closed for this event!")
+            raise PermissionDenied("Registrtaion has closed for this event")
+
+        if event.status != 'published':
+            raise PermissionDenied("Event is not published")
 
         # Check administrator of this obj
         if obj and not eventAttendancePermissions(request, obj):
