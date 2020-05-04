@@ -25,7 +25,7 @@ def checkStatePermissions(request, obj, permission):
 
     # Check state level permission for object
     for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
-        if coordinator.checkPermission(obj, permission):
+        if permission in obj.coordinatorPermissions(coordinator.permissions):
             return True
 
     return False
