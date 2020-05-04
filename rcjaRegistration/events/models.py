@@ -211,6 +211,8 @@ class Event(CustomSaveDeleteModel):
     name = models.CharField('Name', max_length=50)
     eventTypeChoices = (('competition', 'Competition'), ('workshop', 'Workshop'))
     eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
+    statusChoices = (('draft', 'Draft'), ('published', 'Published'))
+    status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
 
     # Dates
     startDate = models.DateField('Event start date')
@@ -257,6 +259,10 @@ class Event(CustomSaveDeleteModel):
         errors = []
         # Check required fields are not None
         checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+
+        # Validate status
+        if self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
+            errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
         # Check close and end date after start dates
         if self.startDate > self.endDate:

@@ -313,6 +313,22 @@ class TestEventClean(TestCase):
         self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
         self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
+    # Status validation
+    def testStatusPublished(self):
+        self.event.status = 'published'
+        self.event.clean()
+
+    def testStatusDraft(self):
+        self.event.status = 'draft'
+        self.event.clean()
+
+    def testStatusDraftTeamExists(self):
+        self.event.status = 'draft'
+        self.event.clean()
+        self.event.save()
+        Team.objects.create(event=self.event, division=self.division, mentorUser=self.user, name='New Test Team')
+        self.assertRaises(ValidationError, self.event.clean)
+
     # Dates validation
 
     def teststartDateNoneInvalid(self):

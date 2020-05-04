@@ -165,7 +165,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     competition_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -182,7 +182,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     workshop_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -221,6 +221,13 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     add_readonly_fields = [
     ]
+
+    def get_readonly_fields(self, request, obj):
+        # Make status read only if can't unpublish
+        fields = super().get_readonly_fields(request, obj)
+        if obj.status == 'published' and (obj.baseeventattendance_set.exists() or obj.invoice_set.exists()):
+            fields.append('status')
+        return fields
 
     autocomplete_fields = [
         'state',
@@ -297,7 +304,10 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         if obj.pk:
             if obj.venue is None:
                 self.message_user(request, f"{obj}: You haven't added a venue yet, we recommend adding a venue.", messages.WARNING)
-        
+
+            if obj.status != 'published':
+                self.message_user(request, f"{obj}: Event is not published, publish event to make visible.", messages.WARNING)
+
         super().save_model(request, obj, form, change)
 
     # Message user regarding divisions during inline save
