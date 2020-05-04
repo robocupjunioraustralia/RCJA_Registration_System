@@ -45,6 +45,7 @@ def commonSetUp(obj):
         state=obj.newState,
         name='test old not reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -60,6 +61,7 @@ def commonSetUp(obj):
         state=obj.newState,
         name='test new yes reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
@@ -75,6 +77,7 @@ def commonSetUp(obj):
         state=obj.newState,
         name='test old yes reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
@@ -197,26 +200,26 @@ class TestEventDetailsPage_school(TestCase):
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
 
     def testUsesCorrectTemplate(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/details.html')
 
     def testEventTitlePresent(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
-        self.assertContains(response, 'test old')
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new yes reg')
 
     def testTeamNamePresent(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertContains(response, 'test new team')
 
-    def testOldEventNotRegisterable(self):
+    def testOldEventPermissionDenied(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
-        self.assertContains(response,'Registration for this event has closed.')
-        self.assertNotContains(response, 'Add team')
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response,'This event is unavailable', status_code=403)
 
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
@@ -301,6 +304,7 @@ class TestEventClean(TestCase):
             year=self.year,
             state=self.newState,
             name='Event 1',
+            status='published',
             maxMembersPerTeam=5,
             event_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -312,6 +316,22 @@ class TestEventClean(TestCase):
         self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
         self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
         self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
+
+    # Status validation
+    def testStatusPublished(self):
+        self.event.status = 'published'
+        self.event.clean()
+
+    def testStatusDraft(self):
+        self.event.status = 'draft'
+        self.event.clean()
+
+    def testStatusDraftTeamExists(self):
+        self.event.status = 'draft'
+        self.event.clean()
+        self.event.save()
+        Team.objects.create(event=self.event, division=self.division, mentorUser=self.user, name='New Test Team')
+        self.assertRaises(ValidationError, self.event.clean)
 
     # Dates validation
 
@@ -451,6 +471,7 @@ class TestEventMethods(TestCase):
             year=self.year,
             state=self.newState,
             name='Event 1',
+            status='published',
             maxMembersPerTeam=5,
             event_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -514,6 +535,7 @@ def newSetupEvent(self):
         year=self.year,
         state=self.newState,
         name='Event 1',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),

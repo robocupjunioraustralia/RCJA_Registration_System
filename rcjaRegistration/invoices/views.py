@@ -28,7 +28,7 @@ def summary(request):
 def mentorInvoicePermissions(request, invoice):
     return request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user
 
-def coordinatorInvoiceView(request, invoice):
+def coordinatorInvoiceDetailsPermissions(request, invoice):
     from coordination.adminPermissions import checkStatePermissions
     return checkStatePermissions(request, invoice, 'view')
 
@@ -40,7 +40,7 @@ def details(request, invoiceID):
 
     # Check permissions
     mentor = mentorInvoicePermissions(request, invoice)
-    coordinator = coordinatorInvoiceView(request, invoice)
+    coordinator = coordinatorInvoiceDetailsPermissions(request, invoice)
     if not (mentor or coordinator):
         raise PermissionDenied("You do not have permission to view this invoice")
 

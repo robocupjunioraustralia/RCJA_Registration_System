@@ -212,6 +212,7 @@ class TestEditSchoolDetails(TestCase):
             state=self.state1,
             name='Test event 1',
             eventType='competition',
+            status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',
