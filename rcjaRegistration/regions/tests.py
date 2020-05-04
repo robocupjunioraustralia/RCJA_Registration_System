@@ -172,14 +172,14 @@ class TestStateAdmin(TestCase):
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, "State Coordinators")
+        self.assertContains(response, "Coordinators")
 
     def testCorrectInlines_add_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
         response = self.client.get(reverse('admin:regions_state_add'))
         self.assertEqual(response.status_code, 200)
 
-        self.assertNotContains(response, "State Coordinators")
+        self.assertNotContains(response, "Coordinators")
 
     def testCorrectInlines_change_fullCoordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
@@ -187,7 +187,7 @@ class TestStateAdmin(TestCase):
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, "State Coordinators")
+        self.assertContains(response, "Coordinators")
 
     def testCorrectInlines_change_viewCoordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
@@ -196,4 +196,4 @@ class TestStateAdmin(TestCase):
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 200)
 
-        self.assertNotContains(response, "State Coordinators")
+        self.assertNotContains(response, "Coordinators")
