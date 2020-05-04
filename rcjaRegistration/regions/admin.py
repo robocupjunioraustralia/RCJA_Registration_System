@@ -106,10 +106,21 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = self.filterQuerysetByState(queryset, request, ['full'])
 
-        for url in ['events/event/', 'events/division/', 'events/venue/', 'schools/school/']:
+        from events.models import Event, Division, Venue
+        from schools.models import School
+        from publicwebsite.models import CommitteeMember
+        urlPairs = {
+            'events/event/': Event,
+            'events/division/': Division,
+            'events/venue/': Venue,
+            'schools/school/': School,
+            'publicwebsite/committeemember': CommitteeMember,
+        }
+
+        for url in urlPairs:
             if url in request.META.get('HTTP_REFERER', ''):
-                defaultPermissions = reversePermisisons(self.model, ['add', 'change'])
-                queryset = self.filterQuerysetByState(queryset, request, ['full'])
+                permissionLevels = reversePermisisons(urlPairs[url], ['add', 'change'])
+                queryset = self.filterQuerysetByState(queryset, request, permissionLevels)
 
         return super().get_search_results(request, queryset, search_term)
 
