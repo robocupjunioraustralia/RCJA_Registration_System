@@ -459,7 +459,7 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
             },
             {
                 'field': 'event',
-                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping, status='published'),
+                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
                 'filterNone': True,
                 'useAutocomplete': True,
             }

@@ -431,7 +431,7 @@ class AvailableDivision(CustomSaveDeleteModel):
 
 class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # Foreign keys
-    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
+    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE, limit_choices_to={'status': 'published'})
     division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
 
     # User and school foreign keys
