@@ -17,6 +17,7 @@ class Coordinator(CustomSaveDeleteModel):
         ('eventmanager', 'Event manager'),
         ('schoolmanager', 'School manager'),
         ('billingmanager', 'Billing manager'),
+        ('webeditor', 'Web editor'),
         ('full','Full'))
     permissions = models.CharField('Permissions', max_length=20, choices=permissionsOptions)
     position = models.CharField('Position', max_length=50)
