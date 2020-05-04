@@ -44,7 +44,6 @@ class VenueSerializer(serializers.ModelSerializer):
         ]
 
 class EventSerializer(serializers.ModelSerializer):
-    state = StateSerializer(read_only=True)
     availabledivision_set = AvailableDivisionSerializer(read_only=True, many=True)
     venue = VenueSerializer(read_only=True)
 

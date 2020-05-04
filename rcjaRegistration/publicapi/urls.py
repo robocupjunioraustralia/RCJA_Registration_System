@@ -19,9 +19,6 @@ Router.register(r'states', views.StateViewSet)
 
 # # *****Events*****
 
-Router.register(r'events', views.EventViewSet)
-
-
 # # **********URL patterns**********
 
 app_name = 'apiv1'

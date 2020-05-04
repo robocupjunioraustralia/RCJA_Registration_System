@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.core.exceptions import ValidationError
 from rest_framework import status, viewsets
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from django.db.models.deletion import ProtectedError
 
 from common.apiPermissions import ReadOnly
@@ -20,10 +21,14 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet):
 
     permission_classes = (ReadOnly,)
 
-# *****Events*****
+    @action(detail=True)
+    def events(self, request, pk=None):
+        queryset = Event.objects.filter(state__pk=pk).order_by('id')
 
-class EventViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Event.objects.order_by('id')
-    serializer_class = EventSerializer
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = EventSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-    permission_classes = (ReadOnly,)
+        serializer = EventSerializer(queryset, many=True)
+        return Response(serializer.data)
