@@ -154,6 +154,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     list_display = [
         'name',
         'eventType',
+        'status',
         'year',
         'state',
         'startDate',
@@ -240,9 +241,10 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     add_inlines = [ # Don't include available divisions here so the divisions will be fitlered when shown
     ]
     list_filter = [
-        'state',
+        'status',
         'eventType',
         'year',
+        'state',
     ]
     search_fields = [
         'name',
