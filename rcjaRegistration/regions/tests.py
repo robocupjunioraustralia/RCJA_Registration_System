@@ -17,8 +17,8 @@ def commonSetUp(self):
     self.user3 = User.objects.create_user(email=self.email3, password=self.password)
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
-    self.state1 = State.objects.create(name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
 
 class TestStateClean(TestCase):
     email1 = 'user1@user.com'
