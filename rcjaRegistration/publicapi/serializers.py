@@ -23,7 +23,6 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AvailableDivision
         fields = [
-            'id',
             'name',
             'description',
             # Team details
@@ -38,21 +37,30 @@ class VenueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venue
         fields = [
-            'id',
             'name',
             'address',
         ]
 
+class DirectEnquiriesToSerializer(serializers.ModelSerializer):
+    fullName = serializers.CharField(label='Full name', source='get_full_name')
+    class Meta:
+        from users.models import User
+        model = User
+        fields = [
+            'fullName',
+            'email',
+        ]
+
 class EventSerializer(serializers.ModelSerializer):
-    availabledivision_set = AvailableDivisionSerializer(read_only=True, many=True)
+    availabledivisions = AvailableDivisionSerializer(read_only=True, many=True, source='availabledivision_set')
     venue = VenueSerializer(read_only=True)
+    directEnquiriesTo = DirectEnquiriesToSerializer(read_only=True)
     registrationURL = serializers.CharField(label='Registration URL', source='get_absolute_url')
 
     class Meta:
         model = Event
         fields = [
             'id',
-            'year',
             'state',
             'globalEvent',
             'name',
@@ -81,8 +89,7 @@ class EventSerializer(serializers.ModelSerializer):
             'directEnquiriesTo',
             'venue',
             'eventDetails',
-            'additionalInvoiceMessage',
             'registrationURL',
             # Divisions
-            'availabledivision_set',
+            'availabledivisions',
         ]
