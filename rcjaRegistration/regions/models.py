@@ -50,7 +50,7 @@ class State(CustomSaveDeleteModel):
                 'view',
                 'change'
             ]
-        elif level in ['viewall', 'eventmanager', 'billingmanager']:
+        elif level in ['viewall', 'eventmanager', 'billingmanager', 'schoolmanager', 'webeditor']:
             return [
                 'view',
             ]
