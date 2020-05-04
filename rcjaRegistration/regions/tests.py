@@ -17,8 +17,8 @@ def commonSetUp(self):
     self.user3 = User.objects.create_user(email=self.email3, password=self.password)
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
-    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(name='South Australia', abbreviation='SA')
 
 class TestStateClean(TestCase):
     email1 = 'user1@user.com'
@@ -32,7 +32,7 @@ class TestStateClean(TestCase):
 
     def testValid(self):
         state2 = State(
-            treasurer=self.user1,
+            
             name='New South Wales',
             abbreviation='NSW',
         )
@@ -41,7 +41,7 @@ class TestStateClean(TestCase):
 
     def testNameCaseInsensitive(self):
         state2 = State(
-            treasurer=self.user1,
+            
             name='VicToria',
             abbreviation='VIC1',
         )
@@ -49,7 +49,7 @@ class TestStateClean(TestCase):
 
     def testAbbreviationCaseInsensitive(self):
         state2 = State(
-            treasurer=self.user1,
+            
             name='Thing',
             abbreviation='vic',
         )
@@ -68,18 +68,12 @@ class TestStateMethods(TestCase):
     def testGetState(self):
         self.assertEqual(self.state1, self.state1.getState())
 
-    def testTreasurerName(self):
-        self.assertEqual(self.user1.fullname_or_email(), self.state1.treasurerName())
-
-    def testTreasurerEmail(self):
-        self.assertEqual(self.user1.email, self.state1.treasurerEmail())
-
     def testStr(self):
         self.assertEqual('Victoria', str(self.state1))
 
     def testSave(self):
         state2 = State(
-            treasurer=self.user1,
+            
             name='New South Wales',
             abbreviation='nsw',
         )
