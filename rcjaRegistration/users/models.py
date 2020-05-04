@@ -82,7 +82,7 @@ class User(AbstractUser):
                 'view',
                 'change',
             ]
-        elif level in ['viewall', 'eventmanager', 'schoolmanager', 'billingmanager']:
+        elif level in ['viewall', 'eventmanager', 'schoolmanager', 'billingmanager', 'webeditor']:
             return [
                 'view',
             ]
