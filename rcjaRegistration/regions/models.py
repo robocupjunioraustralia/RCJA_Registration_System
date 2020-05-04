@@ -11,6 +11,9 @@ class State(CustomSaveDeleteModel):
     # Fields
     name = models.CharField('Name', max_length=30, unique=True)
     abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
+    # Type fields
+    typeRegistration = models.BooleanField('Registration', default=False, help_text='Use this state in the registration portal. Once enabled cannot be disabled.')
+    typeWebsite = models.BooleanField('Website', default=False, help_text='Display this state on the public website.')
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
     bankAccountBSB = models.CharField('Bank Account BSB', max_length=7, blank=True, null=True)

@@ -22,10 +22,28 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
+        'typeRegistration',
+        'typeWebsite',
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
         'paypalEmail'
+    ]
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'abbreviation')
+        }),
+        ('Type', {
+            'fields': ('typeRegistration', 'typeWebsite')
+        }),
+        ('Bank details', {
+            'fields': ('bankAccountName', 'bankAccountBSB', 'bankAccountNumber', 'paypalEmail')
+        }),
+        ('Event details', {
+            'fields': (('defaultEventDetails', 'invoiceMessage'),)
+        }),
+    )
+    readonly_fields = [
     ]
     search_fields = [
         'name',
@@ -39,7 +57,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     exportFields = [
         'name',
         'abbreviation',
-
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
@@ -49,6 +66,17 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     inlines = [
     ]
+
+    def get_readonly_fields(self, request, obj):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        # Restrict changing of type fields
+        if not request.user.is_superuser:
+            readonly_fields = readonly_fields + ['typeRegistration', 'typeWebsite']
+        elif obj.typeRegistration:
+            readonly_fields = readonly_fields + ['typeRegistration']
+
+        return readonly_fields
 
     def get_inlines(self, request, obj):
         if obj is None:
