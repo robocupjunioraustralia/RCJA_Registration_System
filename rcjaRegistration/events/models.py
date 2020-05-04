@@ -458,6 +458,10 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         if getattr(self, 'eventTypeMapping', None) != self.event.eventType:
             errors.append(ValidationError('This event attendance is incompatible with this event type'))
 
+        # Check event is published
+        if self.event.status != 'published':
+            errors.append(ValidationError('Event must be published'))
+
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:
             errors.append(ValidationError('Campus school must match school'))
