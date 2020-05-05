@@ -1106,3 +1106,79 @@ class TestVenueAdmin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
+
+class TestEventAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+
+        self.year = Year.objects.create(year=2020)
+        self.event = Event.objects.create(
+            year=self.year,
+            state=self.state1,
+            name='Event 1',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user1
+        )
+
+    # Test readonly fields on change page
+
+    def testCorrectReadonlyFields_add(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_add'))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Status:</label>')
+        self.assertNotContains(response, '<select name="status" id="id_status">')
+
+        self.assertNotContains(response, '<label>Event type:</label>')
+        self.assertContains(response, '<select name="eventType" required id="id_eventType">')
+
+    def testCorrectReadonlyFields_change_draft(self):
+        self.event.status = 'draft'
+        self.event.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Status:</label>')
+        self.assertContains(response, '<select name="status" id="id_status">')
+
+        self.assertContains(response, '<label>Event type:</label>')
+        self.assertNotContains(response, '<select name="eventType" required id="id_eventType">')
+
+    def testCorrectReadonlyFields_change_published_noTeams(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Status:</label>')
+        self.assertContains(response, '<select name="status" id="id_status">')
+
+        self.assertContains(response, '<label>Event type:</label>')
+        self.assertNotContains(response, '<select name="eventType" required id="id_eventType">')
+
+    def testCorrectReadonlyFields_change_published_teams(self):
+        Team.objects.create(event=self.event, division=self.division1, mentorUser=self.user1, name='Test Team')
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '<label>Status:</label>')
+        self.assertNotContains(response, '<select name="status" id="id_status">')
+
+        self.assertContains(response, '<label>Event type:</label>')
+        self.assertNotContains(response, '<select name="eventType" required id="id_eventType">')

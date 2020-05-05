@@ -197,3 +197,43 @@ class TestStateAdmin(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertNotContains(response, "Coordinators")
+
+    # Test readonly fields on change page
+
+    def testCorrectReadonlyFields_change_superuser_registration(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '<label>Registration:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+
+    def testCorrectReadonlyFields_change_superuser_notRegistration(self):
+        self.state1.typeRegistration = False
+        self.state1.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Registration:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+
+    def testCorrectReadonlyFields_change_coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '<label>Registration:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertContains(response, '<label>Website:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeWebsite"')
