@@ -157,12 +157,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         'status',
         'year',
         'state',
+        'globalEvent',
         'startDate',
-        'endDate',
-        'registrationsOpenDate',
         'registrationsCloseDate',
-        'venue',
         'directEnquiriesToName',
+        'venue',
     ]
     competition_fieldsets = (
         (None, {
@@ -250,6 +249,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         'eventType',
         'year',
         'state',
+        'globalEvent',
     ]
     search_fields = [
         'name',
