@@ -1150,7 +1150,7 @@ class TestEventAdmin(TestCase):
         self.event.save()
 
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:events_event_change', args=(self.state1.id,)))
+        response = self.client.get(reverse('admin:events_event_change', args=(self.event.id,)))
         self.assertEqual(response.status_code, 200)
 
         self.assertNotContains(response, '<label>Status:</label>')
@@ -1161,7 +1161,7 @@ class TestEventAdmin(TestCase):
 
     def testCorrectReadonlyFields_change_published_noTeams(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:events_event_change', args=(self.state1.id,)))
+        response = self.client.get(reverse('admin:events_event_change', args=(self.event.id,)))
         self.assertEqual(response.status_code, 200)
 
         self.assertNotContains(response, '<label>Status:</label>')
@@ -1174,7 +1174,7 @@ class TestEventAdmin(TestCase):
         Team.objects.create(event=self.event, division=self.division1, mentorUser=self.user1, name='Test Team')
 
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:events_event_change', args=(self.state1.id,)))
+        response = self.client.get(reverse('admin:events_event_change', args=(self.event.id,)))
         self.assertEqual(response.status_code, 200)
 
         self.assertContains(response, '<label>Status:</label>')
