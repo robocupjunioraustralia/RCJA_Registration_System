@@ -71,9 +71,8 @@ class TestStateMethods(TestCase):
     def testStr(self):
         self.assertEqual('Victoria', str(self.state1))
 
-    def testSave(self):
+    def testSave_abbreviation(self):
         state2 = State(
-            
             name='New South Wales',
             abbreviation='nsw',
         )
@@ -81,6 +80,32 @@ class TestStateMethods(TestCase):
         self.assertEqual('nsw', state2.abbreviation)
         state2.save()
         self.assertEqual('NSW', state2.abbreviation)
+
+    def testTypeGlobal_typeRegistration(self):
+        self.state1.typeGlobal = True
+        self.assertEqual(self.state1.typeGlobal, True)
+        self.state1.save()
+        self.assertEqual(self.state1.typeGlobal, False)
+
+    def testTypeGlobal_notTypeRegistration(self):
+        self.state1.typeGlobal = True
+        self.state1.typeRegistration = False
+        self.assertEqual(self.state1.typeGlobal, True)
+        self.state1.save()
+        self.assertEqual(self.state1.typeGlobal, True)
+
+    def testTypeGlobal_otherGlobalState(self):
+        self.state1.typeGlobal = True
+        self.state1.typeRegistration = False
+        self.state1.save()
+        self.assertEqual(self.state1.typeGlobal, True)
+
+        self.state2.typeGlobal = True
+        self.state2.typeRegistration = False
+        self.state2.save()
+        self.assertEqual(self.state2.typeGlobal, True)
+        self.state1.refresh_from_db()
+        self.assertEqual(self.state1.typeGlobal, False)
 
 class TestStateAdmin(TestCase):
     email1 = 'user1@user.com'
@@ -208,6 +233,9 @@ class TestStateAdmin(TestCase):
         self.assertContains(response, '<label>Registration:</label>')
         self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
 
+        self.assertContains(response, '<label>Global:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeGlobal"')
+
         self.assertNotContains(response, '<label>Website:</label>')
         self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
 
@@ -222,6 +250,9 @@ class TestStateAdmin(TestCase):
         self.assertNotContains(response, '<label>Registration:</label>')
         self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
 
+        self.assertNotContains(response, '<label>Global:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeGlobal"')
+
         self.assertNotContains(response, '<label>Website:</label>')
         self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
 
@@ -234,6 +265,9 @@ class TestStateAdmin(TestCase):
 
         self.assertContains(response, '<label>Registration:</label>')
         self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertContains(response, '<label>Global:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeGlobal"')
 
         self.assertContains(response, '<label>Website:</label>')
         self.assertNotContains(response, '<input type="checkbox" name="typeWebsite"')

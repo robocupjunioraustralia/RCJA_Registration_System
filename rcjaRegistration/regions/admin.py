@@ -47,7 +47,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('name', 'abbreviation')
         }),
         ('Type', {
-            'fields': ('typeRegistration', 'typeWebsite')
+            'fields': ('typeRegistration', 'typeWebsite', 'typeGlobal')
         }),
         ('Bank details', {
             'fields': ('bankAccountName', 'bankAccountBSB', 'bankAccountNumber', 'paypalEmail')
@@ -89,9 +89,9 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
         # Restrict changing of type fields
         if not request.user.is_superuser:
-            readonly_fields = readonly_fields + ['typeRegistration', 'typeWebsite']
+            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal', 'typeWebsite']
         elif obj.typeRegistration:
-            readonly_fields = readonly_fields + ['typeRegistration']
+            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal']
 
         return readonly_fields
 

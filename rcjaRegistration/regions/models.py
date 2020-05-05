@@ -13,6 +13,7 @@ class State(CustomSaveDeleteModel):
     abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
     # Type fields
     typeRegistration = models.BooleanField('Registration', default=False, help_text='Use this state in the registration portal. Once enabled cannot be disabled.')
+    typeGlobal = models.BooleanField('Global', default=False, help_text='Associate this state with global events.')
     typeWebsite = models.BooleanField('Website', default=False, help_text='Display this state on the public website.')
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
@@ -65,6 +66,14 @@ class State(CustomSaveDeleteModel):
 
     def preSave(self):
         self.abbreviation = self.abbreviation.upper()
+
+        # Registration type incompatible with global type
+        if self.typeRegistration:
+            self.typeGlobal = False
+        
+        # Can only be one global state
+        if self.typeGlobal:
+            State.objects.exclude(pk=self.pk).update(typeGlobal=False)
 
     # *****Methods*****
 
