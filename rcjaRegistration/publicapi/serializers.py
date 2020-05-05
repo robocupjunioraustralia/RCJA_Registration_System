@@ -62,7 +62,6 @@ class EventSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'state',
-            'globalEvent',
             'name',
             'eventType',
             # Dates
