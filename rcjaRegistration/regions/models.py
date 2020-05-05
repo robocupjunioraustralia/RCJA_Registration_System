@@ -5,14 +5,16 @@ from django.conf import settings
 # **********MODELS**********
 
 class State(CustomSaveDeleteModel):
-    # Foreign keys
-    treasurer = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Treasurer', on_delete=models.PROTECT, related_name='+')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=30, unique=True)
     abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
+    # Type fields
+    typeRegistration = models.BooleanField('Registration', default=False, help_text='Use this state in the registration portal. Once enabled cannot be disabled.')
+    typeGlobal = models.BooleanField('Global', default=False, help_text='Associate this state with global events.')
+    typeWebsite = models.BooleanField('Website', default=False, help_text='Display this state on the public website.')
     # Bank details
     bankAccountName = models.CharField('Bank Account Name', max_length=200, blank=True, null=True)
     bankAccountBSB = models.CharField('Bank Account BSB', max_length=7, blank=True, null=True)
@@ -49,7 +51,7 @@ class State(CustomSaveDeleteModel):
                 'view',
                 'change'
             ]
-        elif level in ['viewall', 'eventmanager', 'billingmanager']:
+        elif level in ['viewall', 'eventmanager', 'billingmanager', 'schoolmanager', 'webeditor']:
             return [
                 'view',
             ]
@@ -65,19 +67,17 @@ class State(CustomSaveDeleteModel):
     def preSave(self):
         self.abbreviation = self.abbreviation.upper()
 
+        # Registration type incompatible with global type
+        if self.typeRegistration:
+            self.typeGlobal = False
+        
+        # Can only be one global state
+        if self.typeGlobal:
+            State.objects.exclude(pk=self.pk).update(typeGlobal=False)
+
     # *****Methods*****
 
     # *****Get Methods*****
-
-    def treasurerName(self):
-        return self.treasurer.fullname_or_email()
-    treasurerName.short_description = 'Treasurer'
-    treasurerName.admin_order_field = 'treasurer'
-
-    def treasurerEmail(self):
-        return self.treasurer.email
-    treasurerEmail.short_description = 'Treasurer email'
-    treasurerEmail.admin_order_field = 'treasurer__email'
 
     def __str__(self):
         return self.name

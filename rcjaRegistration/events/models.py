@@ -71,7 +71,7 @@ class Division(models.Model):
     name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
     category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
 
     # *****Meta and clean*****
     class Meta:
@@ -119,7 +119,7 @@ class Division(models.Model):
 
 class Venue(models.Model):
     # Foreign keys
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -200,7 +200,7 @@ class Year(models.Model):
 class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
-    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
+    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
     globalEvent = models.BooleanField('Global event', default=False, help_text='Global events appear to users as not belonging to a state. Recommeneded for national events. Billing still uses state based settings.')
 
     # Creation and update time
@@ -431,7 +431,7 @@ class AvailableDivision(CustomSaveDeleteModel):
 
 class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # Foreign keys
-    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
+    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE, limit_choices_to={'status': 'published'})
     division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
 
     # User and school foreign keys

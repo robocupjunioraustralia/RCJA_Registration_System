@@ -15,8 +15,8 @@ def commonSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
     self.user2 = User.objects.create_user(email=self.email2, password=self.password)
 
-    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
 
     self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
