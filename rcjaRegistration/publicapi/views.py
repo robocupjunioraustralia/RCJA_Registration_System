@@ -11,7 +11,7 @@ from common.apiPermissions import ReadOnly
 from .serializers import *
 
 from events.models import Event
-from regions.models import State, Region
+from regions.models import State
 
 import datetime
 
@@ -34,7 +34,7 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
     permission_classes = (ReadOnly,)
 
     def eventsBaseQueryset(self, pk):
-        state = get_object_or_404(State, pk=pk)
+        state = get_object_or_404(State, pk=pk, typeWebsite=True)
         if state.typeGlobal:
             return Event.objects.filter(globalEvent=True, status='published')
         else:
