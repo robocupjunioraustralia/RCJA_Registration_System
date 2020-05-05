@@ -1,12 +1,10 @@
 from rest_framework import serializers
 
-from events.models import Event, AvailableDivision, Venue
-from regions.models import State, Region
-
 # *****Regions*****
 
 class StateSerializer(serializers.ModelSerializer):
     class Meta:
+        from regions.models import State
         model = State
         fields = [
             'id',
@@ -21,6 +19,7 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
     description = serializers.CharField(label='Description', source='division.description')
 
     class Meta:
+        from events.models import AvailableDivision
         model = AvailableDivision
         fields = [
             'name',
@@ -35,13 +34,14 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
 
 class VenueSerializer(serializers.ModelSerializer):
     class Meta:
+        from events.models import Venue
         model = Venue
         fields = [
             'name',
             'address',
         ]
 
-class DirectEnquiriesToSerializer(serializers.ModelSerializer):
+class BasicUserSerializer(serializers.ModelSerializer):
     fullName = serializers.CharField(label='Full name', source='get_full_name')
     class Meta:
         from users.models import User
@@ -54,10 +54,11 @@ class DirectEnquiriesToSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     availabledivisions = AvailableDivisionSerializer(read_only=True, many=True, source='availabledivision_set')
     venue = VenueSerializer(read_only=True)
-    directEnquiriesTo = DirectEnquiriesToSerializer(read_only=True)
+    directEnquiriesTo = BasicUserSerializer(read_only=True)
     registrationURL = serializers.CharField(label='Registration URL', source='get_absolute_url')
 
     class Meta:
+        from events.models import Event
         model = Event
         fields = [
             'id',
