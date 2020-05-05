@@ -36,6 +36,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         '__str__',
         'abbreviation',
         'typeRegistration',
+        'typeGlobal',
         'typeWebsite',
         'bankAccountName',
         'bankAccountBSB',
@@ -47,7 +48,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('name', 'abbreviation')
         }),
         ('Type', {
-            'fields': ('typeRegistration', 'typeWebsite', 'typeGlobal')
+            'fields': ('typeRegistration', 'typeGlobal', 'typeWebsite')
         }),
         ('Bank details', {
             'fields': ('bankAccountName', 'bankAccountBSB', 'bankAccountNumber', 'paypalEmail')
@@ -70,6 +71,9 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     exportFields = [
         'name',
         'abbreviation',
+        'typeRegistration',
+        'typeGlobal',
+        'typeWebsite',
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
