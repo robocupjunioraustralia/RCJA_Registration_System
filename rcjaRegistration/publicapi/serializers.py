@@ -93,3 +93,18 @@ class EventSerializer(serializers.ModelSerializer):
             # Divisions
             'availabledivisions',
         ]
+
+# *****Committee Member*****
+
+class CommitteeMemberSerializer(serializers.ModelSerializer):
+    user = BasicUserSerializer(read_only=True)
+
+    class Meta:
+        from publicwebsite.models import CommitteeMember
+        model = CommitteeMember
+        fields = [
+            'id',
+            'user',
+            'position',
+            'biography',
+        ]
