@@ -157,12 +157,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         'status',
         'year',
         'state',
+        'globalEvent',
         'startDate',
-        'endDate',
-        'registrationsOpenDate',
         'registrationsCloseDate',
-        'venue',
         'directEnquiriesToName',
+        'venue',
     ]
     competition_fieldsets = (
         (None, {
@@ -224,11 +223,16 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
 
     def get_readonly_fields(self, request, obj):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj is None:
+            return readonly_fields
+
         # Make status read only if can't unpublish
-        fields = super().get_readonly_fields(request, obj)
         if obj.status == 'published' and (obj.baseeventattendance_set.exists() or obj.invoice_set.exists()):
-            fields.append('status')
-        return fields
+            readonly_fields = readonly_fields + ['status']
+
+        return readonly_fields
 
     autocomplete_fields = [
         'state',
@@ -238,13 +242,14 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     inlines = [
         AvailableDivisionInline,
     ]
-    add_inlines = [ # Don't include available divisions here so the divisions will be fitlered when shown
+    add_inlines = [ # Don't include available divisions here so the divisions will be filtered when shown
     ]
     list_filter = [
         'status',
         'eventType',
         'year',
         'state',
+        'globalEvent',
     ]
     search_fields = [
         'name',
@@ -459,7 +464,7 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
             },
             {
                 'field': 'event',
-                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping, status='published'),
+                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
                 'filterNone': True,
                 'useAutocomplete': True,
             }

@@ -28,7 +28,7 @@ class AuthViewTests(TestCase):
 
     def setUp(self):
         self.user = user = User.objects.create_user(email='admin@test.com', password='admin')
-        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
+        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
@@ -153,7 +153,7 @@ class TestEditDetails(TestCase):
             email='admin@test.com',
             password='admin'
         )
-        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
+        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
@@ -218,8 +218,8 @@ class TestUserSave(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email=self.email, password=self.password)
 
-        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(treasurer=self.user, name='New South Wales', abbreviation='NSW')
+        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeRegistration=True, name='New South Wales', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Region 1')
         self.region2 = Region.objects.create(name='Region 2')
 
@@ -347,8 +347,8 @@ class TestTermsAndConditionsView(TestCase):
 def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
 
-    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
 
     self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
     self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)

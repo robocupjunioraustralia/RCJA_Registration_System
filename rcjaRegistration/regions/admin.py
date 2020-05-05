@@ -10,9 +10,22 @@ class CoordinatorInline(admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0
-    verbose_name = "State coordinator"
-    verbose_name_plural = "State Coordinators"
+    verbose_name = "Coordinator"
+    verbose_name_plural = "Coordinators"
     show_change_link = True
+    autocomplete_fields = [
+        'user',
+    ]
+
+class CommitteeMemberInline(admin.TabularInline):
+    from publicwebsite.models import CommitteeMember
+    model = CommitteeMember
+    extra = 0
+    show_change_link = True
+    fields = [
+        'user',
+        'position',
+    ]
     autocomplete_fields = [
         'user',
     ]
@@ -22,18 +35,35 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
-        'treasurerName',
+        'typeRegistration',
+        'typeGlobal',
+        'typeWebsite',
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
         'paypalEmail'
+    ]
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'abbreviation')
+        }),
+        ('Type', {
+            'fields': ('typeRegistration', 'typeGlobal', 'typeWebsite')
+        }),
+        ('Bank details', {
+            'fields': ('bankAccountName', 'bankAccountBSB', 'bankAccountNumber', 'paypalEmail')
+        }),
+        ('Event details', {
+            'fields': (('defaultEventDetails', 'invoiceMessage'),)
+        }),
+    )
+    readonly_fields = [
     ]
     search_fields = [
         'name',
         'abbreviation'
     ]
     autocomplete_fields = [
-        'treasurer',
     ]
     actions = [
         'export_as_csv'
@@ -41,8 +71,9 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     exportFields = [
         'name',
         'abbreviation',
-        'treasurerName',
-        'treasurerEmail',
+        'typeRegistration',
+        'typeGlobal',
+        'typeWebsite',
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
@@ -51,7 +82,22 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceMessage'
     ]
     inlines = [
+        CommitteeMemberInline,
     ]
+
+    def get_readonly_fields(self, request, obj):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        if obj is None:
+            return readonly_fields
+
+        # Restrict changing of type fields
+        if not request.user.is_superuser:
+            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal', 'typeWebsite']
+        elif obj.typeRegistration:
+            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal']
+
+        return readonly_fields
 
     def get_inlines(self, request, obj):
         if obj is None:
@@ -62,19 +108,37 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             return self.inlines + [
                 CoordinatorInline,
             ]
+
         return self.inlines
 
     # Filter autocompletes to valid options
     def get_search_results(self, request, queryset, search_term):
+        # Filter by typeRegistration
+        for url in ['users/user/', 'events/event/', 'events/division/', 'events/venue/', 'schools/school/']:
+            if url in request.META.get('HTTP_REFERER', ''):
+                queryset = queryset.filter(typeRegistration=True)
+
+        # Filter by state
         from coordination.adminPermissions import reversePermisisons
         for url in ['users/user/', 'coordination/coordinator/']:
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = self.filterQuerysetByState(queryset, request, ['full'])
 
-        for url in ['events/event/', 'events/division/', 'events/venue/', 'schools/school/']:
+        from events.models import Event, Division, Venue
+        from schools.models import School
+        from publicwebsite.models import CommitteeMember
+        urlPairs = {
+            'events/event/': Event,
+            'events/division/': Division,
+            'events/venue/': Venue,
+            'schools/school/': School,
+            'publicwebsite/committeemember': CommitteeMember,
+        }
+
+        for url in urlPairs:
             if url in request.META.get('HTTP_REFERER', ''):
-                defaultPermissions = reversePermisisons(self.model, ['add', 'change'])
-                queryset = self.filterQuerysetByState(queryset, request, ['full'])
+                permissionLevels = reversePermisisons(urlPairs[url], ['add', 'change'])
+                queryset = self.filterQuerysetByState(queryset, request, permissionLevels)
 
         return super().get_search_results(request, queryset, search_term)
 
