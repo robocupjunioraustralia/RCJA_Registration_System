@@ -12,6 +12,24 @@
     .cardimage {
         max-height: 150px;
     }
+
+    .upComingImageContainer{
+        height: 15rem;
+        width: 100%;
+        background-color:gray;
+    }
+    .upComingEventImage{
+        height: 10rem;
+        background-color: gray;
+    }
+    .mapContainer{
+        height: 10rem;
+        width: 100%;
+        background-color:gray;
+    }
+
+
+
 </style>
 {% endblock %}
 
@@ -21,7 +39,6 @@
         <h3>You are currently interacting as {{ request.user.currentlySelectedSchool.name|default:"independent" }}.</h3><br>
     </div>
     <div class="row">
-        <h1>Invoices:</h1> 
         {% if outstandingInvoices %}
             <div class="ui icon message">
             <i class="ui dollar icon"></i>
@@ -57,64 +74,47 @@
     </div>
     <br>
    
-    <div class="row">  
-        {% if currentEvents or openForRegistrationWorkshops or openForRegistrationCompetitions or pastEvents %}
-            {% if currentEvents %}
-            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
-            <br>
-            {% endif %}
-
-            {% if openForRegistrationWorkshops %}
-            {% include "events/eventRow.html" with comps=openForRegistrationWorkshops rowHeading="Open for registration workshops:" %}
-            <br>
-            {% endif %}
-
-            {% if openForRegistrationCompetitions %}
-            {% include "events/eventRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration competitions:" %}
-            <br>
-            {% endif %}
-
-            {% if not 'viewAll' in request.GET %}
-            <p>Currently viewing events from {{currentState}}.</p>
-            <div>
-                <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
+    <div class="row"> 
+        <div class = "ui segment">
+            <h3> Your next Event </h3>
+        <div class = "ui divider"> </div>
+        <div class = "ui grid">
+            <div class = "ui row">
+                <div class = "ui four wide column">
+                    <div class = "upComingImageContainer"> 
+                        <img src = "upComingImage">
+                    </div>
+                </div>
+                <div class = "ui twelve wide column grid">
+                    <div class = "ui four wide column">
+                        <div class = "row">
+                            <div class = "row">
+                                <h4> Robocup States 2019 </h4> 
+                            </div>
+                            <div class = "row">
+                                Begins in 6 months
+                            </div>
+                            <div class = "row">
+                                22 Forest Hill South Yarra VIC 3010
+                            </div>
+                            <div class = "row">
+                                9898 attending
+                            </div>
+                        </div>
+                    </div>
+                    <div class = "ui seven wide column"> </div>
+                    <div class = "ui four wide column">
+                        <div class = "mapContainer">
+                            Map here
+                        </div>
+                    </div>
+                    <div class = "ui row divider ">
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <p>Currently viewing events from all states.</p>
-            <div>
-                <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
-            </div>
-            {% endif %}
-            <br>
-
-            {% if pastEvents %}
-                {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events:" %}
-            {% endif %}
-        {% else %}
-        <div class="ui icon warning message">
-            <i class="frown icon"></i>
-            <div class="content">
-              <div class="header">
-                No Events
-              </div>
-              <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
-            </div>
+            
         </div>
-
-        <!-- This button should be refactored to reduce duplicated code (see above). -->
-        {% if not 'viewAll' in request.GET and eventsAvailable %}
-        <p>Currently viewing events from {{currentState}}.</p>
-        <div>
-            <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
-        </div>
-        {% else %}
-        <p>Currently viewing events from all states.</p>
-        <div>
-            <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
-        </div>
-        {% endif %}
-
-    {% endif %}
+    
     </div>
 
 </div>
