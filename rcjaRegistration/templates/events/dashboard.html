@@ -14,22 +14,43 @@
     }
 
     .upComingImageContainer{
-        height: 15rem;
+        height: 17rem;
         width: 100%;
         background-color:gray;
     }
     .upComingEventImage{
-        height: 10rem;
+        height: 17rem;
+        width: 100%;
         background-color: gray;
     }
     .mapContainer{
         height: 10rem;
-        width: 100%;
         background-color:gray;
+        border: 1px solid lightgray;
+    }
+    .mapImage{
+        height: 10rem;
+        width: 100%;
+    }
+    .floatRight{
+        float:right;
+        text-align: right;
+        margin-left: auto;
+        margin-right: 0;
+    }
+    .lightGrayBackground{
+        background-color:lightgray !important;
+    }
+    .whiteBackGround {
+        background-color:white !important;
     }
 
-
-
+    .smallBottomPad {
+        padding-bottom: 2rem !important;
+    }
+    .noPadding {
+        padding: none !important;
+    }
 </style>
 {% endblock %}
 
@@ -75,40 +96,51 @@
     <br>
    
     <div class="row"> 
-        <div class = "ui segment">
+        <div class = "ui segment lightGrayBackground">
             <h3> Your next Event </h3>
         <div class = "ui divider"> </div>
-        <div class = "ui grid">
+        <div class = "ui stackable grid">
             <div class = "ui row">
-                <div class = "ui four wide column">
+                <div class = "ui four wide column noPadding">
                     <div class = "upComingImageContainer"> 
-                        <img src = "upComingImage">
+                        <img class = "upComingEventImage" src = "https://upload.wikimedia.org/wikipedia/commons/f/f7/Melbourne_and_the_Yarra.jpg">
                     </div>
                 </div>
-                <div class = "ui twelve wide column grid">
-                    <div class = "ui four wide column">
+                <div class = "ui twelve wide column stackable grid whiteBackGround">
+                    <div class = "ui six wide column">
                         <div class = "row">
                             <div class = "row">
                                 <h4> Robocup States 2019 </h4> 
                             </div>
                             <div class = "row">
-                                Begins in 6 months
+                                <i class = "calendar icon"> </i> Begins in 6 months
                             </div>
                             <div class = "row">
-                                22 Forest Hill South Yarra VIC 3010
+                                <i class = "location arrow icon"> </i> 22 Forest Hill South Yarra VIC 3010
                             </div>
                             <div class = "row">
-                                9898 attending
+                                <i class = "user icon"> </i> 9898 attending
                             </div>
                         </div>
                     </div>
-                    <div class = "ui seven wide column"> </div>
+                    <div class = "ui five wide column"> 
+                        <div class = "ui icon message">
+                        <i class ="dollar sign icon"></i>
+                        <div class = "content">
+                            Payment Complete
+                            <a href = "#"> View Invoice </a>
+                        </div>
+                        </div>
+                    </div>
+
                     <div class = "ui four wide column">
                         <div class = "mapContainer">
-                            Map here
+                            <img class = "mapImage" src = "https://www.google.com/maps/about/images/mymaps/mymaps-desktop-16x9.png">
                         </div>
                     </div>
-                    <div class = "ui row divider ">
+                    <div class = "ui row divider smallBottomPad">
+                        <span> <i class = "user icon"></i> 10 Registered, 2 Teams </span>
+                        <div class = "floatRight"> <a href = "#" class = "ui button primary">View Event </a> </div>
                     </div>
                 </div>
             </div>
