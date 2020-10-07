@@ -176,7 +176,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     competition_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'))
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'))
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -193,7 +193,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     workshop_fieldsets = (
         (None, {
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'))
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', ('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'))
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
