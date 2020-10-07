@@ -7,7 +7,7 @@ from django.conf import settings
 class Coordinator(CustomSaveDeleteModel):
     # Foreign keys
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
-    state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE, null=True, blank=True)
+    state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE, null=True, blank=True) # Don't restrict to registration states to allow delegation of website administration
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -17,6 +17,7 @@ class Coordinator(CustomSaveDeleteModel):
         ('eventmanager', 'Event manager'),
         ('schoolmanager', 'School manager'),
         ('billingmanager', 'Billing manager'),
+        ('webeditor', 'Web editor'),
         ('full','Full'))
     permissions = models.CharField('Permissions', max_length=20, choices=permissionsOptions)
     position = models.CharField('Position', max_length=50)
@@ -101,9 +102,6 @@ class Coordinator(CustomSaveDeleteModel):
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
         user.user_permissions.clear()
         user.user_permissions.add(*permissionObjects)
-
-    def checkPermission(self, obj, permission):
-        return permission in obj.coordinatorPermissions(self.permissions)
 
     # *****Get Methods*****
 

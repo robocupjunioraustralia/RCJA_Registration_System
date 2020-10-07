@@ -35,7 +35,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 
     def setUp(self):
         self.user = User.objects.create_user(email=self.username, password=self.password)
-        self.newState = State.objects.create(treasurer=self.user,name='Victoria',abbreviation='VIC')
+        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
@@ -80,7 +80,7 @@ class TestCurrentlySelectedSchool(TestCase):
         self.user = User.objects.create_user(email=self.email, password=self.password)
         self.user2 = User.objects.create_user(email=self.email2, password=self.password)
 
-        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
+        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -199,7 +199,7 @@ class TestEditSchoolDetails(TestCase):
         self.user = User.objects.create_user(email=self.email, password=self.password)
         self.user2 = User.objects.create_user(email=self.email2, password=self.password)
 
-        self.state1 = State.objects.create(treasurer=self.user, name='Victoria', abbreviation='VIC')
+        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -212,6 +212,7 @@ class TestEditSchoolDetails(TestCase):
             state=self.state1,
             name='Test event 1',
             eventType='competition',
+            status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',
@@ -581,7 +582,7 @@ class TestEditSchoolDetails(TestCase):
 
 def schoolSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
     self.region1 = Region.objects.create(name='Test Region', description='test desc')
     self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
 
@@ -809,8 +810,8 @@ def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
-    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
 
     self.region1 = Region.objects.create(name='Metro')
 

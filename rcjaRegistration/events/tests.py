@@ -19,7 +19,7 @@ def commonSetUp(obj):
     obj.password = 'password'
     obj.user = user = User.objects.create_user(email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
-        treasurer=obj.user,
+        typeRegistration=True,
         name='Victoria',
         abbreviation='VIC'
     )
@@ -45,6 +45,7 @@ def commonSetUp(obj):
         state=obj.newState,
         name='test old not reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -60,6 +61,7 @@ def commonSetUp(obj):
         state=obj.newState,
         name='test new yes reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
@@ -75,6 +77,7 @@ def commonSetUp(obj):
         state=obj.newState,
         name='test old yes reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
@@ -197,26 +200,26 @@ class TestEventDetailsPage_school(TestCase):
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testPageLoad(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
 
     def testUsesCorrectTemplate(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/details.html')
 
     def testEventTitlePresent(self):
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
-        self.assertContains(response, 'test old')
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new yes reg')
 
     def testTeamNamePresent(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertContains(response, 'test new team')
 
-    def testOldEventNotRegisterable(self):
+    def testOldEventPermissionDenied(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
-        self.assertContains(response,'Registration for this event has closed.')
-        self.assertNotContains(response, 'Add team')
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response,'This event is unavailable', status_code=403)
 
     def testCreationButtonsVisibleWhenRegoOpen(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
@@ -301,6 +304,7 @@ class TestEventClean(TestCase):
             year=self.year,
             state=self.newState,
             name='Event 1',
+            status='published',
             maxMembersPerTeam=5,
             event_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -309,9 +313,25 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
-        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
         self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
         self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
+
+    # Status validation
+    def testStatusPublished(self):
+        self.event.status = 'published'
+        self.event.clean()
+
+    def testStatusDraft(self):
+        self.event.status = 'draft'
+        self.event.clean()
+
+    def testStatusDraftTeamExists(self):
+        self.event.status = 'draft'
+        self.event.clean()
+        self.event.save()
+        Team.objects.create(event=self.event, division=self.division, mentorUser=self.user, name='New Test Team')
+        self.assertRaises(ValidationError, self.event.clean)
 
     # Dates validation
 
@@ -451,6 +471,7 @@ class TestEventMethods(TestCase):
             year=self.year,
             state=self.newState,
             name='Event 1',
+            status='published',
             maxMembersPerTeam=5,
             event_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -514,6 +535,7 @@ def newSetupEvent(self):
         year=self.year,
         state=self.newState,
         name='Event 1',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
@@ -583,7 +605,7 @@ class TestAvailableDivisionClean(TestCase):
         self.assertRaises(ValidationError, self.availableDivision.clean)
 
     def testStateValidation(self):
-        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
         self.division2 = Division.objects.create(name='Division 2', state=self.state2)
         self.availableDivision.division=self.division2
         self.assertRaises(ValidationError, self.availableDivision.clean)
@@ -600,7 +622,7 @@ class TestDivisionClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
 
     def testSuccessValidation_noState(self):
         self.division1.clean()
@@ -626,7 +648,7 @@ class TestDivisionMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
 
     def testStrNoState(self):
         self.assertEqual(str(self.division1), 'Division 1')
@@ -650,7 +672,7 @@ class TestVenueClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
         createVenues(self)
 
     def testSuccess(self):
@@ -668,7 +690,7 @@ class TestVenueMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(treasurer=self.user, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
         createVenues(self)
 
     def testGetState(self):
@@ -679,8 +701,8 @@ def adminSetUp(self):
     self.user2 = User.objects.create_user(email=self.email2, password=self.password)
     self.user3 = User.objects.create_user(email=self.email3, password=self.password)
 
-    self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(treasurer=self.user1, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
 
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
@@ -1084,3 +1106,79 @@ class TestVenueAdmin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
+
+class TestEventAdmin(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    emailsuper = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminSetUp(self)
+
+        self.year = Year.objects.create(year=2020)
+        self.event = Event.objects.create(
+            year=self.year,
+            state=self.state1,
+            name='Event 1',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user1
+        )
+
+    # Test readonly fields on change page
+
+    def testCorrectReadonlyFields_add(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_add'))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Status:</label>')
+        self.assertNotContains(response, '<select name="status" id="id_status">')
+
+        self.assertNotContains(response, '<label>Event type:</label>')
+        self.assertContains(response, '<select name="eventType" required id="id_eventType">')
+
+    def testCorrectReadonlyFields_change_draft(self):
+        self.event.status = 'draft'
+        self.event.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_change', args=(self.event.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Status:</label>')
+        self.assertContains(response, '<select name="status" id="id_status">')
+
+        self.assertContains(response, '<label>Event type:</label>')
+        self.assertNotContains(response, '<select name="eventType" required id="id_eventType">')
+
+    def testCorrectReadonlyFields_change_published_noTeams(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_change', args=(self.event.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Status:</label>')
+        self.assertContains(response, '<select name="status" id="id_status">')
+
+        self.assertContains(response, '<label>Event type:</label>')
+        self.assertNotContains(response, '<select name="eventType" required id="id_eventType">')
+
+    def testCorrectReadonlyFields_change_published_teams(self):
+        Team.objects.create(event=self.event, division=self.division1, mentorUser=self.user1, name='Test Team')
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:events_event_change', args=(self.event.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '<label>Status:</label>')
+        self.assertNotContains(response, '<select name="status" id="id_status">')
+
+        self.assertContains(response, '<label>Event type:</label>')
+        self.assertNotContains(response, '<select name="eventType" required id="id_eventType">')

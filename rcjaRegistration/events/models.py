@@ -78,7 +78,7 @@ class Division(models.Model):
     name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
     category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
 
     # *****Meta and clean*****
     class Meta:
@@ -126,7 +126,7 @@ class Division(models.Model):
 
 class Venue(models.Model):
     # Foreign keys
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT)
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -225,7 +225,7 @@ class Year(models.Model):
 class Event(CustomSaveDeleteModel):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
-    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT)
+    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
     globalEvent = models.BooleanField('Global event', default=False, help_text='Global events appear to users as not belonging to a state. Recommeneded for national events. Billing still uses state based settings.')
 
     # Creation and update time
@@ -236,6 +236,8 @@ class Event(CustomSaveDeleteModel):
     name = models.CharField('Name', max_length=50)
     eventTypeChoices = (('competition', 'Competition'), ('workshop', 'Workshop'))
     eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
+    statusChoices = (('draft', 'Draft'), ('published', 'Published'))
+    status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
 
     def generateUUIDFilename(self, filename):
         self.eventBannerImageOriginalFileName = filename
@@ -290,6 +292,10 @@ class Event(CustomSaveDeleteModel):
         errors = []
         # Check required fields are not None
         checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+
+        # Validate status
+        if self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
+            errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
         # Check close and end date after start dates
         if self.startDate > self.endDate:
@@ -478,7 +484,7 @@ class AvailableDivision(CustomSaveDeleteModel):
 
 class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # Foreign keys
-    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
+    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE, limit_choices_to={'status': 'published'})
     division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
 
     # User and school foreign keys
@@ -504,6 +510,10 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         # eventTypeMapping must be defined on child or defaults to validation errror
         if getattr(self, 'eventTypeMapping', None) != self.event.eventType:
             errors.append(ValidationError('This event attendance is incompatible with this event type'))
+
+        # Check event is published
+        if self.event.status != 'published':
+            errors.append(ValidationError('Event must be published'))
 
         # Check campus school matches school on this object
         if self.campus and self.campus.school != self.school:

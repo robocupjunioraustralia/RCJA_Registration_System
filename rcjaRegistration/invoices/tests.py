@@ -36,8 +36,8 @@ def commonSetUp(self):
         self.user3 = User.objects.create_user(email=self.email3, password=self.password)
         self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True)
 
-        self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(treasurer=self.user1, name='NSW', abbreviation='NSW')
+        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -50,6 +50,7 @@ def commonSetUp(self):
             state=self.state1,
             name='Test event 1',
             eventType='competition',
+            status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',

@@ -18,8 +18,8 @@ import datetime
 def newCommonSetUp(self):
         self.user1 = User.objects.create_user(email=self.email1, password=self.password)
 
-        self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(treasurer=self.user1, name='NSW', abbreviation='NSW')
+        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
@@ -39,6 +39,7 @@ def newCommonSetUp(self):
             state=self.state1,
             name='Test event 1',
             eventType='workshop',
+            status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',
@@ -287,6 +288,7 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
             state=self.state1,
             name='Test event 2',
             eventType='workshop',
+            status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',

@@ -19,7 +19,7 @@ def commonSetUp(obj): #copied from events, todo refactor
     obj.password = 'password'
     obj.user = user = User.objects.create_user(email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
-        treasurer=obj.user,
+        typeRegistration=True,
         name='Victoria',
         abbreviation='VIC'
     )
@@ -45,6 +45,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         state=obj.newState,
         name='test old not reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -60,6 +61,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         state=obj.newState,
         name='test new not reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
@@ -75,6 +77,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         state=obj.newState,
         name='test old yes reg',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
@@ -328,8 +331,8 @@ class TestTeamEdit(TestCase):
 def newCommonSetUp(self):
         self.user1 = User.objects.create_user(email=self.email1, password=self.password)
 
-        self.state1 = State.objects.create(treasurer=self.user1, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(treasurer=self.user1, name='NSW', abbreviation='NSW')
+        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
@@ -349,6 +352,7 @@ def newCommonSetUp(self):
             state=self.state1,
             name='Test event 1',
             eventType='competition',
+            status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
             event_billingType='team',
@@ -841,6 +845,7 @@ def createEventsAndTeams(self):
         state=self.state1,
         name='Event 1',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         entryFeeIncludesGST=True,
         event_billingType='team',
@@ -856,6 +861,7 @@ def createEventsAndTeams(self):
         state=self.state2,
         name='Event 2',
         eventType='competition',
+        status='published',
         maxMembersPerTeam=5,
         entryFeeIncludesGST=True,
         event_billingType='team',
