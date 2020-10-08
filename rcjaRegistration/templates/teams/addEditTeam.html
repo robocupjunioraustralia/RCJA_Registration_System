@@ -117,7 +117,8 @@
               </div>
 
               <!-- Add more student forms -->
-              <input type="button" value="Add More" id="add_more">
+              <br>
+              <input type="button" value="Add Another Student" id="add_more" class="primary ui button right floated" style="display: none">
               <div id="empty_form" style="display:none">
                 {% with formset.empty_form as studentform %}
                 {% include 'teams/studentForm.html' with studentNumber="" %}
@@ -139,10 +140,21 @@
   </div>
 </div>
 <script>
+  $(document).ready(function() {
+    console.log('loaded');
+    if ($('#id_student_set-TOTAL_FORMS').val() < $('#id_student_set-MAX_NUM_FORMS').val()) {
+      $("#add_more").show();
+    }
+  });
+
   $('#add_more').click(function() {
-    var form_idx = $('#id_form-TOTAL_FORMS').val();
+    var form_idx = $('#id_student_set-TOTAL_FORMS').val();
     $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
-    $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+    $('#id_student_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+
+    if ($('#id_student_set-TOTAL_FORMS').val() >= $('#id_student_set-MAX_NUM_FORMS').val()) {
+      $("#add_more").hide();
+    }
   });
 </script>
 {% endblock %}
