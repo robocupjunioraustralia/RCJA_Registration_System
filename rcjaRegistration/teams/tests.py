@@ -118,7 +118,8 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Teams/ attendees cannot be created for this event type', status_code=403)
 
-    # This test needs to be a POST request to properly test max team members submission
+    # This test needs to be a POST request to properly test max team members submission - see issue #368
+    # Test fails due to dynamic formsets
     # def testMaxSubmissionNumber(self):
     #     response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
     #     self.assertEqual(response.status_code, 200)
