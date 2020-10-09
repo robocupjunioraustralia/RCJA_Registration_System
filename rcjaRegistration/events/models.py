@@ -2,9 +2,9 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
-import uuid
 from django.utils.html import format_html
 from common.utils import formatFilesize
+from common.fields import UUIDImageField
 
 from rcjaRegistration.storageBackends import PublicMediaStorage
 from django.templatetags.static import static
@@ -133,13 +133,8 @@ class Venue(models.Model):
     # Fields
     name = models.CharField('Name', max_length=60)
     address = models.TextField('Address', blank=True)
-
-    def generateUUIDFilename(self, filename):
-        self.venueImageOriginalFileName = filename
-        extension = filename.rsplit('.', 1)[1]
-        newFilename = f'VenueImage_{str(uuid.uuid4())}.{extension}'
-        return newFilename
-    venueImage = models.ImageField('Venue image', storage=PublicMediaStorage(), upload_to=generateUUIDFilename, null=True, blank=True)
+    # Venue image
+    venueImage = UUIDImageField('Venue image', storage=PublicMediaStorage(), upload_prefix="VenueImage", original_filename_field="venueImageOriginalFileName", null=True, blank=True)
     venueImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
@@ -239,12 +234,8 @@ class Event(CustomSaveDeleteModel):
     statusChoices = (('draft', 'Draft'), ('published', 'Published'))
     status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
 
-    def generateUUIDFilename(self, filename):
-        self.eventBannerImageOriginalFileName = filename
-        extension = filename.rsplit('.', 1)[1]
-        newFilename = f'EventBannerImage_{str(uuid.uuid4())}.{extension}'
-        return newFilename
-    eventBannerImage = models.ImageField('Banner image', storage=PublicMediaStorage(), upload_to=generateUUIDFilename, null=True, blank=True)
+    # Banner image
+    eventBannerImage = UUIDImageField('Banner image', storage=PublicMediaStorage(), upload_prefix='EventBannerImage', original_filename_field='eventBannerImageOriginalFileName', null=True, blank=True)
     eventBannerImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # Dates
@@ -379,6 +370,8 @@ class Event(CustomSaveDeleteModel):
     def boolWorkshop(self):
         return self.eventType == 'workshop'
 
+    # Image methods
+
     def effectiveBannerImageURL(self):
         if self.eventBannerImage:
             return self.eventBannerImage.url
@@ -392,8 +385,6 @@ class Event(CustomSaveDeleteModel):
     def effectiveBannerImageTag(self):
         return format_html('<img src="{}" height="200" />', self.effectiveBannerImageURL())
     effectiveBannerImageTag.short_description = 'Preview'
-
-    # Image methods
 
     def bannerImageFilesize(self):
         return formatFilesize(self.eventBannerImage.size)

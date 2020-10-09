@@ -2,9 +2,9 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
-import uuid
 from django.utils.html import format_html
 from common.utils import formatFilesize
+from common.fields import UUIDImageField
 
 from rcjaRegistration.storageBackends import PublicMediaStorage
 
@@ -29,14 +29,8 @@ class State(CustomSaveDeleteModel):
     # Defaults
     defaultEventDetails = models.TextField('Default event details', blank=True)
     invoiceMessage = models.TextField('Invoice message', blank=True)
-
     # Default event image
-    def generateUUIDFilename(self, filename):
-        self.defaultEventImageOriginalFileName = filename
-        extension = filename.rsplit('.', 1)[1]
-        newFilename = f'DefaultEventImage_{str(uuid.uuid4())}.{extension}'
-        return newFilename
-    defaultEventImage = models.ImageField('Default event image', storage=PublicMediaStorage(), upload_to=generateUUIDFilename, null=True, blank=True)
+    defaultEventImage = UUIDImageField('Default event image', storage=PublicMediaStorage(), upload_prefix="DefaultEventImage", original_filename_field="defaultEventImageOriginalFileName", null=True, blank=True)
     defaultEventImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
