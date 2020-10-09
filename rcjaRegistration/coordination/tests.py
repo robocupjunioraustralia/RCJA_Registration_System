@@ -72,6 +72,13 @@ class TestCoordinatorMethods(TestCase):
     def testUserEmail(self):
         self.assertEqual(self.coord1.userEmail(), self.email1)
 
+    def testStringState(self):
+        self.assertEqual(str(self.coord1), f'First Last: Victoria - Full')
+
+    def testStringNoState(self):
+        self.coord2 = Coordinator.objects.create(user=self.user1, permissions='full', position='Thing')
+        self.assertEqual(str(self.coord2), f'First Last: Full')
+
 class TestCoordinatorAdmin(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
