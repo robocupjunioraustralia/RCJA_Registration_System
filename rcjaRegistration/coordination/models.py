@@ -72,9 +72,6 @@ class Coordinator(CustomSaveDeleteModel):
         if hasattr(self, 'previousUser',) and self.user != self.previousUser:
             Coordinator.updateUserPermissions(user=self.previousUser)
 
-    def postDelete(self):
-        Coordinator.updateUserPermissions(user=self.user)
-
     # *****Methods*****
 
     @classmethod
@@ -116,7 +113,9 @@ class Coordinator(CustomSaveDeleteModel):
     userEmail.admin_order_field = 'user__email'
 
     def __str__(self):
-        return f'{self.userName()}: {self.state}'
+        if self.state:
+            return f'{self.userName()}: {self.state} - {self.get_permissions_display()}'
+        return f'{self.userName()}: {self.get_permissions_display()}'
 
     # *****CSV export methods*****
 
