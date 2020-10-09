@@ -126,7 +126,7 @@ class TestCoordinatorMethods(TestCase):
 
     def testCleanNotDuplicate(self):
         self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
-        self.coord1.clean()
+        self.coord2.clean()
 
     def testCleanDuplicate(self):
         self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='full', position='Thing')
