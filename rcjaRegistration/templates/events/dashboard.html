@@ -97,7 +97,7 @@
               <div class="header">
                 No Events
               </div>
-              <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
+              <p>Sorry, no events found. Please check again for events soon.{% if not 'viewAll' in request.GET and eventsAvailable %} Alternatively, you can check for events from other states.{% endif %}</p>
             </div>
         </div>
 
@@ -107,7 +107,7 @@
         <div>
             <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
         </div>
-        {% else %}
+        {% elif eventsAvailable %}
         <p>Currently viewing events from all states.</p>
         <div>
             <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
