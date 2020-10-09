@@ -124,6 +124,14 @@ class TestCoordinatorMethods(TestCase):
         self.coord2 = Coordinator.objects.create(user=self.user1, permissions='full', position='Thing')
         self.assertEqual(str(self.coord2), f'First Last: Full')
 
+    def testCleanNotDuplicate(self):
+        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.coord1.clean()
+
+    def testCleanDuplicate(self):
+        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.assertRaises(ValidationError, self.coord2.clean)
+
 class TestCoordinatorAdmin(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'

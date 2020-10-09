@@ -38,7 +38,7 @@ class Coordinator(CustomSaveDeleteModel):
 
         # Check only one global coordinator per permission and user
         if Coordinator.objects.filter(user=self.user, permissions=self.permissions, state=self.state).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('Already coordinator for this user and permission level'))
+            errors.append(ValidationError('Already coordinator for this user, permission level and state'))
 
         # Raise any errors
         if errors:
