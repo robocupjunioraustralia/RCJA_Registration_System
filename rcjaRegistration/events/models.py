@@ -574,6 +574,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
             if hasattr(self, attr):
                 return getattr(self, attr)
 
+    def __str__(self):
+        return str(self.childObject())
+
     def homeState(self):
         if self.school:
             return self.school.state

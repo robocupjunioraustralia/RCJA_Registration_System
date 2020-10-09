@@ -2,9 +2,9 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
-import uuid
 from django.utils.html import format_html
 from common.utils import formatFilesize
+from common.fields import UUIDFileField
 
 from rcjaRegistration.storageBackends import PrivateMediaStorage
 
@@ -21,13 +21,8 @@ class MentorEventAttendanceFile(models.Model):
 
     # Fields
 
-    # Banner image
-    def generateUUIDFilename(self, filename):
-        self.originalFileName = filename
-        extension = filename.rsplit('.', 1)[1]
-        newFilename = f'MentorFile_{str(uuid.uuid4())}.{extension}'
-        return newFilename
-    fileUpload = models.ImageField('File', storage=PrivateMediaStorage(), upload_to=generateUUIDFilename)
+    # File
+    fileUpload = UUIDFileField('File', storage=PrivateMediaStorage(), upload_prefix="MentorFile", original_filename_field="originalFileName")
     originalFileName = models.CharField('Original filename', max_length=300, editable=False)
 
     # *****Meta and clean*****
@@ -36,9 +31,10 @@ class MentorEventAttendanceFile(models.Model):
 
 
     # *****Permissions*****
-    # @classmethod
-    # def coordinatorPermissions(cls, level):
-    #     return eventCoordinatorViewPermissions(level)
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        from events.models import eventCoordinatorViewPermissions
+        return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
 
@@ -47,9 +43,7 @@ class MentorEventAttendanceFile(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        attendanceChildObject = self.eventAttendance.childObject()
-
-        return f"{str(attendanceChildObject)} {self.creationDateTime}"
+        return f"{str(self.eventAttendance)} {self.creationDateTime}"
 
     def filesize(self):
         return formatFilesize(self.fileUpload.size)
