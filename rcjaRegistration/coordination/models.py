@@ -72,9 +72,6 @@ class Coordinator(CustomSaveDeleteModel):
         if hasattr(self, 'previousUser',) and self.user != self.previousUser:
             Coordinator.updateUserPermissions(user=self.previousUser)
 
-    def postDelete(self):
-        Coordinator.updateUserPermissions(user=self.user)
-
     # *****Methods*****
 
     @classmethod
