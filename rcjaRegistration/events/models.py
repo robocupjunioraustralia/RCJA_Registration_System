@@ -577,6 +577,12 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
+    def childObject(self):
+        # Get team or workshop attendance object
+        for attr in ['team', 'workshopattendee']:
+            if hasattr(self, attr):
+                return getattr(self, attr)
+
     def homeState(self):
         if self.school:
             return self.school.state

@@ -46,8 +46,10 @@ class MentorEventAttendanceFile(models.Model):
 
     # *****Get Methods*****
 
-    # def __str__(self):
-    #     return str(self.year)
+    def __str__(self):
+        attendanceChildObject = self.eventAttendance.childObject()
+
+        return f"{str(attendanceChildObject)} {self.creationDateTime}"
 
     def filesize(self):
         return formatFilesize(self.fileUpload.size)
