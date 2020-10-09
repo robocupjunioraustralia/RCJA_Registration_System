@@ -10,13 +10,15 @@ from .models import *
 class MentorEventAttendanceFileAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
     list_display = [
         '__str__',
+        'eventAttendance',
         'uploadedBy',
     ]
 
     add_readonly_fields = [
     ]
     readonly_fields = [
-        'fileUpload'
+        'fileUpload',
+        'uploadedBy'
     ]
 
     autocomplete_fields = [

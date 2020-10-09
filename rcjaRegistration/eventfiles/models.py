@@ -10,9 +10,9 @@ from rcjaRegistration.storageBackends import PrivateMediaStorage
 
 # **********MODELS**********
 
-class MentorEventAttendanceFile(models.Model):
+class MentorEventAttendanceFile(SaveDeleteMixin, models.Model):
     # Foreign keys
-    eventAttendance = models.ForeignKey('events.BaseEventAttendance', verbose_name='Event Attendance', on_delete=models.PROTECT) # Not sure how to handle deletions. Ideally need to delete the file in S3.
+    eventAttendance = models.ForeignKey('events.BaseEventAttendance', verbose_name='Team/ attendee', on_delete=models.CASCADE)
     uploadedBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Uploaded by', on_delete=models.PROTECT, editable=False)
 
     # Creation and update time
@@ -37,6 +37,10 @@ class MentorEventAttendanceFile(models.Model):
         return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
+
+    def postDelete(self):
+        # Delete the actual file
+        self.fileUpload.delete(save=False)
 
     # *****Methods*****
 
