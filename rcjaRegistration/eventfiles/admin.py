@@ -15,6 +15,7 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
         '__str__',
         'eventAttendance',
         'event',
+        'fileType',
         'uploadedBy',
     ]
 
@@ -27,12 +28,26 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
         'filesize',
     ]
 
-    autocomplete_fields = [
-    ]
-
     list_filter = [
+        'fileType',
+        'eventAttendance__event',
     ]
     search_fields = [
+        'fileType__name',
+        'uploadedBy__first_name',
+        'uploadedBy__last_name',
+        'uploadedBy__email',
+        'eventAttendance__school__state__name',
+        'eventAttendance__school__state__abbreviation',
+        'eventAttendance__school__region__name',
+        'eventAttendance__school__name',
+        'eventAttendance__school__abbreviation',
+        'eventAttendance__campus__name',
+        'eventAttendance__mentorUser__first_name',
+        'eventAttendance__mentorUser__last_name',
+        'eventAttendance__mentorUser__email',
+        'eventAttendance__event__name',
+        'eventAttendance__division__name',
     ]
 
 
