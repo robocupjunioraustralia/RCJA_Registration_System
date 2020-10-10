@@ -215,6 +215,30 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
             QuestionResponseInline,
         ]
 
+    # Permissions
+
+    def has_change_permission(self, request, obj=None):
+        # Check parent permisisons
+        if not super().has_change_permission(request, obj=obj):
+            return False
+
+        # Only superuser can change or delete superusers
+        if obj and obj.is_superuser and not request.user.is_superuser:
+            return False
+        
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        # Check parent permisisons
+        if not super().has_delete_permission(request, obj=obj):
+            return False
+
+        # Only superuser can change or delete superusers
+        if obj and obj.is_superuser and not request.user.is_superuser:
+            return False
+        
+        return True
+
     # Actions
 
     def setForcePasswordChange(self, request, queryset):
