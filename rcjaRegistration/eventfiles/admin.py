@@ -6,8 +6,8 @@ from coordination.adminPermissions import AdminPermissions, InlineAdminPermissio
 from .models import *
 
 
-@admin.register(MentorEventAttendanceFile)
-class MentorEventAttendanceFileAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
+@admin.register(MentorEventFileUpload)
+class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
     list_display = [
         '__str__',
         'eventAttendance',

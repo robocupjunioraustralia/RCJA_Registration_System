@@ -10,7 +10,7 @@ from rcjaRegistration.storageBackends import PrivateMediaStorage
 
 # **********MODELS**********
 
-class MentorEventAttendanceFile(SaveDeleteMixin, models.Model):
+class MentorEventFileUpload(SaveDeleteMixin, models.Model):
     # Foreign keys
     eventAttendance = models.ForeignKey('events.BaseEventAttendance', verbose_name='Team/ attendee', on_delete=models.CASCADE)
     uploadedBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Uploaded by', on_delete=models.PROTECT, editable=False)
@@ -27,7 +27,7 @@ class MentorEventAttendanceFile(SaveDeleteMixin, models.Model):
 
     # *****Meta and clean*****
     class Meta:
-        verbose_name = "Mentor Event File"
+        verbose_name = "Mentor Event File Upload"
 
 
     # *****Permissions*****
@@ -38,6 +38,7 @@ class MentorEventAttendanceFile(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
+    # Need to handle bulk delete!!
     def postDelete(self):
         # Delete the actual file
         self.fileUpload.delete(save=False)
