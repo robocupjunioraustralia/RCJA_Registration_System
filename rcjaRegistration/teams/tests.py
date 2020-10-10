@@ -240,6 +240,52 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
         self.assertEqual(Team.objects.count(), numberTeams)
 
+class TestTeamDetails(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
+
+    def testOpenRegistrationDoesLoad(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "Viewing team test new team")
+
+    def testClosedRegistrationDoesLoad(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Viewing team test')
+
+    def testOpenRegistration_editButton(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href ="/teams/{self.newEventTeam.id}/edit"')
+
+    def testClosedRegistration_noEditButton(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertNotContains(response, "Edit")
+
+    def testOpenRegistration_editButton(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href = "/teams/{self.newEventTeam.id}/edit"')
+
+    def testClosedRegistration_noEditButton(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertNotContains(response, "Edit")
+
+    def testOpenRegistration_backEventButton(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href = "/events/{self.newEvent.id}')
+
+    def testClosedRegistration_backEventButton(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href = "/events/{self.oldEventWithTeams.id}')
+
 class TestTeamEdit(TestCase):
     def setUp(self):
         commonSetUp(self)
