@@ -50,6 +50,13 @@ class MentorEventFileUpload(SaveDeleteMixin, models.Model):
     def __str__(self):
         return f"{str(self.eventAttendance)} {self.creationDateTime}"
 
+    def event(self):
+        return self.eventAttendance.event
+    event.short_description = 'Event'
+    event.admin_order_field = 'eventAttendance__event'
+
+    # File methods
+
     def filesize(self):
         return formatFilesize(self.fileUpload.size)
     filesize.short_description = 'Size'

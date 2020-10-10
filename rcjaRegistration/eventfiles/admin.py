@@ -11,6 +11,7 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
     list_display = [
         '__str__',
         'eventAttendance',
+        'event',
         'uploadedBy',
     ]
 
@@ -18,7 +19,9 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
     ]
     readonly_fields = [
         'fileUpload',
-        'uploadedBy'
+        'event',
+        'uploadedBy',
+        'filesize',
     ]
 
     autocomplete_fields = [
