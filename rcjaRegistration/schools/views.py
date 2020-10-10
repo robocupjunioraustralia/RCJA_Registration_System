@@ -73,7 +73,7 @@ def details(request):
         School,
         Campus,
         form=CampusForm,
-        extra=2,
+        extra=0,
         can_delete=True
     )
 

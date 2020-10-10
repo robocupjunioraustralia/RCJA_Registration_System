@@ -82,42 +82,21 @@
                         <!-- Campus -->
                         <h1>Campuses</h1>
                         <p>Campuses can be used to ease the management of large schools. Each administrator can be assigned a campus and you can choose to be invoiced on a per campus basis.</p>
-                        <p>If you need to add more campuses save the form and then complete it again.</p>
+                        <div id = "form_set">
                         {% for campusForm in campusFormset %}
-                        {{campusForm.id|attr:"type:hidden"}}
-                        <div class="ui segment">
-                            <h4 class="ui dividing header">Campus {{forloop.counter}}</h4>
-                            {% if campusForm.errors %}
-                            <div class="ui message left-aligned-text">
-                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                                {{ campusForm.non_field_errors }}
-                                <ul>
-                                    {% for field in campusForm %}
-                                    {% if field.errors %}
-                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>
-                                    {% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-                            <div class="three fields">
-                                <div class="field">
-                                    <label> {{campusForm.name.label_tag}}</label>
-                                    {{campusForm.name}}
-                                </div>
-                                <div class="field">
-                                    <label> {{campusForm.postcode.label_tag}}</label>
-                                    {{campusForm.postcode}}
-                                </div>
-                                {% if campusFormset.can_delete %}
-                                <div class="field">
-                                    <label> Delete campus</label>
-                                    {{campusForm.DELETE}} <span>This will delete this campus.</span>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
+                        {% include 'schools/campusForm.html' %}
                         {% endfor %}
+                        </div>
+
+                        <!-- Add more campus forms -->
+                        <br>
+                        <input type="button" value="Add Another Campus" id="add_more" class="primary ui button right floated">
+                        <div id="empty_form" style="display:none">
+                        {% with campusFormset.empty_form as campusForm %}
+                        {% include 'schools/campusForm.html' %}
+                        {% endwith %}
+                        </div>
+                        <br>
 
                         <!-- Administrators -->
                         <h1>Administrators</h1>
@@ -220,5 +199,12 @@ function getCookie(name) {
     return (document.cookie.match('(^|;) *'+name+'=([^;]*)')||"")[2];
 }
 
+</script>
+<script>
+    $('#add_more').click(function() {
+      var form_idx = $('#id_campus_set-TOTAL_FORMS').val();
+      $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+      $('#id_campus_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+    });
 </script>
 {% endblock %}
