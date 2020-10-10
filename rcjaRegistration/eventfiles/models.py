@@ -2,6 +2,8 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+import datetime
+
 from django.utils.html import format_html
 from common.utils import formatFilesize
 from common.fields import UUIDFileField
@@ -93,7 +95,7 @@ class MentorEventFileUpload(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return f"{str(self.eventAttendance)} {self.creationDateTime}"
+        return f"{self.eventAttendance} - {self.event()}: {self.fileType} ({self.creationDateTime.strftime('%d/%m/%y %H:%M:%S')})"
 
     def event(self):
         return self.eventAttendance.event

@@ -7,13 +7,16 @@ from .models import *
 
 @admin.register(MentorEventFileType)
 class MentorEventFileTypeAdmin(AdminPermissions, admin.ModelAdmin):
-    pass
+    list_display = [
+        'name',
+        'maxFilesizeMB',
+        'allowedFileTypes',
+    ]
 
 @admin.register(MentorEventFileUpload)
 class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
     list_display = [
         '__str__',
-        'eventAttendance',
         'event',
         'fileType',
         'uploadedBy',
