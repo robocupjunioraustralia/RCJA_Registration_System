@@ -105,6 +105,10 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertEqual(200, response.status_code)
 
+    def testCancelButtonCorrectLink(self):
+        response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+        self.assertContains(response, f'href = "/events/{self.newEvent.id}"')
+
     def testClosedRegoReturnsError_get(self):
         response = self.client.get(reverse('teams:create', kwargs={'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 403)
@@ -245,7 +249,15 @@ class TestTeamEdit(TestCase):
     def testOpenEditDoesLoad(self):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
-  
+
+    def testCancelButtonCorrectLink_fromEvent(self):
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id})+ "?fromEvent")
+        self.assertContains(response, f'href = "/events/{self.newEvent.id}"')
+
+    def testCancelButtonCorrectLink_fromDetails(self):
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertContains(response, f'href = "/teams/{self.newEventTeam.id}"')
+
     def testClosedEditReturnsError_get(self):
         response = self.client.get(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}))
         self.assertEqual(403, response.status_code)
@@ -293,6 +305,7 @@ class TestTeamEdit(TestCase):
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(Student.objects.get(firstName="teststringhere").firstName,"teststringhere")
         self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
     def testMissingManagementFormData(self):
         payload = {
