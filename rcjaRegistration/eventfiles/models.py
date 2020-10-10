@@ -62,12 +62,14 @@ class MentorEventFileUpload(SaveDeleteMixin, models.Model):
     # Foreign keys
     eventAttendance = models.ForeignKey('events.BaseEventAttendance', verbose_name='Team/ attendee', on_delete=models.CASCADE)
     uploadedBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Uploaded by', on_delete=models.PROTECT, editable=False)
+    fileType = models.ForeignKey('eventfiles.MentorEventFileType', verbose_name='Type', on_delete=models.PROTECT)
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
+    comments = models.TextField('Comments', blank=True)
 
     # File
     fileUpload = UUIDFileField('File', storage=PrivateMediaStorage(), upload_prefix="MentorFile", original_filename_field="originalFileName")
