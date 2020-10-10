@@ -13,6 +13,13 @@ class UUIDFIeld:
         
         return filename
 
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        kwargs['upload_prefix'] = self.uploadPrefix
+        kwargs['original_filename_field'] = self.originalFilenameField
+        del kwargs["upload_to"]
+        return name, path, args, kwargs
+
 class UUIDFileField(UUIDFIeld, models.FileField):
 
     description = "UUID File Field"
