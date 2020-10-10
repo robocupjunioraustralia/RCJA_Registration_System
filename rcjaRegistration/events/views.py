@@ -154,7 +154,7 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
 
         # Check registrations open
-        if event.registrationsOpen():
+        if not event.registrationsOpen():
             raise PermissionDenied("Registration has closed for this event")
 
         if event.status != 'published':
