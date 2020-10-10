@@ -5,6 +5,9 @@ from coordination.adminPermissions import AdminPermissions, InlineAdminPermissio
 
 from .models import *
 
+@admin.register(MentorEventFileType)
+class MentorEventFileTypeAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
 
 @admin.register(MentorEventFileUpload)
 class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):

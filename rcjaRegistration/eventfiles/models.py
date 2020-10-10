@@ -6,9 +6,57 @@ from django.utils.html import format_html
 from common.utils import formatFilesize
 from common.fields import UUIDFileField
 
+from events.models import eventCoordinatorViewPermissions
+
 from rcjaRegistration.storageBackends import PrivateMediaStorage
 
 # **********MODELS**********
+
+class MentorEventFileType(models.Model):
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
+    # Fields
+    name = models.CharField('Name', max_length=60, unique=True)
+    description = models.CharField('Description', max_length=200, blank=True)
+    systemMaxFileSizeMB = 1000
+    maxFilesizeMB = models.PositiveIntegerField('Max file size (MB)', default=100)
+    allowedFileTypes = models.CharField('Allowed file types', max_length=200, help_text='Comma separated list allowed file types, leave blank for no restrictions', blank=True)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = "Mentor Event File Type"
+
+    def clean(self):
+        errors = []
+
+        if self.maxFilesizeMB > MentorEventFileType.systemMaxFileSizeMB:
+            errors.append(ValidationError("Max file size exceeds maximum allowed (1000MB)"))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        # Only superusers can edit file type
+        return eventCoordinatorViewPermissions(level)
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
 
 class MentorEventFileUpload(SaveDeleteMixin, models.Model):
     # Foreign keys
