@@ -23,7 +23,7 @@ def details(request, teamID):
     team = get_object_or_404(Team, pk=teamID)
 
     # Check administrator of this team
-    if eventAttendancePermissions(request, team):
+    if not eventAttendancePermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
     return render(request, 'teams/viewTeam.html', {'team':team})
