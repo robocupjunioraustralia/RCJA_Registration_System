@@ -54,7 +54,7 @@
             {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
             {% else %}
-            <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">Add team</button></a>
+            <a href="{% url 'teams:create' event.id %}?fromEvent"><button class="ui primary button">Add team</button></a>
             {% endif %}
         {% elif event.status == 'published' %}
         <h5> Registration for this event has closed. If you need to make modifications, please contact the event coordinator. </h5>
@@ -118,7 +118,7 @@
                 <td>
                     <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
                     {% if event.registrationsOpen %}
-                    <a href="{% url 'teams:edit' team.id %}"><button class="ui primary button">Edit</button></a>
+                    <a href="{% url 'teams:edit' team.id %}?fromEvent"><button class="ui primary button">Edit</button></a>
                     <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:details' team.id %}')" class="ui negative button">Delete</button>
                     {% endif %}
                 </td>

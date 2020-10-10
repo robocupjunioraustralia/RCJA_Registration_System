@@ -89,6 +89,9 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
                 if 'add_text' in request.POST and newTeam:
                     return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
 
+                elif not newTeam:
+                    return redirect(reverse('teams:details', kwargs = {"teamID":team.id}))
+
                 return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
         except ValidationError:
             # To catch missing management data
