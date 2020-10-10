@@ -83,7 +83,7 @@ def coordinatorEventDetailsPermissions(request, event):
     return checkStatePermissions(request, event, 'view')
 
 def mentorEventDetailsPermissions_currentEvent(request, event):
-    return event.status == 'published' and event.endDate >= datetime.date.today() and event.registrationsOpenDate <= datetime.date.today()
+    return event.status == 'published' and event.registrationsOpen()
 
 @login_required
 def details(request, eventID):
