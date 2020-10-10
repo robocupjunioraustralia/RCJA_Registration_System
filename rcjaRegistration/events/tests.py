@@ -280,6 +280,22 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertContains(response, 'test new team ind')
 
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+        self.team.delete()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'This event is unavailable', status_code=403)
+
+    def testCreationButtonsNotVisibleWhenRegoClosed(self):
+        self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertContains(response,'Registration for this event has closed.')
+        self.assertNotContains(response, 'Add team')
+
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
             name='School 2',
