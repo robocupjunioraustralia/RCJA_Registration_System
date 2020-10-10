@@ -109,6 +109,14 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertContains(response, f'href = "/events/{self.newEvent.id}"')
 
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
     def testClosedRegoReturnsError_get(self):
         response = self.client.get(reverse('teams:create', kwargs={'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 403)
@@ -293,6 +301,14 @@ class TestTeamEdit(TestCase):
     def testCancelButtonCorrectLink_fromDetails(self):
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertContains(response, f'href = "/teams/{self.newEventTeam.id}"')
+
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
 
     def testClosedEditReturnsError_get(self):
         response = self.client.get(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}))
