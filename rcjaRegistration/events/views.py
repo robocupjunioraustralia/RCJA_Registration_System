@@ -126,7 +126,6 @@ def details(request, eventID):
         'teams': teams,
         'workshopAttendees': workshopAttendees,
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
-        'today':datetime.date.today(),
         'billingTypeLabel': billingTypeLabel,
     }
     return render(request, 'events/details.html', context)   
