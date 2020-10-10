@@ -18,6 +18,7 @@ import datetime
 
 # Create your views here.
 
+@login_required
 def details(request, teamID):
     team = get_object_or_404(Team, pk=teamID)
 
