@@ -119,7 +119,7 @@
                     <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
                     {% if event.registrationsOpen %}
                     <a href="{% url 'teams:edit' team.id %}?fromEvent"><button class="ui primary button">Edit</button></a>
-                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:details' team.id %}')" class="ui negative button">Delete</button>
+                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
                     {% endif %}
                 </td>
             </tr>
