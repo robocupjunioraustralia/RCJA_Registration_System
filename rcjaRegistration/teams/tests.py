@@ -120,7 +120,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
     def testClosedRegoReturnsError_get(self):
         response = self.client.get(reverse('teams:create', kwargs={'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testWorkshopReturnsError_get(self):
         self.newEvent.eventType = 'workshop'
@@ -245,7 +245,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}),data=payload)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
         self.assertEqual(Team.objects.count(), numberTeams)
 
 class TestTeamDetails(TestCase):
@@ -313,7 +313,7 @@ class TestTeamEdit(TestCase):
     def testClosedEditReturnsError_get(self):
         response = self.client.get(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}))
         self.assertEqual(403, response.status_code)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testClosedEditReturnsError_post(self):
         payload = {
@@ -335,7 +335,7 @@ class TestTeamEdit(TestCase):
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}),data=payload)
 
         self.assertEqual(403, response.status_code)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testEditStudentSucceeds(self):
         payload = {
@@ -660,7 +660,7 @@ class TestTeamDelete(TestCase):
         
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
         Team.objects.get(pk=self.team1.pk)
 
 class TestTeamClean(TestCase):

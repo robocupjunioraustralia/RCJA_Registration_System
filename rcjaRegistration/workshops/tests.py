@@ -308,7 +308,7 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
     def testClosedRegoReturnsError_get(self):
         response = self.client.get(reverse('workshops:create', kwargs={'eventID':self.closedEvent.id}))
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testCompetitionReturnsError_get(self):
         self.event.eventType = 'competition'

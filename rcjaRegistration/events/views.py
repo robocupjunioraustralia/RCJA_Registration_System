@@ -155,7 +155,7 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
 
         # Check registrations open
         if event.registrationsOpen():
-            raise PermissionDenied("Registrtaion has closed for this event")
+            raise PermissionDenied("Registration has closed for this event")
 
         if event.status != 'published':
             raise PermissionDenied("Event is not published")
