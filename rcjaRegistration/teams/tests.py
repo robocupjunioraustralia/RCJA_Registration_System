@@ -259,16 +259,6 @@ class TestTeamDetails(TestCase):
     def testOpenRegistration_editButton(self):
         response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
-        self.assertContains(response, f'<a href ="/teams/{self.newEventTeam.id}/edit"')
-
-    def testClosedRegistration_noEditButton(self):
-        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
-        self.assertEqual(200, response.status_code)
-        self.assertNotContains(response, "Edit")
-
-    def testOpenRegistration_editButton(self):
-        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
-        self.assertEqual(200, response.status_code)
         self.assertContains(response, f'<a href = "/teams/{self.newEventTeam.id}/edit"')
 
     def testClosedRegistration_noEditButton(self):
