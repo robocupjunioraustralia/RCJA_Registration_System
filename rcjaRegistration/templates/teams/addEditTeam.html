@@ -112,7 +112,7 @@
               <div id = "form_set">
               {% for studentform in formset %}
                 {{studentform.id|attr:"type:hidden"}}
-                {% include 'teams/studentForm.html' with studentNumber="{{forloop.counter}}" %}
+                {% include 'teams/studentForm.html' %}
                 {% endfor %}
               </div>
 
@@ -121,7 +121,7 @@
               <input type="button" value="Add Another Student" id="add_more" class="primary ui button right floated" style="display: none">
               <div id="empty_form" style="display:none">
                 {% with formset.empty_form as studentform %}
-                {% include 'teams/studentForm.html' with studentNumber="" %}
+                {% include 'teams/studentForm.html' %}
                 {% endwith %}
               </div>
               <br>
