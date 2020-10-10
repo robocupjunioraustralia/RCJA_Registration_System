@@ -88,6 +88,10 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     def get_readonly_fields(self, request, obj):
         readonly_fields = super().get_readonly_fields(request, obj)
 
+        # Don't allow creating new global state if one already exists
+        if State.objects.filter(typeGlobal=True).exclude(id=obj.id if obj is not None else None).exists():
+            readonly_fields = readonly_fields + ['typeGlobal']
+
         if obj is None:
             return readonly_fields
 
@@ -96,6 +100,8 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal', 'typeWebsite']
         elif obj.typeRegistration:
             readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal']
+        elif obj.typeGlobal:
+            readonly_fields = readonly_fields + ['typeRegistration']
 
         return readonly_fields
 
