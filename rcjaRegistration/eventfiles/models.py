@@ -58,7 +58,7 @@ class MentorEventFileType(models.Model):
     # *****Email methods*****
 
 
-class MentorEventFileUpload(SaveDeleteMixin, models.Model):
+class MentorEventFileUpload(models.Model):
     # Foreign keys
     eventAttendance = models.ForeignKey('events.BaseEventAttendance', verbose_name='Team/ attendee', on_delete=models.CASCADE)
     uploadedBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Uploaded by', on_delete=models.PROTECT, editable=False)
@@ -87,11 +87,6 @@ class MentorEventFileUpload(SaveDeleteMixin, models.Model):
         return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
-
-    # Need to handle bulk delete!!
-    def postDelete(self):
-        # Delete the actual file
-        self.fileUpload.delete(save=False)
 
     # *****Methods*****
 
