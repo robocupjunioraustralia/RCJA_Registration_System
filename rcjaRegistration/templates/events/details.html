@@ -101,7 +101,7 @@
             <th> Division</th>
             {% if showCampusColumn %}<th>Campus</th>{% endif %}
             <th>Students</th>
-            {% if event.registrationsCloseDate >= today %}<th>Actions</th>{% endif %}
+            <th>Actions</th>
         </thead>
         <tbody>
             {% for team in teams %}
@@ -115,12 +115,13 @@
                     {% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 </td>
-                {% if event.registrationsCloseDate >= today %}
                 <td>
-                    <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">Edit/View Details</button></a>
+                    <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
+                    {% if event.registrationsCloseDate >= today %}
+                    <a href="{% url 'teams:edit' team.id %}"><button class="ui primary button">Edit</button></a>
                     <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:details' team.id %}')" class="ui negative button">Delete</button>
+                    {% endif %}
                 </td>
-                {% endif %}
             </tr>
             {% endfor %}
         </tbody>

@@ -12,11 +12,20 @@ from .forms import TeamForm, StudentForm
 from .models import Student, Team
 from events.models import Event
 
-from events.views import CreateEditBaseEventAttendance
+from events.views import CreateEditBaseEventAttendance, eventAttendancePermissions
 
 import datetime
 
 # Create your views here.
+
+def details(request, teamID):
+    team = get_object_or_404(Team, pk=teamID)
+
+    # Check administrator of this team
+    if team and not eventAttendancePermissions(request, team):
+        raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+    return render(request, 'teams/viewTeam.html', {'team':team})
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
