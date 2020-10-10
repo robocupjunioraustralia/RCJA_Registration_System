@@ -690,3 +690,214 @@ class TestUserAdminInlinesAndFields(TestCase):
         self.assertNotContains(response, '<input type="checkbox" name="is_active"')
         self.assertNotContains(response, '<input type="checkbox" name="is_staff"')
         self.assertNotContains(response, '<input type="checkbox" name="is_superuser"')
+
+def adminPermissionsSetUp(self):
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
+
+    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, homeState=self.state1, is_staff=True, is_superuser=True)
+    self.usersuper2 = User.objects.create_user(email=self.emaulsuper2, password=self.password, homeState=self.state2, is_staff=True, is_superuser=True)
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password, homeState=self.state1)
+    self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
+    
+    self.coord1 = Coordinator.objects.create(user=self.user1, permissions='full', position='Thing')
+
+class TestUserAdminPermissions(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    emailsuper = 'user4@user.com'
+    emaulsuper2 = 'user3@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        adminPermissionsSetUp(self)
+
+    # Change load - same state
+
+    def testSuperuserChangeLoads_sameState_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertContains(response, 'Delete')
+
+    def testNonsuperuserChangeLoads_sameState_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertContains(response, 'Delete')
+
+    def testSuperuserChangeLoads_readonly_sameState_fullcoordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, 'View user')
+        self.assertNotContains(response, 'Change user')
+
+        self.assertNotContains(response, 'Save')
+        self.assertNotContains(response, 'Delete')
+
+    def testNonsuperuserChangeLoads_sameState_fullcoordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertNotContains(response, 'Delete')
+
+    # Change load - different state
+
+    def testSuperuserChangeLoads_differentState_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertContains(response, 'Delete')
+
+    def testNonsuperuserChangeLoads_differentState_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertContains(response, 'Delete')
+
+    def testSuperuserChangeLoads_denied_differentState_statecoordinator(self):
+        self.coord1.state = self.state1
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def testNonsuperuserChangeLoads_denied_differentState_statecoordinator(self):
+        self.coord1.state = self.state1
+        self.coord1.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def testSuperuserChangeLoads_denied_differentState_fullcoordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, 'View user')
+        self.assertNotContains(response, 'Change user')
+
+        self.assertNotContains(response, 'Save')
+        self.assertNotContains(response, 'Delete')
+
+    def testNonsuperuserChangeLoads_denied_differentState_fullcoordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertNotContains(response, 'Delete')
+
+    # Change load - no state
+
+    def testSuperuserChangeLoads_noState_superuser(self):
+        self.usersuper2.homeState = None
+        self.usersuper2.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertContains(response, 'Delete')
+
+    def testNonsuperuserChangeLoads_noState_superuser(self):
+        self.user2.homeState = None
+        self.user2.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
+
+        self.assertContains(response, 'Save')
+        self.assertContains(response, 'Delete')
+
+    def testSuperuserChangeLoads_readonly_noState_fullcoordinator(self):
+        self.usersuper2.homeState = None
+        self.usersuper2.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.usersuper2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, 'View user')
+        self.assertNotContains(response, 'Change user')
+
+        self.assertNotContains(response, 'Save')
+        self.assertNotContains(response, 'Delete')
+
+
+    def testNonsuperuserChangeLoads_readonly_noState_fullcoordinator(self):
+        self.user2.homeState = None
+        self.user2.save()
+
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, 'View user')
+        self.assertNotContains(response, 'Change user')
+
+        self.assertNotContains(response, 'Save')
+        self.assertNotContains(response, 'Delete')
+
+
+    # Password change load
+
+    def testSuperuserPasswordchangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:auth_user_password_change', args=(self.usersuper.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testNonsuperuserPasswordchangeLoads_superuser(self):
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:auth_user_password_change', args=(self.user1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+    def testSuperuserPasswordchangeLoads_readonly_fullcoordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:auth_user_password_change', args=(self.usersuper.id,)))
+        self.assertEqual(response.status_code, 403)
+
+    def testNonsuperuserPasswordchangeLoads_fullcoordinator(self):
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        response = self.client.get(reverse('admin:auth_user_password_change', args=(self.user1.id,)))
+        self.assertEqual(response.status_code, 200)

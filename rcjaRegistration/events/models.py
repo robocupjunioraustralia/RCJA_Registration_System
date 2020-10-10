@@ -2,6 +2,8 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+import datetime
+
 from django.utils.html import format_html
 from common.utils import formatFilesize
 from common.fields import UUIDImageField
@@ -352,6 +354,9 @@ class Event(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def registrationsOpen(self):
+        return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
 
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()

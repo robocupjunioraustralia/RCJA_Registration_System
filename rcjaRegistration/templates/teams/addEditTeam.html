@@ -112,7 +112,7 @@
               <div id = "form_set">
               {% for studentform in formset %}
                 {{studentform.id|attr:"type:hidden"}}
-                {% include 'teams/studentForm.html' with studentNumber="{{forloop.counter}}" %}
+                {% include 'teams/studentForm.html' %}
                 {% endfor %}
               </div>
 
@@ -121,7 +121,7 @@
               <input type="button" value="Add Another Student" id="add_more" class="primary ui button right floated" style="display: none">
               <div id="empty_form" style="display:none">
                 {% with formset.empty_form as studentform %}
-                {% include 'teams/studentForm.html' with studentNumber="" %}
+                {% include 'teams/studentForm.html' %}
                 {% endwith %}
               </div>
               <br>
@@ -130,8 +130,12 @@
               <input class="primary ui button" type="submit" value="Save" />
               {% if not team %}
               <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
-              {% endif %}    
-              <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% endif %}
+              {% if 'fromEvent' in request.GET or not team %}
+              <a href = "{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% else %}
+              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% endif %}
             </form>
           </div>
         </div>
