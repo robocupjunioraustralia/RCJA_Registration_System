@@ -50,7 +50,7 @@
     </div><br>
 
     <div class="row">
-        {% if event.registrationsCloseDate >= today and event.status == 'published' %}
+        {% if event.registrationsOpen and event.status == 'published' %}
             {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
             {% else %}
@@ -73,7 +73,7 @@
                 <th>Type</th>
                 <th> Division</th>
                 {% if showCampusColumn %}<th>Campus</th>{% endif %}
-                {% if event.registrationsCloseDate >= today %}<th>Actions</th>{% endif %}
+                {% if event.registrationsOpen %}<th>Actions</th>{% endif %}
             </thead>
             <tbody>
                 {% for workshopAttendee in workshopAttendees %}
@@ -82,7 +82,7 @@
                     <td>{{workshopAttendee.attendeeType}}</td>
                     <td>{{workshopAttendee.division}}</td>
                     {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
-                    {% if event.registrationsCloseDate >= today %}
+                    {% if event.registrationsOpen %}
                     <td>
                         <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
                         <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
@@ -101,7 +101,7 @@
             <th> Division</th>
             {% if showCampusColumn %}<th>Campus</th>{% endif %}
             <th>Students</th>
-            {% if event.registrationsCloseDate >= today %}<th>Actions</th>{% endif %}
+            <th>Actions</th>
         </thead>
         <tbody>
             {% for team in teams %}
@@ -115,12 +115,13 @@
                     {% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 </td>
-                {% if event.registrationsCloseDate >= today %}
                 <td>
-                    <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">Edit/View Details</button></a>
-                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:details' team.id %}')" class="ui negative button">Delete</button>
+                    <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
+                    {% if event.registrationsOpen %}
+                    <a href="{% url 'teams:edit' team.id %}?fromEvent"><button class="ui primary button">Edit</button></a>
+                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
+                    {% endif %}
                 </td>
-                {% endif %}
             </tr>
             {% endfor %}
         </tbody>

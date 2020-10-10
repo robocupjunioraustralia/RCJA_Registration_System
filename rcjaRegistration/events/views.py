@@ -83,7 +83,7 @@ def coordinatorEventDetailsPermissions(request, event):
     return checkStatePermissions(request, event, 'view')
 
 def mentorEventDetailsPermissions_currentEvent(request, event):
-    return event.status == 'published' and event.endDate >= datetime.date.today() and event.registrationsOpenDate <= datetime.date.today()
+    return event.status == 'published' and event.registrationsOpen()
 
 @login_required
 def details(request, eventID):
@@ -126,7 +126,6 @@ def details(request, eventID):
         'teams': teams,
         'workshopAttendees': workshopAttendees,
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
-        'today':datetime.date.today(),
         'billingTypeLabel': billingTypeLabel,
     }
     return render(request, 'events/details.html', context)   
@@ -155,8 +154,8 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
 
         # Check registrations open
-        if event.registrationsCloseDate < datetime.datetime.now().date():
-            raise PermissionDenied("Registrtaion has closed for this event")
+        if not event.registrationsOpen():
+            raise PermissionDenied("Registration has closed for this event")
 
         if event.status != 'published':
             raise PermissionDenied("Event is not published")

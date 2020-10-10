@@ -216,6 +216,15 @@ class TestEventDetailsPage_school(TestCase):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertContains(response, 'test new team')
 
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+        self.newEventTeam.delete()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'This event is unavailable', status_code=403)
+
     def testOldEventPermissionDenied(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 403)
@@ -225,6 +234,11 @@ class TestEventDetailsPage_school(TestCase):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertNotContains(response,'Registration for this event has closed.')
         self.assertContains(response, 'Add team')
+
+    def testCreationButtonsNotVisibleWhenRegoClosed(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertContains(response,'Registration for this event has closed.')
+        self.assertNotContains(response, 'Add team')
 
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
@@ -266,6 +280,22 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
         self.assertContains(response, 'test new team ind')
 
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+        self.team.delete()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'This event is unavailable', status_code=403)
+
+    def testCreationButtonsNotVisibleWhenRegoClosed(self):
+        self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertContains(response,'Registration for this event has closed.')
+        self.assertNotContains(response, 'Add team')
+
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
             name='School 2',
@@ -294,6 +324,43 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
 
         for team in response.context['teams']:
             assert team.school is None and team.mentorUser == self.user, 'No permission to view this team'
+
+class TestEventDetailsPage_superuser(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.user.is_superuser = True
+        self.user.save()
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
+    def testPageLoad(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/details.html')
+
+    def testEventTitlePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new yes reg')
+
+    def testTeamNamePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new team')
+
+    def testNotPublishedLoad(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+        self.newEventTeam.delete()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Event is not published.')
+
+    def testOldEventLoad(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
+        self.assertEqual(response.status_code, 200)
 
 class TestEventClean(TestCase):
     def setUp(self):
