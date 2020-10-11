@@ -7,8 +7,11 @@ class UUIDFIeld:
             setattr(obj, self.originalFilenameField, filename)
 
         if self.uploadPrefix is not None:
-            extension = filename.rsplit('.', 1)[1]
-            newFilename = f'{self.uploadPrefix}s/{self.uploadPrefix}_{str(uuid.uuid4())}.{extension}'
+            try:
+                extension = f".{filename.rsplit('.', 1)[1]}"
+            except IndexError:
+                extension = ''
+            newFilename = f'{self.uploadPrefix}s/{self.uploadPrefix}_{str(uuid.uuid4())}{extension}'
             return newFilename
         
         return filename
