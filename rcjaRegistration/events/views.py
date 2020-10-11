@@ -82,7 +82,7 @@ def coordinatorEventDetailsPermissions(request, event):
     from coordination.adminPermissions import checkStatePermissions
     return checkStatePermissions(request, event, 'view')
 
-def mentorEventDetailsPermissions_currentEvent(request, event):
+def mentorEventRegistrablePermissions(request, event):
     return event.published() and event.registrationsOpen()
 
 @login_required
@@ -102,7 +102,7 @@ def details(request, eventID):
             'event': event,
         }
 
-    if not (coordinatorEventDetailsPermissions(request, event) or mentorEventDetailsPermissions_currentEvent(request, event) or BaseEventAttendance.objects.filter(**filterDict).exists()):
+    if not (coordinatorEventDetailsPermissions(request, event) or mentorEventRegistrablePermissions(request, event) or BaseEventAttendance.objects.filter(**filterDict).exists()):
         raise PermissionDenied("This event is unavailable")
 
     # Filter team or workshop attendee
@@ -134,7 +134,7 @@ def details(request, eventID):
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 
 
-def eventAttendancePermissions(request, eventAttendance):
+def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     if request.user.currentlySelectedSchool:
         # If user is a school administrator can only edit the currently selected school
         if request.user.currentlySelectedSchool != eventAttendance.school:
@@ -161,7 +161,7 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
             raise PermissionDenied("Event is not published")
 
         # Check administrator of this obj
-        if obj and not eventAttendancePermissions(request, obj):
+        if obj and not mentorEventAttendanceAccessPermissions(request, obj):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
     def delete(self, request, objID):
