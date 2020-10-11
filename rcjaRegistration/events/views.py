@@ -169,7 +169,7 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
             raise PermissionDenied("Registration has closed for this event")
 
         # Check event is published
-        if event.status != 'published':
+        if event.published():
             raise PermissionDenied("Event is not published")
 
         # Check administrator of this obj
