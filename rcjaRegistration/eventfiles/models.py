@@ -90,7 +90,6 @@ class EventAvailableFileType(models.Model):
     def getState(self):
         return self.event.state
 
-
     # *****Save & Delete Methods*****
 
     # *****Methods*****
