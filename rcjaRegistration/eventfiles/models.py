@@ -9,7 +9,7 @@ from django.utils.html import format_html
 from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDFileField
 
-from events.models import eventCoordinatorViewPermissions
+from events.models import eventCoordinatorViewPermissions, eventCoordinatorEditPermisisons
 
 from rcjaRegistration.storageBackends import PrivateMediaStorage
 
@@ -58,6 +58,47 @@ class MentorEventFileType(models.Model):
 
     def __str__(self):
         return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
+class EventAvailableFileType(models.Model):
+    # Foreign keys
+    event = models.ForeignKey('events.Event', verbose_name='Event', on_delete=models.CASCADE)
+    fileType = models.ForeignKey('eventfiles.MentorEventFileType', verbose_name='Type', on_delete=models.PROTECT)
+
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+
+    # Fields
+    uploadDeadline = models.DateTimeField('Upload deadline')
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = "Event Available File Type"
+        unique_together = ('event', 'fileType')
+
+    # *****Permissions*****
+    @classmethod
+    def coordinatorPermissions(cls, level):
+        # Only superusers can edit file type
+        return eventCoordinatorEditPermisisons(level)
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.event.state
+
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return f"{self.event}: {self.fileType}"
 
     # *****CSV export methods*****
 
