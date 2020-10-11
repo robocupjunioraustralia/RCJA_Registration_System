@@ -358,6 +358,9 @@ class Event(CustomSaveDeleteModel):
     def registrationsOpen(self):
         return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
 
+    def published(self):
+        return self.status == 'published'
+
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
     directEnquiriesToName.short_description = 'Direct enquiries to'
