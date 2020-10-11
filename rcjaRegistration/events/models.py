@@ -5,7 +5,7 @@ from django.conf import settings
 import datetime
 
 from django.utils.html import format_html
-from common.utils import formatFilesize
+from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDImageField
 
 from rcjaRegistration.storageBackends import PublicMediaStorage
@@ -174,7 +174,7 @@ class Venue(models.Model):
     # Image methods
 
     def venueImageFilesize(self):
-        return formatFilesize(self.venueImage.size)
+        return filesizeformat(self.venueImage.size)
     venueImageFilesize.short_description = 'Size'
 
     def venueImageTag(self):
@@ -392,7 +392,7 @@ class Event(CustomSaveDeleteModel):
     effectiveBannerImageTag.short_description = 'Preview'
 
     def bannerImageFilesize(self):
-        return formatFilesize(self.eventBannerImage.size)
+        return filesizeformat(self.eventBannerImage.size)
     bannerImageFilesize.short_description = 'Size'
 
     def __str__(self):

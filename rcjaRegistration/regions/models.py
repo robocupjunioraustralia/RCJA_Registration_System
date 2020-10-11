@@ -3,7 +3,7 @@ from common.models import *
 from django.conf import settings
 
 from django.utils.html import format_html
-from common.utils import formatFilesize
+from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDImageField
 
 from rcjaRegistration.storageBackends import PublicMediaStorage
@@ -91,7 +91,7 @@ class State(CustomSaveDeleteModel):
     # Image methods
 
     def defaultEventImageFilesize(self):
-        return formatFilesize(self.defaultEventImage.size)
+        return filesizeformat(self.defaultEventImage.size)
     defaultEventImageFilesize.short_description = 'Size'
 
     def defaultEventImageTag(self):

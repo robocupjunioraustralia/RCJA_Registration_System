@@ -5,7 +5,7 @@ from django.conf import settings
 import datetime
 
 from django.utils.html import format_html
-from common.utils import formatFilesize
+from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDFileField
 
 from events.models import eventCoordinatorViewPermissions
@@ -59,7 +59,6 @@ class MentorEventFileType(models.Model):
 
     # *****Email methods*****
 
-
 class MentorEventFileUpload(models.Model):
     # Foreign keys
     eventAttendance = models.ForeignKey('events.BaseEventAttendance', verbose_name='Team/ attendee', on_delete=models.CASCADE)
@@ -105,7 +104,7 @@ class MentorEventFileUpload(models.Model):
     # File methods
 
     def filesize(self):
-        return formatFilesize(self.fileUpload.size)
+        return filesizeformat(self.fileUpload.size)
     filesize.short_description = 'Size'
 
     # *****CSV export methods*****
