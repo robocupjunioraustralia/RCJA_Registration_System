@@ -22,6 +22,10 @@ import datetime
 def details(request, teamID):
     team = get_object_or_404(Team, pk=teamID)
 
+    # Check event is published
+    if team.event.status != 'published':
+        raise PermissionDenied("Event is not published")
+
     # Check administrator of this team
     if not mentorEventAttendanceAccessPermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
