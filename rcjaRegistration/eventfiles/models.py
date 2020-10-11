@@ -73,7 +73,7 @@ class EventAvailableFileType(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
-    uploadDeadline = models.DateTimeField('Upload deadline')
+    uploadDeadline = models.DateField('Upload deadline')
 
     # *****Meta and clean*****
     class Meta:
