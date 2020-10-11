@@ -1,5 +1,6 @@
 from django.db import models
-from common.models import *
+from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
+from django.core.exceptions import ValidationError
 from django.conf import settings
 
 import datetime
@@ -52,6 +53,9 @@ class MentorEventFileType(models.Model):
 
     # *****Get Methods*****
 
+    def maxFilesizeBytes(self):
+        return self.maxFilesizeMB * 2**20
+
     def __str__(self):
         return self.name
 
@@ -80,6 +84,27 @@ class MentorEventFileUpload(models.Model):
     class Meta:
         verbose_name = "Mentor Event File Upload"
 
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['eventAttendance', 'fileType', 'fileUpload'])
+
+        # Check allowed file extension
+        # Empty list means no restriction
+        try:
+            extension = self.fileUpload.name.rsplit('.', 1)[1]
+        except IndexError:
+            raise ValidationError("File must have a filetype")
+        if self.fileType.allowedFileTypes and extension not in self.fileType.allowedFileTypes:
+            errors.append(ValidationError(f'File not of allowed type, must be: {self.fileType.allowedFileTypes}'))
+
+        # Check within size limit
+        if self.fileUpload.size > self.fileType.maxFilesizeBytes():
+            errors.append(ValidationError(f'File must be less than {filesizeformat(self.fileType.maxFilesizeBytes())}. Current filesize is {filesizeformat(self.fileUpload.size)}.'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
