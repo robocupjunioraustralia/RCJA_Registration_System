@@ -53,11 +53,13 @@ def dashboard(request):
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
+        status="published",
     ).distinct().order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
+        status="published",
     ).order_by('-startDate').distinct()
 
     # Invoices
@@ -82,8 +84,17 @@ def coordinatorEventDetailsPermissions(request, event):
     from coordination.adminPermissions import checkStatePermissions
     return checkStatePermissions(request, event, 'view')
 
-def mentorEventRegistrablePermissions(request, event):
-    return event.published() and event.registrationsOpen()
+def eventDetailsPermissions(request, event, filterDict):
+    if coordinatorEventDetailsPermissions(request, event):
+        return True
+
+    if event.published() and event.registrationsOpen():
+        return True
+
+    if event.published() and BaseEventAttendance.objects.filter(**filterDict).exists():
+        return True
+
+    return False
 
 @login_required
 def details(request, eventID):
@@ -102,7 +113,7 @@ def details(request, eventID):
             'event': event,
         }
 
-    if not (coordinatorEventDetailsPermissions(request, event) or mentorEventRegistrablePermissions(request, event) or BaseEventAttendance.objects.filter(**filterDict).exists()):
+    if not eventDetailsPermissions(request, event, filterDict):
         raise PermissionDenied("This event is unavailable")
 
     # Filter team or workshop attendee
@@ -157,6 +168,7 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if not event.registrationsOpen():
             raise PermissionDenied("Registration has closed for this event")
 
+        # Check event is published
         if event.status != 'published':
             raise PermissionDenied("Event is not published")
 
