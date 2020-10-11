@@ -13,6 +13,10 @@ class MentorEventFileTypeAdmin(AdminPermissions, admin.ModelAdmin):
         'allowedFileTypes',
     ]
 
+class EventAvailableFileTypeInline(InlineAdminPermissions, admin.TabularInline):
+    model = EventAvailableFileType
+    extra = 0
+
 @admin.register(MentorEventFileUpload)
 class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
     list_display = [

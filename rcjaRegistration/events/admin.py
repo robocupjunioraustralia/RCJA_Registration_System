@@ -7,6 +7,7 @@ from django import forms
 from .models import *
 from regions.models import State
 from schools.models import Campus
+from eventfiles.admin import EventAvailableFileTypeInline
 
 # Register your models here.
 
@@ -260,6 +261,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     inlines = [
         AvailableDivisionInline,
+        EventAvailableFileTypeInline,
     ]
     add_inlines = [ # Don't include available divisions here so the divisions will be filtered when shown
     ]
