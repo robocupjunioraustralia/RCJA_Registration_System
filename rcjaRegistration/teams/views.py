@@ -4,8 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.urls import reverse
-from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import TeamForm, StudentForm
 
@@ -13,8 +11,6 @@ from .models import Student, Team
 from events.models import Event
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
-
-import datetime
 
 # Create your views here.
 
