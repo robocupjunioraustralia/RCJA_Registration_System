@@ -31,6 +31,8 @@ env = environ.Env(
     DEV_SETTINGS=(bool, False),
 )
 
+assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
