@@ -6,75 +6,80 @@
 <title> Upload file </title>
 
 <style type="text/css">
-  body {
-    background-color: white;
-  }
-  .column {
-    max-width: 100%;
-  }
+    body {
+        background-color: white;
+    }
 
-  .formbox {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  }
-  .bg {
-      /* Full height */
-    height: 100%; 
-    width:auto;
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    /*background-color: #CCE2FF;*/
-  }
-  .left-aligned-text {
-  text-align: left;
-}
+    .column {
+        max-width: 100%;
+    }
+
+    .formbox {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+
+    .bg {
+        /* Full height */
+        height: 100%;
+        width: auto;
+        /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        /*background-color: #CCE2FF;*/
+    }
+
+    .left-aligned-text {
+        text-align: left;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 
 <div class="bg">
-  <div class = "">
-    <div class="ui center aligned grid ">
-      <div class = "twelve wide mobile eight wide computer column ui">
-        <div class = "form form-group left-aligned-text">
-          <div>
-            <h1>{{eventAttendance.event}}: Viewing team {{eventAttendance}}</h1>
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile eight wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    <div>
+                        <h1>{{eventAttendance.event}}: Viewing team {{eventAttendance}}</h1>
 
-            <h2>Upload a new file</h2>
+                        <h2>Upload a new file</h2>
 
-            <h3>File upload categories</h3>
+                        <h3>File upload categories</h3>
 
-            <table id="categoriesTable" class="ui celled table">
-                <thead>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Max file size</th>
-                    <th>Allowed file types</th>
-                    <th>Upload deadline</th>
-                </thead>
-                <tbody>
-                    {% for availableFileUploadType in availableFileUploadTypes %}
-                    <tr id="fileRow{{uploadedFile.id}}">
-                        <td>{{availableFileUploadType.fileType.name}}</td>
-                        <td>{{availableFileUploadType.fileType.description}}</td>
-                        <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
-                        <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}</td>
-                        <td>{{availableFileUploadType.uploadDeadline}}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-              </table>
+                        <table id="categoriesTable" class="ui celled table">
+                            <thead>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Max file size</th>
+                                <th>Allowed file types</th>
+                                <th>Upload deadline</th>
+                            </thead>
+                            <tbody>
+                                {% for availableFileUploadType in availableFileUploadTypes %}
+                                <tr id="fileRow{{uploadedFile.id}}">
+                                    <td>{{availableFileUploadType.fileType.name}}</td>
+                                    <td>{{availableFileUploadType.fileType.description}}</td>
+                                    <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
+                                    <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}
+                                    </td>
+                                    <td>{{availableFileUploadType.uploadDeadline}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
 
-            <a href = "{% url 'teams:details' eventAttendance.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                        <a href="{% url 'teams:details' eventAttendance.id %}" class="ui button negative"
+                            style="margin-top:1rem;">Cancel</a>
 
 
 
-          </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock %}
