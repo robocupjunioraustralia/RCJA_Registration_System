@@ -36,5 +36,6 @@ urlpatterns = [
     path('',include('workshops.urls')),
     path('',include('users.urls')),
     path('',include('invoices.urls')),
+    path('',include('eventfiles.urls')),
     # path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index'),   
 ]
