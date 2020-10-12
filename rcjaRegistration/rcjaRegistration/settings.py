@@ -268,14 +268,8 @@ if STATIC_BUCKET != 'STATIC_BUCKET' and AWS_ACCESS_KEY_ID != 'AWS_ACCESS_KEY_ID'
     STATICFILES_STORAGE = 'rcjaRegistration.storageBackends.StaticStorage'
     STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_BUCKET}/"
 else:
-    TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
     STATIC_URL = '/static/'
-    STATICFILES_STORAGE = (
-        'django.contrib.staticfiles.storage.StaticFilesStorage'
-        if TESTING
-        else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-    )
-
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Public
 PUBLIC_BUCKET = env('PUBLIC_BUCKET')
