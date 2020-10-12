@@ -160,7 +160,7 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     return True
 
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
-    def common(self, request, event, obj):
+    def common(self, request, event, eventAttendance):
         # Check is correct event type
         if event.eventType != self.eventType:
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
@@ -173,8 +173,8 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if not event.published():
             raise PermissionDenied("Event is not published")
 
-        # Check administrator of this obj
-        if obj and not mentorEventAttendanceAccessPermissions(request, obj):
+        # Check administrator of this eventAttendance
+        if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
     def delete(self, request, objID):
