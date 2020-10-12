@@ -23,7 +23,7 @@ jobs:
         docker-compose exec -T web flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        docker-compose exec -T web coverage run --source='.' manage.py test --settings=rcjaRegistration.test
+        docker-compose exec -T web coverage run --source='.' manage.py test --settings=rcjaRegistration.settings_test
         #pip install pytest
         #pytest
     - name: Generate code coverage report
