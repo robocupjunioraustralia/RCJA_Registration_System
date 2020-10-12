@@ -576,11 +576,15 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
-    def childObject(self):
-        # Get team or workshop attendance object
+    def eventAttendanceType(self):
+        # Returns type of eventAttendance. e.g. team, workshopattendee
         for attr in ['team', 'workshopattendee']:
             if hasattr(self, attr):
-                return getattr(self, attr)
+                return attr
+
+    def childObject(self):
+        # Get team or workshop attendance object for this eventAttendee
+        return getattr(self, self.eventAttendanceType())
 
     def __str__(self):
         return str(self.childObject())
