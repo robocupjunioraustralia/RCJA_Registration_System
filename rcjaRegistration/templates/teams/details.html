@@ -106,7 +106,7 @@
             {% endif %}
             {% if availableFileUploadTypes %}
             <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
-            <br><br>
+
             <h3>File upload categories:</h3>
             <ul>
               {% for availableFileUploadType in availableFileUploadTypes %}

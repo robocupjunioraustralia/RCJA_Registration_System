@@ -13,6 +13,8 @@ from events.models import BaseEventAttendance
 
 from events.views import mentorEventAttendanceAccessPermissions
 
+from .forms import MentorEventFileUploadForm
+
 import datetime
 
 
@@ -66,11 +68,10 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         # Check upload permissions
         self.uploadPermissions(request, eventAttendance)
 
-        availableFileUploadTypes = eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
-
         context = {
             "eventAttendance": eventAttendance,
-            "availableFileUploadTypes": availableFileUploadTypes,
+            "availableFileUploadTypes": eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()),
+            "form": MentorEventFileUploadForm(eventAttendance=eventAttendance),
         }
 
         return render(request, 'eventfiles/uploadMentorEventFile.html', context)
@@ -85,6 +86,30 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
 
         # Check upload permissions
         self.uploadPermissions(request, eventAttendance)
+
+        # Get form and check if valid
+        form = MentorEventFileUploadForm(request.POST, request.FILES, eventAttendance=eventAttendance)
+
+        if form.is_valid():
+            # Create team object but don't save so can set foreign keys
+            uploadedFile = form.save(commit=False)
+            uploadedFile.eventAttendance = eventAttendance
+            uploadedFile.uploadedBy = request.user
+
+            # Save team
+            uploadedFile.save()
+
+            # Redirect to team details view
+            return redirect(reverse('teams:details', kwargs = {"teamID": eventAttendance.id}))
+
+        # Default to displaying the form again if form not valid
+        context = {
+            "eventAttendance": eventAttendance,
+            "availableFileUploadTypes": eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()),
+            "form": form,
+        }
+
+        return render(request, 'eventfiles/uploadMentorEventFile.html', context)
 
     def delete(self, request, eventAttendanceID=None, uploadedFileID=None):
         # This endpoint should never be called with eventAttendanceID

@@ -63,18 +63,55 @@
                                     <td>{{availableFileUploadType.fileType.name}}</td>
                                     <td>{{availableFileUploadType.fileType.description}}</td>
                                     <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
-                                    <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}
-                                    </td>
+                                    <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}</td>
                                     <td>{{availableFileUploadType.uploadDeadline}}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
 
-                        <a href="{% url 'teams:details' eventAttendance.id %}" class="ui button negative"
-                            style="margin-top:1rem;">Cancel</a>
+                        <!-- Error messaging -->
+                        {% if form.errors %}
+                        <div class="ui message left-aligned-text">
+                            <div class="">
+                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ form.non_field_errors }}
+                                <ul>
+                                    {% for field in form %}
+                                    {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- /Error messaging -->
 
+                        <form enctype="multipart/form-data" method="post" class="ui form">
+                            {% csrf_token %}
 
+                            <div class="two fields">
+                                <div class="field">
+                                    <label>File:</label>
+                                    {{form.fileUpload}}
+                                </div>
+                                <div class="field">
+                                    <label>Type:</label>
+                                    {{ form.fileType|attr:"class:ui dropdown"}}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="field">
+                                    <label>Comments:</label>
+                                    {{form.comments}}
+                                </div>
+                            </div>
+
+                            <input class="primary ui button" type="submit" value="Save" />
+                            <a href="{% url 'teams:details' eventAttendance.id %}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
+
+                        </form>
 
                     </div>
                 </div>

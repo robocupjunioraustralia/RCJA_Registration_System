@@ -131,14 +131,14 @@ class MentorEventFileUpload(models.Model):
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['eventAttendance', 'fileType', 'fileUpload'])
+        checkRequiredFieldsNotNone(self, ['fileType', 'fileUpload'])
 
         # Check allowed file extension
         # Empty list means no restriction
         try:
             extension = self.fileUpload.name.rsplit('.', 1)[1]
         except IndexError:
-            raise ValidationError("File must have a filetype")
+            raise ValidationError("File must have a file extension")
         if self.fileType.allowedFileTypes and extension not in self.fileType.allowedFileTypes:
             errors.append(ValidationError(f'File not of allowed type, must be: {self.fileType.allowedFileTypes}'))
 
