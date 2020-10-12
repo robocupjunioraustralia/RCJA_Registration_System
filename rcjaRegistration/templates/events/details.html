@@ -50,6 +50,9 @@
     </div><br>
 
     <div class="row">
+        {% if hasAdminPermissions %}
+        <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui positive button">View in admin</button></a>
+        {% endif %}
         {% if event.registrationsOpen and event.published %}
             {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
