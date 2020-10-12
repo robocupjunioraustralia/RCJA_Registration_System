@@ -40,8 +40,7 @@
       <div class = "twelve wide mobile eight wide computer column ui">
         <div class = "form form-group left-aligned-text">
           <div>
-            <h1>{{team.event}}</h1>
-            <h2> Viewing team {{team.name}} </h2>
+            <h1>{{team.event}}: Viewing team {{team}} </h1>
 
             <h3>Details</h3>
             <p>Division: <b>{{team.division}}</b> {{team.division.description}}</p>
@@ -80,8 +79,10 @@
             <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
             {% endif %}
 
-            {% if uploadedFiles.exists %}
+            {% if uploadedFiles.exists or availableFileUploadTypes %}
             <h3>Files</h3>
+            {% endif %}
+            {% if uploadedFiles.exists %}
             <table id="filesTable" class="ui celled table">
               <thead>
                   <th>Filename</th>
@@ -102,6 +103,9 @@
                   {% endfor %}
               </tbody>
             </table>
+            {% endif %}
+            {% if availableFileUploadTypes %}
+            <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
             {% endif %}
 
           </div>
