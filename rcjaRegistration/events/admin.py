@@ -87,10 +87,10 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'state',
         'name',
         'address',
-        ('venueImage', 'venueImageOriginalFileName', 'venueImageFilesize', 'venueImageTag'),
+        ('venueImage', 'venueImageOriginalFilename', 'venueImageFilesize', 'venueImageTag'),
     ]
     readonly_fields = [
-        'venueImageOriginalFileName',
+        'venueImageOriginalFilename',
         'venueImageFilesize',
         'venueImageTag',
     ]
@@ -180,7 +180,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
-            'fields': (('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
+            'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -200,7 +200,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
-            'fields': (('eventBannerImage', 'eventBannerImageOriginalFileName', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
+            'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -235,7 +235,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
 
     readonly_fields = [
         'eventType', # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
-        'eventBannerImageOriginalFileName',
+        'eventBannerImageOriginalFilename',
         'bannerImageFilesize',
         'effectiveBannerImageTag',
     ]

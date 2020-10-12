@@ -30,8 +30,8 @@ class State(CustomSaveDeleteModel):
     defaultEventDetails = models.TextField('Default event details', blank=True)
     invoiceMessage = models.TextField('Invoice message', blank=True)
     # Default event image
-    defaultEventImage = UUIDImageField('Default event image', storage=PublicMediaStorage(), upload_prefix="DefaultEventImage", original_filename_field="defaultEventImageOriginalFileName", null=True, blank=True)
-    defaultEventImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
+    defaultEventImage = UUIDImageField('Default event image', storage=PublicMediaStorage(), upload_prefix="DefaultEventImage", original_filename_field="defaultEventImageOriginalFilename", null=True, blank=True)
+    defaultEventImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
     class Meta:

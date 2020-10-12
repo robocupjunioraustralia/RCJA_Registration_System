@@ -136,8 +136,8 @@ class Venue(models.Model):
     name = models.CharField('Name', max_length=60)
     address = models.TextField('Address', blank=True)
     # Venue image
-    venueImage = UUIDImageField('Venue image', storage=PublicMediaStorage(), upload_prefix="VenueImage", original_filename_field="venueImageOriginalFileName", null=True, blank=True)
-    venueImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
+    venueImage = UUIDImageField('Venue image', storage=PublicMediaStorage(), upload_prefix="VenueImage", original_filename_field="venueImageOriginalFilename", null=True, blank=True)
+    venueImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
     class Meta:
@@ -237,8 +237,8 @@ class Event(CustomSaveDeleteModel):
     status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
 
     # Banner image
-    eventBannerImage = UUIDImageField('Banner image', storage=PublicMediaStorage(), upload_prefix='EventBannerImage', original_filename_field='eventBannerImageOriginalFileName', null=True, blank=True)
-    eventBannerImageOriginalFileName = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
+    eventBannerImage = UUIDImageField('Banner image', storage=PublicMediaStorage(), upload_prefix='EventBannerImage', original_filename_field='eventBannerImageOriginalFilename', null=True, blank=True)
+    eventBannerImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # Dates
     startDate = models.DateField('Event start date')

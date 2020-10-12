@@ -93,7 +93,7 @@
               <tbody>
                   {% for uploadedFile in uploadedFiles.all %}
                   <tr id="fileRow{{uploadedFile.id}}">
-                      <td><a href="{{uploadedFile.downloadURL}}">{{uploadedFile.originalFileName}}</a></td>
+                      <td><a href="{{uploadedFile.downloadURL}}">{{uploadedFile.originalFilename}}</a></td>
                       <td>{{uploadedFile.filesize}}</td>
                       <td>{{uploadedFile.fileType}}</td>
                       <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>

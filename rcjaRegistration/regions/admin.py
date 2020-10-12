@@ -56,12 +56,12 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         ('Event details', {
             'fields': (
                 ('defaultEventDetails', 'invoiceMessage'),
-                ('defaultEventImage', 'defaultEventImageOriginalFileName', 'defaultEventImageFilesize', 'defaultEventImageTag')
+                ('defaultEventImage', 'defaultEventImageOriginalFilename', 'defaultEventImageFilesize', 'defaultEventImageTag')
             )
         }),
     )
     readonly_fields = [
-        'defaultEventImageOriginalFileName',
+        'defaultEventImageOriginalFilename',
         'defaultEventImageFilesize',
         'defaultEventImageTag',
     ]

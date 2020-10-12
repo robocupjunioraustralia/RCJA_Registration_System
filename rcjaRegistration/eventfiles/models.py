@@ -117,8 +117,8 @@ class MentorEventFileUpload(models.Model):
     comments = models.TextField('Comments', blank=True)
 
     # File
-    fileUpload = UUIDFileField('File', storage=PrivateMediaStorage(), upload_prefix="MentorFile", original_filename_field="originalFileName")
-    originalFileName = models.CharField('Original filename', max_length=300, editable=False)
+    fileUpload = UUIDFileField('File', storage=PrivateMediaStorage(), upload_prefix="MentorFile", original_filename_field="originalFilename")
+    originalFilename = models.CharField('Original filename', max_length=300, editable=False)
 
     # *****Meta and clean*****
     class Meta:

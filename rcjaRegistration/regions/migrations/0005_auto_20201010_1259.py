@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='state',
             name='defaultEventImage',
-            field=common.fields.UUIDImageField(blank=True, null=True, original_filename_field='defaultEventImageOriginalFileName', storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_prefix='DefaultEventImage', verbose_name='Default event image'),
+            field=common.fields.UUIDImageField(blank=True, null=True, original_filename_field='defaultEventImageOriginalFilename', storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_prefix='DefaultEventImage', verbose_name='Default event image'),
         ),
         migrations.AddField(
             model_name='state',
-            name='defaultEventImageOriginalFileName',
+            name='defaultEventImageOriginalFilename',
             field=models.CharField(blank=True, editable=False, max_length=300, null=True, verbose_name='Original filename'),
         ),
     ]

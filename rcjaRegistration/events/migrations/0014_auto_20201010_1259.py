@@ -15,21 +15,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='event',
             name='eventBannerImage',
-            field=common.fields.UUIDImageField(blank=True, null=True, original_filename_field='eventBannerImageOriginalFileName', storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_prefix='EventBannerImage', verbose_name='Banner image'),
+            field=common.fields.UUIDImageField(blank=True, null=True, original_filename_field='eventBannerImageOriginalFilename', storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_prefix='EventBannerImage', verbose_name='Banner image'),
         ),
         migrations.AddField(
             model_name='event',
-            name='eventBannerImageOriginalFileName',
+            name='eventBannerImageOriginalFilename',
             field=models.CharField(blank=True, editable=False, max_length=300, null=True, verbose_name='Original filename'),
         ),
         migrations.AddField(
             model_name='venue',
             name='venueImage',
-            field=common.fields.UUIDImageField(blank=True, null=True, original_filename_field='venueImageOriginalFileName', storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_prefix='VenueImage', verbose_name='Venue image'),
+            field=common.fields.UUIDImageField(blank=True, null=True, original_filename_field='venueImageOriginalFilename', storage=rcjaRegistration.storageBackends.PublicMediaStorage(), upload_prefix='VenueImage', verbose_name='Venue image'),
         ),
         migrations.AddField(
             model_name='venue',
-            name='venueImageOriginalFileName',
+            name='venueImageOriginalFilename',
             field=models.CharField(blank=True, editable=False, max_length=300, null=True, verbose_name='Original filename'),
         ),
     ]
