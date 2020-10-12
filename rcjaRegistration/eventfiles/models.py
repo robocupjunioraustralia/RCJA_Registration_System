@@ -30,6 +30,7 @@ class MentorEventFileType(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = "Mentor Event File Type"
+        ordering = ['name']
 
     def clean(self):
         errors = []
@@ -83,6 +84,7 @@ class EventAvailableFileType(models.Model):
     class Meta:
         verbose_name = "Event Available File Type"
         unique_together = ('event', 'fileType')
+        ordering = ['event', 'fileType']
 
     # *****Permissions*****
     @classmethod
@@ -127,6 +129,7 @@ class MentorEventFileUpload(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = "Mentor Event File Upload"
+        ordering = ['eventAttendance', 'fileType']
 
     def clean(self):
         errors = []
@@ -168,7 +171,7 @@ class MentorEventFileUpload(models.Model):
     # *****Get Methods*****
 
     def __str__(self):
-        return f"{self.eventAttendance} - {self.event()}: {self.fileType} ({self.creationDateTime.strftime('%d/%m/%y %H:%M:%S')})"
+        return f"{self.originalFilename}"
 
     def event(self):
         return self.eventAttendance.event

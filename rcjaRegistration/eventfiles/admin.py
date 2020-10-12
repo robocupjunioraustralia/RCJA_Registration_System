@@ -21,9 +21,11 @@ class EventAvailableFileTypeInline(InlineAdminPermissions, admin.TabularInline):
 class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
     list_display = [
         '__str__',
-        'event',
+        'eventAttendance',
         'fileType',
+        'event',
         'uploadedBy',
+        'filesize',
     ]
 
     add_readonly_fields = [
