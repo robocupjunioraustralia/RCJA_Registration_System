@@ -22,6 +22,8 @@ env = environ.Env(
     USE_SQLLITE_DB=(bool, False),
 )
 
+assert (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should only be used to run tests"
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
