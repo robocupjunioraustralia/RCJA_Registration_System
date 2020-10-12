@@ -56,17 +56,23 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         if not eventAttendance.eventAttendanceType() == 'team':
            raise PermissionDenied("File upload is only supported for teams") 
 
-    def get(self, request, eventAttendanceID=None, uploadedFileID=None):
-        # This page currently does not support viewing existing files
+    def get_post_common(self, request, eventAttendanceID, uploadedFileID):
+        # This page currently does not support viewing or editing existing files, so deny access if is not None
         # Can't edit uploaded files, so deny access if post with uploadedFileID
         if uploadedFileID is not None:
-            return PermissionDenied("Can't edit existing files")
+            raise PermissionDenied("Can't edit existing files")
 
         # Get eventAttendance object
         eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
 
         # Check upload permissions
         self.uploadPermissions(request, eventAttendance)
+
+        return eventAttendance
+
+
+    def get(self, request, eventAttendanceID=None, uploadedFileID=None):
+        eventAttendance = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
         context = {
             "eventAttendance": eventAttendance,
@@ -77,15 +83,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         return render(request, 'eventfiles/uploadMentorEventFile.html', context)
 
     def post(self, request, eventAttendanceID=None, uploadedFileID=None):
-        # Can't edit uploaded files, so deny access if post with uploadedFileID
-        if uploadedFileID is not None:
-            return PermissionDenied("Can't edit existing files")
-
-        # Get eventAttendance object
-        eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
-
-        # Check upload permissions
-        self.uploadPermissions(request, eventAttendance)
+        eventAttendance = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
         # Get form and check if valid
         form = MentorEventFileUploadForm(request.POST, request.FILES, eventAttendance=eventAttendance)
