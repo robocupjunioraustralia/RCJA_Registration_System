@@ -471,6 +471,17 @@ class TestTeamDetailsPermissions(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    def testDenied_notPublished(self):
+        self.event.status = 'draft'
+        self.event.save()
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
     def testDenied_independent(self):
         url = reverse('teams:details', kwargs={'teamID':self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)

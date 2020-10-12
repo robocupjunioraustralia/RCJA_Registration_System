@@ -138,6 +138,7 @@ def details(request, eventID):
         'workshopAttendees': workshopAttendees,
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
+        'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
     }
     return render(request, 'events/details.html', context)   
 
