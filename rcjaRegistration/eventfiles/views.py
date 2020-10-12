@@ -66,8 +66,11 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         # Check upload permissions
         self.uploadPermissions(request, eventAttendance)
 
+        availableFileUploadTypes = eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
+
         context = {
             "eventAttendance": eventAttendance,
+            "availableFileUploadTypes": availableFileUploadTypes,
         }
 
         return render(request, 'eventfiles/uploadMentorEventFile.html', context)

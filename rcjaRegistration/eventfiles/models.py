@@ -53,6 +53,10 @@ class MentorEventFileType(models.Model):
 
     # *****Get Methods*****
 
+    def maxFileSizeStr(self):
+        return filesizeformat(self.maxFilesizeBytes())
+    maxFileSizeStr.short_description = 'Max size'
+
     def maxFilesizeBytes(self):
         return self.maxFilesizeMB * 2**20
 

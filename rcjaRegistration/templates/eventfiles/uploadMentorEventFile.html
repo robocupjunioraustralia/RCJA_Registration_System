@@ -3,7 +3,7 @@
 
 {% block head %}
 
-<title> View team </title>
+<title> Upload file </title>
 
 <style type="text/css">
   body {
@@ -44,6 +44,28 @@
 
             <h2>Upload a new file</h2>
 
+            <h3>File upload categories</h3>
+
+            <table id="categoriesTable" class="ui celled table">
+                <thead>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Max file size</th>
+                    <th>Allowed file types</th>
+                    <th>Upload deadline</th>
+                </thead>
+                <tbody>
+                    {% for availableFileUploadType in availableFileUploadTypes %}
+                    <tr id="fileRow{{uploadedFile.id}}">
+                        <td>{{availableFileUploadType.fileType.name}}</td>
+                        <td>{{availableFileUploadType.fileType.description}}</td>
+                        <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
+                        <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}</td>
+                        <td>{{availableFileUploadType.uploadDeadline}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
 
             <a href = "{% url 'teams:details' eventAttendance.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
 
