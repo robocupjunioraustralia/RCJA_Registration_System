@@ -235,6 +235,18 @@ class TestEventDetailsPage_school(TestCase):
         self.assertNotContains(response,'Registration for this event has closed.')
         self.assertContains(response, 'Add team')
 
+    def testLoadsClosedRegoWithTeams(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testDeniedUnpublishedClosedRegoWithTeams(self):
+        self.oldEventWithTeams.status = 'draft'
+        self.oldEventWithTeams.save()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'This event is unavailable', status_code=403)
+
     def testCreationButtonsNotVisibleWhenRegoClosed(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
         self.assertContains(response,'Registration for this event has closed.')
@@ -289,12 +301,20 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'This event is unavailable', status_code=403)
 
+    def testLoadsClosedRegoWithTeams(self):
+        self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
+
+        super().testLoadsClosedRegoWithTeams()
+
+    def testDeniedUnpublishedClosedRegoWithTeams(self):
+        self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
+
+        super().testDeniedUnpublishedClosedRegoWithTeams()
+
     def testCreationButtonsNotVisibleWhenRegoClosed(self):
         self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
 
-        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
-        self.assertContains(response,'Registration for this event has closed.')
-        self.assertNotContains(response, 'Add team')
+        super().testCreationButtonsNotVisibleWhenRegoClosed()
 
     def testCorrectTeams(self):
         self.school2 = School.objects.create(

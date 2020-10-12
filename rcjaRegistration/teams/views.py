@@ -12,7 +12,7 @@ from .forms import TeamForm, StudentForm
 from .models import Student, Team
 from events.models import Event
 
-from events.views import CreateEditBaseEventAttendance, eventAttendancePermissions
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
 
 import datetime
 
@@ -22,8 +22,12 @@ import datetime
 def details(request, teamID):
     team = get_object_or_404(Team, pk=teamID)
 
+    # Check event is published
+    if not team.event.published():
+        raise PermissionDenied("Event is not published")
+
     # Check administrator of this team
-    if not eventAttendancePermissions(request, team):
+    if not mentorEventAttendanceAccessPermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
     return render(request, 'teams/viewTeam.html', {'team':team})

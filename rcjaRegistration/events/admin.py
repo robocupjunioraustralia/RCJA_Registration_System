@@ -312,7 +312,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             if obj.venue is None:
                 self.message_user(request, f"{obj}: You haven't added a venue yet, we recommend adding a venue.", messages.WARNING)
 
-            if obj.status != 'published':
+            if not obj.published():
                 self.message_user(request, f"{obj}: Event is not published, publish event to make visible.", messages.WARNING)
 
         super().save_model(request, obj, form, change)
