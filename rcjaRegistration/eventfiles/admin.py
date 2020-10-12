@@ -33,6 +33,7 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
         'event',
         'uploadedBy',
         'filesize',
+        'originalFilename',
     ]
 
     list_filter = [
