@@ -53,6 +53,7 @@
             <p>Software: <b>{{team.softwarePlatform}}</b></p>
 
             <h3>Students</h3>
+            {% if students.exists %}
             <table id="teamTable" class="ui celled table">
                 <thead>
                     <th>Name</th>
@@ -61,7 +62,7 @@
                     <th>Gender</th>
                 </thead>
                 <tbody>
-                    {% for student in team.student_set.all %}
+                    {% for student in students.all %}
                     <tr id="studentRow{{student.id}}">
                         <td>{{student}}</td>
                         <td>{{student.yearLevel}}</td>
@@ -71,9 +72,36 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <p>No students yet.</p>
+            {% endif %}
             <a href = "{% url 'events:details' team.event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
             {% if team.event.registrationsOpen %}
             <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
+            {% endif %}
+
+            {% if uploadedFiles.exists %}
+            <h3>Files</h3>
+            <table id="filesTable" class="ui celled table">
+              <thead>
+                  <th>Filename</th>
+                  <th>Size</th>
+                  <th>Type</th>
+                  <th>Uploaded by</th>
+                  <th>Uploaded at</th>
+              </thead>
+              <tbody>
+                  {% for uploadedFile in uploadedFiles.all %}
+                  <tr id="fileRow{{uploadedFile.id}}">
+                      <td><a href="{{uploadedFile.downloadURL}}">{{uploadedFile.originalFileName}}</a></td>
+                      <td>{{uploadedFile.filesize}}</td>
+                      <td>{{uploadedFile.fileType}}</td>
+                      <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>
+                      <td>{{uploadedFile.creationDateTime}}</td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+            </table>
             {% endif %}
 
           </div>

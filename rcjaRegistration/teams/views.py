@@ -26,7 +26,13 @@ def details(request, teamID):
     if not mentorEventAttendanceAccessPermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    return render(request, 'teams/viewTeam.html', {'team':team})
+    context = {
+        "team": team,
+        "students": team.student_set.all(),
+        'uploadedFiles': team.mentoreventfileupload_set.all(),
+    }
+
+    return render(request, 'teams/viewTeam.html', context)
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
