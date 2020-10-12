@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'publicwebsite.apps.PublicwebsiteConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
+    'eventfiles.apps.EventfilesConfig',
     'invoices.apps.InvoicesConfig',
     'schools.apps.SchoolsConfig',
     'workshops.apps.WorkshopsConfig',
