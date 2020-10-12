@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -177,7 +177,10 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, teamID=None, attendeeID=None):
+    def delete(self, request, teamID=None, attendeeID=None, eventID=None):
+        # This endpoint should never be called with eventID
+        if eventID is not None:
+            return HttpResponseForbidden()
         # Accept multiple variables because used for both teams and workshops
         # Need to lookup the relevant one
         eventAttendanceID = None
