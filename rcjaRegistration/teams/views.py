@@ -32,7 +32,7 @@ def details(request, teamID):
         'uploadedFiles': team.mentoreventfileupload_set.all(),
     }
 
-    return render(request, 'teams/viewTeam.html', context)
+    return render(request, 'teams/details.html', context)
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
@@ -61,7 +61,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = self.StudentInLineFormSet(instance=team)
 
-        return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
     def post(self, request, eventID=None, teamID=None):
         if teamID is not None:
@@ -106,7 +106,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         # Default to displaying the form again if form not valid
         try:
-            return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+            return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
         except ValidationError:
             # To catch missing management data
             return HttpResponseBadRequest('Form data missing')
