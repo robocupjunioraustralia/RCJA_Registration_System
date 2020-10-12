@@ -110,6 +110,3 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         except ValidationError:
             # To catch missing management data
             return HttpResponseBadRequest('Form data missing')
-
-    def delete(self, request, teamID):
-        return super().delete(request, teamID)

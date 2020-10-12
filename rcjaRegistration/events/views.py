@@ -177,11 +177,19 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, objID):
-        obj = get_object_or_404(BaseEventAttendance, pk=objID)
-        event = obj.event
-        self.common(request, event, obj)
+    def delete(self, request, teamID=None, attendeeID=None):
+        # Accept multiple variables because used for both teams and workshops
+        # Need to lookup the relevant one
+        eventAttendanceID = None
+        if teamID is not None:
+            eventAttendanceID = teamID
+        if attendeeID is not None:
+            eventAttendanceID = attendeeID
+
+        eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
+        event = eventAttendance.event
+        self.common(request, event, eventAttendance)
 
         # Delete team
-        obj.delete()
+        eventAttendance.delete()
         return HttpResponse(status=204)

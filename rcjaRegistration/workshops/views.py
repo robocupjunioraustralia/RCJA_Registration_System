@@ -63,6 +63,3 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
 
         # Default to displaying the form again if form not valid
         return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})
-
-    def delete(self, request, attendeeID):
-        return super().delete(request, attendeeID)
