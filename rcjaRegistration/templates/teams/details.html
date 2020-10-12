@@ -42,7 +42,7 @@
           <div>
             <h1>{{team.event}}: Viewing team {{team}} </h1>
 
-            <h3>Details</h3>
+            <h2>Details</h2>
             <p>Division: <b>{{team.division}}</b> {{team.division.description}}</p>
             {% if team.school %}<p>School: <b>{{team.school}}</b></p>{% endif %}
             {% if team.campus %}<p>Campus: <b>{{team.campus}}</b></p>{% endif %}
@@ -51,7 +51,7 @@
             <p>Hardware: <b>{{team.hardwarePlatform}}</b></p>
             <p>Software: <b>{{team.softwarePlatform}}</b></p>
 
-            <h3>Students</h3>
+            <h2>Students</h2>
             {% if students.exists %}
             <table id="teamTable" class="ui celled table">
                 <thead>
@@ -80,7 +80,7 @@
             {% endif %}
 
             {% if uploadedFiles.exists or availableFileUploadTypes %}
-            <h3>Files</h3>
+            <h2>Files</h2>
             {% endif %}
             {% if uploadedFiles.exists %}
             <table id="filesTable" class="ui celled table">
@@ -92,7 +92,7 @@
                   <th>Uploaded at</th>
               </thead>
               <tbody>
-                  {% for uploadedFile in uploadedFiles.all %}
+                  {% for uploadedFile in uploadedFiles %}
                   <tr id="fileRow{{uploadedFile.id}}">
                       <td><a href="{{uploadedFile.downloadURL}}">{{uploadedFile.originalFilename}}</a></td>
                       <td>{{uploadedFile.filesize}}</td>
@@ -106,6 +106,13 @@
             {% endif %}
             {% if availableFileUploadTypes %}
             <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
+            <br><br>
+            <h3>File upload categories:</h3>
+            <ul>
+              {% for availableFileUploadType in availableFileUploadTypes %}
+              <li><strong>{{ availableFileUploadType.fileType.name }}</strong></li>
+              {% endfor %}
+            </ul>
             {% endif %}
 
           </div>
