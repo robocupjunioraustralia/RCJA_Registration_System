@@ -827,6 +827,12 @@ class TestTeamMethods(TestCase):
     def testHomeState_noSchool(self):
         self.assertEqual(self.team1.homeState(), self.state1)
 
+    def testEventAttendanceType(self):
+        self.assertEqual(self.team1.eventAttendanceType(), 'team')
+
+    def testChildObject(self):
+        self.assertEqual(self.team1.childObject(), self.team1)
+
     def testMentorUserName(self):
         self.assertEqual(self.team1.mentorUserName(), 'First Last')
 
