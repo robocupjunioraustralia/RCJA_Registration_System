@@ -367,7 +367,7 @@ class Test_MentorEventFileUploadForm(TestCase):
 
         self.assertNotIn(self.availableFileType1.fileType, form.fields['fileType'].queryset)
 
-class Test_MentorEventFileUploadClean(TestCase):
+class Test_MentorEventFileUpload_Clean(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
@@ -403,3 +403,75 @@ class Test_MentorEventFileUploadClean(TestCase):
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
         self.assertRaises(ValidationError, uploadedFile.clean)
+
+class Test_MentorEventFileUpload_Methods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+    def testGetState(self):
+        self.assertEqual(self.uploadedFile.getState(), self.state1)
+
+    def testEvent(self):
+        self.assertEqual(self.uploadedFile.event(), self.event)
+
+    def testFilesize(self):
+        self.assertEqual(self.uploadedFile.filesize(), "12\xa0bytes")
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.url', return_value='testURL')
+    def testFileURL(self, mock_URL):
+        self.assertEqual(self.uploadedFile.fileURL(), "testURL")
+
+    def testStr(self):
+        self.assertEqual(str(self.uploadedFile), "doc.doc")
+
+class Test_EventAvailableFileType_Methods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def testGetState(self):
+        self.assertEqual(self.availableFileType1.getState(), self.state1)
+
+    def testStr(self):
+        self.assertEqual(str(self.availableFileType1), "Test event 1 2020 (VIC): File Type 1")
+
+class Test_MentorEventFileType_Methods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def testMaxFilesizeBytes(self):
+        self.assertEqual(self.fileType1.maxFilesizeBytes(), 104857600)
+
+    def testMxFileSizeStr(self):
+        self.assertEqual(self.fileType1.maxFileSizeStr(), "100.0\xa0MB")
+
+    def testStr(self):
+        self.assertEqual(str(self.fileType1), "File Type 1")
+
+    def testCleanValidFilesize(self):
+        fileType2 = MentorEventFileType(name="File Type 2", maxFilesizeMB=500)
+
+        fileType2.clean()
+
+    def testCleanInvalidFilesize(self):
+        fileType2 = MentorEventFileType(name="File Type 2", maxFilesizeMB=5000)
+
+        self.assertRaises(ValidationError, fileType2.clean)
