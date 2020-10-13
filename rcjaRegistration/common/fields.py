@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 
 class UUIDFIeld:
-    def generateUUIDFilename(self, obj, filename,):
+    def generateUUIDFilename(self, obj, filename):
         if self.originalFilenameField is not None:
             setattr(obj, self.originalFilenameField, filename)
 
