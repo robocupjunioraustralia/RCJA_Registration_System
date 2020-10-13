@@ -43,7 +43,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             raise PermissionDenied("The upload deadline has passed for this file type for this event")
 
     def uploadPermissions(self, request, eventAttendance):
-        self.commonPermisisons(request, uploadedFile.eventAttendance)
+        self.commonPermisisons(request, eventAttendance)
 
         # Check at least one available file type
         if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
