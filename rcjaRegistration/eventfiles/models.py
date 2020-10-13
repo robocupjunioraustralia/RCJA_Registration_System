@@ -184,9 +184,9 @@ class MentorEventFileUpload(models.Model):
         return filesizeformat(self.fileUpload.size)
     filesize.short_description = 'Size'
 
-    def downloadURL(self):
+    def fileURL(self):
         return self.fileUpload.url
-    downloadURL.short_description = 'URL'
+    fileURL.short_description = 'URL'
 
     # *****CSV export methods*****
 
