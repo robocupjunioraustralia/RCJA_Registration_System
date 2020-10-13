@@ -4,7 +4,6 @@ from django.http import HttpRequest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
-from django.core.files.storage import FileSystemStorage
 
 from invoices.models import InvoiceGlobalSettings
 from users.models import User
