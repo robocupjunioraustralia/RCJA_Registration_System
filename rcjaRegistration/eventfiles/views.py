@@ -57,44 +57,63 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
            raise PermissionDenied("File upload is only supported for teams") 
 
     def get_post_common(self, request, eventAttendanceID, uploadedFileID):
-        # This page currently does not support viewing or editing existing files, so deny access if is not None
-        # Can't edit uploaded files, so deny access if post with uploadedFileID
+        # Check if editing an existing file
         if uploadedFileID is not None:
-            raise PermissionDenied("Can't edit existing files")
+            # Get file
+            uploadedFile = get_object_or_404(MentorEventFileUpload, pk=uploadedFileID)
 
-        # Get eventAttendance object
-        eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
+            # Check edit permissions
+            self.editPermissions(request, uploadedFile)
 
-        # Check upload permissions
-        self.uploadPermissions(request, eventAttendance)
+            # Get eventAttendance for this file
+            eventAttendance = uploadedFile.eventAttendance
+        else:
+            # Otherwise assume uploading a new file - is the only alternative and in the event that this is also None, will just return 404
+            # Get eventAttendance object
+            eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
 
-        return eventAttendance
+            # Check upload permissions
+            self.uploadPermissions(request, eventAttendance)
+
+            # No existing file so set to None
+            uploadedFile = None
+
+        return eventAttendance, uploadedFile
 
 
     def get(self, request, eventAttendanceID=None, uploadedFileID=None):
-        eventAttendance = self.get_post_common(request, eventAttendanceID, uploadedFileID)
+        # Get file and eventAttendance
+        eventAttendance, uploadedFile = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
         context = {
             "eventAttendance": eventAttendance,
+            "uploadedFile": uploadedFile,
             "availableFileUploadTypes": eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()),
-            "form": MentorEventFileUploadForm(eventAttendance=eventAttendance),
+            "form": MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance), # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
         }
 
         return render(request, 'eventfiles/uploadMentorEventFile.html', context)
 
     def post(self, request, eventAttendanceID=None, uploadedFileID=None):
-        eventAttendance = self.get_post_common(request, eventAttendanceID, uploadedFileID)
+        # Get file and eventAttendance
+        eventAttendance, uploadedFile = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
-        # Get form and check if valid
-        form = MentorEventFileUploadForm(request.POST, request.FILES, eventAttendance=eventAttendance)
+        # Get the form here so it can be used in the saving of valid data and also returning errors
+        # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
+        form = MentorEventFileUploadForm(request.POST, request.FILES, instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance)
 
         if form.is_valid():
-            # Create team object but don't save so can set foreign keys
+            # Create fileUpload object but don't save so can set foreign keys
             uploadedFile = form.save(commit=False)
-            uploadedFile.eventAttendance = eventAttendance
-            uploadedFile.uploadedBy = request.user
 
-            # Save team
+            # Set the eventAttendance - is not present on the form
+            uploadedFile.eventAttendance = eventAttendance
+
+            # Set the uploadedBy field only if no PK - which means new file
+            if not uploadedFile.pk:
+                uploadedFile.uploadedBy = request.user
+
+            # Save uploadedFile
             uploadedFile.save()
 
             # Redirect to team details view
@@ -103,6 +122,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         # Default to displaying the form again if form not valid
         context = {
             "eventAttendance": eventAttendance,
+            "uploadedFile": uploadedFile,
             "availableFileUploadTypes": eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()),
             "form": form,
         }

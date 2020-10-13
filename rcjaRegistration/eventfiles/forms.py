@@ -15,9 +15,12 @@ class MentorEventFileUploadForm(ModelForm):
         ]
 
     # Override init to filter fileType
-    def __init__(self, *args, eventAttendance, **kwargs):
+    def __init__(self, *args, uploadedFile, eventAttendance, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Filter fileType to available fileTypes
         from events.models import Division
         self.fields['fileType'].queryset = MentorEventFileType.objects.filter(eventavailablefiletype__event__baseeventattendance=eventAttendance, eventavailablefiletype__uploadDeadline__gte=datetime.datetime.today())
+
+        if uploadedFile:
+            self.fields['fileUpload'].disabled = True
