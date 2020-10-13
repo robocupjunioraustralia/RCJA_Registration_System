@@ -233,3 +233,36 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Bas
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
+
+class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFileUploadView, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+    def url(self):
+        return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
+
+    def getResponse(self):
+        return self.client.post(self.url())
+
+    def testErrorBlankForm(self):
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "File: This field is required.")
+        self.assertContains(response, "Type: This field is required.")
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def testSuccess(self, mock_save, mock_size):
+        data = {
+            'fileUpload': self.docFile,
+            'fileType': self.fileType1.id,
+        }
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        response = self.client.post(self.url(), data=data)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        self.assertEqual(MentorEventFileUpload.objects.get(pk=1).uploadedBy, self.user1)
+        self.assertEqual(MentorEventFileUpload.objects.get(pk=1).eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.get(pk=1).originalFilename, "doc.doc")
