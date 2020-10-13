@@ -105,19 +105,22 @@ class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileU
         super().setUp()
         self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
+    def getResponse(self):
+        return self.client.get(self.url())
+
     def testPageLoads(self):
-        response = self.client.get(self.url())
+        response = self.getResponse()
         self.assertEqual(response.status_code, 200)
 
     def testUsesCorrectTemplate(self):
-        response = self.client.get(self.url())
+        response = self.getResponse()
         self.assertTemplateUsed(response, 'eventfiles/uploadMentorEventFile.html')
 
     def testDeniedUploadDeadlinePassed(self):
         self.availableFileType1.uploadDeadline=(datetime.datetime.now() - datetime.timedelta(days=5)).date()
         self.availableFileType1.save()
 
-        response = self.client.get(self.url())
+        response = self.getResponse()
         self.assertEqual(response.status_code, 403)
         return response
 
@@ -125,7 +128,7 @@ class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileU
         self.team1.mentorUser = self.user2
         self.team1.save()
 
-        response = self.client.get(self.url())
+        response = self.getResponse()
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You are not an administrator of this team/ attendee", status_code=403)
 
@@ -133,13 +136,13 @@ class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileU
         self.event.status = 'draft'
         self.event.save()
 
-        response = self.client.get(self.url())
+        response = self.getResponse()
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "Event is not published", status_code=403)
 
     @patch('events.models.BaseEventAttendance.eventAttendanceType', return_value='workshopattendee')
     def testDeniedWorkshopAttendee(self, mock_eventAttendanceType):
-        response = self.client.get(self.url())
+        response = self.getResponse()
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "File upload is only supported for teams", status_code=403)
 
@@ -162,3 +165,14 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Get(Base_Test_Ment
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
+
+class Test_MentorEventFileUploadView_Permissions_NewFile_Post(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
+    def url(self):
+        return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
+
+    def getResponse(self):
+        return self.client.post(self.url())
+
+    def testDeniedUploadDeadlinePassed(self):
+        response = super().testDeniedUploadDeadlinePassed()
+        self.assertContains(response, "File upload not available", status_code=403)
