@@ -247,6 +247,9 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
     def url(self):
         return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
 
+    def getResponse(self):
+        return self.client.post(self.url())
+
     def testErrorBlankForm(self):
         response = self.getResponse()
         self.assertEqual(response.status_code, 200)
