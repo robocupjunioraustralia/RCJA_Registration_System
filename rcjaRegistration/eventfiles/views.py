@@ -19,9 +19,6 @@ import datetime
 
 
 class MentorEventFileUploadView(LoginRequiredMixin, View):
-    def fileTypeEditAllowed(self, event, fileType):
-        return event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=fileType).exists()
-
     def commonPermisisons(self, request, eventAttendance):
         # Check event is published
         if not eventAttendance.event.published():
@@ -39,7 +36,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         self.commonPermisisons(request, uploadedFile.eventAttendance)
 
         # Check upload deadline not passed
-        if not self.fileTypeEditAllowed(uploadedFile.eventAttendance.event, uploadedFile.fileType):
+        if not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=uploadedFile.fileType).exists():
             raise PermissionDenied("The upload deadline has passed for this file type for this event")
 
     def uploadPermissions(self, request, eventAttendance):
@@ -72,7 +69,6 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             uploadedFile = None
 
         return eventAttendance, uploadedFile
-
 
     def get(self, request, eventAttendanceID=None, uploadedFileID=None):
         # Get file and eventAttendance
