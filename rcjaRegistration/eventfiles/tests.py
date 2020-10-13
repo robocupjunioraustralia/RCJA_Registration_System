@@ -263,6 +263,6 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
         self.assertEqual(response.status_code, 302)
 
         self.assertEqual(MentorEventFileUpload.objects.count(), 1)
-        self.assertEqual(MentorEventFileUpload.objects.get(pk=1).uploadedBy, self.user1)
-        self.assertEqual(MentorEventFileUpload.objects.get(pk=1).eventAttendance.childObject(), self.team1)
-        self.assertEqual(MentorEventFileUpload.objects.get(pk=1).originalFilename, "doc.doc")
+        self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user1)
+        self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
