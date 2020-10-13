@@ -188,6 +188,9 @@ class MentorEventFileUpload(models.Model):
         return self.fileUpload.url
     fileURL.short_description = 'URL'
 
+    def uploadDeadlinePassed(self):
+        return not self.eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=self.fileType).exists()
+
     # *****CSV export methods*****
 
     # *****Email methods*****

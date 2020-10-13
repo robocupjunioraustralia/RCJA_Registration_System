@@ -90,6 +90,7 @@
                   <th>Type</th>
                   <th>Uploaded by</th>
                   <th>Uploaded at</th>
+                  <th>Actions</th>
               </thead>
               <tbody>
                   {% for uploadedFile in uploadedFiles %}
@@ -99,6 +100,12 @@
                       <td>{{uploadedFile.fileType}}</td>
                       <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>
                       <td>{{uploadedFile.creationDateTime}}</td>
+                      <td>
+                        {% if not uploadedFile.uploadDeadlinePassed %}
+                        <a href="{% url 'eventfiles:edit' uploadedFile.id %}"><button class="ui primary button">Edit</button></a>
+                        <button onClick="showDeleteModal({{uploadedFile.id}}, '{% url 'eventfiles:edit' uploadedFile.id %}')" class="ui negative button">Delete</button>
+                        {% endif %}
+                    </td>
                   </tr>
                   {% endfor %}
               </tbody>
@@ -121,4 +128,43 @@
     </div>
   </div>
 </div>
+
+<div class="ui modal">
+  <div class="header">
+    Delete file
+  </div>
+  <div class="image content">
+    <div class="description">
+      <div class="ui header">Are you sure?</div>
+      <p> Deleting a file is an irreversable action. Are you sure that this is the file that you want to delete?</p>
+    </div>
+  </div>
+  <div class="actions">
+    <div class="ui black deny button">No, cancel</div>
+    <button id="deleteConfirm" class="ui negative right button">Yes, I'm certain</button>
+  </div>
+</div>
+
+<script>
+  function showModal() {
+    $('.ui.modal').modal('show');
+  }
+
+  function deleteFile(id, url) {
+    $.ajax({
+      type: "DELETE",
+      url: url,
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+      },
+    })
+      .done((data) => $('#fileRow' + id).remove())
+      .fail((data) => alert('Unexpected Error!' + data))
+  }
+
+  function showDeleteModal(id, url) {
+    $('#deleteConfirm').attr('onClick', "deleteFile(" + id + ",'" + url + "');");
+    showModal()
+  }
+</script>
 {% endblock %}
