@@ -14,6 +14,7 @@ from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 
 from .models import MentorEventFileType, MentorEventFileUpload, EventAvailableFileType
+from .forms import MentorEventFileUploadForm
 
 import datetime
 
@@ -62,6 +63,14 @@ def newCommonSetUp(self):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
 
+        self.docFile = SimpleUploadedFile("doc.doc", b"file_content", content_type="application/msword")
+        self.pdfFile = SimpleUploadedFile("pdf.pdf", b"file_content", content_type="application/pdf")
+        self.jpegFile = SimpleUploadedFile("jpeg.jpeg", b"file_content", content_type="	image/jpeg")
+
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=5)).date())
+
 class Base_Test_MentorEventFileUploadView:
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -74,14 +83,6 @@ class Base_Test_MentorEventFileUploadView:
 
     def setUp(self):
         newCommonSetUp(self)
-
-        self.docFile = SimpleUploadedFile("doc.doc", b"file_content", content_type="application/msword")
-        self.pdfFile = SimpleUploadedFile("pdf.pdf", b"file_content", content_type="application/pdf")
-        self.jpegFile = SimpleUploadedFile("jpeg.jpeg", b"file_content", content_type="	image/jpeg")
-
-        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
-
-        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=5)).date())
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
     def createFile(self, mock_save):
@@ -99,6 +100,8 @@ class Test_MentorEventFileUploadView_LoginRequired(Base_Test_MentorEventFileUplo
         response = self.client.get(reverse('eventfiles:edit', kwargs={'uploadedFileID':self.uploadedFile1.id}))
         self.assertEqual(response.url, f"/accounts/login/?next=/eventfiles/{self.uploadedFile1.id}/edit")
         self.assertEqual(response.status_code, 302)
+
+# Permissions
 
 class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileUploadView):
     def setUp(self):
@@ -234,6 +237,8 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Bas
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
 
+# File upload post
+
 class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFileUploadView, TestCase):
     def setUp(self):
         super().setUp()
@@ -266,3 +271,85 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
         self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user1)
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+
+# Unit tests
+
+class Test_MentorEventFileUploadForm(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def createFile(self, mock_save):
+        return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+        self.uploadedFile1 = self.createFile()
+
+    def testBlankFormUploadEnabled(self):
+        form = MentorEventFileUploadForm(instance=None, uploadedFile=None, eventAttendance=self.team1)
+
+        self.assertEqual(form.fields['fileUpload'].disabled, False)
+
+    def testExistingFormUploadDisabled(self):
+        form = MentorEventFileUploadForm(instance=self.uploadedFile1, uploadedFile=self.uploadedFile1, eventAttendance=self.team1)
+
+        self.assertEqual(form.fields['fileUpload'].disabled, True)
+
+    def testFileTypeQuerysetFiltered_uploadOpen(self):
+        form = MentorEventFileUploadForm(instance=None, uploadedFile=None, eventAttendance=self.team1)
+
+        self.assertIn(self.availableFileType1.fileType, form.fields['fileType'].queryset)
+
+    def testFileTypeQuerysetFiltered_uploadClosed(self):
+        self.availableFileType1.uploadDeadline = (datetime.datetime.now() - datetime.timedelta(days=5)).date()
+        self.availableFileType1.save()
+
+        form = MentorEventFileUploadForm(instance=None, uploadedFile=None, eventAttendance=self.team1)
+
+        self.assertNotIn(self.availableFileType1.fileType, form.fields['fileType'].queryset)
+
+class Test_MentorEventFileUploadClean(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def createFile(self, mock_save):
+        return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def testValidNoExtensionRestrictions(self):
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        uploadedFile.clean()
+
+    def testValidExtensionRestrictions(self):
+        self.fileType1.allowedFileTypes = "doc,pdf"
+        self.fileType1.save()
+
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        uploadedFile.clean()
+
+    def testInvalidExtension(self):
+        self.fileType1.allowedFileTypes = "png,jpeg"
+        self.fileType1.save()
+
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        self.assertRaises(ValidationError, uploadedFile.clean)
+
+    @patch('eventfiles.models.MentorEventFileType.maxFilesizeBytes', return_value=5)
+    def testInvalidFileSize(self, mock_size):
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        self.assertRaises(ValidationError, uploadedFile.clean)
