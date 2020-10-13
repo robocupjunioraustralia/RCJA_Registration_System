@@ -62,14 +62,14 @@ def newCommonSetUp(self):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
 
-class Base_Test_MentorEventFileUploadView(TestCase):
+class Base_Test_MentorEventFileUploadView:
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
     
-    def url(self, objID):
+    def url(self):
         pass
 
     def setUp(self):
@@ -83,17 +83,17 @@ class Base_Test_MentorEventFileUploadView(TestCase):
 
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=5)).date())
 
-    def createFile(self):
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def createFile(self, mock_save):
         return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-class Test_MentorEventFileUploadView_LoginRequired(Base_Test_MentorEventFileUploadView):
+class Test_MentorEventFileUploadView_LoginRequired(Base_Test_MentorEventFileUploadView, TestCase):
     def testNewFileGet(self):
         response = self.client.get(reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID':self.team1.id}))
         self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/uploadFile")
         self.assertEqual(response.status_code, 302)
 
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
-    def testExistingFileGet(self, mock_save):
+    def testExistingFileGet(self):
         self.uploadedFile1 = self.createFile()
 
         response = self.client.get(reverse('eventfiles:edit', kwargs={'uploadedFileID':self.uploadedFile1.id}))
