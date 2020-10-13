@@ -22,24 +22,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
     def fileTypeEditAllowed(self, event, fileType):
         return event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=fileType).exists()
 
-    def editPermissions(self, request, uploadedFile):
-        # Check event is published
-        if not uploadedFile.eventAttendance.event.published():
-            raise PermissionDenied("Event is not published")
-
-        # Check administrator of eventAttendance for this file
-        if not mentorEventAttendanceAccessPermissions(request, uploadedFile.eventAttendance):
-            raise PermissionDenied("You are not an administrator of this team/ attendee")
-
-        # Check upload deadline not passed
-        if not self.fileTypeEditAllowed(uploadedFile.eventAttendance.event, uploadedFile.fileType):
-            raise PermissionDenied("The upload deadline has passed for this file type for this event")
-        
-        # Check team - file upload currently not implemented for workshop attendees
-        if not uploadedFile.eventAttendance.eventAttendanceType() == 'team':
-           raise PermissionDenied("File upload is only supported for teams") 
-
-    def uploadPermissions(self, request, eventAttendance):
+    def commonPermisisons(self, request, eventAttendance):
         # Check event is published
         if not eventAttendance.event.published():
             raise PermissionDenied("Event is not published")
@@ -48,13 +31,23 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-        # Check at least one available file type
-        if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
-            raise PermissionDenied("File upload not available")
-
         # Check team - file upload currently not implemented for workshop attendees
         if not eventAttendance.eventAttendanceType() == 'team':
            raise PermissionDenied("File upload is only supported for teams") 
+
+    def editPermissions(self, request, uploadedFile):
+        self.commonPermisisons(request, uploadedFile.eventAttendance)
+
+        # Check upload deadline not passed
+        if not self.fileTypeEditAllowed(uploadedFile.eventAttendance.event, uploadedFile.fileType):
+            raise PermissionDenied("The upload deadline has passed for this file type for this event")
+
+    def uploadPermissions(self, request, eventAttendance):
+        self.commonPermisisons(request, uploadedFile.eventAttendance)
+
+        # Check at least one available file type
+        if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
+            raise PermissionDenied("File upload not available")
 
     def get_post_common(self, request, eventAttendanceID, uploadedFileID):
         # Check if editing an existing file
