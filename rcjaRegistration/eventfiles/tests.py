@@ -247,9 +247,6 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
     def url(self):
         return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
 
-    def getResponse(self):
-        return self.client.post(self.url())
-
     def testErrorBlankForm(self):
         response = self.getResponse()
         self.assertEqual(response.status_code, 200)
@@ -281,9 +278,6 @@ class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFile
     def url(self):
         return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
 
-    def getResponse(self):
-        return self.client.post(self.url())
-
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
     @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testSuccess(self, mock_save, mock_size):
@@ -312,9 +306,6 @@ class Test_MentorEventFileUploadView_Delete(Base_Test_MentorEventFileUploadView,
 
     def url(self):
         return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
-
-    def getResponse(self):
-        return self.client.delete(self.url())
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
     def testSuccessfulDelete(self, mock_delete):
