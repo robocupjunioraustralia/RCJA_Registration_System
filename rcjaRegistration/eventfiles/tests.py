@@ -307,6 +307,9 @@ class Test_MentorEventFileUploadView_Delete(Base_Test_MentorEventFileUploadView,
     def url(self):
         return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
 
+    def getResponse(self):
+        return self.client.delete(self.url())
+
     @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
     def testSuccessfulDelete(self, mock_delete):
         self.assertEqual(MentorEventFileUpload.objects.count(), 1)
