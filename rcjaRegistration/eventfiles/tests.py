@@ -65,7 +65,8 @@ def newCommonSetUp(self):
 
         self.docFile = SimpleUploadedFile("doc.doc", b"file_content", content_type="application/msword")
         self.pdfFile = SimpleUploadedFile("pdf.pdf", b"file_content", content_type="application/pdf")
-        self.jpegFile = SimpleUploadedFile("jpeg.jpeg", b"file_content", content_type="	image/jpeg")
+        self.jpegFile = SimpleUploadedFile("jpeg.jpeg", b"file_content", content_type="image/jpeg")
+        self.noExtFile = SimpleUploadedFile("noext", b"file_content", content_type="image/jpeg")
 
         self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
 
@@ -395,6 +396,14 @@ class Test_MentorEventFileUpload_Clean(TestCase):
         self.fileType1.save()
 
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        self.assertRaises(ValidationError, uploadedFile.clean)
+
+    def testNoExtension(self):
+        self.fileType1.allowedFileTypes = "png,jpeg"
+        self.fileType1.save()
+
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.noExtFile, originalFilename="noext", uploadedBy=self.user2)
 
         self.assertRaises(ValidationError, uploadedFile.clean)
 
