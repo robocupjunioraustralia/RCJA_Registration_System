@@ -272,6 +272,67 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
 
+class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFileUploadView, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        self.uploadedFile1 = createFile(self)
+
+    def url(self):
+        return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
+
+    def getResponse(self):
+        return self.client.post(self.url())
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testSuccess(self, mock_save, mock_size):
+        data = {
+            'fileUpload': self.jpegFile,
+            'fileType': self.fileType1.id,
+            'comments': 'hello'
+        }
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        response = self.client.post(self.url(), data=data)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user2)
+        self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertEqual(MentorEventFileUpload.objects.first().comments, "hello")
+
+# File upload delete
+
+class Test_MentorEventFileUploadView_Delete(Base_Test_MentorEventFileUploadView, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        self.uploadedFile1 = createFile(self)
+
+    def url(self):
+        return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
+
+    def getResponse(self):
+        return self.client.delete(self.url())
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    def testSuccessfulDelete(self, mock_delete):
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    def testDeniedEventAttendanceID(self, mock_delete):
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+
+        url = reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+
 # Unit tests
 
 class Test_MentorEventFileUploadForm(TestCase):
