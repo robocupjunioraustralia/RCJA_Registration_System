@@ -177,7 +177,20 @@ class Test_MentorEventFileUploadView_Permissions_NewFile_Post(Base_Test_MentorEv
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "File upload not available", status_code=403)
 
-class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
+class Patched_Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileUploadView_Permissions):
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def testPageLoads(self, mock_save, mock_size, mock_delete):
+        return super().testPageLoads()
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def testUsesCorrectTemplate(self, mock_save, mock_size, mock_delete):
+        return super().testUsesCorrectTemplate()
+
+class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
         self.uploadedFile1 = self.createFile()
@@ -190,9 +203,9 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Base_Test_Men
 
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
-        self.assertContains(response, "File upload not available", status_code=403)
+        self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
 
-class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
+class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
         self.uploadedFile1 = self.createFile()
@@ -203,6 +216,20 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Base_Test_M
     def getResponse(self):
         return self.client.delete(self.url())
 
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def testPageLoads(self, mock_save, mock_size, mock_delete):
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 204)
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    def testUsesCorrectTemplate(self, mock_save, mock_size, mock_delete):
+        response = self.getResponse()
+        self.assertTemplateNotUsed(response, 'eventfiles/uploadMentorEventFile.html')
+
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
-        self.assertContains(response, "File upload not available", status_code=403)
+        self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
