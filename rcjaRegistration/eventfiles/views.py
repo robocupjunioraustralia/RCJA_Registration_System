@@ -17,35 +17,34 @@ from .forms import MentorEventFileUploadForm
 
 import datetime
 
+def fileUploadCommonPermissions(self, request, eventAttendance):
+    # Check event is published
+    if not eventAttendance.event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check administrator of this eventAttendance
+    if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
+        raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+    # Check team - file upload currently not implemented for workshop attendees
+    if not eventAttendance.eventAttendanceType() == 'team':
+        raise PermissionDenied("File upload is only supported for teams") 
+
+def fileUploadEditPermissions(self, request, uploadedFile):
+    self.fileUploadCommonPermissions(request, uploadedFile.eventAttendance)
+
+    # Check upload deadline not passed
+    if not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=uploadedFile.fileType).exists():
+        raise PermissionDenied("The upload deadline has passed for this file type for this event")
+
+def fileUploadUploadPermissions(self, request, eventAttendance):
+    self.fileUploadCommonPermissions(request, eventAttendance)
+
+    # Check at least one available file type
+    if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
+        raise PermissionDenied("File upload not available")
 
 class MentorEventFileUploadView(LoginRequiredMixin, View):
-    def commonPermisisons(self, request, eventAttendance):
-        # Check event is published
-        if not eventAttendance.event.published():
-            raise PermissionDenied("Event is not published")
-
-        # Check administrator of this eventAttendance
-        if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
-            raise PermissionDenied("You are not an administrator of this team/ attendee")
-
-        # Check team - file upload currently not implemented for workshop attendees
-        if not eventAttendance.eventAttendanceType() == 'team':
-           raise PermissionDenied("File upload is only supported for teams") 
-
-    def editPermissions(self, request, uploadedFile):
-        self.commonPermisisons(request, uploadedFile.eventAttendance)
-
-        # Check upload deadline not passed
-        if not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=uploadedFile.fileType).exists():
-            raise PermissionDenied("The upload deadline has passed for this file type for this event")
-
-    def uploadPermissions(self, request, eventAttendance):
-        self.commonPermisisons(request, eventAttendance)
-
-        # Check at least one available file type
-        if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
-            raise PermissionDenied("File upload not available")
-
     def get_post_common(self, request, eventAttendanceID, uploadedFileID):
         # Check if editing an existing file
         if uploadedFileID is not None:
@@ -53,7 +52,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             uploadedFile = get_object_or_404(MentorEventFileUpload, pk=uploadedFileID)
 
             # Check edit permissions
-            self.editPermissions(request, uploadedFile)
+            self.fileUploadEditPermissions(request, uploadedFile)
 
             # Get eventAttendance for this file
             eventAttendance = uploadedFile.eventAttendance
@@ -63,7 +62,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
 
             # Check upload permissions
-            self.uploadPermissions(request, eventAttendance)
+            self.fileUploadUploadPermissions(request, eventAttendance)
 
             # No existing file so set to None
             uploadedFile = None
@@ -127,7 +126,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         uploadedFile = get_object_or_404(MentorEventFileUpload, pk=uploadedFileID)
 
         # Check permissions
-        self.editPermissions(request, uploadedFile)
+        self.fileUploadEditPermissions(request, uploadedFile)
 
         # Delete team
         uploadedFile.delete()
