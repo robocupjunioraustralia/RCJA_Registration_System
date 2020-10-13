@@ -71,6 +71,10 @@ def newCommonSetUp(self):
 
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=5)).date())
 
+@patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+def createFile(self, mock_save):
+    return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
 class Base_Test_MentorEventFileUploadView:
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -84,10 +88,6 @@ class Base_Test_MentorEventFileUploadView:
     def setUp(self):
         newCommonSetUp(self)
 
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
-    def createFile(self, mock_save):
-        return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
-
 class Test_MentorEventFileUploadView_LoginRequired(Base_Test_MentorEventFileUploadView, TestCase):
     def testNewFileGet(self):
         response = self.client.get(reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID':self.team1.id}))
@@ -95,7 +95,7 @@ class Test_MentorEventFileUploadView_LoginRequired(Base_Test_MentorEventFileUplo
         self.assertEqual(response.status_code, 302)
 
     def testExistingFileGet(self):
-        self.uploadedFile1 = self.createFile()
+        self.uploadedFile1 = createFile(self)
 
         response = self.client.get(reverse('eventfiles:edit', kwargs={'uploadedFileID':self.uploadedFile1.id}))
         self.assertEqual(response.url, f"/accounts/login/?next=/eventfiles/{self.uploadedFile1.id}/edit")
@@ -160,7 +160,7 @@ class Test_MentorEventFileUploadView_Permissions_NewFile_Get(Base_Test_MentorEve
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Get(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
-        self.uploadedFile1 = self.createFile()
+        self.uploadedFile1 = createFile(self)
 
     def url(self):
         return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
@@ -183,20 +183,20 @@ class Test_MentorEventFileUploadView_Permissions_NewFile_Post(Base_Test_MentorEv
 class Patched_Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileUploadView_Permissions):
     @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testPageLoads(self, mock_save, mock_size, mock_delete):
         return super().testPageLoads()
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testUsesCorrectTemplate(self, mock_save, mock_size, mock_delete):
         return super().testUsesCorrectTemplate()
 
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
-        self.uploadedFile1 = self.createFile()
+        self.uploadedFile1 = createFile(self)
 
     def url(self):
         return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
@@ -211,7 +211,7 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Patched_Base_
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
-        self.uploadedFile1 = self.createFile()
+        self.uploadedFile1 = createFile(self)
 
     def url(self):
         return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
@@ -221,14 +221,14 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Bas
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testPageLoads(self, mock_save, mock_size, mock_delete):
         response = self.getResponse()
         self.assertEqual(response.status_code, 204)
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testUsesCorrectTemplate(self, mock_save, mock_size, mock_delete):
         response = self.getResponse()
         self.assertTemplateNotUsed(response, 'eventfiles/uploadMentorEventFile.html')
@@ -257,7 +257,7 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
         self.assertContains(response, "Type: This field is required.")
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testSuccess(self, mock_save, mock_size):
         data = {
             'fileUpload': self.docFile,
@@ -281,14 +281,10 @@ class Test_MentorEventFileUploadForm(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
-    def createFile(self, mock_save):
-        return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
-
     def setUp(self):
         newCommonSetUp(self)
 
-        self.uploadedFile1 = self.createFile()
+        self.uploadedFile1 = createFile(self)
 
     def testBlankFormUploadEnabled(self):
         form = MentorEventFileUploadForm(instance=None, uploadedFile=None, eventAttendance=self.team1)
@@ -319,10 +315,6 @@ class Test_MentorEventFileUploadClean(TestCase):
     email3 = 'user3@user.com'
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
-
-    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='string')
-    def createFile(self, mock_save):
-        return MentorEventFileUpload.objects.create(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
     def setUp(self):
         newCommonSetUp(self)
