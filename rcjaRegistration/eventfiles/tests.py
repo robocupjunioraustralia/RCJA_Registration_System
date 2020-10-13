@@ -176,3 +176,33 @@ class Test_MentorEventFileUploadView_Permissions_NewFile_Post(Base_Test_MentorEv
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "File upload not available", status_code=403)
+
+class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.uploadedFile1 = self.createFile()
+
+    def url(self):
+        return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
+
+    def getResponse(self):
+        return self.client.post(self.url())
+
+    def testDeniedUploadDeadlinePassed(self):
+        response = super().testDeniedUploadDeadlinePassed()
+        self.assertContains(response, "File upload not available", status_code=403)
+
+class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.uploadedFile1 = self.createFile()
+
+    def url(self):
+        return reverse('eventfiles:edit', kwargs={'uploadedFileID': self.uploadedFile1.id})
+
+    def getResponse(self):
+        return self.client.delete(self.url())
+
+    def testDeniedUploadDeadlinePassed(self):
+        response = super().testDeniedUploadDeadlinePassed()
+        self.assertContains(response, "File upload not available", status_code=403)
