@@ -85,7 +85,7 @@ class Division(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Division'
-        ordering = ['name']
+        ordering = ['category', 'name']
 
     def clean(self):
         errors = []
