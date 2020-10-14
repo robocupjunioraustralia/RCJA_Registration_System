@@ -4,12 +4,19 @@ from django.conf import settings
 
 import datetime
 
+from django.utils.html import format_html
+from django.template.defaultfilters import filesizeformat
+from common.fields import UUIDImageField
+
+from rcjaRegistration.storageBackends import PublicMediaStorage
+from django.templatetags.static import static
+
 from invoices.models import Invoice
 from schools.models import SchoolAdministrator
 
 # **********MODELS**********
 
-def eventCoordinatorEditPermisisons(level):
+def eventCoordinatorEditPermissions(level):
     if level in ['full', 'eventmanager']:
         return [
             'add',
@@ -98,7 +105,7 @@ class Division(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -128,6 +135,9 @@ class Venue(models.Model):
     # Fields
     name = models.CharField('Name', max_length=60)
     address = models.TextField('Address', blank=True)
+    # Venue image
+    venueImage = UUIDImageField('Venue image', storage=PublicMediaStorage(), upload_prefix="VenueImage", original_filename_field="venueImageOriginalFilename", null=True, blank=True)
+    venueImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
     class Meta:
@@ -149,7 +159,7 @@ class Venue(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -160,6 +170,16 @@ class Venue(models.Model):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    # Image methods
+
+    def venueImageFilesize(self):
+        return filesizeformat(self.venueImage.size)
+    venueImageFilesize.short_description = 'Size'
+
+    def venueImageTag(self):
+        return format_html('<img src="{}" height="200" />', self.venueImage.url)
+    venueImageTag.short_description = 'Preview'
 
     def __str__(self):
         return self.name
@@ -215,6 +235,10 @@ class Event(CustomSaveDeleteModel):
     eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
     statusChoices = (('draft', 'Draft'), ('published', 'Published'))
     status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
+
+    # Banner image
+    eventBannerImage = UUIDImageField('Banner image', storage=PublicMediaStorage(), upload_prefix='EventBannerImage', original_filename_field='eventBannerImageOriginalFilename', null=True, blank=True)
+    eventBannerImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # Dates
     startDate = models.DateField('Event start date')
@@ -302,7 +326,7 @@ class Event(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -353,6 +377,26 @@ class Event(CustomSaveDeleteModel):
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    # Image methods
+
+    def effectiveBannerImageURL(self):
+        if self.eventBannerImage:
+            return self.eventBannerImage.url
+        elif self.venue and self.venue.venueImage:
+            return self.venue.venueImage.url
+        elif self.state and self.state.defaultEventImage:
+            return self.state.defaultEventImage.url
+        else:
+            return static("homeimage2.jpg")
+
+    def effectiveBannerImageTag(self):
+        return format_html('<img src="{}" height="200" />', self.effectiveBannerImageURL())
+    effectiveBannerImageTag.short_description = 'Preview'
+
+    def bannerImageFilesize(self):
+        return filesizeformat(self.eventBannerImage.size)
+    bannerImageFilesize.short_description = 'Size'
 
     def __str__(self):
         if not self.globalEvent:
@@ -418,7 +462,7 @@ class AvailableDivision(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -493,7 +537,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -532,6 +576,19 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
+    def eventAttendanceType(self):
+        # Returns type of eventAttendance. e.g. team, workshopattendee
+        for attr in ['team', 'workshopattendee']:
+            if hasattr(self, attr):
+                return attr
+
+    def childObject(self):
+        # Get team or workshop attendance object for this eventAttendee
+        return getattr(self, self.eventAttendanceType())
+
+    def __str__(self):
+        return str(self.childObject())
+
     def homeState(self):
         if self.school:
             return self.school.state
@@ -555,6 +612,11 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
         # Check if at least one invoice has campus field set
         return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+
+    # File upload
+
+    def availableFileUploadTypes(self):
+        return self.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
 
     # *****CSV export methods*****
 

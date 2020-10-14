@@ -32,7 +32,7 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
         # Get form
         form = WorkshopAttendeeForm(instance=attendee, user=request.user, event=event)
 
-        return render(request, 'workshops/addEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})
+        return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})
 
     def post(self, request, eventID=None, attendeeID=None):
         if attendeeID is not None:
@@ -62,7 +62,4 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
         # Default to displaying the form again if form not valid
-        return render(request, 'workshops/addEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})
-
-    def delete(self, request, attendeeID):
-        return super().delete(request, attendeeID)
+        return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})

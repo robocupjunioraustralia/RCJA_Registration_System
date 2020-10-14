@@ -1,0 +1,132 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Upload file </title>
+
+<style type="text/css">
+    body {
+        background-color: white;
+    }
+
+    .column {
+        max-width: 100%;
+    }
+
+    .formbox {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+
+    .bg {
+        /* Full height */
+        height: 100%;
+        width: auto;
+        /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        /*background-color: #CCE2FF;*/
+    }
+
+    .left-aligned-text {
+        text-align: left;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile eight wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    <div>
+                        <h1>{{eventAttendance.event}}: Viewing team {{eventAttendance}}</h1>
+
+                        {% if not uploadedFile %}
+                        <h2>Upload a new file</h2>
+
+                        {% else %}
+                        <h2>Edit existing file: <a href="{{uploadedFile.fileURL}}" target="_blank">{{uploadedFile.originalFilename}}</a></h2>
+                        {% endif %}
+
+                        <h3>File upload categories</h3>
+
+                        <table id="categoriesTable" class="ui celled table">
+                            <thead>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Max file size</th>
+                                <th>Allowed file types</th>
+                                <th>Upload deadline</th>
+                            </thead>
+                            <tbody>
+                                {% for availableFileUploadType in availableFileUploadTypes %}
+                                <tr id="fileRow{{uploadedFile.id}}">
+                                    <td>{{availableFileUploadType.fileType.name}}</td>
+                                    <td>{{availableFileUploadType.fileType.description}}</td>
+                                    <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
+                                    <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}</td>
+                                    <td>{{availableFileUploadType.uploadDeadline}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <!-- Error messaging -->
+                        {% if form.errors %}
+                        <div class="ui message left-aligned-text">
+                            <div class="">
+                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ form.non_field_errors }}
+                                <ul>
+                                    {% for field in form %}
+                                    {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- /Error messaging -->
+
+                        <form enctype="multipart/form-data" method="post" class="ui form">
+                            {% csrf_token %}
+
+                            {% if not uploadedFile %}
+                            <div class="two fields">
+                                <div class="field">
+                                    <label>File:</label>
+                                    {{form.fileUpload}}
+                                </div>
+                                <div class="field">
+                                    <label>Type:</label>
+                                    {{ form.fileType|attr:"class:ui dropdown"}}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="field">
+                                <label>Type:</label>
+                                {{ form.fileType|attr:"class:ui dropdown"}}
+                            </div>
+                            {% endif %}
+
+                            <div class="field">
+                                <label>Comments:</label>
+                                {{form.comments}}
+                            </div>
+
+                            <input class="primary ui button" type="submit" value="Save" />
+                            <a href="{% url 'teams:details' eventAttendance.id %}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

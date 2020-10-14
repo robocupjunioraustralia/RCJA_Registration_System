@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -160,7 +160,7 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     return True
 
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
-    def common(self, request, event, obj):
+    def common(self, request, event, eventAttendance):
         # Check is correct event type
         if event.eventType != self.eventType:
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
@@ -173,15 +173,26 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if not event.published():
             raise PermissionDenied("Event is not published")
 
-        # Check administrator of this obj
-        if obj and not mentorEventAttendanceAccessPermissions(request, obj):
+        # Check administrator of this eventAttendance
+        if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, objID):
-        obj = get_object_or_404(BaseEventAttendance, pk=objID)
-        event = obj.event
-        self.common(request, event, obj)
+    def delete(self, request, teamID=None, attendeeID=None, eventID=None):
+        # This endpoint should never be called with eventID
+        if eventID is not None:
+            return HttpResponseForbidden()
+        # Accept multiple variables because used for both teams and workshops
+        # Need to lookup the relevant one
+        eventAttendanceID = None
+        if teamID is not None:
+            eventAttendanceID = teamID
+        if attendeeID is not None:
+            eventAttendanceID = attendeeID
+
+        eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
+        event = eventAttendance.event
+        self.common(request, event, eventAttendance)
 
         # Delete team
-        obj.delete()
+        eventAttendance.delete()
         return HttpResponse(status=204)

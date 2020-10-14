@@ -663,6 +663,15 @@ class TestTeamDelete(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertRaises(Team.DoesNotExist, lambda: Team.objects.get(pk=self.team1.pk))
 
+    def testWrongEndpointDenied(self):
+        Team.objects.get(pk=self.team1.pk)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:create', kwargs={'eventID':self.team1.id})
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        Team.objects.get(pk=self.team1.pk)
+
     def testDenied_closed(self):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.event.save()
@@ -817,6 +826,12 @@ class TestTeamMethods(TestCase):
 
     def testHomeState_noSchool(self):
         self.assertEqual(self.team1.homeState(), self.state1)
+
+    def testEventAttendanceType(self):
+        self.assertEqual(self.team1.eventAttendanceType(), 'team')
+
+    def testChildObject(self):
+        self.assertEqual(self.team1.childObject(), self.team1)
 
     def testMentorUserName(self):
         self.assertEqual(self.team1.mentorUserName(), 'First Last')
