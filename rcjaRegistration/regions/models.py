@@ -2,6 +2,12 @@ from django.db import models
 from common.models import *
 from django.conf import settings
 
+from django.utils.html import format_html
+from django.template.defaultfilters import filesizeformat
+from common.fields import UUIDImageField
+
+from rcjaRegistration.storageBackends import PublicMediaStorage
+
 # **********MODELS**********
 
 class State(CustomSaveDeleteModel):
@@ -23,6 +29,9 @@ class State(CustomSaveDeleteModel):
     # Defaults
     defaultEventDetails = models.TextField('Default event details', blank=True)
     invoiceMessage = models.TextField('Invoice message', blank=True)
+    # Default event image
+    defaultEventImage = UUIDImageField('Default event image', storage=PublicMediaStorage(), upload_prefix="DefaultEventImage", original_filename_field="defaultEventImageOriginalFilename", null=True, blank=True)
+    defaultEventImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
     class Meta:
@@ -78,6 +87,16 @@ class State(CustomSaveDeleteModel):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    # Image methods
+
+    def defaultEventImageFilesize(self):
+        return filesizeformat(self.defaultEventImage.size)
+    defaultEventImageFilesize.short_description = 'Size'
+
+    def defaultEventImageTag(self):
+        return format_html('<img src="{}" height="200" />', self.defaultEventImage.url)
+    defaultEventImageTag.short_description = 'Preview'
 
     def __str__(self):
         return self.name

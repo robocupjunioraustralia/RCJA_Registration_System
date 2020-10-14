@@ -1,0 +1,170 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> View team </title>
+
+<style type="text/css">
+  body {
+    background-color: white;
+  }
+  .column {
+    max-width: 100%;
+  }
+
+  .formbox {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  .bg {
+      /* Full height */
+    height: 100%; 
+    width:auto;
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    /*background-color: #CCE2FF;*/
+  }
+  .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+  <div class = "">
+    <div class="ui center aligned grid ">
+      <div class = "twelve wide mobile eight wide computer column ui">
+        <div class = "form form-group left-aligned-text">
+          <div>
+            <h1>{{team.event}}: Viewing team {{team}} </h1>
+
+            <h2>Details</h2>
+            <p>Division: <b>{{team.division}}</b> {{team.division.description}}</p>
+            {% if team.school %}<p>School: <b>{{team.school}}</b></p>{% endif %}
+            {% if team.campus %}<p>Campus: <b>{{team.campus}}</b></p>{% endif %}
+
+            <h3>Platform</h3>
+            <p>Hardware: <b>{{team.hardwarePlatform}}</b></p>
+            <p>Software: <b>{{team.softwarePlatform}}</b></p>
+
+            <h2>Students</h2>
+            {% if students.exists %}
+            <table id="teamTable" class="ui celled table">
+                <thead>
+                    <th>Name</th>
+                    <th>Year Level</th>
+                    <th>Birthday</th>
+                    <th>Gender</th>
+                </thead>
+                <tbody>
+                    {% for student in students.all %}
+                    <tr id="studentRow{{student.id}}">
+                        <td>{{student}}</td>
+                        <td>{{student.yearLevel}}</td>
+                        <td>{{student.birthday}}</td>
+                        <td>{{student.get_gender_display}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No students yet.</p>
+            {% endif %}
+            <a href = "{% url 'events:details' team.event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+            {% if team.event.registrationsOpen %}
+            <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
+            {% endif %}
+
+            {% if uploadedFiles.exists or team.availableFileUploadTypes %}
+            <h2>Files</h2>
+            {% endif %}
+            {% if uploadedFiles.exists %}
+            <table id="filesTable" class="ui celled table">
+              <thead>
+                  <th>Filename</th>
+                  <th>Size</th>
+                  <th>Type</th>
+                  <th>Uploaded by</th>
+                  <th>Uploaded at</th>
+                  <th>Actions</th>
+              </thead>
+              <tbody>
+                  {% for uploadedFile in uploadedFiles %}
+                  <tr id="fileRow{{uploadedFile.id}}">
+                      <td><a href="{{uploadedFile.fileURL}}" target="_blank">{{uploadedFile.originalFilename}}</a></td>
+                      <td>{{uploadedFile.filesize}}</td>
+                      <td>{{uploadedFile.fileType}}</td>
+                      <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>
+                      <td>{{uploadedFile.creationDateTime}}</td>
+                      <td>
+                        {% if not uploadedFile.uploadDeadlinePassed %}
+                        <a href="{% url 'eventfiles:edit' uploadedFile.id %}"><button class="ui primary button">Edit</button></a>
+                        <button onClick="showDeleteModal({{uploadedFile.id}}, '{% url 'eventfiles:edit' uploadedFile.id %}')" class="ui negative button">Delete</button>
+                        {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+            </table>
+            {% endif %}
+            {% if team.availableFileUploadTypes %}
+            <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
+
+            <h3>File upload categories:</h3>
+            <ul>
+              {% for availableFileUploadType in availableFileUploadTypes %}
+              <li><strong>{{ availableFileUploadType.fileType.name }}</strong></li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui modal">
+  <div class="header">
+    Delete file
+  </div>
+  <div class="image content">
+    <div class="description">
+      <div class="ui header">Are you sure?</div>
+      <p> Deleting a file is an irreversable action. Are you sure that this is the file that you want to delete?</p>
+    </div>
+  </div>
+  <div class="actions">
+    <div class="ui black deny button">No, cancel</div>
+    <button id="deleteConfirm" class="ui negative right button">Yes, I'm certain</button>
+  </div>
+</div>
+
+<script>
+  function showModal() {
+    $('.ui.modal').modal('show');
+  }
+
+  function deleteFile(id, url) {
+    $.ajax({
+      type: "DELETE",
+      url: url,
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+      },
+    })
+      .done((data) => $('#fileRow' + id).remove())
+      .fail((data) => alert('Unexpected Error!' + data))
+  }
+
+  function showDeleteModal(id, url) {
+    $('#deleteConfirm').attr('onClick', "deleteFile(" + id + ",'" + url + "');");
+    showModal()
+  }
+</script>
+{% endblock %}
