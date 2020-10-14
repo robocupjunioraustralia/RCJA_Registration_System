@@ -18,33 +18,22 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(
-    DEBUG=(bool, False),
-    SENDGRID_API_KEY=(str, 'API_KEY'),
-    ALLOWED_HOSTS=(list, ['127.0.0.1', 'localhost']),
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     USE_SQLLITE_DB=(bool, False),
-    AWS_ACCESS_KEY_ID=(str, 'AWS_ACCESS_KEY_ID'),
-    AWS_SECRET_ACCESS_KEY=(str, 'AWS_SECRET_ACCESS_KEY'),
-    STATIC_BUCKET=(str, 'STATIC_BUCKET'),
-    PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
-    PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
-    DEV_SETTINGS=(bool, False),
 )
 
-assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
+assert (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should only be used to run tests"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = "TESTONLY_slfgdjheaklfgjb34wuhgb35789gbne97urgblskdg"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = False
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
-
-DEV_SETTINGS = env('DEV_SETTINGS')
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -77,7 +66,6 @@ AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -147,26 +135,8 @@ else:
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-if DEV_SETTINGS and DEBUG:
-    AUTH_PASSWORD_VALIDATORS = []
-else:
-    AUTH_PASSWORD_VALIDATORS = [
-        {
-            'NAME': 'common.hibpValidator.PWNEDPasswordValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-        },
-    ]
+AUTH_PASSWORD_VALIDATORS = [
+]
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -179,16 +149,15 @@ PWNED_VALIDATOR_ERROR = "Your password was determined to have been involved in a
 PWNED_VALIDATOR_ERROR_FAIL = "We could not validate the safety of this password. This does not mean the password is invalid. Please try again in a little bit, if the problem persists please contact us."
 PWNED_VALIDATOR_FAIL_SAFE = False
 
-# Dev only
-if DEV_SETTINGS:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
 PASSWORD_RESET_TIMEOUT_DAYS = 1 # 1 day
 SESSION_COOKIE_AGE = 172800 # 2 days
 
 # Email
 
-SENDGRID_API_KEY = env('SENDGRID_API_KEY')
+SENDGRID_API_KEY = "testing"
 
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = 'apikey'
@@ -205,21 +174,16 @@ DEFAULT_RENDERER_CLASSES = (
     'rest_framework.renderers.JSONRenderer',
 )
 
-if DEV_SETTINGS and DEBUG:
-    DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    )
-
 REST_FRAMEWORK = {
     # 'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend','rest_framework.filters.OrderingFilter','rest_framework.filters.SearchFilter'),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         ),
-    'DEFAULT_PERMISSION_CLASSES': ('common.apiPermissions.IsSuperUser',),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
-    'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
-    'PAGE_SIZE': 50
+    # 'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
+    # 'PAGE_SIZE': 50
 }
 
 
@@ -247,8 +211,8 @@ LOGIN_REDIRECT_URL = '/'
 
 # AWS SETTINGS
 
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+AWS_ACCESS_KEY_ID = "testing"
+AWS_SECRET_ACCESS_KEY = "testing"
 AWS_DEFAULT_ACL = None
 
 AWS_S3_OBJECT_PARAMETERS = {
@@ -259,26 +223,22 @@ AWS_S3_OBJECT_PARAMETERS = {
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
 
-STATIC_BUCKET = env('STATIC_BUCKET')
+STATIC_BUCKET = "testing"
 STATIC_DOMAIN = f'{STATIC_BUCKET}.s3.amazonaws.com'
 
 AWS_STATIC_LOCATION = ''
 
-if STATIC_BUCKET != 'STATIC_BUCKET' and AWS_ACCESS_KEY_ID != 'AWS_ACCESS_KEY_ID':
-    STATICFILES_STORAGE = 'rcjaRegistration.storageBackends.StaticStorage'
-    STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_BUCKET}/"
-else:
-    STATIC_URL = '/static/'
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Public
-PUBLIC_BUCKET = env('PUBLIC_BUCKET')
+PUBLIC_BUCKET = "testing"
 PUBLIC_DOMAIN = f'{PUBLIC_BUCKET}.s3.amazonaws.com'
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PublicMediaStorage'
 AWS_PUBLIC_MEDIA_LOCATION = ''
 
 # Private
-PRIVATE_BUCKET = env('PRIVATE_BUCKET')
+PRIVATE_BUCKET = "testing"
 PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 PRIVATE_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
 AWS_PRIVATE_MEDIA_LOCATION = ''

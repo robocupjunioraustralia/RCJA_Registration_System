@@ -33,13 +33,13 @@ class TestUpdateUserPermissions(TestCase):
 
     def testCoordinatorUserChange(self):
         # Setup
-        coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
         self.assertEqual(self.user1.is_staff, True)
         self.assertEqual(self.user1.is_superuser, False)
 
         # test changing user field on coordinator
-        coordinator1.user = self.user2
-        coordinator1.save()
+        self.coordinator1.user = self.user2
+        self.coordinator1.save()
         self.user1.refresh_from_db()
         # Check user 1
         self.assertEqual(self.user1.is_staff, False)
@@ -48,6 +48,51 @@ class TestUpdateUserPermissions(TestCase):
         # Check user 2
         self.assertEqual(self.user2.is_staff, True)
         self.assertEqual(self.user2.is_superuser, False)
+
+    def testDelete(self):
+        # Setup
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.assertTrue(self.user1.is_staff)
+        self.assertFalse(self.user1.is_superuser)
+
+        # Delete
+        self.coordinator1.delete()
+        self.user1.refresh_from_db()
+        
+        # Check delete success
+        self.assertFalse(Coordinator.objects.exists())
+
+        # Check permissions update
+        self.assertFalse(self.user1.is_staff)
+        self.assertFalse(self.user1.is_superuser)
+
+    def testAdminBulkDelete(self):
+        # Setup
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.assertTrue(self.user1.is_staff)
+        self.assertFalse(self.user1.is_superuser)
+
+        # Bulk delete coordinator
+        payload = {
+            'post': "yes",
+            '_selected_action': self.coordinator1.id,
+            'action': 'delete_selected'
+        }
+
+        response = self.client.post(reverse('admin:coordination_coordinator_changelist'), data=payload)
+        self.user1.refresh_from_db()
+        
+        # Check delete success
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Coordinator.objects.exists())
+
+        # Check permissions update
+        self.assertFalse(self.user1.is_staff)
+        self.assertFalse(self.user1.is_superuser)
 
 class TestCoordinatorMethods(TestCase):
     email1 = 'user1@user.com'
@@ -71,6 +116,21 @@ class TestCoordinatorMethods(TestCase):
 
     def testUserEmail(self):
         self.assertEqual(self.coord1.userEmail(), self.email1)
+
+    def testStringState(self):
+        self.assertEqual(str(self.coord1), f'First Last: Victoria - Full')
+
+    def testStringNoState(self):
+        self.coord2 = Coordinator.objects.create(user=self.user1, permissions='full', position='Thing')
+        self.assertEqual(str(self.coord2), f'First Last: Full')
+
+    def testCleanNotDuplicate(self):
+        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.coord2.clean()
+
+    def testCleanDuplicate(self):
+        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.assertRaises(ValidationError, self.coord2.clean)
 
 class TestCoordinatorAdmin(TestCase):
     email1 = 'user1@user.com'

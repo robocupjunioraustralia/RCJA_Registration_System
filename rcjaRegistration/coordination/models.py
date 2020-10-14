@@ -38,7 +38,7 @@ class Coordinator(CustomSaveDeleteModel):
 
         # Check only one global coordinator per permission and user
         if Coordinator.objects.filter(user=self.user, permissions=self.permissions, state=self.state).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('Already coordinator for this user and permission level'))
+            errors.append(ValidationError('Already coordinator for this user, permission level and state'))
 
         # Raise any errors
         if errors:
@@ -71,9 +71,6 @@ class Coordinator(CustomSaveDeleteModel):
 
         if hasattr(self, 'previousUser',) and self.user != self.previousUser:
             Coordinator.updateUserPermissions(user=self.previousUser)
-
-    def postDelete(self):
-        Coordinator.updateUserPermissions(user=self.user)
 
     # *****Methods*****
 
@@ -116,7 +113,9 @@ class Coordinator(CustomSaveDeleteModel):
     userEmail.admin_order_field = 'user__email'
 
     def __str__(self):
-        return f'{self.userName()}: {self.state}'
+        if self.state:
+            return f'{self.userName()}: {self.state} - {self.get_permissions_display()}'
+        return f'{self.userName()}: {self.get_permissions_display()}'
 
     # *****CSV export methods*****
 

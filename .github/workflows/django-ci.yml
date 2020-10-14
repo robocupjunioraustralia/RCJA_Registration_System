@@ -22,11 +22,8 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         docker-compose exec -T web flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
-      env:
-        DEBUG: true
-        SECRET_KEY: xmc$&0neem3(yld1mzt+2vhw14u%gyrd4r&y7t7btflzh^ljk)
       run: |
-        docker-compose exec -T web coverage run --source='.' manage.py test
+        docker-compose exec -T web coverage run --source='.' manage.py test --settings=rcjaRegistration.settings_test
         #pip install pytest
         #pytest
     - name: Generate code coverage report
