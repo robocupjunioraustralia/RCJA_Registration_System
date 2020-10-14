@@ -14,7 +14,7 @@ class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request, obj=None):
         if InvoiceGlobalSettings.objects.exists():
-            return None
+            return False
         
         return super().has_add_permission(request)
 
