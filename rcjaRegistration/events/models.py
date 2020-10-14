@@ -388,7 +388,7 @@ class Event(CustomSaveDeleteModel):
         elif self.state and self.state.defaultEventImage:
             return self.state.defaultEventImage.url
         else:
-            return static("placeholderCity.png")
+            return static("homeimage2.jpg")
 
     def effectiveBannerImageTag(self):
         return format_html('<img src="{}" height="200" />', self.effectiveBannerImageURL())
