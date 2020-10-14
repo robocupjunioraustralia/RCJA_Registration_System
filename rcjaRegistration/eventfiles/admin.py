@@ -1,9 +1,11 @@
 from django.contrib import admin
-from common.admin import *
+from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
+
+from django.utils.html import format_html
 
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 
-from .models import *
+from .models import MentorEventFileType, EventAvailableFileType, MentorEventFileUpload
 
 @admin.register(MentorEventFileType)
 class MentorEventFileTypeAdmin(AdminPermissions, admin.ModelAdmin):
@@ -18,7 +20,7 @@ class EventAvailableFileTypeInline(InlineAdminPermissions, admin.TabularInline):
     extra = 0
 
 @admin.register(MentorEventFileUpload)
-class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin):
+class MentorEventFileUploadAdmin(AdminPermissions, admin.ModelAdmin):
     list_display = [
         '__str__',
         'eventAttendance',
@@ -28,14 +30,16 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
         'filesize',
     ]
 
-    add_readonly_fields = [
-    ]
     readonly_fields = [
-        'fileUpload',
+        'eventAttendance',
+        'fileLinkNewTab',
         'event',
         'uploadedBy',
         'filesize',
         'originalFilename',
+    ]
+    exclude = [
+        'fileUpload',
     ]
 
     list_filter = [
@@ -60,6 +64,9 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
         'eventAttendance__division__name',
     ]
 
+    def fileLinkNewTab(self, obj):
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.fileUpload.url, obj.originalFilename)
+    fileLinkNewTab.short_description = 'File'
 
     # Add uploadedBy in save
     def save_model(self, request, obj, form, change):
@@ -68,11 +75,8 @@ class MentorEventFileUploadAdmin(DifferentAddFieldsMixin, AdminPermissions, admi
 
         super().save_model(request, obj, form, change)
 
-
-    # def has_change_permission(self, request, obj=None):
-    #     return False
-    # def has_add_permission(self, request, obj=None):
-    #     return False
+    def has_add_permission(self, request, obj=None):
+        return False
 
     # State based filtering
 

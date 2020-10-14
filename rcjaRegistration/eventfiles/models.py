@@ -157,7 +157,7 @@ class MentorEventFileUpload(models.Model):
     @classmethod
     def coordinatorPermissions(cls, level):
         # May want to make this editable by admin, or at least creatable
-        return eventCoordinatorViewPermissions(level)
+        return eventCoordinatorEditPermisisons(level)
 
     # Used in state coordinator permission checking
     def getState(self):
