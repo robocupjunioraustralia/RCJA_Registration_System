@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.db.models import F, Q
 
-from .models import *
+from .models import Coordinator
 
 from django.contrib.auth import get_permission_codename
 
