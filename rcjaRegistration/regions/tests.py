@@ -256,6 +256,44 @@ class TestStateAdmin(TestCase):
         self.assertNotContains(response, '<label>Website:</label>')
         self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
 
+    def testCorrectReadonlyFields_change_superuser_global(self):
+        self.state1.typeRegistration = False
+        self.state1.typeGlobal = True
+        self.state1.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '<label>Registration:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertNotContains(response, '<label>Global:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeGlobal"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+
+    def testCorrectReadonlyFields_change_superuser_otherGlobal(self):
+        self.state1.typeRegistration = False
+        self.state2.typeRegistration = False
+        self.state2.typeGlobal = True
+        self.state1.save()
+        self.state2.save()
+
+        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
+        response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotContains(response, '<label>Registration:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertContains(response, '<label>Global:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeGlobal"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+
     def testCorrectReadonlyFields_change_coordinator(self):
         Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
 

@@ -105,10 +105,22 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
         self.assertEqual(200, response.status_code)
 
+    def testCancelButtonCorrectLink(self):
+        response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+        self.assertContains(response, f'href = "/events/{self.newEvent.id}"')
+
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
     def testClosedRegoReturnsError_get(self):
         response = self.client.get(reverse('teams:create', kwargs={'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testWorkshopReturnsError_get(self):
         self.newEvent.eventType = 'workshop'
@@ -118,10 +130,12 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Teams/ attendees cannot be created for this event type', status_code=403)
 
-    def testMaxSubmissionNumber(self):
-        response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response,'First name', self.newEvent.maxMembersPerTeam)
+    # This test needs to be a POST request to properly test max team members submission - see issue #368
+    # Test fails due to dynamic formsets
+    # def testMaxSubmissionNumber(self):
+    #     response = self.client.get(reverse('teams:create',kwargs={'eventID':self.newEvent.id}))
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertContains(response,'First name', self.newEvent.maxMembersPerTeam)
 
     def testWorkingTeamCreate(self):
         numberTeams = Team.objects.count()
@@ -231,8 +245,44 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}),data=payload)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
         self.assertEqual(Team.objects.count(), numberTeams)
+
+class TestTeamDetails(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
+
+    def testOpenRegistrationDoesLoad(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "Viewing team test new team")
+
+    def testClosedRegistrationDoesLoad(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Viewing team test')
+
+    def testOpenRegistration_editButton(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href = "/teams/{self.newEventTeam.id}/edit"')
+
+    def testClosedRegistration_noEditButton(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertNotContains(response, "Edit")
+
+    def testOpenRegistration_backEventButton(self):
+        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href = "/events/{self.newEvent.id}')
+
+    def testClosedRegistration_backEventButton(self):
+        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, f'<a href = "/events/{self.oldEventWithTeams.id}')
 
 class TestTeamEdit(TestCase):
     def setUp(self):
@@ -241,13 +291,29 @@ class TestTeamEdit(TestCase):
         self.software = SoftwarePlatform.objects.create(name='Software 1')
 
     def testOpenEditDoesLoad(self):
-        response = self.client.get(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}))
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
-  
+
+    def testCancelButtonCorrectLink_fromEvent(self):
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id})+ "?fromEvent")
+        self.assertContains(response, f'href = "/events/{self.newEvent.id}"')
+
+    def testCancelButtonCorrectLink_fromDetails(self):
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertContains(response, f'href = "/teams/{self.newEventTeam.id}"')
+
+    def testNotPublished_denied_get(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
     def testClosedEditReturnsError_get(self):
-        response = self.client.get(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}))
+        response = self.client.get(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}))
         self.assertEqual(403, response.status_code)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testClosedEditReturnsError_post(self):
         payload = {
@@ -266,10 +332,10 @@ class TestTeamEdit(TestCase):
             "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
-        response = self.client.post(reverse('teams:details', kwargs={'teamID':self.oldEventTeam.id}),data=payload)
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}),data=payload)
 
         self.assertEqual(403, response.status_code)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testEditStudentSucceeds(self):
         payload = {
@@ -288,9 +354,10 @@ class TestTeamEdit(TestCase):
             "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
-        response = self.client.post(reverse('teams:details', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(Student.objects.get(firstName="teststringhere").firstName,"teststringhere")
         self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
     def testMissingManagementFormData(self):
         payload = {
@@ -305,7 +372,7 @@ class TestTeamEdit(TestCase):
             "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
-        response = self.client.post(reverse('teams:details', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(response.status_code, 400)
         self.assertContains(response, 'Form data missing', status_code=400)
 
@@ -325,7 +392,7 @@ class TestTeamEdit(TestCase):
             "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
-        response = self.client.post(reverse('teams:details',kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        response = self.client.post(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEqual(200,response.status_code)
 
 def newCommonSetUp(self):
@@ -374,7 +441,7 @@ def newCommonSetUp(self):
             invoiceFooterMessage='Test Footer Text',
         )
 
-class TestTeamEditPermissions(TestCase):
+class TestTeamDetailsPermissions(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
@@ -403,6 +470,17 @@ class TestTeamEditPermissions(TestCase):
     
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
+    def testDenied_notPublished(self):
+        self.event.status = 'draft'
+        self.event.save()
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
 
     def testDenied_independent(self):
         url = reverse('teams:details', kwargs={'teamID':self.team1.id})
@@ -445,6 +523,77 @@ class TestTeamEditPermissions(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'You are not an administrator of this team', status_code=403)
 
+class TestTeamEditPermissions(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+
+    def testLoginRequired(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+    
+        response = self.client.post(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/edit")
+        self.assertEqual(response.status_code, 302)
+
+    def testLoads_independent(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_independent(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testDenied_independent_teamHasSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testLoads_school(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user3)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_school_noSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def testDenied_school_wrongSchool(self):
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
+        login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
+        SchoolAdministrator.objects.create(school=self.school2, user=self.user3)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -459,17 +608,17 @@ class TestTeamDelete(TestCase):
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
 
     def testLoginRequired(self):
-        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
     
         response = self.client.delete(url, follow=True)
         self.assertContains(response, "Login")
 
         response = self.client.delete(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}")
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/{self.team1.id}/edit")
         self.assertEqual(response.status_code, 302)
 
     def testDenied_independent(self):
-        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
     
         response = self.client.delete(url)
@@ -478,7 +627,7 @@ class TestTeamDelete(TestCase):
         Team.objects.get(pk=self.team1.pk)
 
     def testDenied_independent_teamHasSchool(self):
-        url = reverse('teams:details', kwargs={'teamID':self.team3.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
         response = self.client.delete(url)
@@ -487,7 +636,7 @@ class TestTeamDelete(TestCase):
         Team.objects.get(pk=self.team3.pk)
 
     def testDenied_school_noSchool(self):
-        url = reverse('teams:details', kwargs={'teamID':self.team3.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
         login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
     
         response = self.client.delete(url)
@@ -496,7 +645,7 @@ class TestTeamDelete(TestCase):
         Team.objects.get(pk=self.team3.pk)
 
     def testDenied_school_wrongSchool(self):
-        url = reverse('teams:details', kwargs={'teamID':self.team3.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team3.id})
         login = self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
         SchoolAdministrator.objects.create(school=self.school2, user=self.user3)
     
@@ -508,7 +657,7 @@ class TestTeamDelete(TestCase):
     def testSuccess(self):
         Team.objects.get(pk=self.team1.pk)
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
         
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 204)
@@ -518,11 +667,11 @@ class TestTeamDelete(TestCase):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.event.save()
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        url = reverse('teams:edit', kwargs={'teamID':self.team1.id})
         
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Registrtaion has closed for this event', status_code=403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
         Team.objects.get(pk=self.team1.pk)
 
 class TestTeamClean(TestCase):

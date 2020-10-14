@@ -53,11 +53,13 @@ def dashboard(request):
     currentEvents = Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
+        status="published",
     ).distinct().order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
+        status="published",
     ).order_by('-startDate').distinct()
 
     # Invoices
@@ -82,8 +84,17 @@ def coordinatorEventDetailsPermissions(request, event):
     from coordination.adminPermissions import checkStatePermissions
     return checkStatePermissions(request, event, 'view')
 
-def mentorEventDetailsPermissions_currentEvent(request, event):
-    return event.status == 'published' and event.endDate >= datetime.date.today() and event.registrationsOpenDate <= datetime.date.today()
+def eventDetailsPermissions(request, event, filterDict):
+    if coordinatorEventDetailsPermissions(request, event):
+        return True
+
+    if event.published() and event.registrationsOpen():
+        return True
+
+    if event.published() and BaseEventAttendance.objects.filter(**filterDict).exists():
+        return True
+
+    return False
 
 @login_required
 def details(request, eventID):
@@ -102,7 +113,7 @@ def details(request, eventID):
             'event': event,
         }
 
-    if not (coordinatorEventDetailsPermissions(request, event) or mentorEventDetailsPermissions_currentEvent(request, event) or BaseEventAttendance.objects.filter(**filterDict).exists()):
+    if not eventDetailsPermissions(request, event, filterDict):
         raise PermissionDenied("This event is unavailable")
 
     # Filter team or workshop attendee
@@ -126,8 +137,8 @@ def details(request, eventID):
         'teams': teams,
         'workshopAttendees': workshopAttendees,
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
-        'today':datetime.date.today(),
         'billingTypeLabel': billingTypeLabel,
+        'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
     }
     return render(request, 'events/details.html', context)   
 
@@ -135,7 +146,7 @@ def details(request, eventID):
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 
 
-def eventAttendancePermissions(request, eventAttendance):
+def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     if request.user.currentlySelectedSchool:
         # If user is a school administrator can only edit the currently selected school
         if request.user.currentlySelectedSchool != eventAttendance.school:
@@ -155,14 +166,15 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
 
         # Check registrations open
-        if event.registrationsCloseDate < datetime.datetime.now().date():
-            raise PermissionDenied("Registrtaion has closed for this event")
+        if not event.registrationsOpen():
+            raise PermissionDenied("Registration has closed for this event")
 
-        if event.status != 'published':
+        # Check event is published
+        if not event.published():
             raise PermissionDenied("Event is not published")
 
         # Check administrator of this obj
-        if obj and not eventAttendancePermissions(request, obj):
+        if obj and not mentorEventAttendanceAccessPermissions(request, obj):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
     def delete(self, request, objID):

@@ -12,11 +12,25 @@ from .forms import TeamForm, StudentForm
 from .models import Student, Team
 from events.models import Event
 
-from events.views import CreateEditBaseEventAttendance
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
 
 import datetime
 
 # Create your views here.
+
+@login_required
+def details(request, teamID):
+    team = get_object_or_404(Team, pk=teamID)
+
+    # Check event is published
+    if not team.event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check administrator of this team
+    if not mentorEventAttendanceAccessPermissions(request, team):
+        raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+    return render(request, 'teams/viewTeam.html', {'team':team})
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
@@ -27,7 +41,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             Team,
             Student,
             form = StudentForm,
-            extra = event.maxMembersPerTeam,
+            extra = 1 if team is None else 0,
             max_num = event.maxMembersPerTeam,
             can_delete = team is not None,
         )
@@ -79,6 +93,9 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
                 # Redirect if add another in response
                 if 'add_text' in request.POST and newTeam:
                     return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
+
+                elif not newTeam:
+                    return redirect(reverse('teams:details', kwargs = {"teamID":team.id}))
 
                 return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
         except ValidationError:

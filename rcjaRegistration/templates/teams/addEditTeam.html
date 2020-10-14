@@ -109,67 +109,33 @@
 
               <!-- Students -->
               <h2>Students</h2>
+              <div id = "form_set">
               {% for studentform in formset %}
                 {{studentform.id|attr:"type:hidden"}}
-              <div class = "ui segment">
-                <h4 class="ui dividing header">Student {{forloop.counter}}</h4>
-                {% if studentform.errors %}
-                  <div class="ui message left-aligned-text">
-                      <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                            {{ studentform.non_field_errors }}  
-                      <ul>
-                              {% for field in studentform %}
-                                {% if field.errors %}
-                                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>
-                                {% endif %}
-                              {% endfor %}
-                      </ul>
-
-                  </div>
-                {% endif %}
-
-                <div class = "two fields">
-                  <div class = "field">
-                    <label> {{studentform.firstName.label_tag}} </label>
-                            {{studentform.firstName}}
-                        
-                  </div>
-                  <div class = "field">
-                    <label> {{studentform.lastName.label_tag}} </label>
-                            {{studentform.lastName}}
-                        
-                  </div>
-                </div>
-                <div class = "four fields">
-                  <div class="field"> 
-                    <label> {{studentform.yearLevel.label_tag}}</label>
-                            {{studentform.yearLevel}}
-                        
-                  </div>
-                  <div class="field">
-                    <label> {{studentform.birthday.label_tag}}</label>
-                            {{studentform.birthday|attr:"type:date"}}
-                        
-                  </div>
-                  <div class="field">
-                    <label> {{studentform.gender.label_tag}}</label>
-                            {{studentform.gender}}
-                        
-                  </div>
-                  {% if formset.can_delete %}
-                  <div class="field">
-                      <label> Remove this student?</label>
-                        {{studentform.DELETE}} <span>This will delete this student from the team record</span>
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
+                {% include 'teams/studentForm.html' %}
                 {% endfor %}
+              </div>
+
+              <!-- Add more student forms -->
+              <br>
+              <input type="button" value="Add Another Student" id="add_more" class="primary ui button right floated" style="display: none">
+              <div id="empty_form" style="display:none">
+                {% with formset.empty_form as studentform %}
+                {% include 'teams/studentForm.html' %}
+                {% endwith %}
+              </div>
+              <br>
+
+
               <input class="primary ui button" type="submit" value="Save" />
               {% if not team %}
               <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
-              {% endif %}    
-              <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% endif %}
+              {% if 'fromEvent' in request.GET or not team %}
+              <a href = "{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% else %}
+              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% endif %}
             </form>
           </div>
         </div>
@@ -177,4 +143,22 @@
     </div>
   </div>
 </div>
+<script>
+  $(document).ready(function() {
+    console.log('loaded');
+    if ($('#id_student_set-TOTAL_FORMS').val() < $('#id_student_set-MAX_NUM_FORMS').val()) {
+      $("#add_more").show();
+    }
+  });
+
+  $('#add_more').click(function() {
+    var form_idx = $('#id_student_set-TOTAL_FORMS').val();
+    $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+    $('#id_student_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+
+    if ($('#id_student_set-TOTAL_FORMS').val() >= $('#id_student_set-MAX_NUM_FORMS').val()) {
+      $("#add_more").hide();
+    }
+  });
+</script>
 {% endblock %}
