@@ -234,10 +234,12 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Public
 PUBLIC_BUCKET = "testing"
+PUBLIC_DOMAIN = f'{PUBLIC_BUCKET}.s3.amazonaws.com'
 AWS_PUBLIC_MEDIA_LOCATION = ''
 
 # Private
 PRIVATE_BUCKET = "testing"
+PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
