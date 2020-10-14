@@ -9,7 +9,7 @@ from django.utils.html import format_html
 from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDFileField
 
-from events.models import eventCoordinatorViewPermissions, eventCoordinatorEditPermisisons
+from events.models import eventCoordinatorViewPermissions, eventCoordinatorEditPermissions
 
 from rcjaRegistration.storageBackends import PrivateMediaStorage
 
@@ -90,7 +90,7 @@ class EventAvailableFileType(models.Model):
     @classmethod
     def coordinatorPermissions(cls, level):
         # Only superusers can edit file type
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -157,7 +157,7 @@ class MentorEventFileUpload(models.Model):
     @classmethod
     def coordinatorPermissions(cls, level):
         # May want to make this editable by admin, or at least creatable
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):

@@ -16,7 +16,7 @@ from schools.models import SchoolAdministrator
 
 # **********MODELS**********
 
-def eventCoordinatorEditPermisisons(level):
+def eventCoordinatorEditPermissions(level):
     if level in ['full', 'eventmanager']:
         return [
             'add',
@@ -105,7 +105,7 @@ class Division(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -159,7 +159,7 @@ class Venue(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -326,7 +326,7 @@ class Event(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -462,7 +462,7 @@ class AvailableDivision(CustomSaveDeleteModel):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -537,7 +537,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
