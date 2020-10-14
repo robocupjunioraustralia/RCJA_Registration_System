@@ -1,7 +1,7 @@
 from django.db import models
 from common.models import *
 
-from events.models import BaseEventAttendance, eventCoordinatorEditPermisisons, eventCoordinatorViewPermissions
+from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
 
 # **********MODELS**********
 
@@ -131,7 +131,7 @@ class Student(models.Model):
     # *****Permissions*****
     @classmethod
     def coordinatorPermissions(cls, level):
-        return eventCoordinatorEditPermisisons(level)
+        return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):

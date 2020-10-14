@@ -4,17 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.urls import reverse
-from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import TeamForm, StudentForm
+
+import datetime
 
 from .models import Student, Team
 from events.models import Event
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
-
-import datetime
 
 # Create your views here.
 
@@ -30,7 +28,13 @@ def details(request, teamID):
     if not mentorEventAttendanceAccessPermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    return render(request, 'teams/viewTeam.html', {'team':team})
+    context = {
+        "team": team,
+        "students": team.student_set.all(),
+        'uploadedFiles': team.mentoreventfileupload_set.all(),
+    }
+
+    return render(request, 'teams/details.html', context)
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
@@ -59,7 +63,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = self.StudentInLineFormSet(instance=team)
 
-        return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
 
     def post(self, request, eventID=None, teamID=None):
         if teamID is not None:
@@ -104,10 +108,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         # Default to displaying the form again if form not valid
         try:
-            return render(request, 'teams/addEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+            return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
         except ValidationError:
             # To catch missing management data
             return HttpResponseBadRequest('Form data missing')
-
-    def delete(self, request, teamID):
-        return super().delete(request, teamID)

@@ -7,6 +7,7 @@ from django import forms
 from .models import *
 from regions.models import State
 from schools.models import Campus
+from eventfiles.admin import EventAvailableFileTypeInline
 
 # Register your models here.
 
@@ -81,6 +82,17 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'name',
         'state',
         'address',
+    ]
+    fields = [
+        'state',
+        'name',
+        'address',
+        ('venueImage', 'venueImageOriginalFilename', 'venueImageFilesize', 'venueImageTag'),
+    ]
+    readonly_fields = [
+        'venueImageOriginalFilename',
+        'venueImageFilesize',
+        'venueImageTag',
     ]
     search_fields = [
         'name',
@@ -167,6 +179,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         (None, {
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
+        ('Display image', {
+            'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
+        }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
@@ -183,6 +198,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     workshop_fieldsets = (
         (None, {
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+        }),
+        ('Display image', {
+            'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
@@ -215,9 +233,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         }),
     )
 
-    # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
     readonly_fields = [
-        'eventType',
+        'eventType', # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
+        'eventBannerImageOriginalFilename',
+        'bannerImageFilesize',
+        'effectiveBannerImageTag',
     ]
     add_readonly_fields = [
     ]
@@ -241,6 +261,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     inlines = [
         AvailableDivisionInline,
+        EventAvailableFileTypeInline,
     ]
     add_inlines = [ # Don't include available divisions here so the divisions will be filtered when shown
     ]
@@ -320,7 +341,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     # Message user regarding divisions during inline save
     def save_formset(self, request, form, formset, change):
         # Don't want to display error on add page because inlines not shown so impossible to add divisions
-        if change:
+        if change and str(formset.form) == "<class 'django.forms.widgets.AvailableDivisionForm'>": # This is a really hacky way of checking the formset
             if len(formset.cleaned_data) == 0:
                 self.message_user(request, f"{form.instance}: You haven't added any divisions yet, people won't be able to register.", messages.WARNING)
 
