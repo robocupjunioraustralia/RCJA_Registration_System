@@ -51,13 +51,13 @@
 
     <div class="row">
         {% if hasAdminPermissions %}
-        <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui positive button">View in admin</button></a>
+        <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui primary button">View in admin</button></a>
         {% endif %}
         {% if event.registrationsOpen and event.published %}
             {% if event.boolWorkshop %}
-            <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
+            <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
             {% else %}
-            <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">Add team</button></a>
+            <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
             {% endif %}
         {% elif event.published %}
         <h5> Registration for this event has closed. If you need to make modifications, please contact the event coordinator. </h5>
@@ -120,8 +120,16 @@
                 </td>
                 <td>
                     <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
+
                     {% if event.registrationsOpen %}
                     <a href="{% url 'teams:edit' team.id %}?fromEvent"><button class="ui primary button">Edit</button></a>
+                    {% endif %}
+
+                    {% if team.availableFileUploadTypes %}
+                    <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload file</a>
+                    {% endif %}
+
+                    {% if event.registrationsOpen %}
                     <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
                     {% endif %}
                 </td>

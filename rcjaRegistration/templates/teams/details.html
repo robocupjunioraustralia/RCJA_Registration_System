@@ -79,7 +79,7 @@
             <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
             {% endif %}
 
-            {% if uploadedFiles.exists or availableFileUploadTypes %}
+            {% if uploadedFiles.exists or team.availableFileUploadTypes %}
             <h2>Files</h2>
             {% endif %}
             {% if uploadedFiles.exists %}
@@ -111,7 +111,7 @@
               </tbody>
             </table>
             {% endif %}
-            {% if availableFileUploadTypes %}
+            {% if team.availableFileUploadTypes %}
             <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
 
             <h3>File upload categories:</h3>

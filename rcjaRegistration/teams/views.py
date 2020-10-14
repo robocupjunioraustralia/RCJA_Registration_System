@@ -28,13 +28,10 @@ def details(request, teamID):
     if not mentorEventAttendanceAccessPermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    availableFileUploadTypes = team.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
-
     context = {
         "team": team,
         "students": team.student_set.all(),
         'uploadedFiles': team.mentoreventfileupload_set.all(),
-        "availableFileUploadTypes": availableFileUploadTypes,
     }
 
     return render(request, 'teams/details.html', context)

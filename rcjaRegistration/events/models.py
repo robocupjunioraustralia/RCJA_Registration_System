@@ -613,6 +613,11 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         # Check if at least one invoice has campus field set
         return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
+    # File upload
+
+    def availableFileUploadTypes(self):
+        return self.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
+
     # *****CSV export methods*****
 
     # *****Email methods*****
