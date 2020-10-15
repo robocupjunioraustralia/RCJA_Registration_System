@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from common.serializers import *
+# from common.serializers import *
 
 from events.models import Event
 from regions.models import State, Region
