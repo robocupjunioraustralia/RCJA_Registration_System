@@ -72,12 +72,12 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
         # Check for global coordinator
         if Coordinator.objects.filter(user=request.user, state=None).exists():
-            return [Q(state__coordinator__permissions__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)]
+            return [Q(state__coordinator__permissionLevel__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)]
 
         # Default to filtering by state
         return [
             Q(state__coordinator__in = Coordinator.objects.filter(user=request.user)) | Q(state=None),
-            Q(state__coordinator__permissions__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)
+            Q(state__coordinator__permissionLevel__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)
         ]
 
 @admin.register(Venue)
