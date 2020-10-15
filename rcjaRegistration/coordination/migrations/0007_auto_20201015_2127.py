@@ -31,4 +31,9 @@ class Migration(migrations.Migration):
             model_name='coordinator',
             constraint=models.UniqueConstraint(fields=('user', 'state', 'permissionLevel'), name='user_state_permissions'),
         ),
+        migrations.AlterField(
+            model_name='coordinator',
+            name='permissionLevel',
+            field=models.CharField(choices=[('viewall', 'View all'), ('eventmanager', 'Event manager'), ('schoolmanager', 'School manager'), ('billingmanager', 'Billing manager'), ('webeditor', 'Web editor'), ('full', 'Full')], max_length=20, verbose_name='Permission level'),
+        ),
     ]

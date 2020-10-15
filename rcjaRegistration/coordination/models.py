@@ -21,7 +21,7 @@ class Coordinator(SaveDeleteMixin, models.Model):
         ('billingmanager', 'Billing manager'),
         ('webeditor', 'Web editor'),
         ('full','Full'))
-    permissionLevel = models.CharField('Permissions', max_length=20, choices=permissionLevelOptions)
+    permissionLevel = models.CharField('Permission level', max_length=20, choices=permissionLevelOptions)
     position = models.CharField('Position', max_length=50)
 
     # *****Meta and clean*****
