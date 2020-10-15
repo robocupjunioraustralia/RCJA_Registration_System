@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import *
+from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from .adminInlines import SchoolAdministratorInline
 

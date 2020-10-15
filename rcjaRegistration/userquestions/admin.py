@@ -1,8 +1,7 @@
 from django.contrib import admin
-from common.admin import *
 from coordination.adminPermissions import InlineAdminPermissions
 
-from .models import *
+from .models import Question, QuestionResponse
 
 # Register your models here.
 
