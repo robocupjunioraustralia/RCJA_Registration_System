@@ -43,7 +43,7 @@ def checkStatePermissionsLevels(request, obj, permisisonLevels):
 
 def reversePermisisons(obj, permissions):
     levels = []
-    for level in Coordinator.permissionsOptions:
+    for level in Coordinator.permissionLevelOptions:
         for permission in permissions:
             if permission in obj.coordinatorPermissions(level[0]):
                 levels.append(level[0])
