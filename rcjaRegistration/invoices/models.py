@@ -32,7 +32,7 @@ class InvoiceGlobalSettings(models.Model):
     def __str__(self):
         return 'Invoice settings'
 
-class Invoice(CustomSaveDeleteModel):
+class Invoice(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.CASCADE, editable=False)
 

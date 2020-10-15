@@ -6,7 +6,7 @@ import re
 
 # **********MODELS**********
 
-class School(CustomSaveDeleteModel):
+class School(SaveDeleteMixin, models.Model):
     # Foreign keys
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -97,7 +97,7 @@ class School(CustomSaveDeleteModel):
 
     # *****Email methods*****
 
-class Campus(CustomSaveDeleteModel):
+class Campus(SaveDeleteMixin, models.Model):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
     # Creation and update time
@@ -150,7 +150,7 @@ class Campus(CustomSaveDeleteModel):
 
     # *****Email methods*****  
 
-class SchoolAdministrator(CustomSaveDeleteModel):
+class SchoolAdministrator(SaveDeleteMixin, models.Model):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
     campus = models.ForeignKey(Campus, verbose_name='Campus', on_delete=models.SET_NULL, null=True, blank=True)

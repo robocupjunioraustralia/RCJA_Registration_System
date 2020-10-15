@@ -4,7 +4,7 @@ from django.conf import settings
 
 # **********MODELS**********
 
-class CommitteeMember(CustomSaveDeleteModel):
+class CommitteeMember(SaveDeleteMixin, models.Model):
     # Foreign keys
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.CASCADE) # Don't restrict to registration states because can assign to purely website states

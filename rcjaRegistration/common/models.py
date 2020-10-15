@@ -69,10 +69,6 @@ class SaveDeleteMixin:
     class Meta:
         abstract = True
 
-class CustomSaveDeleteModel(SaveDeleteMixin, models.Model):
-    class Meta:
-        abstract = True
-
 # **********FUNCTIONS**********
 
 def cleanDownstream(objectIn,setName,attributeName,errors, cleanDownstreamObjects=False):

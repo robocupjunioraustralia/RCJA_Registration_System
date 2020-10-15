@@ -10,7 +10,7 @@ from rcjaRegistration.storageBackends import PublicMediaStorage
 
 # **********MODELS**********
 
-class State(CustomSaveDeleteModel):
+class State(SaveDeleteMixin, models.Model):
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)

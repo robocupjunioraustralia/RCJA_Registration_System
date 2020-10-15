@@ -4,7 +4,7 @@ from django.conf import settings
 
 # **********MODELS**********
 
-class Coordinator(CustomSaveDeleteModel):
+class Coordinator(SaveDeleteMixin, models.Model):
     # Foreign keys
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='User', on_delete=models.CASCADE)
     state = models.ForeignKey('regions.state', verbose_name='State', on_delete=models.CASCADE, null=True, blank=True) # Don't restrict to registration states to allow delegation of website administration

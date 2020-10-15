@@ -219,7 +219,7 @@ class Year(models.Model):
 
     # *****Email methods*****
 
-class Event(CustomSaveDeleteModel):
+class Event(SaveDeleteMixin, models.Model):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
     state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
@@ -408,7 +408,7 @@ class Event(CustomSaveDeleteModel):
 
     # *****Email methods*****
 
-class AvailableDivision(CustomSaveDeleteModel):
+class AvailableDivision(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
