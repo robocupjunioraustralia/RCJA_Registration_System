@@ -188,13 +188,16 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
         if self.pk:
             self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
 
+        if self.pk:
+            self.previousSchool = SchoolAdministrator.objects.get(pk=self.pk).school
+
     def postSave(self):
         # Set currently selected school if not set
-        if self.user.currentlySelectedSchool is None:
+        if self.user.currentlySelectedSchool is None or (hasattr(self, 'previousSchool') and self.user.currentlySelectedSchool == self.previousSchool):
             self.user.currentlySelectedSchool = self.school
             self.user.save(update_fields=['currentlySelectedSchool'])
 
-        if hasattr(self, 'previousUser',) and self.user != self.previousUser:
+        if hasattr(self, 'previousUser') and self.user != self.previousUser:
             self.previousUser.setCurrentlySelectedSchool()
 
     # *****Methods*****
