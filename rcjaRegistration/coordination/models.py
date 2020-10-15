@@ -1,5 +1,6 @@
 from django.db import models
-from common.models import *
+from django.db.models import F, Q
+from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 
 # **********MODELS**********

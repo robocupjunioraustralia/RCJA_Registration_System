@@ -1,5 +1,5 @@
 from django.db import models
-from common.models import *
+from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 
 import re

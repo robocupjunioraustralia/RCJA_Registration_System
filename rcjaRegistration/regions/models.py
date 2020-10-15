@@ -1,5 +1,5 @@
 from django.db import models
-from common.models import *
+from common.models import SaveDeleteMixin
 from django.conf import settings
 
 from django.utils.html import format_html

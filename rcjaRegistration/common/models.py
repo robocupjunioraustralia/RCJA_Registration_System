@@ -1,7 +1,5 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.db.models import F, Q, Avg, Count, Min, Sum, OuterRef, Subquery, ExpressionWrapper, CharField, Value
-from django.db.models.functions import Concat
 
 # Create your models here.
 
@@ -54,15 +52,6 @@ class SaveDeleteMixin:
         abstract = True
 
 # **********FUNCTIONS**********
-
-def cleanDownstream(objectIn,setName,attributeName,errors, cleanDownstreamObjects=False):
-    for obj in getattr(objectIn,setName).all():
-        setattr(obj,attributeName,objectIn)
-        try:
-            obj.clean(cleanDownstreamObjects=cleanDownstreamObjects)
-        except Exception as e:
-            for message in e.messages:
-                errors.append(ValidationError(message))
 
 def checkRequiredFieldsNotNone(self, requiredFields):
     errors = []

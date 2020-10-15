@@ -1,5 +1,4 @@
 from django.db import models
-from common.models import *
 
 from events.models import BaseEventAttendance
 
