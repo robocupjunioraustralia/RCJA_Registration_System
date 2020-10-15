@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
 
