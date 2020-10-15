@@ -1,6 +1,7 @@
 from django.contrib import admin
 from common.admin import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from django.utils.html import format_html, escape
 
 from .models import InvoiceGlobalSettings, Invoice, InvoicePayment
 
@@ -89,9 +90,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     stateFilterLookup = 'event__state__coordinator'
 
     def detailURL(self, instance):
-        from django.utils.safestring import mark_safe
-        url = instance.get_absolute_url()  
-        return mark_safe(f'<a href="{url}" target="_blank">View invoice</a>')
+        return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url()  )
     detailURL.short_description = 'View invoice'
 
     # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation
