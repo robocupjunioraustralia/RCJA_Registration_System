@@ -183,7 +183,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
             {
                 'field': 'homeState',
                 'required': True,
-                'permissions': ['full'],
+                'permissionLevels': ['full'],
                 'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }

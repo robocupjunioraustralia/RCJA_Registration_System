@@ -123,7 +123,7 @@ class BaseAdminPermissions:
 
                     # Use defined permissions if present, else default to add and change on current model
                     defaultPermissionLevels = reversePermisisons(self.model, ['add', 'change'])
-                    permissionLevels = fieldToFilter.get('permissions', defaultPermissionLevels)
+                    permissionLevels = fieldToFilter.get('permissionLevels', defaultPermissionLevels)
 
                     queryset = fieldToFilter['fieldAdmin'].filterQuerysetByState(queryset, request, permissionLevels)
 

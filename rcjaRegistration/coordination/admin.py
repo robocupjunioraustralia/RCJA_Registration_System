@@ -59,7 +59,7 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             {
                 'field': 'state',
                 'required': True,
-                'permissions': ['full'],
+                'permissionLevels': ['full'],
                 'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
