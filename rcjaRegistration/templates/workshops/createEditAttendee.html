@@ -109,12 +109,6 @@
                 <div class = "field">
                   <label>Year level:</label>
                     {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
-                      <div class="ui pointing above label" id = "teacherHelpText" style="display:none">
-                        Teachers: Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)
-                      </div>
-                      <div class="ui pointing above label" id = "studentHelpText" style="display:none">
-                        Students: Enter a year level
-                      </div>
                 </div>
                 <div class = "field">
                   <label>Gender:</label>
@@ -125,13 +119,13 @@
               <div id="teacherOnlyFields" style="display:none"> 
                 <div class = "field">
                   <label>Email:</label>
-                    {{form.email|attr:"placeholder:Email"}}
+                    {{form.email|attr:"placeholder:Email"|attr:"id:emailForm"}}
                 </div>
               </div>
               <div id="studentOnlyFields"style="display:none">
                 <div class = "field">
                   <label>Birthday:</label>
-                    {{form.birthday|attr:"type:date"}}
+                    {{form.birthday|attr:"type:date"|attr:"id:birthdayForm"}}
                 </div>
               </div>
 
@@ -163,16 +157,17 @@ const attendeeTypeHandler = (newDisplayString) => {
     $("#studentOnlyFields").hide("slow");
     $("#teacherOnlyFields").show("slow");
   
-    $("#studentHelpText").hide("slow");
-    $("#teacherHelpText").show("slow");
-
+    $("#yearLevelForm").attr("placeholder", "Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)");
+    $("#emailForm").attr("required", true);
+    $("#birthdayForm").attr("required", false);
   }
   if( newDisplayString=== "student") {
     $("#studentOnlyFields").show("slow");
     $("#teacherOnlyFields").hide("slow");
 
-    $("#studentHelpText").show("slow");
-    $("#teacherHelpText").hide("slow");
+    $("#yearLevelForm").attr("placeholder", "Enter a year level");
+    $("#emailForm").attr("required", false);
+    $("#birthdayForm").attr("required", true);
   }
 }
 

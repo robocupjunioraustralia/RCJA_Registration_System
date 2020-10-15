@@ -1,7 +1,7 @@
 from django.contrib import admin
 from coordination.adminPermissions import InlineAdminPermissions
 
-from .models import *
+from .models import SchoolAdministrator, Campus
 
 class SchoolAdministratorInline(InlineAdminPermissions, admin.TabularInline):
     model = SchoolAdministrator

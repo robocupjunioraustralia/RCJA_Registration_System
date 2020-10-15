@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 
 from common.admin import ExportCSVMixin
-from coordination.adminPermissions import AdminPermissions
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 
 from .models import User
 
@@ -15,7 +15,7 @@ admin.site.unregister(Group)
 
 # User admin
 
-class SchoolAdministratorInline(admin.TabularInline):
+class SchoolAdministratorInline(InlineAdminPermissions, admin.TabularInline):
     from schools.models import SchoolAdministrator
     model = SchoolAdministrator
     extra = 0
@@ -35,7 +35,7 @@ class SchoolAdministratorInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return False
 
-class CoordinatorInline(admin.TabularInline):
+class CoordinatorInline(InlineAdminPermissions, admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0

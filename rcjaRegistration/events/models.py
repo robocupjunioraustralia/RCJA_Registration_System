@@ -1,6 +1,8 @@
 from django.db import models
-from common.models import *
+from django.db.models import F, Q
+from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 import datetime
 
@@ -85,7 +87,7 @@ class Division(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Division'
-        ordering = ['name']
+        ordering = ['category', 'name']
 
     def clean(self):
         errors = []
@@ -219,7 +221,7 @@ class Year(models.Model):
 
     # *****Email methods*****
 
-class Event(CustomSaveDeleteModel):
+class Event(SaveDeleteMixin, models.Model):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
     state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
@@ -408,7 +410,7 @@ class Event(CustomSaveDeleteModel):
 
     # *****Email methods*****
 
-class AvailableDivision(CustomSaveDeleteModel):
+class AvailableDivision(models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
@@ -487,7 +489,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     division = models.ForeignKey('events.Division', verbose_name='Division', on_delete=models.PROTECT)
 
     # User and school foreign keys
-    mentorUser = models.ForeignKey('users.User', verbose_name='Mentor', on_delete=models.PROTECT)
+    mentorUser = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Mentor', on_delete=models.PROTECT)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
 

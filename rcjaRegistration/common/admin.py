@@ -4,7 +4,6 @@ from django.db.models import F, Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 
-from django.forms import TextInput, Textarea
 from django.utils.html import format_html, escape
 from django.contrib import messages
 from django.urls import reverse
@@ -90,7 +89,7 @@ class ExportCSVMixin:
         return response
 
     export_as_csv.short_description = "Export selected"
-    export_as_csv.allowed_permissions = ('change',)
+    export_as_csv.allowed_permissions = ('view',)
 
 class DifferentAddFieldsMixin:
     """
