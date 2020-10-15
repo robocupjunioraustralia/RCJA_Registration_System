@@ -9,11 +9,6 @@ from django.db.models.functions import Concat
 
 class SaveDeleteMixin:
     # *****Save*****
-    # Save override to provide for arhived object protection
-
-    # Always allow editing by default, override on individual Model to change behaviour
-    def editingAllowed(self):
-        return True
 
     # Hook for custom pre save actions
     def preSave(self):
@@ -25,9 +20,6 @@ class SaveDeleteMixin:
 
     # Save
     def save(self, skipPrePostSave=False, *args, **kwargs):
-        # Prevent update if editing is not allowed
-        if not self.editingAllowed():
-            return
         # Run custom pre save actions
         if not skipPrePostSave:
             self.preSave()
@@ -38,11 +30,6 @@ class SaveDeleteMixin:
             self.postSave()
 
     # *****Delete*****
-    # Delete override to provide for arhived object protection
-
-    # Normally use editingAllowed status
-    def deletingAllowed(self):
-        return self.editingAllowed()
 
     # Hook for custom pre delete actions
     def preDelete(self):
@@ -54,9 +41,6 @@ class SaveDeleteMixin:
 
     # Delete
     def delete(self, skipPrePostDelete=False, *args, **kwargs):
-        # Prevent update if editing is not allowed
-        if not self.deletingAllowed():
-            return
         # Run custom pre save actions
         if not skipPrePostDelete:
             self.preDelete()
