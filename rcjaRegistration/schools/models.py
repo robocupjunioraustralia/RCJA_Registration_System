@@ -97,7 +97,7 @@ class School(SaveDeleteMixin, models.Model):
 
     # *****Email methods*****
 
-class Campus(SaveDeleteMixin, models.Model):
+class Campus(models.Model):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
     # Creation and update time

@@ -408,7 +408,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # *****Email methods*****
 
-class AvailableDivision(SaveDeleteMixin, models.Model):
+class AvailableDivision(models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
