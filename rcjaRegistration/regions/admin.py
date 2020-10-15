@@ -2,7 +2,7 @@ from django.contrib import admin
 from common.admin import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels
 
-from .models import *
+from .models import State, Region
 
 # Register your models here.
 

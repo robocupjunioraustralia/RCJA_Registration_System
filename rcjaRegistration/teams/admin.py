@@ -3,7 +3,7 @@ from common.admin import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 
-from .models import *
+from .models import HardwarePlatform, SoftwarePlatform, Team, Student
 
 from events.admin import BaseWorkshopAttendanceAdmin
 

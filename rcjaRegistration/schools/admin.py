@@ -3,7 +3,7 @@ from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from .adminInlines import SchoolAdministratorInline
 
-from .models import *
+from .models import School, Campus, SchoolAdministrator
 
 # Register your models here.
 

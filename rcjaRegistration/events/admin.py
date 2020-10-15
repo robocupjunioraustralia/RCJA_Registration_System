@@ -6,8 +6,9 @@ from django.contrib import messages
 from django import forms
 from django.forms import TextInput, Textarea
 from django.core.exceptions import ValidationError
+from django.db import models
 
-from .models import *
+from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
 from schools.models import Campus
 from eventfiles.admin import EventAvailableFileTypeInline
