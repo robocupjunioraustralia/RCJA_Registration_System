@@ -128,6 +128,17 @@ class TestCurrentlySelectedSchool(TestCase):
         self.assertEqual(self.user.currentlySelectedSchool, None)
         self.assertEqual(self.user2.currentlySelectedSchool, self.school1)
 
+    def testSchoolAdministratorSchoolChange(self):
+        # Setup
+        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+
+        # test changing user field on school administrator
+        admin1.school = self.school2
+        admin1.save()
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
+
     def testSuccesful_setCurrentSchool(self):
         # Setup
         admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)

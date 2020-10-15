@@ -1,12 +1,12 @@
 from django.contrib import admin
-from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from common.admin import ExportCSVMixin
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels
 
-from .models import *
+from .models import State, Region
 
 # Register your models here.
 
-class CoordinatorInline(admin.TabularInline):
+class CoordinatorInline(InlineAdminPermissions, admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0
@@ -17,7 +17,7 @@ class CoordinatorInline(admin.TabularInline):
         'user',
     ]
 
-class CommitteeMemberInline(admin.TabularInline):
+class CommitteeMemberInline(InlineAdminPermissions, admin.TabularInline):
     from publicwebsite.models import CommitteeMember
     model = CommitteeMember
     extra = 0
@@ -116,7 +116,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             return []
 
         # User must have full permissions to view coordinators
-        if self.checkStatePermissionsLevels(request, obj, ['full']):
+        if checkStatePermissionsLevels(request, obj, ['full']):
             return self.inlines + [
                 CoordinatorInline,
             ]

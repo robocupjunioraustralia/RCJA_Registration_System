@@ -1,12 +1,13 @@
 from django.db import models
-from common.models import *
+from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 import re
 
 # **********MODELS**********
 
-class School(CustomSaveDeleteModel):
+class School(SaveDeleteMixin, models.Model):
     # Foreign keys
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -97,7 +98,7 @@ class School(CustomSaveDeleteModel):
 
     # *****Email methods*****
 
-class Campus(CustomSaveDeleteModel):
+class Campus(models.Model):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
     # Creation and update time
@@ -150,7 +151,7 @@ class Campus(CustomSaveDeleteModel):
 
     # *****Email methods*****  
 
-class SchoolAdministrator(CustomSaveDeleteModel):
+class SchoolAdministrator(SaveDeleteMixin, models.Model):
     # Foreign keys
     school = models.ForeignKey(School, verbose_name='School', on_delete=models.CASCADE)
     campus = models.ForeignKey(Campus, verbose_name='Campus', on_delete=models.SET_NULL, null=True, blank=True)
@@ -187,13 +188,16 @@ class SchoolAdministrator(CustomSaveDeleteModel):
         if self.pk:
             self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
 
+        if self.pk:
+            self.previousSchool = SchoolAdministrator.objects.get(pk=self.pk).school
+
     def postSave(self):
         # Set currently selected school if not set
-        if self.user.currentlySelectedSchool is None:
+        if self.user.currentlySelectedSchool is None or (hasattr(self, 'previousSchool') and self.user.currentlySelectedSchool == self.previousSchool):
             self.user.currentlySelectedSchool = self.school
             self.user.save(update_fields=['currentlySelectedSchool'])
 
-        if hasattr(self, 'previousUser',) and self.user != self.previousUser:
+        if hasattr(self, 'previousUser') and self.user != self.previousUser:
             self.previousUser.setCurrentlySelectedSchool()
 
     # *****Methods*****

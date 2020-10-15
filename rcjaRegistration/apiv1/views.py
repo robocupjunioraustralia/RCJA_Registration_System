@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from common.views import *
+# from common.views import *
 
-from .serializers import *
+# from .serializers import *
 
 from events.models import Event
 from regions.models import State, Region
