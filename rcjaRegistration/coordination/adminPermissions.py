@@ -118,14 +118,18 @@ class BaseAdminPermissions:
             for fieldToFilter in self.fieldsToFilterRequest(request):
                 if db_field.name == fieldToFilter['field']:
 
+                    objAdmin = fieldToFilter['fieldAdmin']
+                    # Default to using the model attribute on the admin class, but default to fieldModel for cases where the admin is not registered and the model must be specified manually
+                    objModel = getattr(objAdmin, 'model', fieldToFilter['fieldModel'])
+
                     if not objectFiltering:
-                        queryset = fieldToFilter['fieldModel'].objects.all()
+                        queryset = objModel.objects.all()
 
                     # Use defined permissions if present, else default to add and change on current model
                     defaultPermissionLevels = reversePermisisons(self.model, ['add', 'change'])
                     permissionLevels = fieldToFilter.get('permissionLevels', defaultPermissionLevels)
 
-                    queryset = fieldToFilter['fieldAdmin'].filterQuerysetByState(queryset, request, permissionLevels)
+                    queryset = objAdmin.filterQuerysetByState(queryset, request, permissionLevels)
 
                     kwargs['queryset'] = queryset
 

@@ -2,13 +2,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
-
 from common.admin import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 
 from .models import User
 
 from userquestions.admin import QuestionResponseInline
+from regions.admin import StateAdmin
 
 # Unregister group
 admin.site.unregister(Group)
@@ -177,14 +177,11 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
         return [
             {
                 'field': 'homeState',
                 'required': True,
                 'permissionLevels': ['full'],
-                'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
         ]

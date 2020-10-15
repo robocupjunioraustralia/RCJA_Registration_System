@@ -4,6 +4,8 @@ from coordination.adminPermissions import AdminPermissions
 
 from .models import CommitteeMember
 
+from regions.admin import StateAdmin
+
 # Register your models here.
 
 @admin.register(CommitteeMember)
@@ -45,12 +47,9 @@ class CommitteeMemberAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
         return [
             {
                 'field': 'state',
-                'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
         ]

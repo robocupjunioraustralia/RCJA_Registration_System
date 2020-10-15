@@ -138,7 +138,6 @@ class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return [
             {
                 'field': 'team',
-                'fieldModel': Team,
                 'fieldAdmin': TeamAdmin,
             }
         ]

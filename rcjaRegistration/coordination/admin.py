@@ -3,6 +3,7 @@ from common.admin import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions
 
 from .models import Coordinator
+from regions.admin import StateAdmin
 
 # Register your models here.
 
@@ -53,14 +54,11 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
         return [
             {
                 'field': 'state',
                 'required': True,
                 'permissionLevels': ['full'],
-                'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
         ]

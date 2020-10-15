@@ -13,6 +13,8 @@ from regions.models import State
 from schools.models import Campus
 from eventfiles.admin import EventAvailableFileTypeInline
 
+from regions.admin import StateAdmin
+
 # Register your models here.
 
 @admin.register(DivisionCategory)
@@ -54,13 +56,10 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
         return [
             {
                 'field': 'state',
                 'required': True,
-                'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
         ]
@@ -123,12 +122,9 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
         return [
             {
                 'field': 'state',
-                'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
         ]
@@ -365,12 +361,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
         return [
             {
                 'field': 'state',
-                'fieldModel': State,
                 'fieldAdmin': StateAdmin,
             }
         ]
@@ -469,12 +462,9 @@ class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, adm
 
     @classmethod
     def fieldsToFilterRequest(cls, request):
-        from events.admin import EventAdmin
-        from events.models import Event
         return [
             {
                 'field': 'event',
-                'fieldModel': Event,
                 'fieldAdmin': EventAdmin,
             }
         ]
