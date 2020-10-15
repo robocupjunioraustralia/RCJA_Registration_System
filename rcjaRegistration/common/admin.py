@@ -89,7 +89,7 @@ class ExportCSVMixin:
         return response
 
     export_as_csv.short_description = "Export selected"
-    export_as_csv.allowed_permissions = ('change',)
+    export_as_csv.allowed_permissions = ('view',)
 
 class DifferentAddFieldsMixin:
     """
