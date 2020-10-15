@@ -156,18 +156,6 @@ class BaseAdminPermissions:
 
     # Permissions
 
-    def checkModelEditingAllowed(self, obj):
-        # Try admin specific editingAllowed first
-        try:
-            return obj.editingAllowedAdmin()
-        except AttributeError:
-            pass
-        # Revert to generic editing allowed, which may be more db intensive unnesecarily (in admin case because change form not registered, extra db calls still needed in api)
-        try:
-            return obj.editingAllowed()
-        except AttributeError:
-            return True
-
     # Add permisison only needed for inline, defined there
 
     def has_view_permission(self, request, obj=None):
@@ -183,8 +171,8 @@ class BaseAdminPermissions:
         return checkStatePermissions(request, obj, 'view')
 
     def has_change_permission(self, request, obj=None):
-        # Check django permissions and editing allowed
-        if not (super().has_change_permission(request, obj=obj) and self.checkModelEditingAllowed(obj)):
+        # Check django permissions
+        if not super().has_change_permission(request, obj=obj):
             return False
 
         # Only superuser can change or delete global objects
@@ -195,8 +183,8 @@ class BaseAdminPermissions:
         return checkStatePermissions(request, obj, 'change', permissionsModel=self.model)
 
     def has_delete_permission(self, request, obj=None):
-        # Check django permissions and editing allowed
-        if not (super().has_delete_permission(request, obj=obj) and self.checkModelEditingAllowed(obj)):
+        # Check django permissions
+        if not super().has_delete_permission(request, obj=obj):
             return False
 
         # Only superuser can change or delete global objects
@@ -218,8 +206,8 @@ class InlineAdminPermissions(BaseAdminPermissions):
         return super().get_formset(request, obj, **kwargs)
 
     def has_add_permission(self, request, obj):
-        # Check django permissions and editing allowed
-        if not (super().has_add_permission(request, obj) and self.checkModelEditingAllowed(obj)):
+        # Check django permissions
+        if not super().has_add_permission(request, obj):
             return False
 
         # Check state permissions
