@@ -842,13 +842,13 @@ class TestDivisionAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testListLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_changelist'))
         self.assertEqual(response.status_code, 200)
 
     def testListContent_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_changelist'))
         self.assertEqual(response.status_code, 200)
@@ -857,26 +857,26 @@ class TestDivisionAdmin(TestCase):
         self.assertNotContains(response, 'Division 2')
 
     def testChangeLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_change', args=(self.division1.id,)))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Save')
 
     def testAddLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_add'))
         self.assertEqual(response.status_code, 200)
 
     def testDeleteLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_delete', args=(self.division1.id,)))
         self.assertEqual(response.status_code, 200)
 
     def testChangeDenied_wrongState_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_change', args=(self.division2.id,)))
         self.assertEqual(response.status_code, 302)
@@ -886,20 +886,20 @@ class TestDivisionAdmin(TestCase):
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
     def testViewLoads_viewonly_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_change', args=(self.division1.id,)))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Save')
 
     def testAddDenied_viewPermission_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_add'))
         self.assertEqual(response.status_code, 403)
 
     def testDeleteDenied_viewPermission_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_division_delete', args=(self.division1.id,)))
         self.assertEqual(response.status_code, 403)
@@ -907,7 +907,7 @@ class TestDivisionAdmin(TestCase):
     # Change Post
 
     def testChangePostAllowed_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -924,7 +924,7 @@ class TestDivisionAdmin(TestCase):
         self.assertEqual(self.division1.name, 'Renamed 1')
 
     def testChangePostDenied_wrongState_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 2',
@@ -938,7 +938,7 @@ class TestDivisionAdmin(TestCase):
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
     def testChangePostDenied_noState_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 0',
@@ -948,7 +948,7 @@ class TestDivisionAdmin(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def testChangePostDenied_viewPermission_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -970,7 +970,7 @@ class TestDivisionAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testStateFieldSuccess_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -980,7 +980,7 @@ class TestDivisionAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testStateFieldDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -992,7 +992,7 @@ class TestDivisionAdmin(TestCase):
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
     def testStateFieldBlankDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -1044,13 +1044,13 @@ class TestVenueAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testListLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_changelist'))
         self.assertEqual(response.status_code, 200)
 
     def testListContent_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_changelist'))
         self.assertEqual(response.status_code, 200)
@@ -1058,26 +1058,26 @@ class TestVenueAdmin(TestCase):
         self.assertNotContains(response, 'Venue 2')
 
     def testChangeLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_change', args=(self.venue1.id,)))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Save')
 
     def testAddLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_add'))
         self.assertEqual(response.status_code, 200)
 
     def testDeleteLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_delete', args=(self.venue1.id,)))
         self.assertEqual(response.status_code, 200)
 
     def testChangeDenied_wrongState_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_change', args=(self.venue2.id,)))
         self.assertEqual(response.status_code, 302)
@@ -1087,20 +1087,20 @@ class TestVenueAdmin(TestCase):
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
     def testViewLoads_viewonly_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_change', args=(self.venue1.id,)))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Save')
 
     def testAddDenied_viewPermission_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_add'))
         self.assertEqual(response.status_code, 403)
 
     def testDeleteDenied_viewPermission_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:events_venue_delete', args=(self.venue1.id,)))
         self.assertEqual(response.status_code, 403)
@@ -1108,7 +1108,7 @@ class TestVenueAdmin(TestCase):
     # Change Post
 
     def testChangePostAllowed_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -1125,7 +1125,7 @@ class TestVenueAdmin(TestCase):
         self.assertEqual(self.venue1.name, 'Renamed 1')
 
     def testChangePostDenied_wrongState_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 2',
@@ -1139,7 +1139,7 @@ class TestVenueAdmin(TestCase):
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
     def testChangePostDenied_viewPermission_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -1161,7 +1161,7 @@ class TestVenueAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testStateFieldSuccess_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -1171,7 +1171,7 @@ class TestVenueAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testStateFieldDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',
@@ -1183,7 +1183,7 @@ class TestVenueAdmin(TestCase):
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
     def testStateFieldBlankDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'name': 'Renamed 1',

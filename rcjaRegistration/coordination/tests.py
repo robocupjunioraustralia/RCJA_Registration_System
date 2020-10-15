@@ -33,7 +33,7 @@ class TestUpdateUserPermissions(TestCase):
 
     def testCoordinatorUserChange(self):
         # Setup
-        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.assertEqual(self.user1.is_staff, True)
         self.assertEqual(self.user1.is_superuser, False)
 
@@ -53,7 +53,7 @@ class TestUpdateUserPermissions(TestCase):
         # Setup
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
 
-        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.assertTrue(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
 
@@ -72,7 +72,7 @@ class TestUpdateUserPermissions(TestCase):
         # Setup
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
 
-        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.assertTrue(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
 
@@ -103,7 +103,7 @@ class TestCoordinatorMethods(TestCase):
 
     def setUp(self):
         commonSetUp(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.user1.first_name = 'First'
         self.user1.last_name = 'Last'
         self.user1.save()
@@ -121,15 +121,15 @@ class TestCoordinatorMethods(TestCase):
         self.assertEqual(str(self.coord1), f'First Last: Victoria - Full')
 
     def testStringNoState(self):
-        self.coord2 = Coordinator.objects.create(user=self.user1, permissions='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user1, permissionLevel='full', position='Thing')
         self.assertEqual(str(self.coord2), f'First Last: Full')
 
     def testCleanNotDuplicate(self):
-        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
+        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
         self.coord2.clean()
 
     def testCleanDuplicate(self):
-        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.assertRaises(ValidationError, self.coord2.clean)
 
 class TestCoordinatorAdmin(TestCase):
@@ -141,8 +141,8 @@ class TestCoordinatorAdmin(TestCase):
 
     def setUp(self):
         commonSetUp(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
-        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
 
     def testCoordinatorListLoads_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
@@ -196,7 +196,7 @@ class TestCoordinatorAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testCoordinatorChangeDenied_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -204,14 +204,14 @@ class TestCoordinatorAdmin(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def testChangePostDenied_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         payload = {
             'user': self.user3.id,
             'state': self.state1.id,
-            'permissions': 'full',
+            'permissionLevel': 'full',
             'position': 'Thing',
         }
         response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
@@ -225,7 +225,7 @@ class TestCoordinatorAdmin(TestCase):
         payload = {
             'user': self.user3.id,
             'state': self.state1.id,
-            'permissions': 'full',
+            'permissionLevel': 'full',
             'position': 'Thing',
         }
         response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
@@ -236,7 +236,7 @@ class TestCoordinatorAdmin(TestCase):
         payload = {
             'user': self.user3.id,
             'state': self.state1.id,
-            'permissions': 'full',
+            'permissionLevel': 'full',
             'position': 'Thing',
         }
         response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
@@ -247,7 +247,7 @@ class TestCoordinatorAdmin(TestCase):
         payload = {
             'user': self.user3.id,
             'state': self.state2.id,
-            'permissions': 'full',
+            'permissionLevel': 'full',
             'position': 'Thing',
         }
         response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
@@ -260,7 +260,7 @@ class TestCoordinatorAdmin(TestCase):
         payload = {
             'user': self.user3.id,
             'state': '',
-            'permissions': 'full',
+            'permissionLevel': 'full',
             'position': 'Thing',
         }
         response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)

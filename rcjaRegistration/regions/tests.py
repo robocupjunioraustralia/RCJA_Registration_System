@@ -146,13 +146,13 @@ class TestStateAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testStateListLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_changelist'))
         self.assertEqual(response.status_code, 200)
 
     def testStateListContent_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_changelist'))
         self.assertEqual(response.status_code, 200)
@@ -160,32 +160,32 @@ class TestStateAdmin(TestCase):
         self.assertNotContains(response, 'South Australia')
 
     def testStateChangeLoads_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Save')
 
     def testStateDeleteDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_delete', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 403)
 
     def testStateAddDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_add'))
         self.assertEqual(response.status_code, 403)
 
     def testStateAddDenied_globalCoordinator(self):
-        Coordinator.objects.create(user=self.user1, state=None, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=None, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_add'))
         self.assertEqual(response.status_code, 403)
 
     def testStateChangeDenied_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state2.id,)))
         self.assertEqual(response.status_code, 302)
@@ -207,7 +207,7 @@ class TestStateAdmin(TestCase):
         self.assertNotContains(response, "Coordinators")
 
     def testCorrectInlines_change_fullCoordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 200)
@@ -215,8 +215,8 @@ class TestStateAdmin(TestCase):
         self.assertContains(response, "Coordinators")
 
     def testCorrectInlines_change_viewCoordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='viewall', position='Thing')
-        Coordinator.objects.create(user=self.user1, state=self.state2, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state2, permissionLevel='full', position='Thing')
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))
         self.assertEqual(response.status_code, 200)
@@ -295,7 +295,7 @@ class TestStateAdmin(TestCase):
         self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
 
     def testCorrectReadonlyFields_change_coordinator(self):
-        Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         response = self.client.get(reverse('admin:regions_state_change', args=(self.state1.id,)))

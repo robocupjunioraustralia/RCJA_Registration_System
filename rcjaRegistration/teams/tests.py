@@ -1050,8 +1050,8 @@ class TestTeamAdmin(TestCase):
     def setUp(self):
         newCommonSetUp(self)
         createEventsAndTeams(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
-        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
 
         self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
         self.software = SoftwarePlatform.objects.create(name='Software 1')
@@ -1108,7 +1108,7 @@ class TestTeamAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testViewLoads_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1187,7 +1187,7 @@ class TestTeamAdmin(TestCase):
         self.assertEqual(self.team2.name, 'Team 2')
 
     def testChangePostDenied_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1235,7 +1235,7 @@ class TestTeamAdmin(TestCase):
         self.assertContains(response, 'was added successfully. You may edit it again below.')
 
     def testAddPostDenied_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)

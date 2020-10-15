@@ -363,8 +363,8 @@ class TestUserAdmin(TestCase):
 
     def setUp(self):
         adminSetUp(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
-        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
 
     def testUserListLoads_superuser(self):
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
@@ -419,7 +419,7 @@ class TestUserAdmin(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def testUserViewLoads_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -477,7 +477,7 @@ class TestUserAdmin(TestCase):
         self.assertContains(response, 'doesn’t exist. Perhaps it was deleted?')
 
     def testChangePostDenied_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -512,7 +512,7 @@ class TestUserAdmin(TestCase):
         self.assertContains(response, 'was added successfully. You may edit it again below.')
 
     def testAddPostDenied_viewPermission_coordinator(self):
-        self.coord1.permissions = 'viewall'
+        self.coord1.permissionLevel = 'viewall'
         self.coord1.save()
 
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -606,8 +606,8 @@ class TestUserAdminInlinesAndFields(TestCase):
 
     def setUp(self):
         adminSetUp(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
-        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='full', position='Thing')
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
+        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
 
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -700,7 +700,7 @@ def adminPermissionsSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password, homeState=self.state1)
     self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
     
-    self.coord1 = Coordinator.objects.create(user=self.user1, permissions='full', position='Thing')
+    self.coord1 = Coordinator.objects.create(user=self.user1, permissionLevel='full', position='Thing')
 
 class TestUserAdminPermissions(TestCase):
     email1 = 'user1@user.com'
