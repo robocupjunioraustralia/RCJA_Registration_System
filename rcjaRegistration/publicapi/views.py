@@ -8,7 +8,7 @@ from django.db.models.deletion import ProtectedError
 
 from common.apiPermissions import ReadOnly
 
-from .serializers import *
+from .serializers import StateSerializer, EventSerializer, CommitteeMemberSerializer
 
 from events.models import Event
 from regions.models import State
