@@ -90,7 +90,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     stateFilterLookup = 'event__state__coordinator'
 
     def detailURL(self, instance):
-        return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url()  )
+        return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url())
     detailURL.short_description = 'View invoice'
 
     # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation
