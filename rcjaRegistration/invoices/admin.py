@@ -1,8 +1,9 @@
 from django.contrib import admin
-from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from common.admin import ExportCSVMixin
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from django.utils.html import format_html, escape
 
-from .models import *
+from .models import InvoiceGlobalSettings, Invoice, InvoicePayment
 
 # Register your models here.
 
@@ -14,11 +15,11 @@ class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request, obj=None):
         if InvoiceGlobalSettings.objects.exists():
-            return None
+            return False
         
         return super().has_add_permission(request)
 
-class InvoicePaymentInline(admin.TabularInline):
+class InvoicePaymentInline(InlineAdminPermissions, admin.TabularInline):
     model = InvoicePayment
     extra = 0
 
@@ -89,9 +90,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     stateFilterLookup = 'event__state__coordinator'
 
     def detailURL(self, instance):
-        from django.utils.safestring import mark_safe
-        url = instance.get_absolute_url()  
-        return mark_safe(f'<a href="{url}" target="_blank">View invoice</a>')
+        return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url())
     detailURL.short_description = 'View invoice'
 
     # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation

@@ -1,6 +1,7 @@
 from django.db import models
-from common.models import *
+from common.models import SaveDeleteMixin
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from django.utils.html import format_html
 from django.template.defaultfilters import filesizeformat
@@ -10,7 +11,7 @@ from rcjaRegistration.storageBackends import PublicMediaStorage
 
 # **********MODELS**********
 
-class State(CustomSaveDeleteModel):
+class State(SaveDeleteMixin, models.Model):
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)

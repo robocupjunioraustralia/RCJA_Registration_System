@@ -1,5 +1,4 @@
 from django import forms
-from django.core.exceptions import ValidationError
 
 class BaseEventAttendanceFormInitMixin:
     # Override init to filter division and campus, set school and event

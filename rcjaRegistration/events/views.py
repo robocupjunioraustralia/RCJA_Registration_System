@@ -5,10 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.db.models import F, Q
 
 import datetime
 
-from .models import *
+from .models import Event, BaseEventAttendance
 from teams.models import Team
 from schools.models import Campus
 from workshops.models import WorkshopAttendee

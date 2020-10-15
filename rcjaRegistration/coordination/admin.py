@@ -1,8 +1,8 @@
 from django.contrib import admin
-from common.admin import *
+from common.admin import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions
 
-from .models import *
+from .models import Coordinator
 
 # Register your models here.
 

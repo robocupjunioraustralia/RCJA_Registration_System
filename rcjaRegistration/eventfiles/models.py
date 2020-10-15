@@ -1,5 +1,5 @@
 from django.db import models
-from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
+from common.models import checkRequiredFieldsNotNone
 from django.core.exceptions import ValidationError
 from django.conf import settings
 

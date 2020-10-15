@@ -1,6 +1,8 @@
 from django.db import models
-from common.models import *
+from django.db.models import F, Q
+from common.models import SaveDeleteMixin
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 # **********MODELS**********
 
@@ -32,12 +34,12 @@ class InvoiceGlobalSettings(models.Model):
     def __str__(self):
         return 'Invoice settings'
 
-class Invoice(CustomSaveDeleteModel):
+class Invoice(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey('events.Event', verbose_name = 'Event', on_delete=models.CASCADE, editable=False)
 
     # User and school foreign keys
-    invoiceToUser = models.ForeignKey('users.User', verbose_name='Invoice to', on_delete=models.PROTECT, editable=False)
+    invoiceToUser = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Invoice to', on_delete=models.PROTECT, editable=False)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True, editable=False)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True, editable=False)
 
