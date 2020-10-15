@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from coordination.adminPermissions import AdminPermissions, checkStatePermissionsLevels
 
 from .models import *
 
@@ -116,7 +116,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             return []
 
         # User must have full permissions to view coordinators
-        if self.checkStatePermissionsLevels(request, obj, ['full']):
+        if checkStatePermissionsLevels(request, obj, ['full']):
             return self.inlines + [
                 CoordinatorInline,
             ]

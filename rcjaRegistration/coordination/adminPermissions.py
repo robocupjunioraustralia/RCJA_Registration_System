@@ -161,12 +161,6 @@ class BaseAdminPermissions:
         except AttributeError:
             return True
 
-    def checkStatePermissions(self, request, obj, permission):
-        return checkStatePermissions(request, obj, permission)
-
-    def checkStatePermissionsLevels(self, request, obj, permisisonLevels):
-        return checkStatePermissionsLevels(request, obj, permisisonLevels)
-
     # Add permisison only needed for inline, defined there
 
     def has_view_permission(self, request, obj=None):
@@ -179,7 +173,7 @@ class BaseAdminPermissions:
             return True
 
         # Check state permissions
-        return self.checkStatePermissions(request, obj, 'view')
+        return checkStatePermissions(request, obj, 'view')
 
     def has_change_permission(self, request, obj=None):
         # Check django permissions and editing allowed
@@ -191,7 +185,7 @@ class BaseAdminPermissions:
             return False
 
         # Check state permissions
-        return self.checkStatePermissions(request, obj, 'change')
+        return checkStatePermissions(request, obj, 'change')
 
     def has_delete_permission(self, request, obj=None):
         # Check django permissions and editing allowed
@@ -203,7 +197,7 @@ class BaseAdminPermissions:
             return False
 
         # Check state permissions
-        return self.checkStatePermissions(request, obj, 'delete')
+        return checkStatePermissions(request, obj, 'delete')
 
 class AdminPermissions(BaseAdminPermissions):
     def get_form(self, request, obj=None, **kwargs):
@@ -222,4 +216,4 @@ class InlineAdminPermissions(BaseAdminPermissions):
             return False
 
         # Check state permissions
-        return self.checkStatePermissions(request, obj, 'add')
+        return checkStatePermissions(request, obj, 'add')
