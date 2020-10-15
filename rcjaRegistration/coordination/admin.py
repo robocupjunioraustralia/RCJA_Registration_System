@@ -12,13 +12,13 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'userName',
         'userEmail',
         'state',
-        'permissions',
+        'permissionLevel',
         'position'
     ]
     fields = [
         'user',
         'state',
-        'permissions',
+        'permissionLevel',
         'position'
     ]
     autocomplete_fields = [
@@ -27,7 +27,7 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     list_filter = [
         'state',
-        'permissions',
+        'permissionLevel',
     ]
     search_fields = [
         'user__first_name',
@@ -35,7 +35,7 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'user__email',
         'state__name',
         'state__abbreviation',
-        'permissions',
+        'permissionLevel',
         'position',
     ]
     actions = [
@@ -45,7 +45,7 @@ class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'userName',
         'userEmail',
         'state',
-        'permissions',
+        'permissionLevel',
         'position',
     ]
 

@@ -14,32 +14,32 @@ class Coordinator(SaveDeleteMixin, models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    permissionsOptions = (
+    permissionLevelOptions = (
         ('viewall', 'View all'),
         ('eventmanager', 'Event manager'),
         ('schoolmanager', 'School manager'),
         ('billingmanager', 'Billing manager'),
         ('webeditor', 'Web editor'),
         ('full','Full'))
-    permissions = models.CharField('Permissions', max_length=20, choices=permissionsOptions)
+    permissionLevel = models.CharField('Permissions', max_length=20, choices=permissionLevelOptions)
     position = models.CharField('Position', max_length=50)
 
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Coordinator'
         constraints = [
-            models.UniqueConstraint(fields=['user', 'permissions'], condition=Q(state=None), name='user_permissions'),
-            models.UniqueConstraint(fields=['user', 'state', 'permissions'], name='user_state_permissions'),
+            models.UniqueConstraint(fields=['user', 'permissionLevel'], condition=Q(state=None), name='user_permissions'),
+            models.UniqueConstraint(fields=['user', 'state', 'permissionLevel'], name='user_state_permissions'),
         ]
         ordering = ['state', 'user']
 
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['user', 'permissions', 'position'])
+        checkRequiredFieldsNotNone(self, ['user', 'permissionLevel', 'position'])
 
-        # Check only one global coordinator per permission and user
-        if Coordinator.objects.filter(user=self.user, permissions=self.permissions, state=self.state).exclude(pk=self.pk).exists():
+        # Check only one global coordinator per permissionLevel and user
+        if Coordinator.objects.filter(user=self.user, permissionLevel=self.permissionLevel, state=self.state).exclude(pk=self.pk).exists():
             errors.append(ValidationError('Already coordinator for this user, permission level and state'))
 
         # Raise any errors
@@ -94,7 +94,7 @@ class Coordinator(SaveDeleteMixin, models.Model):
         for coordinator in coordinators:
             for model in django.apps.apps.get_models():
                 if hasattr(model, 'coordinatorPermissions'):
-                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
+                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissionLevel))
 
         # Add permissions to user
         from django.contrib.auth.models import Permission
@@ -116,8 +116,8 @@ class Coordinator(SaveDeleteMixin, models.Model):
 
     def __str__(self):
         if self.state:
-            return f'{self.userName()}: {self.state} - {self.get_permissions_display()}'
-        return f'{self.userName()}: {self.get_permissions_display()}'
+            return f'{self.userName()}: {self.state} - {self.get_permissionLevel_display()}'
+        return f'{self.userName()}: {self.get_permissionLevel_display()}'
 
     # *****CSV export methods*****
 
