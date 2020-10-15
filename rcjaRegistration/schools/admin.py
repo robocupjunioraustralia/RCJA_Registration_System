@@ -1,13 +1,13 @@
 from django.contrib import admin
 from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from .adminInlines import SchoolAdministratorInline
 
 from .models import *
 
 # Register your models here.
 
-class CampusInline(admin.TabularInline):
+class CampusInline(InlineAdminPermissions, admin.TabularInline):
     model = Campus
     extra = 0
 

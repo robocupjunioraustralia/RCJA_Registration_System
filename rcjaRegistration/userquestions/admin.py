@@ -1,11 +1,12 @@
 from django.contrib import admin
 from common.admin import *
+from coordination.adminPermissions import InlineAdminPermissions
 
 from .models import *
 
 # Register your models here.
 
-class QuestionResponseInline(admin.TabularInline):
+class QuestionResponseInline(InlineAdminPermissions, admin.TabularInline):
     model = QuestionResponse
     extra = 0
     readonly_fields = [

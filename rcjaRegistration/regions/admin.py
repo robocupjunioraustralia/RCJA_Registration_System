@@ -1,12 +1,12 @@
 from django.contrib import admin
 from common.admin import *
-from coordination.adminPermissions import AdminPermissions, checkStatePermissionsLevels
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels
 
 from .models import *
 
 # Register your models here.
 
-class CoordinatorInline(admin.TabularInline):
+class CoordinatorInline(InlineAdminPermissions, admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0
@@ -17,7 +17,7 @@ class CoordinatorInline(admin.TabularInline):
         'user',
     ]
 
-class CommitteeMemberInline(admin.TabularInline):
+class CommitteeMemberInline(InlineAdminPermissions, admin.TabularInline):
     from publicwebsite.models import CommitteeMember
     model = CommitteeMember
     extra = 0

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 
 from .models import *
 
@@ -18,7 +18,7 @@ class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
         
         return super().has_add_permission(request)
 
-class InvoicePaymentInline(admin.TabularInline):
+class InvoicePaymentInline(InlineAdminPermissions, admin.TabularInline):
     model = InvoicePayment
     extra = 0
 

@@ -20,13 +20,16 @@ def commonCheckStatePermissions(request, obj):
 
     return False
 
-def checkStatePermissions(request, obj, permission):
+def checkStatePermissions(request, obj, permission, permissionsModel=None):
     if commonCheckStatePermissions(request, obj):
         return True
 
+    if permissionsModel is None:
+        permissionsModel = obj
+
     # Check state level permission for object
     for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
-        if permission in obj.coordinatorPermissions(coordinator.permissions):
+        if permission in permissionsModel.coordinatorPermissions(coordinator.permissions):
             return True
 
     return False
@@ -84,7 +87,7 @@ class BaseAdminPermissions:
     def get_queryset(self, request):
         # Get base queryset
         queryset = super().get_queryset(request)
-        
+
         defaultPermissions = reversePermisisons(self.model, ['view', 'change'])
         permissions = getattr(self, 'stateFilteringPermissions', defaultPermissions)
 
@@ -185,7 +188,7 @@ class BaseAdminPermissions:
             return False
 
         # Check state permissions
-        return checkStatePermissions(request, obj, 'change')
+        return checkStatePermissions(request, obj, 'change', permissionsModel=self.model)
 
     def has_delete_permission(self, request, obj=None):
         # Check django permissions and editing allowed
@@ -197,7 +200,7 @@ class BaseAdminPermissions:
             return False
 
         # Check state permissions
-        return checkStatePermissions(request, obj, 'delete')
+        return checkStatePermissions(request, obj, 'delete', permissionsModel=self.model)
 
 class AdminPermissions(BaseAdminPermissions):
     def get_form(self, request, obj=None, **kwargs):
@@ -216,4 +219,5 @@ class InlineAdminPermissions(BaseAdminPermissions):
             return False
 
         # Check state permissions
-        return checkStatePermissions(request, obj, 'add')
+        return checkStatePermissions(request, obj, 'add', permissionsModel=self.model)
+

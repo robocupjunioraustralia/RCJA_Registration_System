@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.admin import *
-from coordination.adminPermissions import AdminPermissions
+from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 
 from .models import *
@@ -17,7 +17,7 @@ class HardwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
 class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
     pass
 
-class StudentInline(admin.TabularInline):
+class StudentInline(InlineAdminPermissions, admin.TabularInline):
     model = Student
     extra = 0
 
