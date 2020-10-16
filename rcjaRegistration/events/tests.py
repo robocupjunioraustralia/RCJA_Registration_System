@@ -259,7 +259,7 @@ class TestEventDetailsPage_school(TestCase):
             state=self.newState,
             region=self.newRegion
         )
-        self.user2 = User.objects.create(email='user2@user.com', password=self.password)
+        self.user2 = User.objects.create_user(email='user2@user.com', password=self.password)
 
         # Already one team for this user in common setup
         # Teams that should be visible
@@ -323,7 +323,7 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
             state=self.newState,
             region=self.newRegion
         )
-        self.user2 = User.objects.create(email='user2@user.com', password=self.password)
+        self.user2 = User.objects.create_user(email='user2@user.com', password=self.password)
 
         # Already one team for this user in common setup
         # Teams that should be visible
