@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.test import Client
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
+from unittest.mock import patch, Mock
 
 from .models import User
 from schools.models import School, SchoolAdministrator
@@ -188,6 +189,22 @@ class TestUserSignupForm(TestUserForm):
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.non_field_errors(), ["Passwords do not match"])
+
+    @patch('users.forms.validate_password', side_effect = Mock(side_effect=ValidationError('Password too short')))
+    def testPasswordNotValid(self, mocked_validate_password):
+        form = self.createForm({
+            'first_name': 'First',
+            'last_name': 'Last',
+            'email': 'not@test.com',
+            'mobileNumber': '12345',
+            'homeState': self.state1.id,
+            'homeRegion': self.region1.id,
+            'password': 'pass',
+            'passwordConfirm': 'pass',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.non_field_errors(), ["Password too short"])
 
 @modify_settings(MIDDLEWARE={
     'remove': 'common.redirectsMiddleware.RedirectMiddleware',
