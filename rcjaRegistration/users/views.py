@@ -46,10 +46,7 @@ def details(request):
         questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials)
 
         # Don't redirect to home if use was forced here and no schools, so user can create a school
-        if request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool:
-            redirectTo = reverse('users:details')
-        else:
-            redirectTo = '/'
+        displayAgain = request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool
 
         try:
             if form.is_valid() and questionFormset.is_valid():
@@ -61,7 +58,11 @@ def details(request):
                 # Save question response questionFormset
                 questionFormset.save() 
 
-                return redirect(redirectTo)
+                # Stay on page if continue_editng in response or if must display again, else redirect to home
+                if displayAgain or 'continue_editng' in request.POST:
+                    return redirect(reverse('users:details'))
+
+                return redirect(reverse('events:dashboard'))
 
         except ValidationError:
             # To catch missing management data

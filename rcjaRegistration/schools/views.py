@@ -135,7 +135,11 @@ def details(request):
                             })
                     SchoolAdministrator.objects.get_or_create(school=school, user=user)
 
-                return redirect('/')
+                # Stay on page if continue_editng in response, else redirect to home
+                if 'continue_editng' in request.POST:
+                    return redirect(reverse('schools:details'))
+
+                return redirect(reverse('events:dashboard'))
 
         except ValidationError:
             # To catch missing management data
