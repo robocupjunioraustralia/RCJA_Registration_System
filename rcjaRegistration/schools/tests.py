@@ -444,23 +444,7 @@ class TestEditSchoolDetails(TestCase):
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
 
-        payload = {
-            'campus_set-TOTAL_FORMS':2,
-            "campus_set-INITIAL_FORMS":2,
-            "campus_set-MIN_NUM_FORMS":0,
-            "campus_set-MAX_NUM_FORMS":1000,
-            'schooladministrator_set-TOTAL_FORMS':2,
-            "schooladministrator_set-INITIAL_FORMS":2,
-            "schooladministrator_set-MIN_NUM_FORMS":0,
-            "schooladministrator_set-MAX_NUM_FORMS":1000,
-            "name":"other name",
-            "abbreviation": 'sch1',
-            'state': self.state1.id,
-            'region': self.region1.id,
-            'postcode':3000,
-        }
-
-        response = self.client.get(url, data=payload)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.email2)
 
