@@ -357,6 +357,47 @@ class TestEditDetails(TestCase):
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(302,response.status_code)
+        self.assertEquals(response.url, reverse('events:dashboard'))
+        self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
+
+    def testEditWorks_continueEditing(self):
+        payload = {
+            'questionresponse_set-TOTAL_FORMS':0,
+            "questionresponse_set-INITIAL_FORMS":0,
+            "questionresponse_set-MIN_NUM_FORMS":0,
+            "questionresponse_set-MAX_NUM_FORMS":0,
+            "first_name":"Admin",
+            "last_name":"User",
+            "mobileNumber":123,
+            "email":"admon@admon.com",
+            'homeState': self.newState.id,
+            'homeRegion': self.newRegion.id,
+            'continue_editing': 'y',
+        }
+        response = self.client.post(path=reverse('users:details'),data=payload)
+        self.assertEqual(302,response.status_code)
+        self.assertEquals(response.url, reverse('users:details'))
+        self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
+
+    def testEditWorks_displayAgain(self):
+        self.user1.forceDetailsUpdate = True
+        self.user1.save()
+
+        payload = {
+            'questionresponse_set-TOTAL_FORMS':0,
+            "questionresponse_set-INITIAL_FORMS":0,
+            "questionresponse_set-MIN_NUM_FORMS":0,
+            "questionresponse_set-MAX_NUM_FORMS":0,
+            "first_name":"Admin",
+            "last_name":"User",
+            "mobileNumber":123,
+            "email":"admon@admon.com",
+            'homeState': self.newState.id,
+            'homeRegion': self.newRegion.id,
+        }
+        response = self.client.post(path=reverse('users:details'),data=payload)
+        self.assertEqual(302,response.status_code)
+        self.assertEquals(response.url, reverse('users:details'))
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
     def testMissingManagementFormData(self):
