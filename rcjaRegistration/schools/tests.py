@@ -65,12 +65,6 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         self.assertContains(response, 'School with this Abbreviation already exists.')
         self.assertContains(response, 'School with this Name already exists.')
 
-# class TestSchoolAJAXCreate(TestSchoolCreate):
-#     reverseString = 'schools:createAJAX'
-#     validLoadCode = 403 #no get requests to this url
-#     validSubmitCode = 200
-#     inValidCreateCode = 400
-
 class TestCurrentlySelectedSchool(TestCase):
     email = 'user@user.com'
     email2 = 'user2@user.com'
