@@ -834,6 +834,34 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
+        self.assertEquals(response.url, reverse("events:dashboard"))
+        School.objects.get(name='New name')
+
+    def testChangeName_success_continueEditing(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+
+        payload = {
+            'campus_set-TOTAL_FORMS':2,
+            "campus_set-INITIAL_FORMS":0,
+            "campus_set-MIN_NUM_FORMS":0,
+            "campus_set-MAX_NUM_FORMS":1000,
+            'schooladministrator_set-TOTAL_FORMS':1,
+            "schooladministrator_set-INITIAL_FORMS":0,
+            "schooladministrator_set-MIN_NUM_FORMS":0,
+            "schooladministrator_set-MAX_NUM_FORMS":1000,
+            "name":"New name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode':3000,
+            'continue_editing': 'y',
+        }
+
+        response = self.client.post(url, data=payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEquals(response.url, reverse('schools:details'))
         School.objects.get(name='New name')
 
     def testMissingManagementFormData(self):
