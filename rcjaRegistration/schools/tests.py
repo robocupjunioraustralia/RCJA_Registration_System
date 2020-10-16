@@ -14,7 +14,7 @@ from coordination.models import Coordinator
 
 import datetime
 
-from .forms import SchoolForm, SchoolEditForm, SchoolAdministratorForm
+from .forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdministratorForm
 
 # Unit Tests
 
@@ -358,7 +358,6 @@ class TestSchoolForm(TestCase):
             'Postcode too short',
         ])
 
-
 class TestSchoolEditForm(TestSchoolForm):
     def createForm(self, data):
         return SchoolEditForm(data=data)
@@ -387,6 +386,141 @@ class TestSchoolEditForm(TestSchoolForm):
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.errors["addAdministratorEmail"], ["Enter a valid email address."])
+
+class TestCampusForm(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+
+    def createForm(self, data):
+        return CampusForm(data=data)
+
+    def testValid(self):
+        form = self.createForm({
+            'name': 'Campus 1',
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), True)
+
+    def testFieldsRequired(self):
+        form = self.createForm({})
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["name"], ["This field is required."])
+        self.assertEqual(form.errors["postcode"], ["This field is required."])
+
+    def testPostcodeClean(self):
+        form = self.createForm({
+            'name': 'Campus 1',
+            'postcode': 'a',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.non_field_errors(), [
+            'Postcode must be numeric',
+            'Postcode too short',
+        ])
+
+class TestSchoolAdministratorForm(TestCase):
+    email1 = 'user@user.com'
+    email2 = 'user2@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+        self.school2 = School.objects.create(name='School 2', abbreviation='SCH2', state=self.state1, region=self.region1)
+        self.campus1 = Campus.objects.create(school=self.school1, name="Campus 1")
+        self.campus2 = Campus.objects.create(school=self.school2, name="Campus 2")
+
+        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+
+        SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+
+    def testCreateDisabled(self):
+        form = SchoolAdministratorForm(instance=self.school1, user=self.user1, data={
+            'user': self.user2.id,
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["user"], ["This field is required."])
+
+    def testFieldsRequired(self):
+        form = SchoolAdministratorForm(instance=self.school1, user=self.user1, data={})
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["user"], ["This field is required."])
+
+    def testUserDisabled(self):
+        form = SchoolAdministratorForm(instance=self.school1, user=self.user1, data={
+            'user': self.user2.id,
+        })
+
+        self.assertEqual(form.fields['user'].disabled, True)
+
+    def testUserNotEditable(self):
+        form = SchoolAdministratorForm(
+            instance=self.school1,
+            user=self.user1,
+            data={
+                'user': self.user2.id,
+            },
+            initial={
+               'user': self.user1.id, 
+            })
+
+        self.assertEqual(form.is_valid(), True)
+        self.assertEqual(form.cleaned_data['user'], self.user1)
+
+    def testQuerysetsFiltered(self):
+        form = SchoolAdministratorForm(
+            instance=self.school1,
+            user=self.user1,
+            data={
+            },
+            initial={
+               'user': self.user1.id, 
+            })
+
+        self.assertEqual(form.is_valid(), True)
+
+        # Campus
+        self.assertIn(self.campus1, form.fields['campus'].queryset)
+        self.assertNotIn(self.campus2, form.fields['campus'].queryset)
+
+        # User
+        self.assertIn(self.user1, form.fields['user'].queryset)
+        self.assertNotIn(self.user2, form.fields['user'].queryset)
+
+    def testValidCampus(self):
+        form = SchoolAdministratorForm(
+            instance=self.school1,
+            user=self.user1,
+            data={
+                'campus': self.campus1.id,
+            },
+            initial={
+               'user': self.user1.id, 
+            })
+
+        self.assertEqual(form.is_valid(), True)
+
+    def testInvalidCampus(self):
+        form = SchoolAdministratorForm(
+            instance=self.school1,
+            user=self.user1,
+            data={
+                'campus': self.campus2.id,
+            },
+            initial={
+               'user': self.user1.id, 
+            })
+
+        self.assertEqual(form.is_valid(), False)
+
+        self.assertEqual(form.errors["campus"], ["Select a valid choice. That choice is not one of the available choices."])
 
 # Currently selected school update tests
 
