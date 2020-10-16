@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.test import Client
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
+from unittest.mock import patch, Mock
+from django.db.models import ProtectedError
 
 from users.models import User
 from .models import School, SchoolAdministrator, Campus
@@ -1062,6 +1064,39 @@ class TestEditSchoolDetails(TestCase):
         self.assertEqual(response.status_code, 302)
         self.admin1.refresh_from_db()
         self.assertEqual(self.admin1.campus, self.campus1)
+
+    @patch('schools.models.SchoolAdministrator.delete', side_effect = Mock(side_effect=ProtectedError('protected', SchoolAdministrator)))
+    def testAdministratorDelete_protected(self, mocked_delete):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.admin2 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+        SchoolAdministrator.objects.get(pk=self.admin2.pk)
+        numberExistingAdmins = SchoolAdministrator.objects.count()
+
+        payload = {
+            'campus_set-TOTAL_FORMS':2,
+            "campus_set-INITIAL_FORMS":0,
+            "campus_set-MIN_NUM_FORMS":0,
+            "campus_set-MAX_NUM_FORMS":1000,
+            'schooladministrator_set-TOTAL_FORMS':2,
+            "schooladministrator_set-INITIAL_FORMS":2,
+            "schooladministrator_set-MIN_NUM_FORMS":0,
+            "schooladministrator_set-MAX_NUM_FORMS":1000,
+            "name":"other name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode':3000,
+            'schooladministrator_set-0-id': self.admin1.id,
+            'schooladministrator_set-1-id': self.admin2.id,
+            'schooladministrator_set-1-DELETE': 'on',
+        }
+
+        response = self.client.post(url, data=payload)
+        self.assertEqual(response.status_code, 302)
+        SchoolAdministrator.objects.get(pk=self.admin2.pk)
+        self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins)
 
     def testAdministratorDelete_success(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
