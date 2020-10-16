@@ -14,7 +14,110 @@ from coordination.models import Coordinator
 
 import datetime
 
-# View Tests
+
+# School frontend view permissions tests
+
+def schoolViewSetup(self):
+    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.region1 = Region.objects.create(name='Region 1',)
+
+    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+
+    self.school1 = School.objects.create(name='School 1',abbreviation='SCH1', state=self.state1, region=self.region1)
+    self.school2 = School.objects.create(name='School 2',abbreviation='SCH2', state=self.state1, region=self.region1)
+    self.school3 = School.objects.create(name='School 3',abbreviation='SCH3', state=self.state1, region=self.region1)
+
+    self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+    self.schoolAdmin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+
+class Base_Test_SchoolViews:
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolViewSetup(self)
+
+class Test_SchoolViews_LoginRequired(Base_Test_SchoolViews, TestCase):
+    def testCreate(self):
+        response = self.client.get(reverse('schools:create'))
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/create")
+        self.assertEqual(response.status_code, 302)
+
+    def testSetCurrentSchool(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        response = self.client.get(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school2.id}")
+        self.assertEqual(response.status_code, 302)
+
+        # Check still school 1
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+    def testDetails(self):
+        response = self.client.get(reverse('schools:details'))
+        self.assertEqual(response.url, f"/accounts/login/?next=/schools/profile")
+        self.assertEqual(response.status_code, 302)
+
+class Base_Test_SchoolViews_Permissions(Base_Test_SchoolViews):
+    def setUp(self):
+        super().setUp()
+        self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+class Test_SchoolDetails_Permissions(Base_Test_SchoolViews_Permissions, TestCase):
+    def url(self):
+        return reverse('schools:details')
+
+    def testPageLoads(self):
+        response = self.client.get(self.url())
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_noSchool(self):
+        self.schoolAdmin1.delete()
+        self.schoolAdmin2.delete()
+
+        response = self.client.get(self.url())
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this school", status_code=403)
+
+    def testDenied_notAdmin(self):
+        self.user1.currentlySelectedSchool = self.school3
+        self.user1.save()
+
+        response = self.client.get(self.url())
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this school", status_code=403)
+
+class Test_SetCurrentSchool_Permissions(Base_Test_SchoolViews_Permissions, TestCase):
+    def url(self, school):
+        return reverse('schools:setCurrentSchool', kwargs={'schoolID': school.id})
+
+    def testSuccess(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        # Change to school 2
+        response = self.client.get(self.url(self.school2))
+        self.assertEqual(response.status_code, 302)
+
+        # Check school changed
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school2)
+
+    def testDeniedNotAdmin(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        response = self.client.get(self.url(self.school3))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "You do not have permission to view this school", status_code=403)
+
+        # Check still school 1
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+# Old view Tests
 class TestSchoolCreate(TestCase): #TODO update to use new auth model
     reverseString = 'schools:create'
     email = 'user@user.com'
@@ -133,59 +236,6 @@ class TestCurrentlySelectedSchool(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.currentlySelectedSchool, self.school2)
 
-    def testSuccesful_setCurrentSchool(self):
-        # Setup
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
-
-        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-
-        # Change to school 2
-        url = reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)
-
-        # Check school changed
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
-
-    def testDenied_setCurrentSchool(self):
-        # Setup
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
-
-        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-
-        # Attempt change to school 3
-        url = reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school3.id})
-        response = self.client.get(url)
-        self.assertContains(response, "You do not have permission to view this school", status_code=403)
-        self.assertEqual(response.status_code, 403)
-
-        # Check still school 1
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
-
-    def testLoginRequired_setCurrentSchool(self):
-        # Setup
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
-
-        # Attempt change to school 3
-        url = reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school3.id})
-        response = self.client.get(url, follow=True)
-        self.assertContains(response, "Login")
-        response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school3.id}")
-        self.assertEqual(response.status_code, 302)
-
-        # Check still school 1
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
-
     def testCurrentlySelectedSchoolDelete(self):
         admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
@@ -228,30 +278,6 @@ class TestEditSchoolDetails(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
             directEnquiriesTo = self.user,
         )
-
-    def testLoginRequired(self):
-        url = reverse('schools:details')
-    
-        response = self.client.get(url, follow=True)
-        self.assertContains(response, "Login")
-    
-        response = self.client.get(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/schools/profile")
-        self.assertEqual(response.status_code, 302)
-
-    def testLoads(self):
-        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-        url = reverse('schools:details')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-
-    def testDenied_noSchool(self):
-        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-        url = reverse('schools:details')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, "You do not have permission to view this school", status_code=403)
 
     def testChangeName_success(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
