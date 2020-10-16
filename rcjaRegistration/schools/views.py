@@ -11,6 +11,7 @@ from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
 from django.urls import reverse
 
+from users.models import User
 from .models import School, Campus, SchoolAdministrator
 
 @login_required
@@ -31,21 +32,6 @@ def create(request):
 
     return render(request, 'schools/createSchool.html', {'form': form})
 
-# @login_required
-# def createAJAX(request):
-#     if request.method == 'POST':
-#         form = SchoolForm(request.POST)
-#         if form.is_valid(): 
-#             newSchool = form.save()
-#             return JsonResponse({'id':newSchool.id,'name':newSchool.name})
-#         else:
-#             return JsonResponse({
-#                 'success': False,
-#                 'errors': dict(form.errors.items())
-#             },status=400)
-#     else:
-#         return HttpResponseForbidden()
-
 @login_required
 def setCurrentSchool(request, schoolID):
     school = get_object_or_404(School, pk=schoolID)
@@ -63,10 +49,10 @@ def setCurrentSchool(request, schoolID):
 @login_required
 def details(request):
     # Check permissions
-    if not request.user.currentlySelectedSchool:
-        raise PermissionDenied("You do not have permission to view this school")
-
     school = request.user.currentlySelectedSchool
+
+    if not (request.user.currentlySelectedSchool and request.user.schooladministrator_set.filter(school=school).exists()):
+        raise PermissionDenied("You do not have permission to view this school")
 
     # Campus formset
     CampusInlineFormset = inlineformset_factory(
@@ -126,15 +112,19 @@ def details(request):
 
                 # Handle new administrator
                 if form.cleaned_data['addAdministratorEmail']:
-                    from users.models import User
-                    # Need to do this rather than use get_or_create because need to do case insentitve get
-                    try:
-                        newUser = User.objects.get(email__iexact=form.cleaned_data['addAdministratorEmail'])
-                    except User.DoesNotExist:
-                        newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'], forceDetailsUpdate=True)
-                    SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
+                    user, created = User.objects.get_or_create(
+                        email__iexact=form.cleaned_data['addAdministratorEmail'],
+                        defaults={
+                            'email': form.cleaned_data['addAdministratorEmail'],
+                            'forceDetailsUpdate': True,
+                            })
+                    SchoolAdministrator.objects.get_or_create(school=school, user=user)
 
-                return redirect('/')
+                # Stay on page if continue_editing in response, else redirect to home
+                if 'continue_editing' in request.POST:
+                    return redirect(reverse('schools:details'))
+
+                return redirect(reverse('events:dashboard'))
 
         except ValidationError:
             # To catch missing management data

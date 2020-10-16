@@ -113,9 +113,10 @@
               </div>
               {% endfor %}
 
-              <input class="primary ui button" type="submit" value="Save" />
+              <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
+              <input class="primary ui button" type="submit" value="Save and exit" />
+              <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
             </form>
-            <a href ="/"><button class = "ui button negative">Cancel</button></a>
 
             <!-- School details -->
             {% if not user.forceDetailsUpdate %}

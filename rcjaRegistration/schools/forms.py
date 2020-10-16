@@ -3,6 +3,9 @@ from django.forms import ModelForm
 from .models import SchoolAdministrator, School, Campus
 from django import forms
 
+from users.models import User
+from schools.models import Campus
+
 class SchoolForm(ModelForm):
     class Meta:
         model = School
@@ -15,7 +18,7 @@ class SchoolForm(ModelForm):
             self.fields[field].required = True
 
 class SchoolEditForm(SchoolForm):
-    addAdministratorEmail = forms.EmailField(required=False)
+    addAdministratorEmail = forms.EmailField(label='Add administrator email', required=False)
 
 class CampusForm(ModelForm):
     class Meta:
@@ -41,12 +44,10 @@ class SchoolAdministratorForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         # Filter campus to user's campuses
-        from schools.models import Campus
         self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
 
         # Make user not editable to prevent user field form being enumerated in drop down
         self.fields['user'].disabled = True
         # This is needed because even if disabled all of the options are available in the html
         # This works to prevent a data leak but it is not the best way of achieving this
-        from users.models import User
         self.fields['user'].queryset = User.objects.filter(schooladministrator__school=user.currentlySelectedSchool)
