@@ -70,7 +70,7 @@ class AuthViewTests(TestCase):
         self.client.post(path=reverse('users:signup'),data = payloadData)
         response = self.client.post(path=reverse('users:signup'), data = payloadData)
         self.assertEqual(response.status_code,200) #ensure failed signup
-        self.assertContains(response, 'Email address: User with this Email address already exists.')
+        self.assertContains(response, 'Email address: User with this email address already exists.')
 
     def testUserExistingSignupCaseInsensitive(self):
         payloadData = self.validPayload
@@ -78,7 +78,7 @@ class AuthViewTests(TestCase):
         payloadData['email'] = 'UsEr@user.com'
         response = self.client.post(path=reverse('users:signup'), data = payloadData)
         self.assertEqual(response.status_code,200) #ensure failed signup
-        self.assertContains(response, 'Email address: User with this Email address already exists.')
+        self.assertContains(response, 'Email address: User with this email address already exists.')
         payloadData['email'] = self.email # reset email for other tests
 
     def testUserInvalidPasswordConfirmSignup(self):
