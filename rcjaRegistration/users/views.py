@@ -13,11 +13,11 @@ from django.urls import reverse
 from .models import User
 from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm
+from schools.models import School
 
 @login_required
 def details(request):
     # Schools
-    from schools.models import School
     schools = School.objects.filter(schooladministrator__user=request.user)
 
     # Questions formset
