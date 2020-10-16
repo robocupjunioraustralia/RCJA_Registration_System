@@ -1034,6 +1034,35 @@ class TestEditSchoolDetails(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.email2)
 
+    def testEditAdministrator_success(self):
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+
+        payload = {
+            'campus_set-TOTAL_FORMS':2,
+            "campus_set-INITIAL_FORMS":0,
+            "campus_set-MIN_NUM_FORMS":0,
+            "campus_set-MAX_NUM_FORMS":1000,
+            'schooladministrator_set-TOTAL_FORMS':1,
+            "schooladministrator_set-INITIAL_FORMS":1,
+            "schooladministrator_set-MIN_NUM_FORMS":0,
+            "schooladministrator_set-MAX_NUM_FORMS":1000,
+            "name":"other name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode':3000,
+            'schooladministrator_set-0-id': self.admin1.id,
+            'schooladministrator_set-0-campus': self.campus1.id,
+        }
+
+        response = self.client.post(url, data=payload)
+        self.assertEqual(response.status_code, 302)
+        self.admin1.refresh_from_db()
+        self.assertEqual(self.admin1.campus, self.campus1)
+
     def testAdministratorDelete_success(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.admin2 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
