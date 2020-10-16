@@ -11,6 +11,7 @@ from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
 from django.urls import reverse
 
+from users.models import User
 from .models import School, Campus, SchoolAdministrator
 
 @login_required
@@ -126,13 +127,13 @@ def details(request):
 
                 # Handle new administrator
                 if form.cleaned_data['addAdministratorEmail']:
-                    from users.models import User
-                    # Need to do this rather than use get_or_create because need to do case insentitve get
-                    try:
-                        newUser = User.objects.get(email__iexact=form.cleaned_data['addAdministratorEmail'])
-                    except User.DoesNotExist:
-                        newUser = User.objects.create(email=form.cleaned_data['addAdministratorEmail'], forceDetailsUpdate=True)
-                    SchoolAdministrator.objects.get_or_create(school=school, user=newUser)
+                    user, created = User.objects.get_or_create(
+                        email__iexact=form.cleaned_data['addAdministratorEmail'],
+                        defaults={
+                            'email': form.cleaned_data['addAdministratorEmail'],
+                            'forceDetailsUpdate': True,
+                            })
+                    SchoolAdministrator.objects.get_or_create(school=school, user=user)
 
                 return redirect('/')
 
