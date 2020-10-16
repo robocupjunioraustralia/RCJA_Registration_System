@@ -272,7 +272,7 @@ class TestCurrentlySelectedSchool(TestCase):
         self.assertEqual(self.user2.currentlySelectedSchool, self.school1)
 
     def testSchoolAdministratorCreateSecond(self):
-        # Test creating second one doesn't set currentlySelectedSchool
+        # Test creating second admin doesn't set currentlySelectedSchool
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
