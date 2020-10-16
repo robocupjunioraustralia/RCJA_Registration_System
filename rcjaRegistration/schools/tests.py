@@ -246,12 +246,12 @@ class TestSchoolAdministratorModelMethods(TestCase):
 # Currently selected school update tests
 
 class TestCurrentlySelectedSchool(TestCase):
-    email = 'user@user.com'
+    email1 = 'user@user.com'
     email2 = 'user2@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
         self.user2 = User.objects.create_user(email=self.email2, password=self.password)
 
         self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
@@ -261,66 +261,89 @@ class TestCurrentlySelectedSchool(TestCase):
         self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
         self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
 
-    def testSchoolAdministratorCreate(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+
+    def testSchoolAdministratorCreateFirst(self):
         # Test creating first admin sets currentlySelectedSchool
-        self.assertEqual(self.user.currentlySelectedSchool, None)
-        SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.user2.currentlySelectedSchool, None)
 
-        # Test creating second one doesn't
-        SchoolAdministrator.objects.create(school=self.school2, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        admin2 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
+        self.user2.refresh_from_db()
+        self.assertEqual(self.user2.currentlySelectedSchool, self.school1)
 
-    def testSchoolAdministratorDelete(self):
-        # Setup
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
-        admin3 = SchoolAdministrator.objects.create(school=self.school3, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+    def testSchoolAdministratorCreateSecond(self):
+        # Test creating second one doesn't set currentlySelectedSchool
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+    def testSchoolAdministratorDelete_nonCurrent(self):
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         # Test deletion of non current school admin while remaining schools
-        admin3.delete()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
-
-        # Test deletion of currently set school admin while remaining schools
-        admin1.delete()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
-
-        # test deletion of last school admin
         admin2.delete()
-        self.assertEqual(self.user.currentlySelectedSchool, None)
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+    def testSchoolAdministratorDelete_currentRemaining(self):
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        # Test deletion of current school admin while remaining schools
+        self.admin1.delete()
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school2)  
+
+    def testSchoolAdministratorDelete_currentNoneRemaining(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        # Test deletion of current school admin while remaining schools
+        self.admin1.delete()
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, None)  
 
     def testSchoolAdministratorUserChange(self):
-        # Setup
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.user2.currentlySelectedSchool, None)
 
-        # test changing user field on school administrator
-        admin1.user = self.user2
-        admin1.save()
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.currentlySelectedSchool, None)
+        # Test changing user field on school administrator
+        self.admin1.user = self.user2
+        self.admin1.save()
+        self.user1.refresh_from_db()
+        self.user2.refresh_from_db()
+
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
         self.assertEqual(self.user2.currentlySelectedSchool, self.school1)
 
     def testSchoolAdministratorSchoolChange(self):
-        # Setup
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         # test changing user field on school administrator
-        admin1.school = self.school2
-        admin1.save()
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
+        self.admin1.school = self.school2
+        self.admin1.save()
+        self.user1.refresh_from_db()
 
-    def testCurrentlySelectedSchoolDelete(self):
-        admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
-        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user)
-        self.assertEqual(self.user.currentlySelectedSchool, self.school1)
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school2)
+
+    def testCurrentlySelectedSchoolDelete_remainingAdmins(self):
+        admin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         self.school1.delete()
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.currentlySelectedSchool, self.school2)
+        self.user1.refresh_from_db()
+
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school2)
+
+    def testCurrentlySelectedSchoolDelete_noRemainingAdmins(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        self.school1.delete()
+        self.user1.refresh_from_db()
+
+        self.assertEqual(self.user1.currentlySelectedSchool, None)
 
 # School frontend view permissions tests
 
