@@ -211,7 +211,6 @@ class AuthViewTests(TestCase):
         self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
-        self.validPayload["school"] = self.newSchool.id
         self.validPayload["homeState"] = self.newState.id
         self.validPayload["homeRegion"] = self.newRegion.id
 
@@ -229,13 +228,13 @@ class AuthViewTests(TestCase):
         self.assertTemplateUsed(response, 'registration/signup.html')
 
     def testUserValidSignup(self):
-        prevUsers = get_user_model().objects.all().count()
+        prevUsers = get_user_model().objects.count()
         self.assertRaises(User.DoesNotExist, lambda: User.objects.get(email=self.email))
 
         payloadData = self.validPayload
         response = self.client.post(path=reverse('users:signup'),data = payloadData)
         self.assertEqual(response.status_code,302) #ensure user is redirected on signup
-        self.assertEqual(get_user_model().objects.all().count(), prevUsers + 1)
+        self.assertEqual(get_user_model().objects.count(), prevUsers + 1)
         # this checks the user created has the right username
         User.objects.get(email=self.email)
 
@@ -243,7 +242,7 @@ class AuthViewTests(TestCase):
         payloadData = {'username':self.email}
         response = self.client.post(path=reverse('users:signup'),data = payloadData)
         self.assertEqual(response.status_code,200) #ensure user is not redirected
-        self.assertEqual(get_user_model().objects.all().count(), 1)
+        self.assertEqual(get_user_model().objects.count(), 1)
     
     def testUserExistingSignup(self):
         payloadData = self.validPayload
@@ -324,7 +323,6 @@ class TestEditDetails(TestCase):
             'passwordConfirm':self.password,
             'first_name':'test',
             'last_name':'test',
-            'school':1,
             'mobileNumber':'123123123',
             'homeState': 1,
             'homeRegion': 1,
@@ -336,11 +334,9 @@ class TestEditDetails(TestCase):
         self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
-        self.validPayload["school"] = self.newSchool.id
         self.validPayload["homeState"] = self.newState.id
         self.validPayload["homeRegion"] = self.newRegion.id
 
-        response = self.client.post(path=reverse('users:signup'),data = self.validPayload)
         self.client.login(request=HttpRequest(), username=self.email,password=self.password)
 
     def testPageLoads(self):
