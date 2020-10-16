@@ -116,7 +116,7 @@ class TestSchoolClean(TestCase):
         )
         self.assertRaises(ValidationError, school2.clean)  
 
-class TestSchoolMethods(TestCase):
+class TestSchoolModelMethods(TestCase):
     email1 = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
@@ -187,7 +187,7 @@ class TestCampusClean(TestCase):
         )
         self.assertRaises(ValidationError, campus2.clean)  
 
-class TestCampusMethods(TestCase):
+class TestCampusModelMethods(TestCase):
     email1 = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
@@ -220,7 +220,7 @@ class TestSchoolAdministratorClean(TestCase):
         self.admin1.school = self.school2
         self.assertRaises(ValidationError, self.admin1.clean)
 
-class TestSchoolAdministratorMethods(TestCase):
+class TestSchoolAdministratorModelMethods(TestCase):
     email1 = 'user@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
