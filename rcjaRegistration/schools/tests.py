@@ -62,8 +62,8 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         response = self.client.post(reverse(self.reverseString),data=payload)
 
         self.assertEqual(response.status_code,self.inValidCreateCode)
-        self.assertIn(b'School with this Abbreviation already exists.',response.content)
-        self.assertIn(b'School with this Name already exists.',response.content)
+        self.assertContains(response, 'School with this Abbreviation already exists.')
+        self.assertContains(response, 'School with this Name already exists.')
 
 # class TestSchoolAJAXCreate(TestSchoolCreate):
 #     reverseString = 'schools:createAJAX'
