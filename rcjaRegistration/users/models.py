@@ -37,6 +37,9 @@ class UserManager(BaseUserManager):
 
         return self._create_user(email, password, **extra_fields)
 
+    def get_by_natural_key(self, username):
+        # Case insensitive username lookup
+        return self.get(**{f'{self.model.USERNAME_FIELD}__iexact': username})
 
 class User(AbstractUser):
     """User model"""
@@ -71,7 +74,7 @@ class User(AbstractUser):
         super().clean()
         # Force case insentive email
         if User.objects.filter(email__iexact=self.email).exclude(pk=self.pk).exists():
-            raise ValidationError({'email': _('User with this Email address already exists.')})
+            raise ValidationError({'email': _('User with this email address already exists.')})
 
     # *****Permissions*****
     @classmethod
