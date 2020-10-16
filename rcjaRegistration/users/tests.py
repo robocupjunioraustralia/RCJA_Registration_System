@@ -327,17 +327,16 @@ class TestEditDetails(TestCase):
             'homeState': 1,
             'homeRegion': 1,
         }
-        self.user = user = User.objects.create_user(
-            email='admin@test.com',
-            password='admin'
-        )
+
         self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["homeState"] = self.newState.id
         self.validPayload["homeRegion"] = self.newRegion.id
 
-        self.client.login(request=HttpRequest(), username=self.email,password=self.password)
+        self.user1 = User.objects.create_user(email=self.email, password=self.password)
+
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
 
     def testPageLoads(self):
         response = self.client.get(path=reverse('users:details'))
