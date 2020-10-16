@@ -49,10 +49,10 @@ def setCurrentSchool(request, schoolID):
 @login_required
 def details(request):
     # Check permissions
-    if not request.user.currentlySelectedSchool:
-        raise PermissionDenied("You do not have permission to view this school")
-
     school = request.user.currentlySelectedSchool
+
+    if not (request.user.currentlySelectedSchool and request.user.schooladministrator_set.filter(school=school).exists()):
+        raise PermissionDenied("You do not have permission to view this school")
 
     # Campus formset
     CampusInlineFormset = inlineformset_factory(
