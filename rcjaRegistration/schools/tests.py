@@ -759,7 +759,7 @@ class TestEditSchoolDetails(TestCase):
         self.assertRaises(SchoolAdministrator.DoesNotExist, lambda: SchoolAdministrator.objects.get(pk=self.admin2.pk))
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins-1)
 
-    def testAdministratorAdd_existing(self):
+    def testAdministratorAdd_existing_sameCase(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
@@ -780,11 +780,49 @@ class TestEditSchoolDetails(TestCase):
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
-            'addAdministratorEmail': self.email2.upper(),
+            'addAdministratorEmail': 'user2@user.com',
         }
-
         response = self.client.post(url, data=payload)
+
+        # Check response
         self.assertEqual(response.status_code, 302)
+        self.assertNotContains(response, "Add administrator email: Enter a valid email address.", status_code=302)
+
+        # Check database
+        self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins+1)
+        self.assertEqual(User.objects.count(), numberExistingUsers)
+        SchoolAdministrator.objects.get(school=self.school1, user=self.user2)
+
+    def testAdministratorAdd_existing_differentCase(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+        numberExistingAdmins = SchoolAdministrator.objects.count()
+        numberExistingUsers = User.objects.count()
+
+        payload = {
+            'campus_set-TOTAL_FORMS':2,
+            "campus_set-INITIAL_FORMS":0,
+            "campus_set-MIN_NUM_FORMS":0,
+            "campus_set-MAX_NUM_FORMS":1000,
+            'schooladministrator_set-TOTAL_FORMS':0,
+            "schooladministrator_set-INITIAL_FORMS":0,
+            "schooladministrator_set-MIN_NUM_FORMS":0,
+            "schooladministrator_set-MAX_NUM_FORMS":1000,
+            "name":"other name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode':3000,
+            'addAdministratorEmail': 'USER2@user.com',
+        }
+        response = self.client.post(url, data=payload)
+
+        # Check response
+        self.assertEqual(response.status_code, 302)
+        self.assertNotContains(response, "Add administrator email: Enter a valid email address.", status_code=302)
+
+        # Check database
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins+1)
         self.assertEqual(User.objects.count(), numberExistingUsers)
         SchoolAdministrator.objects.get(school=self.school1, user=self.user2)
@@ -812,9 +850,13 @@ class TestEditSchoolDetails(TestCase):
             'postcode':3000,
             'addAdministratorEmail': 'new@new.com',
         }
-
         response = self.client.post(url, data=payload)
+
+        # Check response
         self.assertEqual(response.status_code, 302)
+        self.assertNotContains(response, "Add administrator email: Enter a valid email address.", status_code=302)
+
+        # Check database
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins+1)
         self.assertEqual(User.objects.count(), numberExistingUsers+1)
         SchoolAdministrator.objects.get(school=self.school1, user__email='new@new.com')
@@ -842,9 +884,13 @@ class TestEditSchoolDetails(TestCase):
             'postcode':3000,
             'addAdministratorEmail': 'new',
         }
-
         response = self.client.post(url, data=payload)
+
+        # Check response
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Add administrator email: Enter a valid email address.")
+
+        # Check database
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins)
         self.assertEqual(User.objects.count(), numberExistingUsers)
 

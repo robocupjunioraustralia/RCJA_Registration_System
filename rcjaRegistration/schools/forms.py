@@ -15,7 +15,7 @@ class SchoolForm(ModelForm):
             self.fields[field].required = True
 
 class SchoolEditForm(SchoolForm):
-    addAdministratorEmail = forms.EmailField(required=False)
+    addAdministratorEmail = forms.EmailField(label='Add administrator email', required=False)
 
 class CampusForm(ModelForm):
     class Meta:
