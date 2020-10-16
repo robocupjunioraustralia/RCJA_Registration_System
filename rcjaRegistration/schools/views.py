@@ -120,8 +120,8 @@ def details(request):
                             })
                     SchoolAdministrator.objects.get_or_create(school=school, user=user)
 
-                # Stay on page if continue_editng in response, else redirect to home
-                if 'continue_editng' in request.POST:
+                # Stay on page if continue_editing in response, else redirect to home
+                if 'continue_editing' in request.POST:
                     return redirect(reverse('schools:details'))
 
                 return redirect(reverse('events:dashboard'))

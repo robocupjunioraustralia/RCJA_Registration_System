@@ -58,8 +58,8 @@ def details(request):
                 # Save question response questionFormset
                 questionFormset.save() 
 
-                # Stay on page if continue_editng in response or if must display again, else redirect to home
-                if displayAgain or 'continue_editng' in request.POST:
+                # Stay on page if continue_editing in response or if must display again, else redirect to home
+                if displayAgain or 'continue_editing' in request.POST:
                     return redirect(reverse('users:details'))
 
                 return redirect(reverse('events:dashboard'))
