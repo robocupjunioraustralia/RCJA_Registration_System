@@ -14,14 +14,16 @@ from coordination.models import Coordinator
 
 import datetime
 
+from .forms import SchoolForm, SchoolEditForm, SchoolAdministratorForm
 
 # Unit Tests
 
 def schoolSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
     self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+
     self.region1 = Region.objects.create(name='Test Region', description='test desc')
-    self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+    self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
 
 class TestSchoolClean(TestCase):
     email1 = 'user@user.com'
@@ -242,6 +244,149 @@ class TestSchoolAdministratorModelMethods(TestCase):
 
     def testUserEmail(self):
         self.assertEqual(self.admin1.userEmail(), self.email1)
+
+# Forms
+
+class TestSchoolForm(TestCase):
+    email1 = 'user@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        schoolSetUp(self)
+
+    def createForm(self, data):
+        return SchoolForm(data=data)
+
+    def testValid(self):
+        form = self.createForm({
+            'name': 'School 2',
+            'abbreviation': 'sch2',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), True)
+
+    def testFieldsRequired(self):
+        form = self.createForm({})
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["name"], ["This field is required."])
+        self.assertEqual(form.errors["abbreviation"], ["This field is required."])
+        self.assertEqual(form.errors["state"], ["This field is required."])
+        self.assertEqual(form.errors["region"], ["This field is required."])
+        self.assertEqual(form.errors["postcode"], ["This field is required."])
+
+    def testTeamNameSameCase(self):
+        form = self.createForm({
+            'name': 'School 1',
+            'abbreviation': 'sch2',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["name"], ["School with this Name already exists."])
+        self.assertEqual(form.non_field_errors(), ["School with this name exists. Please ask your school administrator to add you."])
+
+    def testTeamNameDifferentCase(self):
+        form = self.createForm({
+            'name': 'school 1',
+            'abbreviation': 'sch2',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.non_field_errors(), ["School with this name exists. Please ask your school administrator to add you."])
+
+    def testAbbreviationSameCase(self):
+        form = self.createForm({
+            'name': 'School 2',
+            'abbreviation': 'SCH1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["abbreviation"], ["School with this Abbreviation already exists."])
+        self.assertEqual(form.non_field_errors(), ["School with this abbreviation exists. Please ask your school administrator to add you."])
+
+    def testAbbreviationDifferentCase(self):
+        form = self.createForm({
+            'name': 'School 2',
+            'abbreviation': 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.non_field_errors(), ["School with this abbreviation exists. Please ask your school administrator to add you."])
+
+    def testIndependentClean(self):
+        form = self.createForm({
+            'name': 'Independent',
+            'abbreviation': 'ind',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.non_field_errors(), [
+            'IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.',
+            "Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.",
+        ])
+
+    def testPostcodeClean(self):
+        form = self.createForm({
+            'name': 'School 2',
+            'abbreviation': 'sch',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': 'a',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.non_field_errors(), [
+            'Postcode must be numeric',
+            'Postcode too short',
+        ])
+
+
+class TestSchoolEditForm(TestSchoolForm):
+    def createForm(self, data):
+        return SchoolEditForm(data=data)
+
+    def testValidWithEmail(self):
+        form = self.createForm({
+            'name': 'School 2',
+            'abbreviation': 'sch2',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+            'addAdministratorEmail': 'new@new.com',
+        })
+
+        self.assertEqual(form.is_valid(), True)
+
+    def testInValidEmail(self):
+        form = self.createForm({
+            'name': 'School 2',
+            'abbreviation': 'sch2',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode': '3000',
+            'addAdministratorEmail': 'sdg',
+        })
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["addAdministratorEmail"], ["Enter a valid email address."])
 
 # Currently selected school update tests
 
