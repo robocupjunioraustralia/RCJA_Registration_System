@@ -5,6 +5,7 @@ omit = */node_modules/
     */venv/*
     */env/*
     */manage.py
+    */settings.py
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
