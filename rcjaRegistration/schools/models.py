@@ -105,7 +105,7 @@ class Campus(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=100, unique=True)
+    name = models.CharField('Name', max_length=100)
     postcode = models.CharField('Postcode', max_length=4, null=True, blank=True)
 
     # *****Meta and clean*****
@@ -113,6 +113,7 @@ class Campus(models.Model):
         verbose_name = 'Campus'
         verbose_name_plural = 'Campuses'
         ordering = ['school', 'name']
+        unique_together = ('school', 'name')
 
     def clean(self):
         errors = []

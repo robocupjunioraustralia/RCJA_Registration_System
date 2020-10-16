@@ -116,7 +116,7 @@
 
             <h3>File upload categories:</h3>
             <ul>
-              {% for availableFileUploadType in availableFileUploadTypes %}
+              {% for availableFileUploadType in team.availableFileUploadTypes %}
               <li><strong>{{ availableFileUploadType.fileType.name }}</strong></li>
               {% endfor %}
             </ul>
