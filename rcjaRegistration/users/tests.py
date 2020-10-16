@@ -17,6 +17,7 @@ from .forms import UserForm, UserSignupForm
 
 class TestUserManager(TestCase):
     def setUp(self):
+        # Use create (instead of create_user) here beause not setting password and testing the user object and manager
         self.user1 = User.objects.create(email='test@test.com')
 
     def test_get_by_natural_key_exact(self):
@@ -32,6 +33,7 @@ def unitTestsSetup(self):
     self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
     self.region1 = Region.objects.create(name='Region 1')
 
+    # Use create (instead of create_user) here beause not setting password and testing the user object and manager
     self.user1 = User.objects.create(email='test@test.com', first_name="First", last_name="Last", homeState=self.state1)
     self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
 
