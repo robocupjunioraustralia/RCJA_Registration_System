@@ -376,6 +376,23 @@ class TestTeamEdit(TestCase):
         self.assertEquals(response.status_code, 400)
         self.assertContains(response, 'Form data missing', status_code=400)
 
+    def testMissingManagementFormData_invalidForm(self):
+        payload = {
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            'hardwarePlatform': 'string',
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"teststringhere",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        self.assertEquals(response.status_code, 400)
+        self.assertContains(response, 'Form data missing', status_code=400)
+
     def testEditStudentWithInvalidFails(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
