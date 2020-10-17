@@ -1,3 +1,4 @@
+from django.db.models import ProtectedError
 
 def saveDeleteFormsetSkipProtected(formset):
     """
