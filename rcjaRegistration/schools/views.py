@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
 from django.urls import reverse
+from common.views import saveDeleteFormsetSkipProtected
 
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
@@ -85,30 +86,10 @@ def details(request):
                 school.save()
 
                 # Save campus formset
-                # Need commit=False to do manual deletion to catch protected errors
-                campuses = campusFormset.save(commit=False)
-
-                for campus in campusFormset.deleted_objects:
-                    try:
-                        campus.delete()
-                    except ProtectedError:
-                        pass
-                
-                for campus in campuses:
-                    campus.save()
+                saveDeleteFormsetSkipProtected(campusFormset)
 
                 # Save administrators formset
-                # Need commit=False to do manual deletion to catch protected errors
-                administrators = schoolAdministratorFormset.save(commit=False)
-
-                for administrator in schoolAdministratorFormset.deleted_objects:
-                    try:
-                        administrator.delete()
-                    except ProtectedError:
-                        pass
-
-                for administrator in administrators:
-                    administrator.save()
+                saveDeleteFormsetSkipProtected(schoolAdministratorFormset)
 
                 # Handle new administrator
                 if form.cleaned_data['addAdministratorEmail']:
