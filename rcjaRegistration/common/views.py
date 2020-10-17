@@ -6,7 +6,7 @@ def saveDeleteFormsetSkipProtected(formset):
     # Need commit=False to do manual deletion to catch protected errors
     objects = formset.save(commit=False)
 
-    for obj in objects.deleted_objects:
+    for obj in formset.deleted_objects:
         try:
             obj.delete()
         except ProtectedError:
