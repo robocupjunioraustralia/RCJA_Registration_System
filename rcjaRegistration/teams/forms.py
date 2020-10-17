@@ -11,7 +11,7 @@ import datetime
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ['team','firstName','lastName','yearLevel','gender','birthday']
+        fields = ['firstName','lastName','yearLevel','gender','birthday']
 
     birthday = forms.DateField( #coerce type to yyyy-mm-dd so html5 date will prefill correctly
     #this does not affect the display of the field to the user, as that is localised on the clientside

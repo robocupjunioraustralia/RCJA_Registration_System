@@ -90,8 +90,6 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
                 team.save()
 
                 # Save student formset
-                if newTeam:
-                    formset.instance = team
                 formset.save()
 
                 # Redirect if add another in response
