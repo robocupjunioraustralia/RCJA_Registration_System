@@ -2,7 +2,11 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
+import django.apps as djangoApps
+from common.models import SaveDeleteMixin
 
+from django.contrib.auth.models import Permission
+from coordination.models import Coordinator
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
@@ -41,7 +45,7 @@ class UserManager(BaseUserManager):
         # Case insensitive username lookup
         return self.get(**{f'{self.model.USERNAME_FIELD}__iexact': username})
 
-class User(AbstractUser):
+class User(SaveDeleteMixin, AbstractUser):
     """User model"""
     # Replace username with email
     username = None
@@ -98,7 +102,34 @@ class User(AbstractUser):
 
     # *****Save & Delete Methods*****
 
+    def postSave(self):
+        # Update user permissions in case is_superuser set or unset
+        self.updateUserPermissions()
+
     # *****Methods*****
+
+    def updateUserPermissions(self):
+        # Get coordinator objects for this user
+        coordinators = Coordinator.objects.filter(user=self)
+
+        # Staff flag
+        self.is_staff = self.is_superuser or coordinators.exists()
+        self.save(update_fields=['is_staff'], skipPrePostSave=True)
+
+        # Permissions
+
+        # Get permissions for all models for all states that this user is a coordinator of
+        permissionsToAdd = []
+
+        for coordinator in coordinators:
+            for model in djangoApps.apps.get_models():
+                if hasattr(model, 'coordinatorPermissions'):
+                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
+
+        # Add permissions to user
+        permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
+        self.user_permissions.clear()
+        self.user_permissions.add(*permissionObjects)
 
     # Reset forcePasswordChange
     def set_password(self, password):

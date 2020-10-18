@@ -82,6 +82,12 @@
                         <!-- Campus -->
                         <h1>Campuses</h1>
                         <p>Campuses can be used to ease the management of large schools. Each administrator can be assigned a campus and you can choose to be invoiced on a per campus basis.</p>
+                        {% if campusFormset.errors %}
+                            <div class="ui message left-aligned-text">
+                                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ campusFormset.non_form_errors }}
+                            </div>
+                        {% endif %}
                         <div id = "form_set">
                         {% for campusForm in campusFormset %}
                         {% include 'schools/campusForm.html' %}
@@ -101,40 +107,45 @@
                         <!-- Administrators -->
                         <h1>Administrators</h1>
                         <p>Administrators can manage the school.</p>
-                        {% for administratorForm in schoolAdministratorFormset %}
-                        {{administratorForm.id|attr:"type:hidden"}}
-                        <div class="ui segment">
-                            <h4 class="ui dividing header">Administrator {{forloop.counter}}</h4>
-                            {% if administratorForm.errors %}
+                        {% if schoolAdministratorFormset.errors %}
                             <div class="ui message left-aligned-text">
-                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                                {{ administratorForm.non_field_errors }}
-                                <ul>
-                                    {% for field in administratorForm %}
-                                    {% if field.errors %}
-                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>
-                                    {% endif %}
-                                    {% endfor %}
-                                </ul>
+                                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ schoolAdministratorFormset.non_form_errors }}
                             </div>
-                            {% endif %}
-                            <div class="three fields">
-                                <div class="field">
-                                    <label> {{administratorForm.user.label_tag}}</label>
-                                    {{administratorForm.user}}
-                                </div>
-                                <div class="field">
-                                        <label> {{administratorForm.campus.label_tag}}</label>
-                                        {{administratorForm.campus}}
-                                    </div>
-                                {% if schoolAdministratorFormset.can_delete %}
-                                <div class="field">
-                                    <label> Delete administrator</label>
-                                    {{administratorForm.DELETE}} <span>This will remove this user as an administrator for this school.</span>
+                        {% endif %}
+                        {% for administratorForm in schoolAdministratorFormset %}
+                            {{administratorForm.id|attr:"type:hidden"}}
+                            <div class="ui segment">
+                                <h4 class="ui dividing header">Administrator {{forloop.counter}}</h4>
+                                {% if administratorForm.errors %}
+                                <div class="ui message left-aligned-text">
+                                    <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                    <ul>
+                                        {% for field in administratorForm %}
+                                        {% if field.errors %}
+                                        <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </ul>
                                 </div>
                                 {% endif %}
+                                <div class="three fields">
+                                    <div class="field">
+                                        {{administratorForm.user.label_tag}}
+                                        {{administratorForm.user}}
+                                    </div>
+                                    <div class="field">
+                                            {{administratorForm.campus.label_tag}}
+                                            {{administratorForm.campus}}
+                                        </div>
+                                    {% if schoolAdministratorFormset.can_delete %}
+                                    <div class="field">
+                                        <label> Delete administrator</label>
+                                        {{administratorForm.DELETE}} <span>This will remove this user as an administrator for this school.</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
                         {% endfor %}
                         
                         <!-- Add administrator email field. Part of SchoolForm but place at end for aesthetics. -->

@@ -77,9 +77,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         )}),
         (_('Permissions'), {'fields': (
             'is_active',
-            'is_staff',
             'is_superuser',
-            # 'groups',
+            'is_staff',
             'user_permissions'
         )}),
         (_('Flags'), {'fields': (
@@ -114,8 +113,8 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     ordering = ('email',)
 
     readonly_fields = DjangoUserAdmin.readonly_fields + (
+        'is_staff',
         'user_permissions',
-        'groups',
         'last_login',
         'date_joined',
     )

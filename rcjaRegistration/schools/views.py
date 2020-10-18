@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
 from django.urls import reverse
+from django.db import IntegrityError, transaction
 
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
@@ -72,43 +73,41 @@ def details(request):
         can_delete=True
     )
 
+    # Create get version of the forms here so that exist before the exception is added if missing management data
+    form = SchoolEditForm(instance=school)
+    campusFormset = CampusInlineFormset(instance=school)
+    schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
+
     if request.method == 'POST':
+        # Create Post versions of forms
         form = SchoolEditForm(request.POST, instance=school)
         campusFormset = CampusInlineFormset(request.POST, instance=school)
         schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user})
 
         try:
-            if form.is_valid() and campusFormset.is_valid() and schoolAdministratorFormset.is_valid():
+            # Check all forms are valid, don't want short circuit logic because want errors to be raised from all forms even if one is invalid
+            if all([x.is_valid() for x in (form, campusFormset, schoolAdministratorFormset)]):
+
                 # Save school
                 school = form.save(commit=False)
                 school.forceSchoolDetailsUpdate = False
-                school.save()
 
-                # Save campus formset
-                # Need commit=False to do manual deletion to catch protected errors
-                campuses = campusFormset.save(commit=False)
+                # Want all data to save or none to save
+                try:
+                    with transaction.atomic():
+                        school.save()
 
-                for campus in campusFormset.deleted_objects:
-                    try:
-                        campus.delete()
-                    except ProtectedError:
-                        pass
-                
-                for campus in campuses:
-                    campus.save()
+                        # Save administrators formset
+                        # Do this before saving the campuses so if a campus is deleted the SET_NULL removes the relation, rather than getting a FK error
+                        schoolAdministratorFormset.save()
 
-                # Save administrators formset
-                # Need commit=False to do manual deletion to catch protected errors
-                administrators = schoolAdministratorFormset.save(commit=False)
+                        # Save campus formset
+                        campusFormset.save()
 
-                for administrator in schoolAdministratorFormset.deleted_objects:
-                    try:
-                        administrator.delete()
-                    except ProtectedError:
-                        pass
-
-                for administrator in administrators:
-                    administrator.save()
+                # Catch deletion of protected objects
+                except ProtectedError as e:
+                    form.add_error(None, e.args[0])
+                    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
 
                 # Handle new administrator
                 if form.cleaned_data['addAdministratorEmail']:
@@ -126,17 +125,13 @@ def details(request):
 
                 return redirect(reverse('events:dashboard'))
 
-        except ValidationError:
-            # To catch missing management data
-            return HttpResponseBadRequest('Form data missing')
-
-    else:
-        form = SchoolEditForm(instance=school)
-        campusFormset = CampusInlineFormset(instance=school)
-        schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
-    
-    try:
-        return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
-    except ValidationError:
         # To catch missing management data
-        return HttpResponseBadRequest('Form data missing')
+        except ValidationError as e:
+            # Reset the formsets so that are valid and won't cause an error when passed to render
+            campusFormset = CampusInlineFormset(instance=school)
+            schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
+
+            # Add error to the form
+            form.add_error(None, e.message)
+
+    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})

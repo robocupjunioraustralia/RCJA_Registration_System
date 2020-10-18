@@ -429,8 +429,21 @@ class TestEditDetails(TestCase):
             'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEquals(response.status_code, 400)
-        self.assertContains(response, 'Form data missing', status_code=400)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
+
+    def testMissingManagementFormData_invalidForm(self):
+        payload = {
+            "first_name":"Admin",
+            "last_name":"User",
+            "mobileNumber":123,
+            "email":"invalid",
+            'homeState': self.newState.id,
+            'homeRegion': self.newRegion.id,
+        }
+        response = self.client.post(path=reverse('users:details'),data=payload)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testInvalidEditFails(self):
         payload = {
@@ -914,7 +927,7 @@ class TestUserAdminInlinesAndFields(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertContains(response, '<input type="checkbox" name="is_active"')
-        self.assertContains(response, '<input type="checkbox" name="is_staff"')
+        self.assertNotContains(response, '<input type="checkbox" name="is_staff"')
         self.assertContains(response, '<input type="checkbox" name="is_superuser"')
 
     def testCorrectReadonlyFields_change_coordinator(self):
@@ -1099,7 +1112,6 @@ class TestUserAdminPermissions(TestCase):
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Delete')
 
-
     def testNonsuperuserChangeLoads_readonly_noState_fullcoordinator(self):
         self.user2.homeState = None
         self.user2.save()
@@ -1113,7 +1125,6 @@ class TestUserAdminPermissions(TestCase):
 
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Delete')
-
 
     # Password change load
 

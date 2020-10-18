@@ -69,38 +69,12 @@ class Coordinator(SaveDeleteMixin, models.Model):
             self.previousUser = Coordinator.objects.get(pk=self.pk).user
     
     def postSave(self):
-        Coordinator.updateUserPermissions(user=self.user)
+        self.user.updateUserPermissions()
 
         if hasattr(self, 'previousUser',) and self.user != self.previousUser:
-            Coordinator.updateUserPermissions(user=self.previousUser)
+            self.previousUser.updateUserPermissions()
 
     # *****Methods*****
-
-    @classmethod
-    def updateUserPermissions(cls, user):
-        # Get coordinator objects for this user
-        coordinators = Coordinator.objects.filter(user=user)
-
-        # Staff flag
-        user.is_staff = user.is_superuser or coordinators.exists()
-        user.save()
-
-        # Permissions
-
-        # Get permissions for all models for all states that this user is a coordinator of
-        permissionsToAdd = []
-
-        import django.apps
-        for coordinator in coordinators:
-            for model in django.apps.apps.get_models():
-                if hasattr(model, 'coordinatorPermissions'):
-                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
-
-        # Add permissions to user
-        from django.contrib.auth.models import Permission
-        permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
-        user.user_permissions.clear()
-        user.user_permissions.add(*permissionObjects)
 
     # *****Get Methods*****
 
