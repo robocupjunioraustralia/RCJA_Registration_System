@@ -182,6 +182,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/create/{self.newEvent.id}")
         self.assertEqual(Team.objects.count(), numberTeams+1)
+        self.assertEqual(Student.objects.count(), numberStudents+1)
 
     def testInvalidTeamCreate_badStudent(self):
         numberTeams = Team.objects.count()
