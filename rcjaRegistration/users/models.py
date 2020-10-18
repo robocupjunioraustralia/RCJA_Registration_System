@@ -109,7 +109,7 @@ class User(AbstractUser):
 
         # Staff flag
         self.is_staff = self.is_superuser or coordinators.exists()
-        self.save()
+        self.save(update_fields=['is_staff'])
 
         # Permissions
 
