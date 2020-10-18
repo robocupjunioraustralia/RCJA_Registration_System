@@ -69,10 +69,10 @@ class Coordinator(SaveDeleteMixin, models.Model):
             self.previousUser = Coordinator.objects.get(pk=self.pk).user
     
     def postSave(self):
-        Coordinator.updateUserPermissions(user=self.user)
+        self.user.updateUserPermissions()
 
         if hasattr(self, 'previousUser',) and self.user != self.previousUser:
-            Coordinator.updateUserPermissions(user=self.previousUser)
+            self.previousUser.updateUserPermissions()
 
     # *****Methods*****
 
