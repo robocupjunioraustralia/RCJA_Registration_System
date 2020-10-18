@@ -1018,6 +1018,7 @@ class TestEditSchoolDetails(TestCase):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
+        numberExistingCampuses = Campus.objects.count()
 
         payload = {
             'campus_set-TOTAL_FORMS':3,
@@ -1043,6 +1044,7 @@ class TestEditSchoolDetails(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, "Cannot delete some instances of model &#x27;Campus&#x27; because they are referenced through a protected foreign key:")
         Campus.objects.get(name='test 1')
+        self.assertEqual(Campus.objects.count(), numberExistingCampuses)
 
     def testAdministratorList(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
