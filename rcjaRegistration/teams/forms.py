@@ -16,9 +16,9 @@ class StudentForm(forms.ModelForm):
     birthday = forms.DateField( #coerce type to yyyy-mm-dd so html5 date will prefill correctly
     #this does not affect the display of the field to the user, as that is localised on the clientside
         widget=forms.DateInput(format='%Y-%m-%d'),
-        input_formats=('%Y-%m-%d', )
+        # input_formats=('%Y-%m-%d', )
         )
-    
+
 class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
         model = Team
