@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 import django.apps as djangoApps
 
 from django.contrib.auth.models import Permission
+from coordination.models import Coordinator
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
