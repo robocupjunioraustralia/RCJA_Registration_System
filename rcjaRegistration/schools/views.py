@@ -10,7 +10,6 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
 from django.urls import reverse
-from common.views import saveDeleteFormsetSkipProtected
 from django.db import IntegrityError, transaction
 
 from users.models import User
