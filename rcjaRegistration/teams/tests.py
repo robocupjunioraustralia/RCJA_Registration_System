@@ -137,6 +137,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
 
     def testWorkingTeamCreate(self):
         numberTeams = Team.objects.count()
+        numberStudents = Student.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -156,9 +157,11 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/events/{self.newEvent.id}")
         self.assertEqual(Team.objects.count(), numberTeams+1)
+        self.assertEqual(Student.objects.count(), numberStudents+1)
 
     def testWorkingTeamCreate_addAnother(self):
         numberTeams = Team.objects.count()
+        numberStudents = Student.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -182,6 +185,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
 
     def testInvalidTeamCreate_badStudent(self):
         numberTeams = Team.objects.count()
+        numberStudents = Student.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -199,11 +203,15 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Year level: Enter a whole number.")
+
         self.assertEqual(Team.objects.count(), numberTeams)
+        self.assertEqual(Student.objects.count(), numberStudents)
 
     def testInvalidTeamCreate_existingName(self):
         Team.objects.create(event=self.newEvent, mentorUser=self.user, name='Test', division=self.division)
         numberTeams = Team.objects.count()
+        numberStudents = Student.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -223,9 +231,11 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Team with this name in this event already exists')
         self.assertEqual(Team.objects.count(), numberTeams)
+        self.assertEqual(Student.objects.count(), numberStudents)
 
     def testInvalidTeamCreate_closed(self):
         numberTeams = Team.objects.count()
+        numberStudents = Student.objects.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -245,6 +255,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
         self.assertEqual(Team.objects.count(), numberTeams)
+        self.assertEqual(Student.objects.count(), numberStudents)
 
 class TestTeamDetails(TestCase):
     def setUp(self):
