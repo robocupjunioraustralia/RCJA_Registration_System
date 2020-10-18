@@ -102,7 +102,7 @@ class User(SaveDeleteMixin, AbstractUser):
 
     # *****Save & Delete Methods*****
 
-    def preSave(self):
+    def postSave(self):
         # Update user permissions in case is_superuser set or unset
         self.updateUserPermissions()
 
