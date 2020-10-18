@@ -124,13 +124,11 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
         from events.models import Event, Division, Venue
         from schools.models import School
-        from publicwebsite.models import CommitteeMember
         urlPairs = {
             'events/event/': Event,
             'events/division/': Division,
             'events/venue/': Venue,
             'schools/school/': School,
-            'publicwebsite/committeemember': CommitteeMember,
         }
 
         for url in urlPairs:
