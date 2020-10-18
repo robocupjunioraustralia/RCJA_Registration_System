@@ -88,10 +88,8 @@ def commonSetUp(obj): #copied from events, todo refactor
     )
     obj.oldEventWithTeams.divisions.add(obj.division)
     obj.oldEventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
-    obj.oldTeamStudent = Student(team=obj.oldEventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
     
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
-    obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='thisisastringfortesting',yearLevel=1,gender='Male',birthday=datetime.datetime.now().date())
 
     login = obj.client.login(request=HttpRequest(), username=obj.username, password=obj.password) 
 
@@ -337,7 +335,8 @@ class TestTeamEdit(TestCase):
         self.assertEqual(403, response.status_code)
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
-    def testEditStudentSucceeds(self):
+    def testAddStudentSucceeds(self):
+        existingStudents = self.newEventTeam.student_set.count()
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
@@ -358,6 +357,8 @@ class TestTeamEdit(TestCase):
         self.assertEquals(Student.objects.get(firstName="teststringhere").firstName,"teststringhere")
         self.assertEquals(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
+
+        self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+1)
 
     def testMissingManagementFormData(self):
         payload = {
@@ -410,7 +411,8 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEqual(200,response.status_code)
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "Year level: Enter a whole number.")
 
 def newCommonSetUp(self):
         self.user1 = User.objects.create_user(email=self.email1, password=self.password)
