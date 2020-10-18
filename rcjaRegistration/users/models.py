@@ -105,11 +105,11 @@ class User(AbstractUser):
 
     def updateUserPermissions(self):
         # Get coordinator objects for this user
-        coordinators = Coordinator.objects.filter(user=user)
+        coordinators = Coordinator.objects.filter(user=self)
 
         # Staff flag
-        user.is_staff = user.is_superuser or coordinators.exists()
-        user.save()
+        self.is_staff = self.is_superuser or coordinators.exists()
+        self.save()
 
         # Permissions
 
@@ -123,8 +123,8 @@ class User(AbstractUser):
 
         # Add permissions to user
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
-        user.user_permissions.clear()
-        user.user_permissions.add(*permissionObjects)
+        self.user_permissions.clear()
+        self.user_permissions.add(*permissionObjects)
 
     # Reset forcePasswordChange
     def set_password(self, password):
