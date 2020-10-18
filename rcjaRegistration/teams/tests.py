@@ -373,8 +373,8 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 400)
-        self.assertContains(response, 'Form data missing', status_code=400)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
         payload = {
@@ -390,8 +390,8 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 400)
-        self.assertContains(response, 'Form data missing', status_code=400)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testEditStudentWithInvalidFails(self):
         payload = {

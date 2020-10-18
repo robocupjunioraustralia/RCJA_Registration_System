@@ -429,8 +429,8 @@ class TestEditDetails(TestCase):
             'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEquals(response.status_code, 400)
-        self.assertContains(response, 'Form data missing', status_code=400)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
         payload = {
@@ -442,8 +442,8 @@ class TestEditDetails(TestCase):
             'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEquals(response.status_code, 400)
-        self.assertContains(response, 'Form data missing', status_code=400)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testInvalidEditFails(self):
         payload = {
