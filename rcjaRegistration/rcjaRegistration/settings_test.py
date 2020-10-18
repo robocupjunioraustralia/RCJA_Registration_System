@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'userquestions.apps.UserquestionsConfig',
     'regions.apps.RegionsConfig',
     'coordination.apps.CoordinationConfig',
-    'publicwebsite.apps.PublicwebsiteConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
     'eventfiles.apps.EventfilesConfig',
