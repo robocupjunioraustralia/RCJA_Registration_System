@@ -17,19 +17,6 @@ class CoordinatorInline(InlineAdminPermissions, admin.TabularInline):
         'user',
     ]
 
-class CommitteeMemberInline(InlineAdminPermissions, admin.TabularInline):
-    from publicwebsite.models import CommitteeMember
-    model = CommitteeMember
-    extra = 0
-    show_change_link = True
-    fields = [
-        'user',
-        'position',
-    ]
-    autocomplete_fields = [
-        'user',
-    ]
-
 @admin.register(State)
 class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -88,7 +75,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceMessage'
     ]
     inlines = [
-        CommitteeMemberInline,
     ]
 
     def get_readonly_fields(self, request, obj):
