@@ -45,9 +45,6 @@ class SaveDeleteMixin:
         if not skipPrePostDelete:
             self.postDelete()
 
-    class Meta:
-        abstract = True
-
 # **********FUNCTIONS**********
 
 def checkRequiredFieldsNotNone(self, requiredFields):
