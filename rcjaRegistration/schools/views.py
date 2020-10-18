@@ -97,20 +97,16 @@ def details(request):
                     with transaction.atomic():
                         school.save()
 
+                        # Save administrators formset
+                        # Do this before saving the campuses so if a campus is deleted the SET_NULL removes the relation, rather than getting a FK error
+                        schoolAdministratorFormset.save()
+
                         # Save campus formset
                         campusFormset.save()
-
-                        # Save administrators formset
-                        schoolAdministratorFormset.save()
 
                 # Catch deletion of protected objects
                 except ProtectedError as e:
                     form.add_error(None, e.args[0])
-                    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
-
-                # Catch other integrity errors, including foreign key errors caused by deleting a campus and adding it to a school administrator at the same time
-                except IntegrityError:
-                    form.add_error(None, "Error when trying to perform the selected actions")
                     return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
 
                 # Handle new administrator

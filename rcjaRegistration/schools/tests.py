@@ -1114,8 +1114,9 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
-        self.assertContains(response, "Error when trying to perform the selected actions")
+        self.assertEqual(response.status_code, 302)
+        self.admin1.refresh_from_db()
+        self.assertEqual(self.admin1.campus, None)
 
     @patch('schools.models.SchoolAdministrator.delete', side_effect = Mock(side_effect=ProtectedError("Cannot delete some instances of model 'SchoolAdministrator' because they are referenced through a protected foreign key:", SchoolAdministrator)))
     def testAdministratorDelete_protected(self, mocked_delete):
