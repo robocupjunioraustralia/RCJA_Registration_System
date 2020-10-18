@@ -86,7 +86,7 @@ def details(request):
 
         try:
             # Check all forms are valid, don't want short circuit logic because want errors to be raised from all forms even if one is invalid
-            if all([ x.is_valid() for x in (form, campusFormset, schoolAdministratorFormset)]):
+            if all([x.is_valid() for x in (form, campusFormset, schoolAdministratorFormset)]):
 
                 # Save school
                 school = form.save(commit=False)

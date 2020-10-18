@@ -81,7 +81,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
         try:
-            if form.is_valid() and formset.is_valid():
+            if all([x.is_valid() for x in (form, formset)]):
                 # Create team object but don't save so can set foreign keys
                 team = form.save(commit=False)
                 team.mentorUser = request.user
@@ -103,13 +103,14 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
                     return redirect(reverse('teams:details', kwargs = {"teamID":team.id}))
 
                 return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
-        except ValidationError:
-            # To catch missing management data
-            return HttpResponseBadRequest('Form data missing')
 
-        # Default to displaying the form again if form not valid
-        try:
-            return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
-        except ValidationError:
-            # To catch missing management data
-            return HttpResponseBadRequest('Form data missing')
+        # To catch missing management data
+        except ValidationError as e:
+            # Reset the formsets so that are valid and won't cause an error when passed to render
+            formset = self.StudentInLineFormSet(instance=team)
+
+            # Add error to the form
+            form.add_error(None, e.message)
+
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+
