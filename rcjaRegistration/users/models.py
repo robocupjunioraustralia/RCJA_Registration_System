@@ -2,7 +2,9 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
+import django.apps as djangoApps
 
+from django.contrib.auth.models import Permission
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
@@ -99,6 +101,29 @@ class User(AbstractUser):
     # *****Save & Delete Methods*****
 
     # *****Methods*****
+
+    def updateUserPermissions(self):
+        # Get coordinator objects for this user
+        coordinators = Coordinator.objects.filter(user=user)
+
+        # Staff flag
+        user.is_staff = user.is_superuser or coordinators.exists()
+        user.save()
+
+        # Permissions
+
+        # Get permissions for all models for all states that this user is a coordinator of
+        permissionsToAdd = []
+
+        for coordinator in coordinators:
+            for model in djangoApps.apps.get_models():
+                if hasattr(model, 'coordinatorPermissions'):
+                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
+
+        # Add permissions to user
+        permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
+        user.user_permissions.clear()
+        user.user_permissions.add(*permissionObjects)
 
     # Reset forcePasswordChange
     def set_password(self, password):
