@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 import django.apps as djangoApps
+from common.models import SaveDeleteMixin
 
 from django.contrib.auth.models import Permission
 from coordination.models import Coordinator
@@ -44,7 +45,7 @@ class UserManager(BaseUserManager):
         # Case insensitive username lookup
         return self.get(**{f'{self.model.USERNAME_FIELD}__iexact': username})
 
-class User(AbstractUser):
+class User(SaveDeleteMixin, AbstractUser):
     """User model"""
     # Replace username with email
     username = None
@@ -101,6 +102,10 @@ class User(AbstractUser):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        # Update user permissions in case is_superuser set or unset
+        self.updateUserPermissions()
+
     # *****Methods*****
 
     def updateUserPermissions(self):
@@ -109,7 +114,7 @@ class User(AbstractUser):
 
         # Staff flag
         self.is_staff = self.is_superuser or coordinators.exists()
-        self.save(update_fields=['is_staff'])
+        self.save(update_fields=['is_staff'], skipPrePostSave=True)
 
         # Permissions
 
