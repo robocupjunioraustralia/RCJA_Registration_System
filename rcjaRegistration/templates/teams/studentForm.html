@@ -18,30 +18,30 @@
 
     <div class = "two fields">
       <div class = "field">
-        <label> {{studentform.firstName.label_tag}} </label>
-                {{studentform.firstName}}
+        {{studentform.firstName.label_tag}}
+        {{studentform.firstName}}
             
       </div>
       <div class = "field">
-        <label> {{studentform.lastName.label_tag}} </label>
-                {{studentform.lastName}}
+        {{studentform.lastName.label_tag}}
+        {{studentform.lastName}}
             
       </div>
     </div>
     <div class = "four fields">
       <div class="field"> 
-        <label> {{studentform.yearLevel.label_tag}}</label>
-                {{studentform.yearLevel}}
+        {{studentform.yearLevel.label_tag}}
+        {{studentform.yearLevel}}
             
       </div>
       <div class="field">
-        <label> {{studentform.birthday.label_tag}}</label>
-                {{studentform.birthday|attr:"type:date"|attr:"placeholder:yyyy-mm-dd"}}
+        {{studentform.birthday.label_tag}}
+        {{studentform.birthday|attr:"type:date"|attr:"placeholder:yyyy-mm-dd"}}
             
       </div>
       <div class="field">
-        <label> {{studentform.gender.label_tag}}</label>
-                {{studentform.gender}}
+        {{studentform.gender.label_tag}}
+        {{studentform.gender}}
             
       </div>
       {% if formset.can_delete %}

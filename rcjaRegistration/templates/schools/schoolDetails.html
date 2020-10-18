@@ -120,11 +120,11 @@
                             {% endif %}
                             <div class="three fields">
                                 <div class="field">
-                                    <label> {{administratorForm.user.label_tag}}</label>
+                                    {{administratorForm.user.label_tag}}
                                     {{administratorForm.user}}
                                 </div>
                                 <div class="field">
-                                        <label> {{administratorForm.campus.label_tag}}</label>
+                                        {{administratorForm.campus.label_tag}}
                                         {{administratorForm.campus}}
                                     </div>
                                 {% if schoolAdministratorFormset.can_delete %}

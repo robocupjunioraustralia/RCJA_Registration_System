@@ -17,11 +17,11 @@
     {% endif %}
     <div class="three fields">
         <div class="field">
-            <label> {{campusForm.name.label_tag}}</label>
+            {{campusForm.name.label_tag}}
             {{campusForm.name}}
         </div>
         <div class="field">
-            <label> {{campusForm.postcode.label_tag}}</label>
+            {{campusForm.postcode.label_tag}}
             {{campusForm.postcode}}
         </div>
         {% if campusFormset.can_delete %}
