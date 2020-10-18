@@ -62,7 +62,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         name='test new not reg',
         eventType='competition',
         status='published',
-        maxMembersPerTeam=5,
+        maxMembersPerTeam=2,
         event_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
@@ -359,18 +359,156 @@ class TestTeamEdit(TestCase):
             "school":self.newSchool.id,
             'hardwarePlatform': self.hardware.id,
             'softwarePlatform': self.software.id,
-            "student_set-0-firstName":"teststringhere",
-            "student_set-0-lastName":"test",
+            "student_set-0-firstName":"First 1",
+            "student_set-0-lastName":"Last 1",
             "student_set-0-yearLevel":"1",
             "student_set-0-birthday":"1111-11-11",
-            "student_set-0-gender":"male"
+            "student_set-0-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(Student.objects.get(firstName="teststringhere").firstName,"teststringhere")
         self.assertEquals(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+1)
+        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
+
+    def testAdd2StudentsSucceeds(self):
+        existingStudents = self.newEventTeam.student_set.count()
+        payload = {
+            'student_set-TOTAL_FORMS':2,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"First 1",
+            "student_set-0-lastName":"Last 1",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male",
+            "student_set-1-firstName":"First 2",
+            "student_set-1-lastName":"Last 2",
+            "student_set-1-yearLevel":"1",
+            "student_set-1-birthday":"1111-11-11",
+            "student_set-1-gender":"male",
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
+
+        self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+2)
+        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+
+    def testAdd3StudentsFails(self):
+        existingStudents = self.newEventTeam.student_set.count()
+        payload = {
+            'student_set-TOTAL_FORMS':3,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"First 1",
+            "student_set-0-lastName":"Last 1",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male",
+            "student_set-1-firstName":"First 2",
+            "student_set-1-lastName":"Last 2",
+            "student_set-1-yearLevel":"1",
+            "student_set-1-birthday":"1111-11-11",
+            "student_set-1-gender":"male",
+            "student_set-2-firstName":"First 3",
+            "student_set-2-lastName":"Last 3",
+            "student_set-2-yearLevel":"1",
+            "student_set-2-birthday":"1111-11-11",
+            "student_set-2-gender":"male",
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Please submit 2 or fewer forms.")
+
+        self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
+        self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
+
+    def testAddStudentOverLimitIgnored_editedTotal(self):
+        self.student1 = Student.objects.create(team=self.newEventTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
+        self.student2 = Student.objects.create(team=self.newEventTeam, firstName='First 2', lastName='Last 2', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
+        existingStudents = self.newEventTeam.student_set.count()
+        payload = {
+            'student_set-TOTAL_FORMS':2,
+            "student_set-INITIAL_FORMS":1,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-id": self.student1.id,
+            "student_set-0-firstName":"New 1",
+            "student_set-0-lastName":"Last 1",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male",
+            "student_set-2-firstName":"First 3",
+            "student_set-2-lastName":"Last 3",
+            "student_set-2-yearLevel":"1",
+            "student_set-2-birthday":"1111-11-11",
+            "student_set-2-gender":"male",
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
+
+        self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
+        self.assertEquals(Student.objects.get(firstName="New 1").firstName, "New 1")
+        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
+        self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
+
+    def testAddStudentOverLimitFails(self):
+        self.student1 = Student.objects.create(team=self.newEventTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
+        self.student2 = Student.objects.create(team=self.newEventTeam, firstName='First 2', lastName='Last 2', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
+        existingStudents = self.newEventTeam.student_set.count()
+        payload = {
+            'student_set-TOTAL_FORMS':3,
+            "student_set-INITIAL_FORMS":2,
+            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
+            "name":"test+team",
+            "division":self.division.id,
+            "school":self.newSchool.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-id": self.student1.id,
+            "student_set-0-firstName":"New 1",
+            "student_set-0-lastName":"Last 1",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-birthday":"1111-11-11",
+            "student_set-0-gender":"male",
+            "student_set-2-firstName":"First 3",
+            "student_set-2-lastName":"Last 3",
+            "student_set-2-yearLevel":"1",
+            "student_set-2-birthday":"1111-11-11",
+            "student_set-2-gender":"male",
+        }
+        response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Please submit 2 or fewer forms.")
+
+        self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
+        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="New 1"))
+        self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
 
     def testMissingManagementFormData(self):
         payload = {
