@@ -69,7 +69,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         InvoicePaymentInline,
     ]
     actions = [
-        'export_as_csv'
+        'export_as_csv',
+        'markPaidToday',
     ]
     exportFields = [
         'event',
@@ -86,6 +87,11 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountDuePaypal',
         'amountPaid',
     ]
+
+    def markPaidToday(self, request, queryset):
+        pass
+    markPaidToday.short_description = "Mark paid today"
+    markPaidToday.allowed_permissions = ('change',)
 
     stateFilterLookup = 'event__state__coordinator'
 
