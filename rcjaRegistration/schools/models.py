@@ -216,7 +216,7 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
     userEmail.admin_order_field = 'user__email'
 
     def __str__(self):
-        return f'{self.user.fullname_or_email()}'
+        return f'{self.school}: {self.user.fullname_or_email()}'
 
     # *****CSV export methods*****
 
