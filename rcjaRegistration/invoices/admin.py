@@ -3,6 +3,8 @@ from common.adminMixins import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissions
 from django.utils.html import format_html, escape
 from django.contrib import messages
+from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.contenttypes.models import ContentType
 
 import datetime
 
@@ -118,8 +120,19 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                 continue
 
             # Create invoice payment for this invoice, use rounded amount because this is what is displayed in the interface, not being used in further calculations
-            invoice.invoicepayment_set.create(amountPaid=invoice.invoiceAmountInclGST(), datePaid=datetime.datetime.today().date())
+            paymentObj = invoice.invoicepayment_set.create(amountPaid=invoice.invoiceAmountInclGST(), datePaid=datetime.datetime.today().date())
             numberUpdated += 1
+
+            # Log the action
+
+            LogEntry.objects.log_action(
+                user_id = request.user.id,
+                content_type_id = ContentType.objects.get_for_model(Invoice).pk,
+                object_id = invoice.id,
+                object_repr = str(invoice),
+                action_flag = CHANGE,
+                change_message = '[{{"added": {{"name": "Payment", "object": "{}"}}}}]'.format(paymentObj)
+            )
 
         self.message_user(request, f"{numberUpdated} invoices marked as paid.{errorMessage}", messages.INFO)
 
