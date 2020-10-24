@@ -95,14 +95,18 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     def markPaidToday(self, request, queryset):
         def addErrorMessage(errorMessage, message):
+            # Helper function to update error message while avoiding duplicate errors
             if message not in errorMessage:
                 errorMessage = errorMessage + f" {message}"
         
             return errorMessage
 
+        # Messaging variables
         errorMessage = ""
         numberUpdated = 0
 
+        # Need to loop over the queryset to use function logic - invoiceAmount is not available on queryset
+        # Also to provide object level permissions
         for invoice in queryset:
             # Check has permission to edit this invoice
             if not checkStatePermissions(request, invoice, 'change'):
@@ -124,7 +128,6 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             numberUpdated += 1
 
             # Log the action
-
             LogEntry.objects.log_action(
                 user_id = request.user.id,
                 content_type_id = ContentType.objects.get_for_model(Invoice).pk,
@@ -134,6 +137,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                 change_message = '[{{"added": {{"name": "Payment", "object": "{}"}}}}]'.format(paymentObj)
             )
 
+        # Message user with result
         self.message_user(request, f"{numberUpdated} invoices marked as paid.{errorMessage}", messages.INFO)
 
     markPaidToday.short_description = "Mark paid today"
