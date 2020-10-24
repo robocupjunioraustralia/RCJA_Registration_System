@@ -184,6 +184,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
+            'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
             'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
@@ -204,6 +205,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
+            'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
             'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
