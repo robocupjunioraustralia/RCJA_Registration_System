@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
+from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 
 from django.utils.html import format_html
 

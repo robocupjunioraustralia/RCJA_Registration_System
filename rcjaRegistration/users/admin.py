@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 
-from common.admin import ExportCSVMixin, FKActionsRemove
+from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 
 from .models import User

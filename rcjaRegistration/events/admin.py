@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import F, Q
-from common.admin import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
+from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 from django import forms

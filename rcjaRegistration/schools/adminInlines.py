@@ -1,6 +1,6 @@
 from django.contrib import admin
 from coordination.adminPermissions import InlineAdminPermissions
-from common.admin import FKActionsRemove
+from common.adminMixins import FKActionsRemove
 
 from .models import SchoolAdministrator, Campus
 

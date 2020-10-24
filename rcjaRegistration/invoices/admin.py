@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin
+from common.adminMixins import ExportCSVMixin
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.utils.html import format_html, escape
 
