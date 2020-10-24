@@ -122,6 +122,9 @@ class Invoice(SaveDeleteMixin, models.Model):
     def invoicesForUser(cls, user):
         return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
 
+    def hiddenInvoice(self):
+        return self.invoiceAmountInclGST() < 0.05 and not self.invoicepayment_set.exists()
+
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse('invoices:details', kwargs = {"invoiceID": self.id})
