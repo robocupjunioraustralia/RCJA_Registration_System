@@ -69,8 +69,8 @@ class SoftwarePlatform(models.Model):
 
 class Team(BaseEventAttendance):
     # Foreign keys
-    hardwarePlatform = models.ForeignKey(HardwarePlatform, verbose_name='Hardware platform', on_delete=models.PROTECT, null=True)
-    softwarePlatform = models.ForeignKey(SoftwarePlatform, verbose_name='Software platform', on_delete=models.PROTECT, null=True)
+    hardwarePlatform = models.ForeignKey(HardwarePlatform, verbose_name='Hardware platform', on_delete=models.PROTECT, null=True, blank=True)
+    softwarePlatform = models.ForeignKey(SoftwarePlatform, verbose_name='Software platform', on_delete=models.PROTECT, null=True, blank=True)
 
     # Fields
     name = models.CharField('Name', max_length=50)
@@ -103,7 +103,7 @@ class Team(BaseEventAttendance):
     # *****Get Methods*****
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.event.name} {self.event.year})"
 
     # *****CSV export methods*****
 

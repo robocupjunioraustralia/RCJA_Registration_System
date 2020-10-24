@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import F, Q
-from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
+from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 from django import forms
@@ -20,7 +20,7 @@ class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
     pass
 
 @admin.register(Division)
-class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'state',
@@ -81,7 +81,7 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         ]
 
 @admin.register(Venue)
-class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'state',
@@ -137,7 +137,7 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
 admin.site.register(Year)
 
-class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
+class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = AvailableDivision
     extra = 0
     autocomplete_fields = [
@@ -166,9 +166,9 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
         ]
 
 @admin.register(Event)
-class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'name',
+        '__str__',
         'eventType',
         'status',
         'year',
@@ -181,9 +181,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     ]
     competition_fieldsets = (
         (None, {
+            'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
+            'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
             'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
@@ -201,9 +203,11 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     workshop_fieldsets = (
         (None, {
+            'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
+            'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
             'fields': (('eventBannerImage', 'eventBannerImageOriginalFilename', 'bannerImageFilesize', 'effectiveBannerImageTag'),)
         }),
         ('Dates', {
@@ -218,6 +222,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     )
     add_fieldsets = (
         (None, {
+            'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name')
         }),
         ('Event type', {
@@ -233,7 +238,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         }),
         ('Details', {
             'description': "More options will be available after you click save",
-            'fields': ('directEnquiriesTo',)
+            'fields': ('directEnquiriesTo', 'venue',)
         }),
     )
 
@@ -318,6 +323,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
+    fkAddEditButtons = [
+        'venue',
+    ]
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
@@ -409,7 +417,7 @@ class BaseWorkshopAttendanceForm(forms.ModelForm):
 
         return cleaned_data
 
-class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, admin.ModelAdmin, ExportCSVMixin):
+class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAddFieldsMixin, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'event',
         'division',

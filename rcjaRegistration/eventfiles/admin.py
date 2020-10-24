@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
+from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 
 from django.utils.html import format_html
 
@@ -15,12 +15,12 @@ class MentorEventFileTypeAdmin(AdminPermissions, admin.ModelAdmin):
         'allowedFileTypes',
     ]
 
-class EventAvailableFileTypeInline(InlineAdminPermissions, admin.TabularInline):
+class EventAvailableFileTypeInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = EventAvailableFileType
     extra = 0
 
 @admin.register(MentorEventFileUpload)
-class MentorEventFileUploadAdmin(AdminPermissions, admin.ModelAdmin):
+class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin):
     list_display = [
         '__str__',
         'eventAttendance',

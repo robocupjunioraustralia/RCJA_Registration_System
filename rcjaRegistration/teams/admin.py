@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin
+from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 
@@ -91,7 +91,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     eventTypeMapping = 'competition'
 
 @admin.register(Student)
-class StudentAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'team',

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin
+from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions
 
 from .models import Coordinator
@@ -7,7 +7,7 @@ from .models import Coordinator
 # Register your models here.
 
 @admin.register(Coordinator)
-class CoordinatorAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'userName',
         'userEmail',

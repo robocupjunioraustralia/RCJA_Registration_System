@@ -18,7 +18,6 @@ def summary(request):
     invoices = Invoice.invoicesForUser(request.user)
 
     context = {
-        'user': request.user,
         'invoices': invoices,
         'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
     }

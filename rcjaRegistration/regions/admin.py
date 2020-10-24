@@ -1,12 +1,12 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin
+from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels
 
 from .models import State, Region
 
 # Register your models here.
 
-class CoordinatorInline(InlineAdminPermissions, admin.TabularInline):
+class CoordinatorInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0

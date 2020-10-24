@@ -33,7 +33,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details for students', {
             'fields': ('birthday',)
         }),
-        ('Optional details for teachers', {
+        ('Required details for teachers', {
             'fields': ('email',)
         }),
     )
@@ -51,7 +51,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details for students', {
             'fields': ('birthday',)
         }),
-        ('Optional details for teachers', {
+        ('Required details for teachers', {
             'fields': ('email',)
         }),
     )
