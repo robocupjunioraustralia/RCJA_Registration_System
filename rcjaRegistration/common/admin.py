@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.contrib.admin.models import DELETION
+from django.utils.html import format_html
+from django.urls import reverse
 
 # **********Key Value Store**********
 
@@ -49,3 +52,55 @@ class TokenAdmin(RestTokenAdmin):
         return False
 
     list_display = ['user', 'created']
+
+# **********Log Entry**********
+
+from django.contrib.admin.models import LogEntry
+
+@admin.register(LogEntry)
+class LogEntryAdmin(admin.ModelAdmin):
+    list_display = [
+        '__str__',
+        'action_time',
+        'user',
+        'action_flag',
+        'content_type',
+    ]
+    readonly_fields = [
+        'action_time',
+        'object_link',
+    ]
+
+    list_filter = [
+        'action_flag',
+        'content_type',
+    ]
+    search_fields = [
+        'object_repr',
+        'change_message',
+        'user__first_name',
+        'user__last_name',
+        'user__email',
+    ]
+
+    date_hierarchy = 'action_time'
+
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def object_link(self, obj):
+        if obj.action_flag == DELETION or obj.content_type is None:
+            link = obj.object_repr
+        else:
+            ct = obj.content_type
+            link = format_html(
+                '<a href="{}" target="_blank">{}</a>',
+                reverse(f'admin:{ct.app_label}_{ct.model}_change', args=[obj.object_id]),
+                obj.object_repr,
+            )
+        return link
+    object_link.short_description = 'Object'
