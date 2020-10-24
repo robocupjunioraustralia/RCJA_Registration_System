@@ -8,6 +8,8 @@ from common.models import SaveDeleteMixin
 from django.contrib.auth.models import Permission
 from coordination.models import Coordinator
 
+from events.models import BaseEventAttendance
+
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
 
@@ -145,8 +147,47 @@ class User(SaveDeleteMixin, AbstractUser):
             self.currentlySelectedSchool = None
         self.save(update_fields=['currentlySelectedSchool'])
 
+    def independentItemsExist(self):
+        # True if the user has registered as an independent previously
+        return BaseEventAttendance.objects.filter(school=None, mentorUser=self).exists()
+
+    def independentSelectable(self):
+        # True if previously registered as an independent or manually selected independent
+        return self.independentSelected or self.independentItemsExist()
+
     # Current school methods
-    def displaySchoolSelector(self):
+    def schoolSelectorDisplay(self):
+        # Get number of schools that user is admin of
+        numberOptions = self.schooladministrator_set.count()
+
+        # Count independent if applicable
+        if self.independentSelectable():
+            numberOptions += 1
+
+        return numberOptions > 1
+
+    def schoolSelectorCurrent(self):
+        # Gets the abbreviation for the currently selected school/ independent
+        if self.currentlySelectedSchool is None:
+            return "IND"
+        return self.currentlySelectedSchool.abbreviation
+
+    def schoolSelectorOptions(self):
+        # Get list of schools/ independent, excluding the currently selected
+        options = []
+        for schoolAdmin in self.schooladministrator_set.exclude(school=self.currentlySelectedSchool):
+            options.append({
+                'schoolID': schoolAdmin.school.id,
+                'schoolAbbreviation': schoolAdmin.school.abbreviation,
+            })
+        
+        if self.independentSelectable() and self.currentlySelectedSchool:
+            options.append({
+                'schoolID': 0,
+                'schoolAbbreviation': "IND",
+            })
+        
+        return options
 
 
     # *****Get Methods*****
