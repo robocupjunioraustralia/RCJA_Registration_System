@@ -385,7 +385,7 @@ class Event(SaveDeleteMixin, models.Model):
         if campus:
             # Filter by school and campus
             return {
-                'event': event,
+                'event': self,
                 'school': school,
                 'campus': campus
             }
@@ -393,14 +393,14 @@ class Event(SaveDeleteMixin, models.Model):
         elif school:
             # If school but not filtering by campus filter by school
             return {
-                'event': event,
+                'event': self,
                 'school': school
             }
 
         else:
             # If no school filter by user
             return {
-                'event': event,
+                'event': self,
                 userFieldName: user,
                 'school': None
             }
