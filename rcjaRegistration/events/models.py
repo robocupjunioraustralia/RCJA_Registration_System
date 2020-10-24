@@ -411,7 +411,7 @@ class Event(SaveDeleteMixin, models.Model):
             return False
 
         # Check if at least one invoice has campus field set
-        return Invoice.objects.filter(school=school, event=self.event, campus__isnull=False).exists()
+        return Invoice.objects.filter(school=school, event=self, campus__isnull=False).exists()
 
     # Image methods
 
