@@ -162,7 +162,7 @@ class Invoice(SaveDeleteMixin, models.Model):
             school=self.school,
             user=self.invoiceToUser,
             userFieldName='mentorUser',
-            campus= self.campus if self.campusInvoicingEnabled() and not ignoreCampus else None,
+            campus = self.campus if self.campusInvoicingEnabled() and not ignoreCampus else None,
         )
 
     # Queryset of teams covered by this invoice

@@ -47,18 +47,11 @@ class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
                 raise ValidationError('Required field is missing')
 
             # Create dict of attributes to filter teams by
-            if school is not None:
-                teamFilterDict = {
-                    'event': event,
-                    'school': school
-                }
-            else:
-                # Independent, filter by mentor
-                teamFilterDict = {
-                    'event': event,
-                    'school': None,
-                    'mentorUser': mentorUser
-                }
+            teamFilterDict = event.itemFilterDict(
+                school=school,
+                user=mentorUser,
+                userFieldName='mentorUser',
+            )
 
             # Check event based limits 
             if event.event_maxTeamsPerSchool is not None and Team.objects.filter(**teamFilterDict).count() + 1 > event.event_maxTeamsPerSchool:
