@@ -35,17 +35,26 @@ def create(request):
 
 @login_required
 def setCurrentSchool(request, schoolID):
-    school = get_object_or_404(School, pk=schoolID)
+    # Set to independent if schoolID is 0
+    if schoolID == 0:
+        request.user.currentlySelectedSchool = None
+        request.user.independentSelected = True
+        request.user.save(update_fields=['currentlySelectedSchool', 'independentSelected'])
 
-    # Check permissions
-    if not request.user.schooladministrator_set.filter(school=school).exists():
-        raise PermissionDenied("You do not have permission to view this school")
+    # Otherwise get and check permissions for the school
+    else:
+        school = get_object_or_404(School, pk=schoolID)
 
-    # Set current school on user
-    request.user.currentlySelectedSchool = school
-    request.user.save(update_fields=['currentlySelectedSchool'])
+        # Check permissions
+        if not request.user.schooladministrator_set.filter(school=school).exists():
+            raise PermissionDenied("You do not have permission to view this school")
+
+        # Set current school on user
+        request.user.currentlySelectedSchool = school
+        request.user.independentSelected = False
+        request.user.save(update_fields=['currentlySelectedSchool', 'independentSelected'])
     
-    return redirect('/')
+    return redirect(reverse("events:dashboard"))
 
 @login_required
 def details(request):
