@@ -19,6 +19,7 @@ class InvoiceGlobalSettings(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Invoice settings'
+        verbose_name_plural = 'Invoice settings'
 
     # Allow only one instance of model
     def clean(self):
