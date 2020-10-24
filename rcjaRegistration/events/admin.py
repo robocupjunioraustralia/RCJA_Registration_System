@@ -233,7 +233,7 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
         }),
         ('Details', {
             'description': "More options will be available after you click save",
-            'fields': ('directEnquiriesTo',)
+            'fields': ('directEnquiriesTo', 'venue',)
         }),
     )
 
