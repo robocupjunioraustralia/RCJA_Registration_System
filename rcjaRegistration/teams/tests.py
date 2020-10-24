@@ -11,6 +11,8 @@ from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
 from .models import Team, Student, HardwarePlatform, SoftwarePlatform
 
+from .forms import TeamForm
+
 import datetime
 # Create your tests here.
 
@@ -1621,3 +1623,29 @@ class TestTeamAdmin(TestCase):
 
         self.assertEqual(Team.objects.filter(name='New Team').exists(), True)
         self.assertEqual(Team.objects.get(name='New Team').school, self.school1)
+
+# Unit tests
+
+# Forms
+
+class TestTeamForm(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def createForm(self, data):
+        return TeamForm(data=data, event=self.event, user=self.user1)
+
+    def testFieldsRequired(self):
+        form = self.createForm({})
+
+        self.assertEqual(form.is_valid(), False)
+        self.assertEqual(form.errors["division"], ["This field is required."])
+        self.assertEqual(form.errors["name"], ["This field is required."])
+        self.assertEqual(form.errors["hardwarePlatform"], ["This field is required."])
+        self.assertEqual(form.errors["softwarePlatform"], ["This field is required."])
