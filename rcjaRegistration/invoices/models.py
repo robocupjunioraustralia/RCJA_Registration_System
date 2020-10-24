@@ -156,30 +156,14 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Teams
 
-    # Filter for all items covered by this ivoice
+    # Filter for all items covered by this invoice
     def allItemsFilterFields(self, ignoreCampus=False):
-        if self.campusInvoicingEnabled() and not ignoreCampus:
-            # Filter by school and campus
-            return {
-                'event': self.event,
-                'school': self.school,
-                'campus': self.campus
-            }
-
-        elif self.school:
-            # If school but campuses not enableed filter by school
-            return {
-                'event': self.event,
-                'school': self.school
-            }
-
-        else:
-            # If no school filter by user
-            return {
-                'event': self.event,
-                'mentorUser': self.invoiceToUser,
-                'school': None
-            }
+        return self.event.itemFilterDict(
+            school=self.school,
+            user=self.invoiceToUser,
+            userFieldName='mentorUser',
+            campus= self.campus if self.campusInvoicingEnabled() and not ignoreCampus else None,
+        )
 
     # Queryset of teams covered by this invoice
     def allTeams(self):

@@ -380,6 +380,31 @@ class Event(SaveDeleteMixin, models.Model):
     def boolWorkshop(self):
         return self.eventType == 'workshop'
 
+    def itemFilterDict(self, school, user, userFieldName, campus=None):
+        # Filter by campus if it is provide
+        if campus:
+            # Filter by school and campus
+            return {
+                'event': event,
+                'school': school,
+                'campus': campus
+            }
+
+        elif school:
+            # If school but not filtering by campus filter by school
+            return {
+                'event': event,
+                'school': school
+            }
+
+        else:
+            # If no school filter by user
+            return {
+                'event': event,
+                userFieldName: user,
+                'school': None
+            }
+
     # Image methods
 
     def effectiveBannerImageURL(self):
