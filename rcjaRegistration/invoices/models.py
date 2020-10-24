@@ -133,11 +133,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Returns true if campus based invoicing enabled for this school for this event
     def campusInvoicingEnabled(self):
-        if not self.school:
-            return False
-
-        # Check if at least one invoice has campus field set
-        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+        return self.event.campusInvoicingEnabled(self.school)
 
     # Returns true if teams with campus for this school and event exists and campus invoicing not already enabled
     def campusInvoicingAvailable(self):

@@ -405,6 +405,14 @@ class Event(SaveDeleteMixin, models.Model):
                 'school': None
             }
 
+    # Returns true if campus based invoicing enabled for this school for this event
+    def campusInvoicingEnabled(self, school):
+        if not school:
+            return False
+
+        # Check if at least one invoice has campus field set
+        return Invoice.objects.filter(school=school, event=self.event, campus__isnull=False).exists()
+
     # Image methods
 
     def effectiveBannerImageURL(self):
@@ -631,14 +639,6 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         return self.mentorUser.email
     mentorUserEmail.short_description = 'Mentor email'
     mentorUserEmail.admin_order_field = 'mentorUser__email'
-
-    # Returns true if campus based invoicing enabled for this school for this event
-    def campusInvoicingEnabled(self):
-        if not self.school:
-            return False
-
-        # Check if at least one invoice has campus field set
-        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
     # File upload
 
