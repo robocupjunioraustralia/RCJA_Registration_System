@@ -91,6 +91,9 @@ class School(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
+    def userIsAdministrator(self, user):
+        return self.schooladministrator_set.filter(user=user).exists()
+
     def __str__(self):
         return self.name
 

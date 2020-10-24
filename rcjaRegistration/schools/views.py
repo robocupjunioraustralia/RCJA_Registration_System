@@ -46,7 +46,7 @@ def setCurrentSchool(request, schoolID):
         school = get_object_or_404(School, pk=schoolID)
 
         # Check permissions
-        if not request.user.schooladministrator_set.filter(school=school).exists():
+        if not school.userIsAdministrator(request.user):
             raise PermissionDenied("You do not have permission to view this school")
 
         # Set current school on user
@@ -61,7 +61,7 @@ def details(request):
     # Check permissions
     school = request.user.currentlySelectedSchool
 
-    if not (request.user.currentlySelectedSchool and request.user.schooladministrator_set.filter(school=school).exists()):
+    if not (request.user.currentlySelectedSchool and school.userIsAdministrator(request.user)):
         raise PermissionDenied("You do not have permission to view this school")
 
     # Campus formset
