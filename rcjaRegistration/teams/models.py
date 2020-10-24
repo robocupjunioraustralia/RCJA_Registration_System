@@ -103,7 +103,7 @@ class Team(BaseEventAttendance):
     # *****Get Methods*****
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.event.name})"
 
     # *****CSV export methods*****
 
