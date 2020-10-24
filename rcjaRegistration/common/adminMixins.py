@@ -1,14 +1,9 @@
 from django.db import models
 from django.contrib import admin
-from django.db.models import F, Q
 
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 
-from django.utils.html import format_html, escape
-from django.contrib import messages
-from django.urls import reverse
-from django.shortcuts import render
 from django.contrib.admin.options import IS_POPUP_VAR
 
 import csv

@@ -1,13 +1,13 @@
 from django.contrib import admin
 
-import keyvaluestore.admin
+# **********Key Value Store**********
 
-# Register your models here.
+import keyvaluestore.admin
 
 # Disable key-value store admin
 admin.site.unregister(keyvaluestore.admin.KeyValueStore)
 
-# Axes admin overrides
+# **********Axes**********
 
 import axes.admin
 from axes.admin import AccessLogAdmin as AxesAccessLogAdmin
@@ -33,7 +33,7 @@ class AccessAttempAdmin(AxesAccessAttempAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
-# Token admin overrides
+# **********Rest Token**********
 
 from rest_framework.authtoken.admin import TokenAdmin as RestTokenAdmin
 from rest_framework.authtoken.models import Token
