@@ -1,3 +1,4 @@
+from django.db import models
 from django.contrib import admin
 from django.db.models import F, Q
 
@@ -131,6 +132,18 @@ class DifferentAddFieldsMixin:
             request.POST = request.POST.copy()
             request.POST['_continue'] = 1
         return super().response_add(request, obj, post_url_continue)
+
+class FKActionsRemove:
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+
+        if isinstance(db_field, models.ForeignKey):
+            if db_field.name not in getattr(self, 'fkAddEditButtons', []):
+                formfield.widget.can_add_related = False
+                formfield.widget.can_change_related = False
+            formfield.widget.can_delete_related = False
+
+        return formfield
 
 # Disable key-value store admin
 admin.site.unregister(keyvaluestore.admin.KeyValueStore)

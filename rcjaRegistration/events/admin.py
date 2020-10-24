@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import F, Q
-from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
+from common.admin import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 from django import forms
@@ -20,7 +20,7 @@ class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
     pass
 
 @admin.register(Division)
-class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'state',
@@ -81,7 +81,7 @@ class DivisionAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         ]
 
 @admin.register(Venue)
-class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'state',
@@ -137,7 +137,7 @@ class VenueAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
 admin.site.register(Year)
 
-class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
+class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = AvailableDivision
     extra = 0
     autocomplete_fields = [
@@ -166,7 +166,7 @@ class AvailableDivisionInline(InlineAdminPermissions, admin.TabularInline):
         ]
 
 @admin.register(Event)
-class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'eventType',
@@ -320,6 +320,9 @@ class EventAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, Ex
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':130})},
     }
+    fkAddEditButtons = [
+        'venue',
+    ]
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
@@ -411,7 +414,7 @@ class BaseWorkshopAttendanceForm(forms.ModelForm):
 
         return cleaned_data
 
-class BaseWorkshopAttendanceAdmin(AdminPermissions, DifferentAddFieldsMixin, admin.ModelAdmin, ExportCSVMixin):
+class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAddFieldsMixin, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'event',
         'division',
