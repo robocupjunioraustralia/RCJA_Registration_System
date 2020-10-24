@@ -239,7 +239,7 @@ class TestSchoolAdministratorModelMethods(TestCase):
         self.assertEqual(self.admin1.getState(), self.state1)
 
     def testStr(self):
-        self.assertEqual(str(self.admin1), 'First Last')
+        self.assertEqual(str(self.admin1), 'Shool 1: First Last')
 
     def testUserName(self):
         self.assertEqual(self.admin1.userName(), 'First Last')
