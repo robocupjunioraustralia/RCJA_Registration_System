@@ -581,31 +581,16 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def postSave(self):
-        # Create invoice
-        if self.campusInvoicingEnabled():
-            # Get or create invoice with matching campus
-            Invoice.objects.get_or_create(
-                school=self.school,
-                campus=self.campus,
-                event=self.event,
-                defaults={'invoiceToUser': self.mentorUser}
-            )
+        invoiceDict = self.event.itemFilterDict(
+            school=self.school,
+            user=self.mentorUser,
+            userFieldName='invoiceToUser',
+            campus = self.campus if self.event.campusInvoicingEnabled(self.school) else None,
+        )
 
-        elif self.school:
-            # Ignore campus and only look for matching school
-            Invoice.objects.get_or_create(
-                school=self.school,
-                event=self.event,
-                defaults={'invoiceToUser': self.mentorUser}
-            )
+        invoiceDict['defaults'] = {'invoiceToUser': self.mentorUser}
 
-        else:
-            # Get invoice for this user for independent entry
-            Invoice.objects.get_or_create(
-                invoiceToUser=self.mentorUser,
-                event=self.event,
-                school=None
-            )
+        Invoice.objects.get_or_create(**invoiceDict)
 
     # *****Methods*****
 
