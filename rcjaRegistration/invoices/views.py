@@ -51,7 +51,7 @@ def details(request, invoiceID):
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'currentDate': datetime.datetime.today().date,
+        'currentDate': datetime.datetime.today().date(),
     }
 
     return render(request, 'invoices/details.html', context)
