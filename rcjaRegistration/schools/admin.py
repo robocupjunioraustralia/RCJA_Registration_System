@@ -145,7 +145,16 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
     fields = [
         'school',
         'name',
+        'postcode',
     ]
+
+    # Set forceDetailsUpdate if a field is blank
+    def save_model(self, request, obj, form, change):
+        if obj.postcode is None:
+            obj.school.forceSchoolDetailsUpdate = True
+            obj.school.save(update_fields=['forceSchoolDetailsUpdate'])
+        
+        super().save_model(request, obj, form, change)
 
     # Don't allow editing school after initial creation
     def get_readonly_fields(self, request, obj=None):
