@@ -168,7 +168,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        'name',
+        '__str__',
         'eventType',
         'status',
         'year',
@@ -181,6 +181,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     ]
     competition_fieldsets = (
         (None, {
+            'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
@@ -202,6 +203,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     )
     workshop_fieldsets = (
         (None, {
+            'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
         }),
         ('Display image', {
@@ -220,6 +222,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     )
     add_fieldsets = (
         (None, {
+            'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name')
         }),
         ('Event type', {
