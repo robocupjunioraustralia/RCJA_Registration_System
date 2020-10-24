@@ -77,7 +77,7 @@ def details(request):
             # Add error to the form
             form.add_error(None, e.message)
 
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
+    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
 
 def signup(request):
     if request.method == 'POST':
