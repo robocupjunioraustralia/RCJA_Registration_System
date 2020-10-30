@@ -466,7 +466,7 @@ class TestEventClean(TestCase):
         self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-        self.assertRaises(ValidationError, self.event.clean)
+        self.event.clean()
 
     def testRegistrationCloseAfterEventStartDate(self):
         self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
