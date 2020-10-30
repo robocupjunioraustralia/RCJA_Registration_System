@@ -299,8 +299,8 @@ class Event(SaveDeleteMixin, models.Model):
         if self.registrationsOpenDate > self.registrationsCloseDate:
             errors.append(ValidationError('Registration open date must not be after registration close date'))
 
-        if self.registrationsCloseDate >= self.startDate:
-            errors.append(ValidationError('Registration close date must be before event start date'))
+        if self.registrationsCloseDate > self.startDate:
+            errors.append(ValidationError('Registration close date must be before or on event start date'))
 
         # Validate billing settings
         if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
