@@ -142,6 +142,7 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'homeState',
         'homeRegion',
         User_QuestionResponse_Filter,
+        'baseeventattendance__event',
     )
     autocomplete_fields = [
         'homeState',
