@@ -146,6 +146,10 @@ class Student(models.Model):
     def __str__(self):
         return f'{self.firstName} {self.lastName}'
 
+    def teamPK(self):
+        return self.team.pk
+    teamPK.short_description = 'Team PK'
+
     # *****CSV export methods*****
 
     # Returns index of this group membship in queryset of groupMemberships for this group

@@ -130,6 +130,7 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
     exportFields = [
         'pk',
         'team',
+        'teamPK',
         'firstName',
         'lastName',
         'yearLevel',
