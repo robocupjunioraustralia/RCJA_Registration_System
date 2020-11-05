@@ -607,6 +607,10 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     mentorUserEmail.short_description = 'Mentor email'
     mentorUserEmail.admin_order_field = 'mentorUser__email'
 
+    def mentorUserPK(self):
+        return self.mentorUser.pk
+    mentorUserPK.short_description = 'Mentor PK'
+
     # Returns true if campus based invoicing enabled for this school for this event
     def campusInvoicingEnabled(self):
         if not self.school:

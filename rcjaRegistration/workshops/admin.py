@@ -78,6 +78,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'division',
         'mentorUserName',
         'mentorUserEmail',
+        'mentorUserPK',
         'school',
         'campus',
         'homeState',

@@ -82,6 +82,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'division',
         'mentorUserName',
         'mentorUserEmail',
+        'mentorUserPK',
         'school',
         'campus',
         'homeState',
