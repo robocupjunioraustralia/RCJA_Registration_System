@@ -44,6 +44,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'setForceDetailsUpdate',
     ]
     exportFields = [
+        'pk',
         'name',
         'abbreviation',
         'state',
@@ -123,6 +124,7 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'name',
         'school',
         'postcode',
@@ -195,6 +197,7 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'userName',
         'userEmail',
         'school',

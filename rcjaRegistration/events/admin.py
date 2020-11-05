@@ -41,6 +41,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'export_as_csv',
     ]
     exportFields = [
+        'pk',
         'name',
         'state',
         'category',
@@ -111,6 +112,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         'export_as_csv',
     ]
     exportFields = [
+        'pk',
         'name',
         'state',
         'address',
@@ -295,6 +297,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'name',
         'year',
         'state',
@@ -454,6 +457,7 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'event',
         'division',
         'mentorUserName',

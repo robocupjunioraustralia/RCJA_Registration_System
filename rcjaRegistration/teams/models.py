@@ -146,6 +146,42 @@ class Student(models.Model):
     def __str__(self):
         return f'{self.firstName} {self.lastName}'
 
+    def teamPK(self):
+        return self.team.pk
+    teamPK.short_description = 'Team PK'
+
     # *****CSV export methods*****
+
+    # Returns index of this group membship in queryset of groupMemberships for this group
+    def getStudentNumber(self):
+        students = self.team.student_set.all()
+        studentNumber = 1 # Start at 1 not 0 because columns should start at 1 not 0
+        for student in students:
+            if student == self:
+                return studentNumber
+            studentNumber += 1
+
+    # List of all csv headers for instance of this model
+    def csvHeaders(self):
+        studentNumber = self.getStudentNumber()
+        return [
+            {'header': f'Member {studentNumber} First Name', 'order': f'{studentNumber}a'},
+            {'header': f'Member {studentNumber} Last Name', 'order': f'{studentNumber}b'},
+            {'header': f'Member {studentNumber} Year Level', 'order': f'{studentNumber}c'},
+            {'header': f'Member {studentNumber} Gender', 'order': f'{studentNumber}d'},
+            {'header': f'Member {studentNumber} Birthday', 'order': f'{studentNumber}e'},
+        ]
+
+    # Dictionary of values for each header
+    def csvValues(self):
+        studentNumber = self.getStudentNumber()
+        print(self.birthday)
+        return {
+            f'Member {studentNumber} First Name': self.firstName,
+            f'Member {studentNumber} Last Name': self.lastName,
+            f'Member {studentNumber} Year Level': self.yearLevel,
+            f'Member {studentNumber} Gender': self.get_gender_display(),
+            f'Member {studentNumber} Birthday': self.birthday.strftime("%d/%m/%Y"),
+        }
 
     # *****Email methods*****

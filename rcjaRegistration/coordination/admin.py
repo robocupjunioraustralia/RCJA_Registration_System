@@ -42,6 +42,7 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'userName',
         'userEmail',
         'state',

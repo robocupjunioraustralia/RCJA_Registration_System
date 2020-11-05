@@ -78,6 +78,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'markPaidToday',
     ]
     exportFields = [
+        'pk',
         'event',
         'invoiceToUserName',
         'invoiceToUserEmail',
