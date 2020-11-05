@@ -66,6 +66,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'firstName',
         'lastName',
         'email',

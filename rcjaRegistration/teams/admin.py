@@ -76,6 +76,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'name',
         'event',
         'division',
@@ -123,6 +124,7 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'team',
         'firstName',
         'lastName',

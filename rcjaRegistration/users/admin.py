@@ -152,6 +152,7 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'setForceDetailsUpdate'
     ]
     exportFields = [
+        'pk',
         'email',
         'first_name',
         'last_name',
