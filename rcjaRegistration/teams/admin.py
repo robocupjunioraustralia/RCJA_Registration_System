@@ -88,6 +88,9 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'hardwarePlatform',
         'softwarePlatform',
     ]
+    exportFieldsManyRelations = [
+        'student_set',
+    ]
 
     eventTypeMapping = 'competition'
 
