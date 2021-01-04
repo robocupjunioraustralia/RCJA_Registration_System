@@ -16,7 +16,7 @@ from coordination.models import Coordinator
 
 import datetime
 
-from .forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdministratorForm
+from schools.forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdministratorForm
 
 # Unit Tests
 
