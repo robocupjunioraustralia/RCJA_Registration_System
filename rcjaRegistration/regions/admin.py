@@ -62,6 +62,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'name',
         'abbreviation',
         'typeRegistration',

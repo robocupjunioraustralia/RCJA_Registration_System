@@ -76,16 +76,21 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'name',
         'event',
         'division',
         'mentorUserName',
         'mentorUserEmail',
+        'mentorUserPK',
         'school',
         'campus',
         'homeState',
         'hardwarePlatform',
         'softwarePlatform',
+    ]
+    exportFieldsManyRelations = [
+        'student_set',
     ]
 
     eventTypeMapping = 'competition'
@@ -123,7 +128,9 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'team',
+        'teamPK',
         'firstName',
         'lastName',
         'yearLevel',
