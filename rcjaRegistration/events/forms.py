@@ -1,16 +1,17 @@
 from django import forms
 
+from events.models import Division
+from schools.models import Campus
+
 class BaseEventAttendanceFormInitMixin:
     # Override init to filter division and campus, set school and event
     def __init__(self, *args, user, event, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Filter division to available divisions
-        from events.models import Division
         self.fields['division'].queryset = Division.objects.filter(event=event)
 
         # Filter campus to user's campuses
-        from schools.models import Campus
         self.fields['campus'].queryset = Campus.objects.filter(school=user.currentlySelectedSchool)
 
         # School field

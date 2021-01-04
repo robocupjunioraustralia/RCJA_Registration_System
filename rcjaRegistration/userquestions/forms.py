@@ -7,15 +7,11 @@ import datetime
 class QuestionResponseForm(forms.ModelForm):
     class Meta:
         model = QuestionResponse
-        fields = ['question', 'user', 'response']
+        fields = ['question', 'response']
 
     # Override init to set user and question
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # User field
-        self.fields['user'].disabled = True
-        self.fields['user'].widget = forms.HiddenInput()
 
         # Question field
         self.fields['question'].disabled = True
