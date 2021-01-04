@@ -8,7 +8,7 @@ from unittest.mock import patch, Mock
 from django.db.models import ProtectedError
 
 from users.models import User
-from .models import School, SchoolAdministrator, Campus
+from schools.models import School, SchoolAdministrator, Campus
 from regions.models import State, Region
 from events.models import Year, Division, Event
 from invoices.models import Invoice
