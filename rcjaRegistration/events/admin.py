@@ -380,6 +380,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ]
 
     stateFilterLookup = 'state__coordinator'
+    fieldFilteringModel = Event
 
     @classmethod
     def fieldsToFilterObj(cls, request, obj):

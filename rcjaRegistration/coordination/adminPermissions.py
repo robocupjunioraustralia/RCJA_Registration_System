@@ -119,8 +119,8 @@ class BaseAdminPermissions:
                 if db_field.name == fieldToFilter['field']:
 
                     objAdmin = fieldToFilter['fieldAdmin']
-                    # Default to using the model attribute on the admin class, but default to fieldModel for cases where the admin is not registered and the model must be specified manually
-                    objModel = getattr(objAdmin, 'model', fieldToFilter['fieldModel'])
+                    # Use fieldModel attribute in fieldToFilter, if not specified use model specified on the target admin
+                    objModel = fieldToFilter.get('fieldModel', objAdmin.fieldFilteringModel)
 
                     if not objectFiltering:
                         queryset = objModel.objects.all()

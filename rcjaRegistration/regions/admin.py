@@ -142,6 +142,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     # State based filtering
 
     stateFilterLookup = 'coordinator'
+    fieldFilteringModel = State
 
 @admin.register(Region)
 class RegionAdmin(AdminPermissions, admin.ModelAdmin):

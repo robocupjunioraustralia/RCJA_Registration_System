@@ -95,6 +95,10 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
 
     eventTypeMapping = 'competition'
 
+    # State based filtering
+
+    fieldFilteringModel = Team
+
 @admin.register(Student)
 class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [

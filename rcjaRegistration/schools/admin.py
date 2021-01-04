@@ -88,6 +88,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         ]
 
     stateFilterLookup = 'state__coordinator'
+    fieldFilteringModel = School
 
     # Actions
 
