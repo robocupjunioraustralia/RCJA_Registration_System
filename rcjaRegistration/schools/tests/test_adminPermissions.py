@@ -1,11 +1,14 @@
 from common.baseTests.adminPermissions import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator
 
 from django.test import TestCase
-
+from django.http import HttpRequest
+from django.urls import reverse
 
 from common.baseTests.populateDatabase import createStates, createUsers, createSchools
 
-class Schools_Base:
+# School
+
+class School_Base:
     modelURLName = 'schools_school'
     state1Obj = 'school1_state1'
     state2Obj = 'school3_state2'
@@ -28,10 +31,10 @@ class Schools_Base:
         self.validPayload['state'] = self.state1.id
         self.validPayload['region'] = self.region1.id
 
-class Test_NotStaff(Schools_Base, Base_Test_NotStaff, TestCase):
+class Test_School_NotStaff(School_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class Test_SuperUser(Schools_Base, Base_Test_SuperUser, TestCase):
+class Test_School_SuperUser(School_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 4
     expectedStrings = [
         'School 1',
@@ -41,7 +44,15 @@ class Test_SuperUser(Schools_Base, Base_Test_SuperUser, TestCase):
     ]
     expectedMissingStrings = []
 
-class Schools_Coordinators_Base(Schools_Base):
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
+class School_Coordinators_Base(School_Base):
     expectedListItems = 2
     expectedStrings = [
         'School 1',
@@ -52,9 +63,24 @@ class Schools_Coordinators_Base(Schools_Base):
         'School 4',
     ]
 
-class Test_FullCoordinator(Schools_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+class Test_School_FullCoordinator(School_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
+    def testPostAddWrongState(self):
+        payload = self.validPayload.copy()
+        payload['state'] = self.state2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+class Test_School_ViewCoordinator(School_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass
 
-class Test_ViewCoordinator(Schools_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
 
