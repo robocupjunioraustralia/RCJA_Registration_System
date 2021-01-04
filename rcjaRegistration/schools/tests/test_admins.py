@@ -9,6 +9,24 @@ class Schools_Base:
     modelURLName = 'schools_school'
     state1Obj = 'school1_state1'
     state2Obj = 'school3_state2'
+    validPayload = {
+            'name': 'School 5',
+            'abbreviation': 'SCH5',
+            'state': 0,
+            'region': 0,
+            'campus_set-TOTAL_FORMS': 0,
+            'campus_set-INITIAL_FORMS': 0,
+            'campus_set-MIN_NUM_FORMS': 0,
+            'campus_set-MAX_NUM_FORMS': 1000,
+            'schooladministrator_set-TOTAL_FORMS': 0,
+            'schooladministrator_set-INITIAL_FORMS': 0,
+            'schooladministrator_set-MIN_NUM_FORMS': 0,
+            'schooladministrator_set-MAX_NUM_FORMS': 1000,
+        }
+
+    def updatePayload(self):
+        self.validPayload['state'] = self.state1.id
+        self.validPayload['region'] = self.region1.id
 
 class Test_NotStaff(Schools_Base, Base_Test_NotStaff, TestCase):
     pass

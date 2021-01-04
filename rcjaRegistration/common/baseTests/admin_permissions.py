@@ -5,6 +5,11 @@ from .populateDatabase import createStates, createUsers, createSchools
 
 class Base:
     """Base for admin permissions tests for all user test cases"""
+
+    def updatePayload(self):
+        """Hook for updating valid payload with foreign foreign key ids"""
+        pass
+
     def setUp(self):
         createStates(self)
         createUsers(self)
@@ -18,6 +23,8 @@ class Base:
         # Should be from state 2, as coordinators from state 2 should not have access to this object
         # Ignored for superuser and notstaff tests
         self.state2ObjID = getattr(self, self.state2Obj).id
+
+        self.updatePayload()
 
     # Change list
 
@@ -72,12 +79,22 @@ class DoesLoadBase(Base):
         for expectedMissingString in self.expectedMissingStrings:
             self.assertNotContains(response, expectedMissingString)
 
+    # Post tests
+    def testPostAdd(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=self.validPayload)
+        self.assertEqual(response.status_code, self.postCode)
+
+    def testPostChange(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=self.validPayload)
+        self.assertEqual(response.status_code, self.postCode)
+
 class Base_Test_SuperUser(DoesLoadBase):
     """Test admin access with a superuser"""
     listLoadsCode = 200
     changeLoadsCode = 200
     addLoadsCode = 200
     deleteLoadsCode = 200
+    postCode = 302
 
     def setUp(self):
         super().setUp()
@@ -96,6 +113,7 @@ class Base_Test_FullCoordinator(CoordinatorBase):
     changeLoadsCode = 200
     addLoadsCode = 200
     deleteLoadsCode = 200
+    postCode = 302
 
     def setUp(self):
         super().setUp()
@@ -111,6 +129,7 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
     changeLoadsCode = 200
     addLoadsCode = 403
     deleteLoadsCode = 403
+    postCode = 403
 
     def setUp(self):
         super().setUp()
