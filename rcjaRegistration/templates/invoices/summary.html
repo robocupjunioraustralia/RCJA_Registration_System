@@ -26,7 +26,7 @@
                 <th> Amount due (PayPal) </th>
             </thead>
             <tbody>
-                {% for invoice in invoices %}
+                {% for invoice in invoices %}{% if not invoice.hiddenInvoice %}
                     <tr id = "invoiceRow{{invoice.id}}">
                         <td><a href="{% url 'invoices:details' invoice.id %}" target="_blank"><button class = "ui button primary" > View invoice </button></a></td>
                         <td><a href="{% url 'events:details' invoice.event.id %}">{{invoice.event}}</a></td> 
@@ -64,7 +64,7 @@
                             {% endif %}
                         </td>
                     </tr>
-                {% endfor %}
+                {% endif %}{% endfor %}
             </tbody>
         </table>
     </div>

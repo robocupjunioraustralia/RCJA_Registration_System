@@ -41,7 +41,12 @@ def details(request):
             'user': request.user.id,
         })
 
+    # Create get version of the forms here so that exist before the exception is added if missing management data
+    form = UserForm(instance=request.user)
+    questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
+
     if request.method == 'POST':
+        # Create Post versions of forms
         form = UserForm(request.POST, instance=request.user)
         questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials)
 
@@ -49,7 +54,7 @@ def details(request):
         displayAgain = request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool
 
         try:
-            if form.is_valid() and questionFormset.is_valid():
+            if all([x.is_valid() for x in (form, questionFormset)]):
                 # Save user
                 user = form.save(commit=False)
                 user.forceDetailsUpdate = False
@@ -64,19 +69,15 @@ def details(request):
 
                 return redirect(reverse('events:dashboard'))
 
-        except ValidationError:
-            # To catch missing management data
-            return HttpResponseBadRequest('Form data missing')
-
-    else:
-        form = UserForm(instance=request.user)
-        questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-    
-    try:
-        return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'user':request.user})
-    except ValidationError:
         # To catch missing management data
-        return HttpResponseBadRequest('Form data missing')
+        except ValidationError as e:
+            # Reset the formsets so that are valid and won't cause an error when passed to render
+            questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
+
+            # Add error to the form
+            form.add_error(None, e.message)
+
+    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
 
 def signup(request):
     if request.method == 'POST':

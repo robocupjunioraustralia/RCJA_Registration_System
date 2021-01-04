@@ -1,9 +1,9 @@
-name: Django Build Tests
+name: Django Tests
 
 on: [push]
 
 jobs:
-  build:
+  tests:
 
     runs-on: ubuntu-latest
 

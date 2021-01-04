@@ -239,7 +239,7 @@ class TestSchoolAdministratorModelMethods(TestCase):
         self.assertEqual(self.admin1.getState(), self.state1)
 
     def testStr(self):
-        self.assertEqual(str(self.admin1), 'First Last')
+        self.assertEqual(str(self.admin1), 'School 1: First Last')
 
     def testUserName(self):
         self.assertEqual(self.admin1.userName(), 'First Last')
@@ -880,8 +880,25 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 400)
-        self.assertContains(response, 'Form data missing', status_code=400)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
+
+    def testMissingManagementFormData_invalidForm(self):
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+
+        payload = {
+            "name":"New name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode':3,
+        }
+
+        response = self.client.post(url, data=payload)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testChangeName_failure(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
@@ -1001,6 +1018,7 @@ class TestEditSchoolDetails(TestCase):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
         url = reverse('schools:details')
+        numberExistingCampuses = Campus.objects.count()
 
         payload = {
             'campus_set-TOTAL_FORMS':3,
@@ -1023,8 +1041,10 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Cannot delete some instances of model &#x27;Campus&#x27; because they are referenced through a protected foreign key:")
         Campus.objects.get(name='test 1')
+        self.assertEqual(Campus.objects.count(), numberExistingCampuses)
 
     def testAdministratorList(self):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
@@ -1065,7 +1085,40 @@ class TestEditSchoolDetails(TestCase):
         self.admin1.refresh_from_db()
         self.assertEqual(self.admin1.campus, self.campus1)
 
-    @patch('schools.models.SchoolAdministrator.delete', side_effect = Mock(side_effect=ProtectedError('protected', SchoolAdministrator)))
+    def testEditAdministrator_addDeletedCampus(self):
+        self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
+        self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
+        self.client.login(request=HttpRequest(), username=self.email, password=self.password)
+        url = reverse('schools:details')
+
+        payload = {
+            'campus_set-TOTAL_FORMS':1,
+            "campus_set-INITIAL_FORMS":1,
+            "campus_set-MIN_NUM_FORMS":0,
+            "campus_set-MAX_NUM_FORMS":1000,
+            'schooladministrator_set-TOTAL_FORMS':1,
+            "schooladministrator_set-INITIAL_FORMS":1,
+            "schooladministrator_set-MIN_NUM_FORMS":0,
+            "schooladministrator_set-MAX_NUM_FORMS":1000,
+            "name":"other name",
+            "abbreviation": 'sch1',
+            'state': self.state1.id,
+            'region': self.region1.id,
+            'postcode':3000,
+            'schooladministrator_set-0-id': self.admin1.id,
+            'schooladministrator_set-0-campus': self.campus1.id,
+            'campus_set-0-id': self.campus1.id,
+            'campus_set-0-name': 'test 1',
+            'campus_set-0-postcode': 3000,
+            'campus_set-0-DELETE': 'on',
+        }
+
+        response = self.client.post(url, data=payload)
+        self.assertEqual(response.status_code, 302)
+        self.admin1.refresh_from_db()
+        self.assertEqual(self.admin1.campus, None)
+
+    @patch('schools.models.SchoolAdministrator.delete', side_effect = Mock(side_effect=ProtectedError("Cannot delete some instances of model 'SchoolAdministrator' because they are referenced through a protected foreign key:", SchoolAdministrator)))
     def testAdministratorDelete_protected(self, mocked_delete):
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user)
         self.admin2 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
@@ -1094,7 +1147,8 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Cannot delete some instances of model &#x27;SchoolAdministrator&#x27; because they are referenced through a protected foreign key:")
         SchoolAdministrator.objects.get(pk=self.admin2.pk)
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins)
 

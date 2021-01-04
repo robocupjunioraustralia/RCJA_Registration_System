@@ -83,7 +83,12 @@
               </div>
 
               <!-- Questions -->
-
+              {% if questionFormset.errors %}
+                <div class="ui message left-aligned-text">
+                    <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                    {{ questionFormset.non_form_errors }}
+                </div>
+              {% endif %}
               {% for questionForm in questionFormset %}
               {{questionForm.id|attr:"type:hidden"}}
               {{ questionForm.user }}
@@ -93,7 +98,6 @@
                   {% if questionForm.errors %}
                   <div class="ui message left-aligned-text">
                       <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                      {{ questionForm.non_field_errors }}
                       <ul>
                           {% for field in questionForm %}
                           {% if field.errors %}

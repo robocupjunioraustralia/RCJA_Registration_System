@@ -1,5 +1,5 @@
 from django.contrib import admin
-from common.admin import ExportCSVMixin, DifferentAddFieldsMixin
+from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 from .adminInlines import SchoolAdministratorInline
 
@@ -12,7 +12,7 @@ class CampusInline(InlineAdminPermissions, admin.TabularInline):
     extra = 0
 
 @admin.register(School)
-class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
@@ -44,6 +44,7 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'setForceDetailsUpdate',
     ]
     exportFields = [
+        'pk',
         'name',
         'abbreviation',
         'state',
@@ -97,7 +98,7 @@ class SchoolAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     setForceDetailsUpdate.allowed_permissions = ('change',)
 
 @admin.register(Campus)
-class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'name',
         'school',
@@ -123,6 +124,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'name',
         'school',
         'postcode',
@@ -145,7 +147,16 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     fields = [
         'school',
         'name',
+        'postcode',
     ]
+
+    # Set forceDetailsUpdate if a field is blank
+    def save_model(self, request, obj, form, change):
+        if obj.postcode is None:
+            obj.school.forceSchoolDetailsUpdate = True
+            obj.school.save(update_fields=['forceSchoolDetailsUpdate'])
+        
+        super().save_model(request, obj, form, change)
 
     # Don't allow editing school after initial creation
     def get_readonly_fields(self, request, obj=None):
@@ -155,7 +166,7 @@ class CampusAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         return alwaysReadOnly
 
 @admin.register(SchoolAdministrator)
-class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         'userName',
         'userEmail',
@@ -186,6 +197,7 @@ class SchoolAdministratorAdmin(DifferentAddFieldsMixin, AdminPermissions, admin.
         'export_as_csv'
     ]
     exportFields = [
+        'pk',
         'userName',
         'userEmail',
         'school',

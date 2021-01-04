@@ -1,7 +1,4 @@
-from django.db import models
 from django.core.exceptions import ValidationError
-
-# Create your models here.
 
 # **********CUSTOM CLASSES**********
 
@@ -47,9 +44,6 @@ class SaveDeleteMixin:
         # Run custom post save actions
         if not skipPrePostDelete:
             self.postDelete()
-
-    class Meta:
-        abstract = True
 
 # **********FUNCTIONS**********
 
