@@ -13,6 +13,10 @@ class State_Base:
     validPayload = {
             'name': 'New State',
             'abbreviation': 'new',
+            'coordinator_set-TOTAL_FORMS': 0,
+            'coordinator_set-INITIAL_FORMS': 0,
+            'coordinator_set-MIN_NUM_FORMS': 0,
+            'coordinator_set-MAX_NUM_FORMS': 1000,
         }
 
     def updatePayload(self):
@@ -39,7 +43,9 @@ class State_Coordinators_Base(State_Base):
     ]
 
 class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
-    pass
+    addLoadsCode = 403
+    deleteLoadsCode = 403
+    addPostCode = 403
 
 class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass
