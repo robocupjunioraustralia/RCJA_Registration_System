@@ -3,6 +3,8 @@ from common.baseTests.adminPermissions import Base_Test_NotStaff, Base_Test_Supe
 from django.test import TestCase
 from django.urls import reverse
 
+from regions.models import State
+
 # State
 
 class State_Base:
@@ -51,6 +53,51 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
         ('typeRegistration', 'Registration'),
         ('typeGlobal', 'Global'),
     ]
+
+    # Additional readonly field tests
+
+    def testCorrectReadonlyFields_changeNotRegistration(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.assertNotContains(response, '<label>Registration:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertNotContains(response, '<label>Global:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeGlobal"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+
+    def testCorrectReadonlyFields_changeGlobal(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3', typeGlobal=True)
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.assertContains(response, '<label>Registration:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertNotContains(response, '<label>Global:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeGlobal"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+
+    def testCorrectReadonlyFields_changeOtherGlobal(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
+        self.state4 = State.objects.create(name='State 4', abbreviation='ST4', typeGlobal=True)
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.assertNotContains(response, '<label>Registration:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
+
+        self.assertContains(response, '<label>Global:</label>')
+        self.assertNotContains(response, '<input type="checkbox" name="typeGlobal"')
+
+        self.assertNotContains(response, '<label>Website:</label>')
+        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
 
 class State_Coordinators_Base(State_Base):
     expectedListItems = 1
