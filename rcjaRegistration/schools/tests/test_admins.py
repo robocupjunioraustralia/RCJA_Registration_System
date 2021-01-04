@@ -7,8 +7,8 @@ from common.baseTests.populateDatabase import createStates, createUsers, createS
 
 class Schools_Base:
     modelURLName = 'schools_school'
-    correctStateObjName = 'school1_state1'
-    wrongStateObjName = 'school3_state2'
+    state1Obj = 'school1_state1'
+    state2Obj = 'school3_state2'
 
 class Test_NotStaff(Schools_Base, Base_Test_NotStaff, TestCase):
     pass
