@@ -5,7 +5,7 @@ from django.test import Client
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
 
-from .models import State, Region
+from regions.models import State, Region
 from users.models import User
 from coordination.models import Coordinator
 
