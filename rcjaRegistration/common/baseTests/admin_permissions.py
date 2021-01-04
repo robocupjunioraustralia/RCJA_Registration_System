@@ -49,7 +49,7 @@ class Base_Test_NotStaff(Base):
 
     def testRedirectToLogin(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
-        self.assertIn('/accounts/login/', response.url)
+        self.assertIn('/admin/login/', response.url)
 
 class DoesLoadBase(Base):
     def testListCorrectNumber(self):
