@@ -109,11 +109,17 @@
 
               <!-- Students -->
               <h2>Students</h2>
+              {% if formset.errors %}
+                <div class="ui message left-aligned-text">
+                    <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                    {{ formset.non_form_errors }}
+                </div>
+              {% endif %}
               <div id = "form_set">
               {% for studentform in formset %}
                 {{studentform.id|attr:"type:hidden"}}
                 {% include 'teams/studentForm.html' %}
-                {% endfor %}
+              {% endfor %}
               </div>
 
               <!-- Add more student forms -->

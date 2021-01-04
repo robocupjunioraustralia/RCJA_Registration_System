@@ -18,7 +18,7 @@
         <p>End date: {{event.endDate}}</p>
         <p>Registrations close: {{event.registrationsCloseDate}}</p>
         {% if not event.boolWorkshop %}<h3>Max members per team: {{ event.maxMembersPerTeam }}</h3>{% endif %}
-        <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, {{ event.directEnquiriesTo.email }}</h3>
+        <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
         <h3>Payment</h3>
         <p>
             This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
@@ -60,7 +60,7 @@
             <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
             {% endif %}
         {% elif event.published %}
-        <h5> Registration for this event has closed. If you need to make modifications, please contact the event coordinator. </h5>
+        <h1> Registration for this event has closed. If you need to make modifications, please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% else %}
         <h5> Event is not published. </h5>
         {% endif %}

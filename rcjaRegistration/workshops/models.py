@@ -78,7 +78,7 @@ class WorkshopAttendee(BaseEventAttendance):
     attendeeFullName.admin_order_field = 'lastName'
 
     def __str__(self):
-        return self.attendeeFullName()
+        return f"{self.attendeeFullName()} ({self.event.name} {self.event.year})"
 
     # *****CSV export methods*****
 

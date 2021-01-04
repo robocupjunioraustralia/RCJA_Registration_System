@@ -11,7 +11,7 @@ import datetime
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ['team','firstName','lastName','yearLevel','gender','birthday']
+        fields = ['firstName','lastName','yearLevel','gender','birthday']
 
     birthday = forms.DateField( #coerce type to yyyy-mm-dd so html5 date will prefill correctly
     #this does not affect the display of the field to the user, as that is localised on the clientside
@@ -23,6 +23,11 @@ class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
         model = Team
         fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
+
+    def __init__(self, *args, user, event, **kwargs):
+        super().__init__(*args, user=user, event=event, **kwargs)
+        for field in ['hardwarePlatform', 'softwarePlatform']:
+            self.fields[field].required = True
 
     # Validate that this team can be created, not exceeding a school or global team maximum
     def clean(self):

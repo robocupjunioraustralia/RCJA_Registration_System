@@ -19,6 +19,7 @@ class InvoiceGlobalSettings(models.Model):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Invoice settings'
+        verbose_name_plural = 'Invoice settings'
 
     # Allow only one instance of model
     def clean(self):
@@ -120,6 +121,9 @@ class Invoice(SaveDeleteMixin, models.Model):
     @classmethod
     def invoicesForUser(cls, user):
         return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
+
+    def hiddenInvoice(self):
+        return self.totalQuantity() == 0 and not self.invoicepayment_set.exists()
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -337,12 +341,18 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Totals
 
+    def amountPaid_unrounded(self):
+        return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
+
     def amountPaid(self):
-        return round(sum(self.invoicepayment_set.values_list('amountPaid', flat=True)), 2)
+        return round(self.amountPaid_unrounded(), 2)
     amountPaid.short_description = 'Amount paid'
 
+    def amountGST_unrounded(self):
+        return sum([item['gst'] for item in self.invoiceItems()])
+
     def amountGST(self):
-        return round(sum([item['gst'] for item in self.invoiceItems()]), 2)
+        return round(self.amountGST_unrounded(), 2)
     amountGST.short_description = 'GST'
 
     def totalQuantity(self):
@@ -350,32 +360,44 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Invoice amount
 
+    def invoiceAmountExclGST_unrounded(self):
+        return sum([item['totalExclGST'] for item in self.invoiceItems()])
+
     def invoiceAmountExclGST(self):
-        return round(sum([item['totalExclGST'] for item in self.invoiceItems()]), 2)
+        return round(self.invoiceAmountExclGST_unrounded(), 2)
     invoiceAmountExclGST.short_description = 'Invoice amount (ex GST)'
 
+    def invoiceAmountInclGST_unrounded(self):
+        return sum([item['totalInclGST'] for item in self.invoiceItems()])
+
     def invoiceAmountInclGST(self):
-        return round(sum([item['totalInclGST'] for item in self.invoiceItems()]), 2)
+        return round(self.invoiceAmountInclGST_unrounded(), 2)
     invoiceAmountInclGST.short_description = 'Invoice amount (incl GST)'
 
     # Amount due
 
+    def amountDueExclGST_unrounded(self):
+        return self.invoiceAmountExclGST_unrounded() - self.amountPaid_unrounded()
+
     def amountDueExclGST(self):
-        return round(self.invoiceAmountExclGST() - self.amountPaid(), 2)
+        return round(self.amountDueExclGST_unrounded(), 2)
     amountDueExclGST.short_description = 'Amount due (ex GST)'
 
+    def amountDueInclGST_unrounded(self):
+        return self.invoiceAmountInclGST_unrounded() - self.amountPaid_unrounded()
+
     def amountDueInclGST(self):
-        return round(self.invoiceAmountInclGST() - self.amountPaid(), 2)
+        return round(self.amountDueInclGST_unrounded(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
 
     def amountDuePaypal(self):
-        if self.amountDueInclGST() < 0.05: # 0.05 to avoid tiny sum edge caes
+        if self.amountDueInclGST_unrounded() < 0.05: # 0.05 to avoid tiny sum edge caes
             return 0
-        return round(self.amountDueInclGST() * 1.0275 + 0.3, 2)
-    amountDueInclGST.short_description = 'Amount due (PayPal)'
+        return round(self.amountDueInclGST_unrounded() * 1.0275 + 0.3, 2)
+    amountDuePaypal.short_description = 'Amount due (PayPal)'
 
     def paypalAvailable(self):
-        return bool(self.event.state.paypalEmail) and self.amountDueInclGST() >= 0.05 # 0.05 to avoid tiny sum edge caes
+        return bool(self.event.state.paypalEmail) and self.amountDueInclGST_unrounded() >= 0.05 # 0.05 to avoid tiny sum edge caes
 
     def __str__(self):
         if self.campus:
