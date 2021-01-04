@@ -18,7 +18,6 @@ def summary(request):
     invoices = Invoice.invoicesForUser(request.user)
 
     context = {
-        'user': request.user,
         'invoices': invoices,
         'showCampusColumn': Campus.objects.filter(school__schooladministrator__user=request.user).exists(),
     }
@@ -52,7 +51,7 @@ def details(request, invoiceID):
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
-        'currentDate': datetime.datetime.today().date,
+        'currentDate': datetime.datetime.today().date(),
     }
 
     return render(request, 'invoices/details.html', context)

@@ -67,7 +67,7 @@ def dashboard(request):
     from invoices.models import Invoice
     invoices = Invoice.invoicesForUser(request.user)
 
-    outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0])
+    outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0.05]) # Rounded because consistent with what user sees and not used in subsequent calculations
 
     context = {
         'openForRegistrationCompetitions': openForRegistrationCompetitions,

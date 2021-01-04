@@ -24,6 +24,11 @@ class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
         model = Team
         fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
 
+    def __init__(self, *args, user, event, **kwargs):
+        super().__init__(*args, user=user, event=event, **kwargs)
+        for field in ['hardwarePlatform', 'softwarePlatform']:
+            self.fields[field].required = True
+
     # Validate that this team can be created, not exceeding a school or global team maximum
     def clean(self):
         cleaned_data = super().clean()

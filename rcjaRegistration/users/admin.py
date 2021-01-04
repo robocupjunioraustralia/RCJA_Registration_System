@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 
-from common.admin import ExportCSVMixin
+from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
 
 from .models import User
@@ -35,7 +35,7 @@ class SchoolAdministratorInline(InlineAdminPermissions, admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return False
 
-class CoordinatorInline(InlineAdminPermissions, admin.TabularInline):
+class CoordinatorInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     from coordination.models import Coordinator
     model = Coordinator
     extra = 0
@@ -61,7 +61,7 @@ class User_QuestionResponse_Filter(admin.SimpleListFilter):
             return queryset
 
 @admin.register(User)
-class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
+class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
     """Define admin model for custom User model with no email field."""
     fieldsets = (
         (None, {'fields': (
@@ -142,6 +142,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         'homeState',
         'homeRegion',
         User_QuestionResponse_Filter,
+        'baseeventattendance__event',
     )
     autocomplete_fields = [
         'homeState',
@@ -152,6 +153,7 @@ class UserAdmin(AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
         'setForceDetailsUpdate'
     ]
     exportFields = [
+        'pk',
         'email',
         'first_name',
         'last_name',

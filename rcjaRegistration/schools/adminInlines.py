@@ -1,9 +1,10 @@
 from django.contrib import admin
 from coordination.adminPermissions import InlineAdminPermissions
+from common.adminMixins import FKActionsRemove
 
 from .models import SchoolAdministrator, Campus
 
-class SchoolAdministratorInline(InlineAdminPermissions, admin.TabularInline):
+class SchoolAdministratorInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = SchoolAdministrator
     extra = 0
     verbose_name = "Administrator"
