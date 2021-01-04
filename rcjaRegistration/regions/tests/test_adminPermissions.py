@@ -32,6 +32,11 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
     ]
     expectedMissingStrings = []
 
+    expectedAddInlines = []
+    expectedMissingAddInlines = ['Coordinators']
+    expectedChangeInlines = ['Coordinators']
+    expectedMissingChangeInlines = []
+
 class State_Coordinators_Base(State_Base):
     expectedListItems = 1
     expectedStrings = [
@@ -46,5 +51,9 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
     deleteLoadsCode = 403
     addPostCode = 403
 
+    expectedChangeInlines = ['Coordinators']
+    expectedMissingChangeInlines = []
+
 class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    expectedChangeInlines = []
+    expectedMissingChangeInlines = ['Coordinators']

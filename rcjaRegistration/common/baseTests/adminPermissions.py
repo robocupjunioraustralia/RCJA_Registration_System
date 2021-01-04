@@ -95,6 +95,30 @@ class DoesLoadBase(Base):
         for expectedMissingString in self.expectedMissingStrings:
             self.assertNotContains(response, expectedMissingString)
 
+    # Inlines
+    expectedAddInlines = []
+    expectedMissingAddInlines = []
+    expectedChangeInlines = []
+    expectedMissingChangeInlines = []
+
+    def testCorrectAddInlines(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
+
+        for expectedInline in self.expectedAddInlines:
+            self.assertContains(response, f'<h2>{expectedInline}</h2>')
+
+        for expectedMissingInline in self.expectedMissingAddInlines:
+            self.assertNotContains(response, expectedMissingInline)
+
+    def testCorrectChangeInlines(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        for expectedInline in self.expectedChangeInlines:
+            self.assertContains(response, f'<h2>{expectedInline}</h2>')
+
+        for expectedMissingInline in self.expectedMissingChangeInlines:
+            self.assertNotContains(response, expectedMissingInline)
+
     # Post tests
     def testPostAdd(self):
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=self.validPayload)
