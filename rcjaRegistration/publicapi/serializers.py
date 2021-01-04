@@ -96,15 +96,15 @@ class EventSerializer(serializers.ModelSerializer):
 
 # *****Committee Member*****
 
-class CommitteeMemberSerializer(serializers.ModelSerializer):
-    user = BasicUserSerializer(read_only=True)
+# class CommitteeMemberSerializer(serializers.ModelSerializer):
+#     user = BasicUserSerializer(read_only=True)
 
-    class Meta:
-        from publicwebsite.models import CommitteeMember
-        model = CommitteeMember
-        fields = [
-            'id',
-            'user',
-            'position',
-            'biography',
-        ]
+#     class Meta:
+#         from publicwebsite.models import CommitteeMember
+#         model = CommitteeMember
+#         fields = [
+#             'id',
+#             'user',
+#             'position',
+#             'biography',
+#         ]

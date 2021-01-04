@@ -8,11 +8,11 @@ from django.db.models.deletion import ProtectedError
 
 from common.apiPermissions import ReadOnly
 
-from .serializers import StateSerializer, EventSerializer, CommitteeMemberSerializer
+from .serializers import StateSerializer, EventSerializer
 
 from events.models import Event
 from regions.models import State
-from publicwebsite.models import CommitteeMember
+# from publicwebsite.models import CommitteeMember
 
 import datetime
 
@@ -52,8 +52,8 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
         queryset = self.eventsBaseQueryset(pk).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
         return self.nestedSerializer(queryset, EventSerializer)
 
-    @action(detail=True)
-    def committeeMembers(self, request, pk=None):
-        state = get_object_or_404(State, pk=pk, typeWebsite=True)
-        queryset = CommitteeMember.objects.filter(state=state).order_by('id')
-        return self.nestedSerializer(queryset, CommitteeMemberSerializer)
+    # @action(detail=True)
+    # def committeeMembers(self, request, pk=None):
+    #     state = get_object_or_404(State, pk=pk, typeWebsite=True)
+    #     queryset = CommitteeMember.objects.filter(state=state).order_by('id')
+    #     return self.nestedSerializer(queryset, CommitteeMemberSerializer)
