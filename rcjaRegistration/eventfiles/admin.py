@@ -1,7 +1,7 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from django.utils.html import format_html
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
 
 from .models import MentorEventFileType, EventAvailableFileType, MentorEventFileUpload
 

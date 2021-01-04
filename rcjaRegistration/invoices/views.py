@@ -28,7 +28,7 @@ def mentorInvoicePermissions(request, invoice):
     return request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user
 
 def coordinatorInvoiceDetailsPermissions(request, invoice):
-    from coordination.adminPermissions import checkStatePermissions
+    from coordination.permissions import checkStatePermissions
     return checkStatePermissions(request, invoice, 'view')
 
 @login_required

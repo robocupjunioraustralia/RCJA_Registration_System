@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.db.models import F, Q
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, reversePermisisons
+from coordination.models import Coordinator
 from django.contrib import messages
 from django import forms
 from django.forms import TextInput, Textarea
@@ -67,9 +68,6 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
 
     @classmethod
     def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        from coordination.adminPermissions import reversePermisisons
-
         # Check for global coordinator
         if Coordinator.objects.filter(user=request.user, state=None).exists():
             return [Q(state__coordinator__permissionLevel__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)]

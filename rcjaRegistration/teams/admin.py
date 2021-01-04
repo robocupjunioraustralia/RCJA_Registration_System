@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 
 from .models import HardwarePlatform, SoftwarePlatform, Team, Student

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkStatePermissions
 from django.utils.html import format_html, escape
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE

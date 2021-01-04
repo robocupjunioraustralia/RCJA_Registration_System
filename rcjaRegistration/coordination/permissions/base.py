@@ -1,53 +1,6 @@
-from django.contrib import admin
-from django.db.models import F, Q
+from coordination.models import Coordinator
 
-from .models import Coordinator
-
-from django.contrib.auth import get_permission_codename
-
-def commonCheckStatePermissions(request, obj):
-    # First check super user
-    if request.user.is_superuser:
-        return True
-
-    # If no object return True because can't do state level filtering
-    if obj is None:
-        return True
-
-    # Check state level filtering is possible
-    if not hasattr(obj, 'getState'):
-        return True
-
-    return False
-
-def checkStatePermissions(request, obj, permission, permissionsModel=None):
-    if commonCheckStatePermissions(request, obj):
-        return True
-
-    if permissionsModel is None:
-        permissionsModel = obj
-
-    # Check state level permission for object
-    for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
-        if permission in permissionsModel.coordinatorPermissions(coordinator.permissionLevel):
-            return True
-
-    return False
-
-def checkStatePermissionsLevels(request, obj, permisisonLevels):
-    if commonCheckStatePermissions(request, obj):
-        return True
-
-    # Check coordinator object
-    return Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user, permissionLevel__in=permisisonLevels).exists()
-
-def reversePermisisons(obj, permissions):
-    levels = []
-    for level in Coordinator.permissionLevelOptions:
-        for permission in permissions:
-            if permission in obj.coordinatorPermissions(level[0]):
-                levels.append(level[0])
-    return levels
+from .utils import checkStatePermissions, reversePermisisons
 
 class BaseAdminPermissions:
     @classmethod
@@ -193,23 +146,3 @@ class BaseAdminPermissions:
 
         # Check state permissions
         return checkStatePermissions(request, obj, 'delete', permissionsModel=self.model)
-
-class AdminPermissions(BaseAdminPermissions):
-    def get_form(self, request, obj=None, **kwargs):
-        self.obj = obj
-        return super().get_form(request, obj, **kwargs)
-
-class InlineAdminPermissions(BaseAdminPermissions):
-    # Set parent obj on class so available to inline
-    def get_formset(self, request, obj=None, **kwargs):
-        self.obj = obj
-        return super().get_formset(request, obj, **kwargs)
-
-    def has_add_permission(self, request, obj):
-        # Check django permissions
-        if not super().has_add_permission(request, obj):
-            return False
-
-        # Check state permissions
-        return checkStatePermissions(request, obj, 'add', permissionsModel=self.model)
-

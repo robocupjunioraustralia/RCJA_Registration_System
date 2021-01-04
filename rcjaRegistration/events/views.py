@@ -82,7 +82,7 @@ def dashboard(request):
     return render(request, 'events/dashboard.html', context)
 
 def coordinatorEventDetailsPermissions(request, event):
-    from coordination.adminPermissions import checkStatePermissions
+    from coordination.permissions import checkStatePermissions
     return checkStatePermissions(request, event, 'view')
 
 def eventDetailsPermissions(request, event, filterDict):

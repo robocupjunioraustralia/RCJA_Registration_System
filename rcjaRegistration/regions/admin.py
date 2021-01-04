@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels, reversePermisisons
 
 from .models import State, Region
 
@@ -118,7 +118,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
                 queryset = queryset.filter(typeRegistration=True)
 
         # Filter by state
-        from coordination.adminPermissions import reversePermisisons
         for url in ['users/user/', 'coordination/coordinator/']:
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = self.filterQuerysetByState(queryset, request, ['full'])
