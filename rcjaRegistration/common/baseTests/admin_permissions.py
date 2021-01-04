@@ -121,5 +121,3 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Save and continue editing')
         self.assertContains(response, 'Close')
-
-
