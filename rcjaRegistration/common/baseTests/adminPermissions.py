@@ -147,8 +147,8 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
     changeLoadsCode = 200
     addLoadsCode = 403
     deleteLoadsCode = 403
-    addPostCode = 302
-    changePostCode = 302
+    addPostCode = 403
+    changePostCode = 403
 
     def setUp(self):
         super().setUp()
