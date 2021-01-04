@@ -37,6 +37,21 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
     expectedChangeInlines = ['Coordinators']
     expectedMissingChangeInlines = []
 
+    expectedAddEditableFields = [
+        ('typeRegistration', 'Registration'),
+        ('typeGlobal', 'Global'),
+        ('typeWebsite', 'Website'),
+    ]
+    expectedAddReadonlyFields = []
+    # Existing states are typeRegistration=True
+    expectedChangeEditableFields = [
+        ('typeWebsite', 'Website'),
+    ]
+    expectedChangeReadonlyFields = [
+        ('typeRegistration', 'Registration'),
+        ('typeGlobal', 'Global'),
+    ]
+
 class State_Coordinators_Base(State_Base):
     expectedListItems = 1
     expectedStrings = [
@@ -54,6 +69,18 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
     expectedChangeInlines = ['Coordinators']
     expectedMissingChangeInlines = []
 
+    expectedChangeReadonlyFields = [
+        ('typeRegistration', 'Registration'),
+        ('typeGlobal', 'Global'),
+        ('typeWebsite', 'Website'),
+    ]
+
 class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     expectedChangeInlines = []
     expectedMissingChangeInlines = ['Coordinators']
+
+    expectedChangeReadonlyFields = [
+        ('typeRegistration', 'Registration'),
+        ('typeGlobal', 'Global'),
+        ('typeWebsite', 'Website'),
+    ]

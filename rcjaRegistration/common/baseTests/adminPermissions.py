@@ -119,6 +119,38 @@ class DoesLoadBase(Base):
         for expectedMissingInline in self.expectedMissingChangeInlines:
             self.assertNotContains(response, expectedMissingInline)
 
+    # Readonly fields
+    expectedAddEditableFields = []
+    expectedAddReadonlyFields = []
+    expectedChangeEditableFields = []
+    expectedChangeReadonlyFields = []
+
+    def testCorrectAddEditableFields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
+
+        for expectedField in self.expectedAddEditableFields:
+            self.assertContains(response, f'name="{expectedField[0]}" id="id_{expectedField[0]}">')
+
+    def testCorrectAddReadonlyFields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
+
+        for expectedField in self.expectedAddReadonlyFields:
+            self.assertNotContains(response, f'name="{expectedField[0]}" id="id_{expectedField[0]}">')
+            self.assertContains(response, f'<label>{expectedField[1]}:</label>')
+
+    def testCorrectChangeEditableFields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        for expectedField in self.expectedChangeEditableFields:
+            self.assertContains(response, f'name="{expectedField[0]}" id="id_{expectedField[0]}">')
+
+    def testCorrectChangeReadonlyFields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        for expectedField in self.expectedChangeReadonlyFields:
+            self.assertNotContains(response, f'name="{expectedField[0]}" id="id_{expectedField[0]}">')
+            self.assertContains(response, f'<label>{expectedField[1]}:</label>')
+
     # Post tests
     def testPostAdd(self):
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=self.validPayload)
