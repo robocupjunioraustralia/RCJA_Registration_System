@@ -124,7 +124,7 @@ class User(SaveDeleteMixin, AbstractUser):
         for coordinator in coordinators:
             for model in djangoApps.apps.get_models():
                 if hasattr(model, 'coordinatorPermissions'):
-                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
+                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissionLevel))
 
         # Add permissions to user
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
