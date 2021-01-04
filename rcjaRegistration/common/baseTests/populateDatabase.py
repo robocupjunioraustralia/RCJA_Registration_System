@@ -16,7 +16,7 @@ def createStates(self):
 
 def createUsers(self):
     self.email_user_state1_super1 = 'super1@user.com'
-    self.email_user_state2_super2 = 'super@user.com'
+    self.email_user_state2_super2 = 'super2@user.com'
     self.email_user_notstaff = 'user1@user.com'
     self.email_user_state1_fullcoordinator = 'user2@user.com'
     self.email_user_state1_viewcoordinator = 'user3@user.com'
