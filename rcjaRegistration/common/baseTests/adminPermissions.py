@@ -98,11 +98,11 @@ class DoesLoadBase(Base):
     # Post tests
     def testPostAdd(self):
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=self.validPayload)
-        self.assertEqual(response.status_code, self.postCode)
+        self.assertEqual(response.status_code, self.addPostCode)
 
     def testPostChange(self):
         response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=self.validPayload)
-        self.assertEqual(response.status_code, self.postCode)
+        self.assertEqual(response.status_code, self.changePostCode)
 
 class Base_Test_SuperUser(DoesLoadBase):
     """Test admin access with a superuser"""
@@ -110,7 +110,8 @@ class Base_Test_SuperUser(DoesLoadBase):
     changeLoadsCode = 200
     addLoadsCode = 200
     deleteLoadsCode = 200
-    postCode = 302
+    addPostCode = 302
+    changePostCode = 302
 
     def setUp(self):
         super().setUp()
@@ -129,7 +130,8 @@ class Base_Test_FullCoordinator(CoordinatorBase):
     changeLoadsCode = 200
     addLoadsCode = 200
     deleteLoadsCode = 200
-    postCode = 302
+    addPostCode = 302
+    changePostCode = 302
 
     def setUp(self):
         super().setUp()
@@ -145,7 +147,8 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
     changeLoadsCode = 200
     addLoadsCode = 403
     deleteLoadsCode = 403
-    postCode = 403
+    addPostCode = 302
+    changePostCode = 302
 
     def setUp(self):
         super().setUp()
