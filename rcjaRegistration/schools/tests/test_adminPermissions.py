@@ -4,8 +4,6 @@ from django.test import TestCase
 from django.http import HttpRequest
 from django.urls import reverse
 
-from common.baseTests.populateDatabase import createStates, createUsers, createSchools
-
 # School
 
 class School_Base:
