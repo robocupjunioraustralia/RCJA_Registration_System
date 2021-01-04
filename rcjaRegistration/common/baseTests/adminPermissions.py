@@ -3,6 +3,22 @@ from django.urls import reverse
 
 from .populateDatabase import createStates, createUsers, createSchools
 
+""" Status codes
+Get
+200 Success
+302 Access denied - redirect to login page or home page
+
+POST
+302 Success - redirect to list page or back to edit page if continue editing
+200 Validation failure - page redisplayed, will contain error message
+403 Access denied
+
+Add and delete pages
+200 Success
+302 Access denied - redirect to login page or home page
+403 Access denied - have permission to view object but not add or delete
+"""
+
 class Base:
     """Base for admin permissions tests for all user test cases"""
 
