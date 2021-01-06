@@ -137,7 +137,12 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
 
     stateFilterLookup = 'state__coordinator'
 
-admin.site.register(Year)
+@admin.register(Year)
+class YearAdmin(AdminPermissions, admin.ModelAdmin):
+    list_display = [
+        '__str__',
+        'displayEventsOnWebsite',
+    ]
 
 class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = AvailableDivision
