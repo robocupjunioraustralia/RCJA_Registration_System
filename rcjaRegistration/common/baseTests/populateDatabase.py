@@ -137,7 +137,7 @@ def createEvents(self):
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         directEnquiriesTo = self.user_state1_super1,
-        venue=self.venue1_state2,
+        venue=self.venue2_state1,
     )
 
     self.state1_pastCompetition = Event.objects.create(
