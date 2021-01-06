@@ -63,14 +63,14 @@ class TestStates(TestCase):
 
     def testCorrectListContent(self):
         response = self.client.get('/api/v1/public/states/')
-        self.assertJSONEqual(response.content, [{"id":1,"name":"State 1","abbreviation":"ST1"},{"id":2,"name":"State 2","abbreviation":"ST2"}])
+        self.assertJSONEqual(response.content, [{"id":self.state1.id,"name":"State 1","abbreviation":"ST1"},{"id":self.state2.id,"name":"State 2","abbreviation":"ST2"}])
 
     def testCorrectListContentNotWebsite(self):
         self.state1.typeWebsite = False
         self.state1.save()
 
         response = self.client.get('/api/v1/public/states/')
-        self.assertJSONEqual(response.content, [{"id":2,"name":"State 2","abbreviation":"ST2"}])
+        self.assertJSONEqual(response.content, [{"id":self.state2.id,"name":"State 2","abbreviation":"ST2"}])
 
     # Details view
 
@@ -80,7 +80,7 @@ class TestStates(TestCase):
 
     def testCorrectDetailContent(self):
         response = self.client.get('/api/v1/public/states/ST1/')
-        self.assertJSONEqual(response.content, {"id":1,"name":"State 1","abbreviation":"ST1"})
+        self.assertJSONEqual(response.content, {"id":self.state1.id,"name":"State 1","abbreviation":"ST1"})
 
     def testNotWebsiteState404(self):
         self.state1.typeWebsite = False
