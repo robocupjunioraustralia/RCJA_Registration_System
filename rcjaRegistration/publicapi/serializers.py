@@ -55,7 +55,10 @@ class EventSerializer(serializers.ModelSerializer):
     availabledivisions = AvailableDivisionSerializer(read_only=True, many=True, source='availabledivision_set')
     venue = VenueSerializer(read_only=True)
     directEnquiriesTo = BasicUserSerializer(read_only=True)
-    registrationURL = serializers.CharField(label='Registration URL', source='get_absolute_url')
+    registrationURL = serializers.SerializerMethodField()
+
+    def get_registrationURL(self, obj):
+        return self.context['request'].build_absolute_uri(obj.get_absolute_url())
 
     class Meta:
         from events.models import Event

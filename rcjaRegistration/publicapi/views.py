@@ -20,10 +20,10 @@ class NestedSerializerActionMinxin:
     def nestedSerializer(self, queryset, serializerClass):
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = serializerClass(page, many=True)
+            serializer = serializerClass(page, many=True, context={'request': self.request})
             return self.get_paginated_response(serializer.data)
 
-        serializer = serializerClass(queryset, many=True)
+        serializer = serializerClass(queryset, many=True, context={'request': self.request})
         return Response(serializer.data)
 
 # *****Regions*****
