@@ -69,19 +69,16 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
 
     @action(detail=True)
     def pastEvents(self, request, abbreviation=None):
-        # May want to limit the past events that are available
         queryset = self.pastEventsQueryset(abbreviation)
         return self.nestedSerializer(queryset, EventSerializer)
 
     @action(detail=True)
     def pastCompetitions(self, request, abbreviation=None):
-        # May want to limit the past events that are available
         queryset = self.pastEventsQueryset(abbreviation).filter(eventType = 'competition')
         return self.nestedSerializer(queryset, EventSerializer)
 
     @action(detail=True)
     def pastWorkshops(self, request, abbreviation=None):
-        # May want to limit the past events that are available
         queryset = self.pastEventsQueryset(abbreviation).filter(eventType = 'workshop')
         return self.nestedSerializer(queryset, EventSerializer)
 
