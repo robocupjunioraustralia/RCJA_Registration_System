@@ -2,7 +2,7 @@ from invoices.models import InvoiceGlobalSettings, Invoice, InvoicePayment
 from users.models import User
 from regions.models import State, Region
 from schools.models import School, SchoolAdministrator, Campus
-from events.models import Event, Year, Division, AvailableDivision
+from events.models import Event, Year, Division, AvailableDivision, Venue
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 
@@ -11,7 +11,6 @@ import datetime
 def createStates(self):
     self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
     self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
-    self.stateNational = State.objects.create(typeGlobal=True, name='National', abbreviation='NAT', typeWebsite=True)
 
     self.region1 = Region.objects.create(name='Region 1', description='test desc')
 
