@@ -9,8 +9,9 @@ from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 import datetime
 
 def createStates(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1')
-    self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2')
+    self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
+    self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
+    self.stateNational = State.objects.create(typeGlobal=True, name='National', abbreviation='NAT', typeWebsite=True)
 
     self.region1 = Region.objects.create(name='Region 1', description='test desc')
 
@@ -65,32 +66,120 @@ def createSchools(self):
     self.schooladmin_mentor4 = SchoolAdministrator.objects.create(school=self.school3_state2, user=self.user_state2_school3_mentor4)
 
 def createEvents(self):
-    self.year = Year.objects.create(year=2020)
+    self.year = Year.objects.create(year=2021)
     self.invoiceSettings = InvoiceGlobalSettings.objects.create(
         invoiceFromName='From Name',
         invoiceFromDetails='Test Details Text',
         invoiceFooterMessage='Test Footer Text',
     )
 
-    self.eventOpen_state1 = Event.objects.create(
-        year=self.year,
-        state=self.state1,
-        name='Test event 1',
-        eventType='competition',
-        status='published',
-        maxMembersPerTeam=5,
-        entryFeeIncludesGST=True,
-        event_billingType='team',
+    # Venues
+
+    self.venue1_state1 = Venue.objects.create(name='Venue 1', state=self.state1)
+    self.venue2_state1 = Venue.objects.create(name='Venue 2', state=self.state1)
+    self.venue3_state2 = Venue.objects.create(name='Venue 3', state=self.state2)
+
+    # Events
+
+    self.state1_openCompetition = Event.objects.create(
+        year = self.year,
+        state = self.state1,
+        name = 'State 1 Open Competition',
+        eventType = 'competition',
+        status = 'published',
         event_defaultEntryFee = 50,
-        startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
-        endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
-        directEnquiriesTo = self.user1,
+        directEnquiriesTo = self.user_state1_super1,
+        venue=self.venue1_state1,
     )
-    self.division1 = Division.objects.create(name='Division 1')
-    self.division2 = Division.objects.create(name='Division 2')
+
+    self.state1_openWorkshop = Event.objects.create(
+        year = self.year,
+        state = self.state1,
+        name = 'State 1 Open Workshop',
+        eventType = 'workshop',
+        status = 'published',
+        event_defaultEntryFee = 50,
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        directEnquiriesTo = self.user_state1_super1,
+        venue=self.venue1_state1,
+    )
+
+    self.state1_closedCompetition1 = Event.objects.create(
+        year = self.year,
+        state = self.state1,
+        name = 'State 1 Closed Competition',
+        eventType = 'competition',
+        status = 'published',
+        event_defaultEntryFee = 50,
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+        directEnquiriesTo = self.user_state1_super1,
+        venue=self.venue1_state1,
+    )
+
+    self.state1_closedCompetition2 = Event.objects.create(
+        year = self.year,
+        state = self.state1,
+        name = 'State 2 Closed Competition',
+        eventType = 'competition',
+        status = 'published',
+        event_defaultEntryFee = 50,
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+        directEnquiriesTo = self.user_state1_super1,
+        venue=self.venue1_state2,
+    )
+
+    self.state1_pastCompetition = Event.objects.create(
+        year = self.year,
+        state = self.state1,
+        name = 'State 1 Past Competition',
+        eventType = 'competition',
+        status = 'published',
+        event_defaultEntryFee = 50,
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-9)).date(),
+        directEnquiriesTo = self.user_state1_super1,
+        venue=self.venue1_state1,
+    )
+
+    self.state2_openCompetition = Event.objects.create(
+        year = self.year,
+        state = self.state2,
+        name = 'State 2 Open Competition',
+        eventType = 'competition',
+        status = 'published',
+        event_defaultEntryFee = 50,
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=20)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=20)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=10)).date(),
+        directEnquiriesTo = self.user_state2_super2,
+        venue=self.venue3_state2,
+    )
+
+    # Divisions
+
+    self.division1_state1 = Division.objects.create(name='Division 1', state=self.state1)
+    self.division2_state2 = Division.objects.create(name='Division 2', state=self.state2)
     self.division3 = Division.objects.create(name='Division 3')
-    self.division4 = Division.objects.create(name='Division 4', state=self.state2)
+    self.division4 = Division.objects.create(name='Division 4')
 
+    # Available Divisions
 
+    for event in ['state1_openCompetition', 'state1_openWorkshop', 'state1_closedCompetition1', 'state1_closedCompetition2', 'state1_pastCompetition', 'state2_openCompetition']:
+        setattr(self, f'availableDivision3_{event}', AvailableDivision.objects.create(event=getattr(self, event), division=self.division3))
+        setattr(self, f'availableDivision4_{event}', AvailableDivision.objects.create(event=getattr(self, event), division=self.division4))
