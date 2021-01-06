@@ -29,14 +29,15 @@ class NestedSerializerActionMinxin:
 # *****Regions*****
 
 class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
-    lookup_field = 'abbreviation'
+    lookup_field = 'abbreviation__iexact'
+    lookup_url_kwarg = 'abbreviation'
     queryset = State.objects.filter(typeWebsite=True).order_by('id')
     serializer_class = StateSerializer
 
     permission_classes = (ReadOnly,)
 
     def eventsBaseQueryset(self, abbreviation):
-        state = get_object_or_404(State, abbreviation=abbreviation, typeWebsite=True)
+        state = get_object_or_404(State, abbreviation__iexact=abbreviation, typeWebsite=True)
         if state.typeGlobal:
             return Event.objects.filter(globalEvent=True, status='published', year__displayEventsOnWebsite=True)
         else:

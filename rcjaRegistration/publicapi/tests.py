@@ -18,6 +18,10 @@ class TestEventsBaseQueryset(TestCase):
         qs = StateViewSet.eventsBaseQueryset(self, 'ST1')
         self.assertIn(self.state1_openCompetition, qs)
 
+    def testPublishedEventIncludedLowercase(self):
+        qs = StateViewSet.eventsBaseQueryset(self, 'st1')
+        self.assertIn(self.state1_openCompetition, qs)
+
     def testDraftEventNotIncluded(self):
         self.state1_openCompetition.status = 'draft'
         self.state1_openCompetition.save()
@@ -78,6 +82,10 @@ class TestStates(TestCase):
         response = self.client.get('/api/v1/public/states/ST1/')
         self.assertEqual(response.status_code, 200)
 
+    def testDetailViewLoadsLowercase(self):
+        response = self.client.get('/api/v1/public/states/st1/')
+        self.assertEqual(response.status_code, 200)
+
     def testCorrectDetailContent(self):
         response = self.client.get('/api/v1/public/states/ST1/')
         self.assertJSONEqual(response.content, {"id":self.state1.id,"name":"State 1","abbreviation":"ST1"})
@@ -103,6 +111,10 @@ class TestEvents(TestCase):
 
     def testUpcomingEventsLoads(self):
         response = self.client.get('/api/v1/public/states/ST1/upcomingEvents/')
+        self.assertEqual(response.status_code, 200)
+
+    def testUpcomingEventsLoadsLowercase(self):
+        response = self.client.get('/api/v1/public/states/st1/upcomingEvents/')
         self.assertEqual(response.status_code, 200)
 
     def testAllUpcomingEventsInUpcomingEvents(self):
