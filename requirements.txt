@@ -6,7 +6,7 @@ chardet==3.0.4
 Django==3.0.7
 django-appconf==1.0.4
 django-axes==5.4.3
-django-cors-headers-3.6.0
+django-cors-headers==3.6.0
 django-environ==0.4.5
 django-ipware==3.0.1
 django-keyvaluestore==0.3
