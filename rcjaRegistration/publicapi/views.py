@@ -38,9 +38,9 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
     def eventsBaseQueryset(self, abbreviation):
         state = get_object_or_404(State, abbreviation=abbreviation, typeWebsite=True)
         if state.typeGlobal:
-            return Event.objects.filter(globalEvent=True, status='published')
+            return Event.objects.filter(globalEvent=True, status='published', year__displayEventsOnWebsite=True)
         else:
-            return Event.objects.filter(globalEvent=False, state=state, status='published')
+            return Event.objects.filter(globalEvent=False, state=state, status='published', year__displayEventsOnWebsite=True)
 
     def upcomingEventsQueryset(self, abbreviation):
         return self.eventsBaseQueryset(abbreviation).filter(startDate__gte=datetime.datetime.today()).order_by('startDate')
