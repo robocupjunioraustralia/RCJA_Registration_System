@@ -45,6 +45,7 @@ DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
 CORS_ALLOWED_ORIGINS = [
+    "https://www.robocupjunior.org.au", # For public api
     "https://robocupjunior.org.au", # For public api
 ]
 
