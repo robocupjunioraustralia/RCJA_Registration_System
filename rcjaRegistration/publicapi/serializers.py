@@ -1,10 +1,13 @@
 from rest_framework import serializers
 
+from regions.models import State
+from events.models import Event, AvailableDivision, Venue
+from users.models import User
+
 # *****Regions*****
 
 class StateSerializer(serializers.ModelSerializer):
     class Meta:
-        from regions.models import State
         model = State
         fields = [
             'id',
@@ -19,7 +22,6 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
     description = serializers.CharField(label='Description', source='division.description')
 
     class Meta:
-        from events.models import AvailableDivision
         model = AvailableDivision
         fields = [
             'name',
@@ -34,7 +36,6 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
 
 class VenueSerializer(serializers.ModelSerializer):
     class Meta:
-        from events.models import Venue
         model = Venue
         fields = [
             'name',
@@ -44,7 +45,6 @@ class VenueSerializer(serializers.ModelSerializer):
 class BasicUserSerializer(serializers.ModelSerializer):
     fullName = serializers.CharField(label='Full name', source='get_full_name')
     class Meta:
-        from users.models import User
         model = User
         fields = [
             'fullName',
@@ -61,7 +61,6 @@ class EventSerializer(serializers.ModelSerializer):
         return self.context['request'].build_absolute_uri(obj.get_absolute_url())
 
     class Meta:
-        from events.models import Event
         model = Event
         fields = [
             'id',
