@@ -52,7 +52,7 @@ CORS_ALLOWED_ORIGINS = [
 # https unless is the default local_hosts for dev
 if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
     for allowed_host in env('ALLOWED_HOSTS'):
-        CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}')
+        CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
 else:
     if isinstance(env('ALLOWED_HOSTS'), list):
         for allowed_host in env('ALLOWED_HOSTS'):
