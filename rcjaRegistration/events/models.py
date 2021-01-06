@@ -197,6 +197,7 @@ class Year(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
+    displayEventsOnWebsite = models.BooleanField('Display events on website', default=False)
 
     # *****Meta and clean*****
     class Meta:
