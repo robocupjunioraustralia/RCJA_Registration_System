@@ -29,6 +29,7 @@ class NestedSerializerActionMinxin:
 # *****Regions*****
 
 class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
+    lookup_field = 'abbreviation'
     queryset = State.objects.filter(typeWebsite=True).order_by('id')
     serializer_class = StateSerializer
 
