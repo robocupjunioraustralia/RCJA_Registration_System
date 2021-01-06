@@ -42,15 +42,47 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
         else:
             return Event.objects.filter(globalEvent=False, state=state, status='published')
 
+    def upcomingEventsQueryset(self, abbreviation):
+        return self.eventsBaseQueryset(abbreviation).filter(startDate__gte=datetime.datetime.today()).order_by('startDate')
+    
+    def pastEventsQueryset(self, abbreviation):
+        return self.eventsBaseQueryset(abbreviation).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
+
+    # Upcoming events
+
     @action(detail=True)
     def upcomingEvents(self, request, abbreviation=None):
-        queryset = self.eventsBaseQueryset(abbreviation).filter(startDate__gte=datetime.datetime.today()).order_by('startDate')
+        queryset = self.upcomingEventsQueryset(abbreviation)
         return self.nestedSerializer(queryset, EventSerializer)
+
+    @action(detail=True)
+    def upcomingCompetitions(self, request, abbreviation=None):
+        queryset = self.upcomingEventsQueryset(abbreviation).filter(eventType = 'competition')
+        return self.nestedSerializer(queryset, EventSerializer)
+
+    @action(detail=True)
+    def upcomingWorkshops(self, request, abbreviation=None):
+        queryset = self.upcomingEventsQueryset(abbreviation).filter(eventType = 'workshop')
+        return self.nestedSerializer(queryset, EventSerializer)
+
+    # Past events
 
     @action(detail=True)
     def pastEvents(self, request, abbreviation=None):
         # May want to limit the past events that are available
-        queryset = self.eventsBaseQueryset(abbreviation).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
+        queryset = self.pastEventsQueryset(abbreviation)
+        return self.nestedSerializer(queryset, EventSerializer)
+
+    @action(detail=True)
+    def pastCompetitions(self, request, abbreviation=None):
+        # May want to limit the past events that are available
+        queryset = self.pastEventsQueryset(abbreviation).filter(eventType = 'competition')
+        return self.nestedSerializer(queryset, EventSerializer)
+
+    @action(detail=True)
+    def pastWorkshops(self, request, abbreviation=None):
+        # May want to limit the past events that are available
+        queryset = self.pastEventsQueryset(abbreviation).filter(eventType = 'workshop')
         return self.nestedSerializer(queryset, EventSerializer)
 
     # @action(detail=True)
