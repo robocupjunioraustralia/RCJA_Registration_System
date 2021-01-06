@@ -113,7 +113,7 @@ def createEvents(self):
     self.state1_closedCompetition1 = Event.objects.create(
         year = self.year,
         state = self.state1,
-        name = 'State 1 Closed Competition',
+        name = 'State 1 Closed Competition 1',
         eventType = 'competition',
         status = 'published',
         event_defaultEntryFee = 50,
@@ -128,7 +128,7 @@ def createEvents(self):
     self.state1_closedCompetition2 = Event.objects.create(
         year = self.year,
         state = self.state1,
-        name = 'State 2 Closed Competition',
+        name = 'State 1 Closed Competition 2',
         eventType = 'competition',
         status = 'published',
         event_defaultEntryFee = 50,
