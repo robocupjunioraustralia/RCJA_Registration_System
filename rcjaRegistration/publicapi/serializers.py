@@ -91,6 +91,7 @@ class EventSerializer(serializers.ModelSerializer):
             'directEnquiriesTo',
             'venue',
             'eventDetails',
+            'effectiveBannerImageURL',
             'registrationURL',
             # Divisions
             'availabledivisions',
