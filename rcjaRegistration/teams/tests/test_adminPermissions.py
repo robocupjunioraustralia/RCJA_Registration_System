@@ -6,7 +6,6 @@ from django.urls import reverse
 
 import datetime
 
-from events.models import Event, Division, Year, AvailableDivision, Venue
 from teams.models import Team
 from schools.models import SchoolAdministrator
 
