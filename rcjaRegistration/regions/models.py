@@ -77,11 +77,11 @@ class State(SaveDeleteMixin, models.Model):
     def preSave(self):
         self.abbreviation = self.abbreviation.upper()
 
-        # Registration type incompatible with global type
+        # Registration type incompatible with global type - should be redundant due to admin permissions
         if self.typeRegistration:
             self.typeGlobal = False
         
-        # Can only be one global state
+        # Can only be one global state - should be redundant due to admin permissions
         if self.typeGlobal:
             State.objects.exclude(pk=self.pk).update(typeGlobal=False)
 
