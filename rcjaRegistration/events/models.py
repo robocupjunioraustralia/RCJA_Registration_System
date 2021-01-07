@@ -150,6 +150,9 @@ class Venue(models.Model):
     def clean(self):
         errors = []
 
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['state'])
+
         # Check changing state won't cause conflict
         if self.event_set.exclude(state=self.state).exists():
             errors.append(ValidationError('State not compatible with existing events with this venue'))

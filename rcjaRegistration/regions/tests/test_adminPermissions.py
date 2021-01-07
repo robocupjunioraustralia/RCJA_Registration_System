@@ -12,13 +12,13 @@ class State_Base:
     state1Obj = 'state1'
     state2Obj = 'state2'
     validPayload = {
-            'name': 'New State',
-            'abbreviation': 'new',
-            'coordinator_set-TOTAL_FORMS': 0,
-            'coordinator_set-INITIAL_FORMS': 0,
-            'coordinator_set-MIN_NUM_FORMS': 0,
-            'coordinator_set-MAX_NUM_FORMS': 1000,
-        }
+        'name': 'New State',
+        'abbreviation': 'new',
+        'coordinator_set-TOTAL_FORMS': 0,
+        'coordinator_set-INITIAL_FORMS': 0,
+        'coordinator_set-MIN_NUM_FORMS': 0,
+        'coordinator_set-MAX_NUM_FORMS': 1000,
+    }
 
     def updatePayload(self):
         pass
@@ -34,10 +34,18 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
     ]
     expectedMissingStrings = []
 
+    # Inlines
+
     expectedAddInlines = []
-    expectedMissingAddInlines = ['Coordinators']
-    expectedChangeInlines = ['Coordinators']
+    expectedMissingAddInlines = [
+        'Coordinators',
+    ]
+    expectedChangeInlines = [
+        'Coordinators',
+    ]
     expectedMissingChangeInlines = []
+
+    # Readonly fields
 
     expectedAddEditableFields = [
         ('typeRegistration', 'Registration'),
@@ -45,12 +53,11 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
         ('typeWebsite', 'Website'),
     ]
     expectedAddReadonlyFields = []
-    # Existing states are typeRegistration=True
     expectedChangeEditableFields = [
         ('typeWebsite', 'Website'),
     ]
     expectedChangeReadonlyFields = [
-        ('typeRegistration', 'Registration'),
+        ('typeRegistration', 'Registration'), # Existing states are typeRegistration=True
         ('typeGlobal', 'Global'),
     ]
 
@@ -113,8 +120,14 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
     deleteLoadsCode = 403
     addPostCode = 403
 
-    expectedChangeInlines = ['Coordinators']
+    # Inlines
+
+    expectedChangeInlines = [
+        'Coordinators',
+    ]
     expectedMissingChangeInlines = []
+
+    # Readonly fields
 
     expectedChangeReadonlyFields = [
         ('typeRegistration', 'Registration'),
@@ -123,8 +136,15 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
     ]
 
 class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
+
+    # Inlines
+
     expectedChangeInlines = []
-    expectedMissingChangeInlines = ['Coordinators']
+    expectedMissingChangeInlines = [
+        'Coordinators',
+    ]
+
+    # Readonly fields
 
     expectedChangeReadonlyFields = [
         ('typeRegistration', 'Registration'),
