@@ -383,6 +383,39 @@ class Event(SaveDeleteMixin, models.Model):
     def boolWorkshop(self):
         return self.eventType == 'workshop'
 
+    def itemFilterDict(self, school, user, userFieldName, campus=None):
+        # Filter by campus if it is provide
+        if campus:
+            # Filter by school and campus
+            return {
+                'event': self,
+                'school': school,
+                'campus': campus
+            }
+
+        elif school:
+            # If school but not filtering by campus filter by school
+            return {
+                'event': self,
+                'school': school
+            }
+
+        else:
+            # If no school filter by user
+            return {
+                'event': self,
+                userFieldName: user,
+                'school': None
+            }
+
+    # Returns true if campus based invoicing enabled for this school for this event
+    def campusInvoicingEnabled(self, school):
+        if not school:
+            return False
+
+        # Check if at least one invoice has campus field set
+        return Invoice.objects.filter(school=school, event=self, campus__isnull=False).exists()
+
     # Image methods
 
     def effectiveBannerImageURL(self):
@@ -551,31 +584,16 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def postSave(self):
-        # Create invoice
-        if self.campusInvoicingEnabled():
-            # Get or create invoice with matching campus
-            Invoice.objects.get_or_create(
-                school=self.school,
-                campus=self.campus,
-                event=self.event,
-                defaults={'invoiceToUser': self.mentorUser}
-            )
+        invoiceDict = self.event.itemFilterDict(
+            school=self.school,
+            user=self.mentorUser,
+            userFieldName='invoiceToUser',
+            campus = self.campus if self.event.campusInvoicingEnabled(self.school) else None,
+        )
 
-        elif self.school:
-            # Ignore campus and only look for matching school
-            Invoice.objects.get_or_create(
-                school=self.school,
-                event=self.event,
-                defaults={'invoiceToUser': self.mentorUser}
-            )
+        invoiceDict['defaults'] = {'invoiceToUser': self.mentorUser}
 
-        else:
-            # Get invoice for this user for independent entry
-            Invoice.objects.get_or_create(
-                invoiceToUser=self.mentorUser,
-                event=self.event,
-                school=None
-            )
+        Invoice.objects.get_or_create(**invoiceDict)
 
     # *****Methods*****
 
@@ -613,14 +631,6 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     def mentorUserPK(self):
         return self.mentorUser.pk
     mentorUserPK.short_description = 'Mentor PK'
-
-    # Returns true if campus based invoicing enabled for this school for this event
-    def campusInvoicingEnabled(self):
-        if not self.school:
-            return False
-
-        # Check if at least one invoice has campus field set
-        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
     # File upload
 

@@ -95,19 +95,15 @@
                 Admin
             </a>
             {% endif %}
-            {% if user.schooladministrator_set.count > 1 %}
+            {% if user.schoolSelectorDisplay %}
                 <div class="ui dropdown simple item" >
                     <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
-                    {% if user.currentlySelectedSchool %}
-                    {{ user.currentlySelectedSchool.abbreviation }}
-                    {% else %}
-                    School
-                    {% endif %}
+                    {{ user.schoolSelectorCurrent }}
                     </span>
                         <i class="dropdown icon"></i>
                         <div class="menu">
-                            {% for schoolAdmin in user.schooladministrator_set.all %}
-                                <a href="{% url 'schools:setCurrentSchool' schoolAdmin.school.id %}" class="item">{{ schoolAdmin.school.abbreviation }}</a>
+                            {% for school in user.schoolSelectorOptions %}
+                                <a href="{% url 'schools:setCurrentSchool' school.schoolID %}" class="item">{{ school.schoolAbbreviation }}</a>
                             {% endfor %}
                         </div>
                 </div>

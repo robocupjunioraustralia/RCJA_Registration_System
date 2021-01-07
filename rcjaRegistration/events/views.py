@@ -102,17 +102,11 @@ def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
     # Get team and workshop attendee filter dict
-    if request.user.currentlySelectedSchool:
-        filterDict = {
-            'school': request.user.currentlySelectedSchool,
-            'event': event,
-        }
-    else:
-        filterDict = {
-            'mentorUser': request.user,
-            'school': None,
-            'event': event,
-        }
+    filterDict = event.itemFilterDict(
+        school=request.user.currentlySelectedSchool,
+        user=request.user,
+        userFieldName='mentorUser',
+    )
 
     if not eventDetailsPermissions(request, event, filterDict):
         raise PermissionDenied("This event is unavailable")

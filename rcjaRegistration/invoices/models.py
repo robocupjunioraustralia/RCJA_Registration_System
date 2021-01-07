@@ -133,11 +133,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Returns true if campus based invoicing enabled for this school for this event
     def campusInvoicingEnabled(self):
-        if not self.school:
-            return False
-
-        # Check if at least one invoice has campus field set
-        return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
+        return self.event.campusInvoicingEnabled(self.school)
 
     # Returns true if teams with campus for this school and event exists and campus invoicing not already enabled
     def campusInvoicingAvailable(self):
@@ -156,30 +152,14 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Teams
 
-    # Filter for all items covered by this ivoice
+    # Filter for all items covered by this invoice
     def allItemsFilterFields(self, ignoreCampus=False):
-        if self.campusInvoicingEnabled() and not ignoreCampus:
-            # Filter by school and campus
-            return {
-                'event': self.event,
-                'school': self.school,
-                'campus': self.campus
-            }
-
-        elif self.school:
-            # If school but campuses not enableed filter by school
-            return {
-                'event': self.event,
-                'school': self.school
-            }
-
-        else:
-            # If no school filter by user
-            return {
-                'event': self.event,
-                'mentorUser': self.invoiceToUser,
-                'school': None
-            }
+        return self.event.itemFilterDict(
+            school=self.school,
+            user=self.invoiceToUser,
+            userFieldName='mentorUser',
+            campus = self.campus if self.campusInvoicingEnabled() and not ignoreCampus else None,
+        )
 
     # Queryset of teams covered by this invoice
     def allTeams(self):
