@@ -22,6 +22,10 @@ Add and delete pages
 class Base:
     """Base for admin permissions tests for all user test cases"""
 
+    def additionalSetup(self):
+        """Hook for doing additional database setup"""
+        pass
+
     def updatePayload(self):
         """Hook for updating valid payload with foreign foreign key ids"""
         pass
@@ -30,6 +34,7 @@ class Base:
         createStates(self)
         createUsers(self)
         createSchools(self)
+        self.additionalSetup()
 
         # IDs of objects for admin being tested
         # Should be from state 1, as coordinators from state 1 should have access to this object
