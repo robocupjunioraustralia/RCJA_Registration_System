@@ -12,13 +12,13 @@ class State_Base:
     state1Obj = 'state1'
     state2Obj = 'state2'
     validPayload = {
-            'name': 'New State',
-            'abbreviation': 'new',
-            'coordinator_set-TOTAL_FORMS': 0,
-            'coordinator_set-INITIAL_FORMS': 0,
-            'coordinator_set-MIN_NUM_FORMS': 0,
-            'coordinator_set-MAX_NUM_FORMS': 1000,
-        }
+        'name': 'New State',
+        'abbreviation': 'new',
+        'coordinator_set-TOTAL_FORMS': 0,
+        'coordinator_set-INITIAL_FORMS': 0,
+        'coordinator_set-MIN_NUM_FORMS': 0,
+        'coordinator_set-MAX_NUM_FORMS': 1000,
+    }
 
     def updatePayload(self):
         pass

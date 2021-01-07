@@ -10,19 +10,19 @@ class School_Base:
     state1Obj = 'school1_state1'
     state2Obj = 'school3_state2'
     validPayload = {
-            'name': 'School 5',
-            'abbreviation': 'SCH5',
-            'state': 0,
-            'region': 0,
-            'campus_set-TOTAL_FORMS': 0,
-            'campus_set-INITIAL_FORMS': 0,
-            'campus_set-MIN_NUM_FORMS': 0,
-            'campus_set-MAX_NUM_FORMS': 1000,
-            'schooladministrator_set-TOTAL_FORMS': 0,
-            'schooladministrator_set-INITIAL_FORMS': 0,
-            'schooladministrator_set-MIN_NUM_FORMS': 0,
-            'schooladministrator_set-MAX_NUM_FORMS': 1000,
-        }
+        'name': 'School 5',
+        'abbreviation': 'SCH5',
+        'state': 0,
+        'region': 0,
+        'campus_set-TOTAL_FORMS': 0,
+        'campus_set-INITIAL_FORMS': 0,
+        'campus_set-MIN_NUM_FORMS': 0,
+        'campus_set-MAX_NUM_FORMS': 1000,
+        'schooladministrator_set-TOTAL_FORMS': 0,
+        'schooladministrator_set-INITIAL_FORMS': 0,
+        'schooladministrator_set-MIN_NUM_FORMS': 0,
+        'schooladministrator_set-MAX_NUM_FORMS': 1000,
+    }
 
     def updatePayload(self):
         self.validPayload['state'] = self.state1.id
@@ -87,9 +87,9 @@ class SchoolAdministrator_Base:
     state1Obj = 'schooladmin_mentor1'
     state2Obj = 'schooladmin_mentor4'
     validPayload = {
-            'user': 0,
-            'school': 0,
-        }
+        'user': 0,
+        'school': 0,
+    }
 
     def updatePayload(self):
         self.validPayload['user'] = self.user_state2_school3_mentor4.id # Can edit users from any state, is only the school field that is filtered

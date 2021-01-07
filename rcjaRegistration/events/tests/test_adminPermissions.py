@@ -13,9 +13,9 @@ class Division_Base:
     state1Obj = 'division1_state1'
     state2Obj = 'division2_state2'
     validPayload = {
-            'name': 'New Division',
-            'state': 0,
-        }
+        'name': 'New Division',
+        'state': 0,
+    }
 
     def additionalSetup(self):
         createEvents(self)
@@ -80,9 +80,9 @@ class Venue_Base:
     state1Obj = 'venue1_state1'
     state2Obj = 'venue3_state2'
     validPayload = {
-            'name': 'New Venue',
-            'state': 0,
-        }
+        'name': 'New Venue',
+        'state': 0,
+    }
 
     def additionalSetup(self):
         createEvents(self)
