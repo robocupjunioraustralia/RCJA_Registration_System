@@ -138,12 +138,14 @@ class DoesLoadBase(Base):
 
     def checkReadonly(self, response, fields):
         for expectedField in fields:
-            self.assertNotContains(response, f'name="{expectedField[0]}" id="id_{expectedField[0]}"')
+            self.assertNotContains(response, f'id="id_{expectedField[0]}"')
+            self.assertNotContains(response, f'name="{expectedField[0]}"')
             self.assertContains(response, f'<label>{expectedField[1]}:</label>')
 
     def checkEditable(self, response, fields):
         for expectedField in fields:
-            self.assertContains(response, f'name="{expectedField[0]}" id="id_{expectedField[0]}"')
+            self.assertContains(response, f'id="id_{expectedField[0]}"')
+            self.assertContains(response, f'name="{expectedField[0]}"')
 
     def testCorrectAddEditableFields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
