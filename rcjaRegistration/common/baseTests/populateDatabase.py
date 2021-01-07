@@ -182,3 +182,35 @@ def createEvents(self):
     for event in ['state1_openCompetition', 'state1_openWorkshop', 'state1_closedCompetition1', 'state1_closedCompetition2', 'state1_pastCompetition', 'state2_openCompetition']:
         setattr(self, f'availableDivision3_{event}', AvailableDivision.objects.create(event=getattr(self, event), division=self.division3))
         setattr(self, f'availableDivision4_{event}', AvailableDivision.objects.create(event=getattr(self, event), division=self.division4))
+
+def createTeams(self):
+    self.hardwarePlatform = HardwarePlatform.objects.create(name='HW 1')
+    self.softwarePlatform = SoftwarePlatform.objects.create(name='HW 1')
+
+    self.state1_event1_team1 = Team.objects.create(
+        event=self.state1_openCompetition,
+        division=self.division3,
+        mentorUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        name='Team 1',
+        hardwarePlatform=self.hardwarePlatform,
+        softwarePlatform=self.softwarePlatform,
+    )
+    self.state1_event1_team2 = Team.objects.create(
+        event=self.state1_openCompetition,
+        division=self.division3,
+        mentorUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        name='Team 2',
+        hardwarePlatform=self.hardwarePlatform,
+        softwarePlatform=self.softwarePlatform,
+    )
+    self.state2_event1_team3 = Team.objects.create(
+        event=self.state2_openCompetition,
+        division=self.division3,
+        mentorUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        name='Team 3',
+        hardwarePlatform=self.hardwarePlatform,
+        softwarePlatform=self.softwarePlatform,
+    )
