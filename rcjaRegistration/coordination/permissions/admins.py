@@ -19,4 +19,3 @@ class InlineAdminPermissions(BaseAdminPermissions):
 
         # Check state permissions
         return checkStatePermissions(request, obj, 'add', permissionsModel=self.model)
-
