@@ -135,7 +135,7 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
 
     def testCorrectReadonlyFields_changeNotRegistration(self):
         self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
-        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissions='full', position='Text')
+        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissionLevel='full', position='Text')
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
@@ -147,7 +147,7 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
 
     def testCorrectReadonlyFields_changeGlobal(self):
         self.state3 = State.objects.create(name='State 3', abbreviation='ST3', typeGlobal=True)
-        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissions='full', position='Text')
+        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissionLevel='full', position='Text')
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
@@ -160,7 +160,7 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
     def testCorrectReadonlyFields_changeOtherGlobal(self):
         self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
         self.state4 = State.objects.create(name='State 4', abbreviation='ST4', typeGlobal=True)
-        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissions='full', position='Text')
+        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissionLevel='full', position='Text')
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
