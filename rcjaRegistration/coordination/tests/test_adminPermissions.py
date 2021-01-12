@@ -27,37 +27,6 @@ def commonSetUp(self):
     emailsuper = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
-        self.user1.first_name = 'First'
-        self.user1.last_name = 'Last'
-        self.user1.save()
-    
-    def testGetState(self):
-        self.assertEqual(self.coord1.getState(), self.state1)
-
-    def testUserName(self):
-        self.assertEqual(self.coord1.userName(), 'First Last')
-
-    def testUserEmail(self):
-        self.assertEqual(self.coord1.userEmail(), self.email1)
-
-    def testStringState(self):
-        self.assertEqual(str(self.coord1), f'First Last: Victoria - Full')
-
-    def testStringNoState(self):
-        self.coord2 = Coordinator.objects.create(user=self.user1, permissionLevel='full', position='Thing')
-        self.assertEqual(str(self.coord2), f'First Last: Full')
-
-    def testCleanNotDuplicate(self):
-        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
-        self.coord2.clean()
-
-    def testCleanDuplicate(self):
-        self.coord2 = Coordinator(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
-        self.assertRaises(ValidationError, self.coord2.clean)
-
 class TestCoordinatorAdmin(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
