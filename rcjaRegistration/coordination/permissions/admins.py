@@ -42,7 +42,7 @@ class BaseAdminPermissions:
         queryset = super().get_queryset(request)
 
         defaultPermissionLevels = reversePermisisons(self.model, ['view', 'change'])
-        permissionLevels = getattr(self, 'stateFilteringPermissions', defaultPermissionLevels)
+        permissionLevels = getattr(self, 'stateFilteringPermissionLevels', defaultPermissionLevels)
 
         return self.filterQuerysetByState(queryset, request, permissionLevels)
 
