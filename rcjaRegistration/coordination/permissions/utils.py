@@ -27,7 +27,7 @@ def checkStatePermissions(request, obj, permission, permissionsModel=None):
 
     # Check state level permission for object
     for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
-        if permission in permissionsModel.coordinatorPermissions(coordinator.permissionLevel):
+        if permission in permissionsModel.stateCoordinatorPermissions(coordinator.permissionLevel):
             return True
 
     return False
@@ -43,6 +43,6 @@ def reversePermisisons(obj, permissions):
     levels = []
     for level in Coordinator.permissionLevelOptions:
         for permission in permissions:
-            if permission in obj.coordinatorPermissions(level[0]):
+            if permission in obj.stateCoordinatorPermissions(level[0]):
                 levels.append(level[0])
     return levels

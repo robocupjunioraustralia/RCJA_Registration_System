@@ -57,7 +57,7 @@ class DivisionCategory(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
@@ -106,7 +106,7 @@ class Division(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -163,7 +163,7 @@ class Venue(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -208,7 +208,7 @@ class Year(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
 
     # *****Save & Delete Methods*****
@@ -330,7 +330,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -466,7 +466,7 @@ class AvailableDivision(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -541,7 +541,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking

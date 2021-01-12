@@ -49,7 +49,7 @@ class QuestionResponse(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         if level in ['full', 'viewall', 'eventmanager', 'schoolmanager', 'billingmanager']:
             return [
                 'view',

@@ -8,13 +8,13 @@ The setting of Django permissions is handled by the Coordinator app and is disab
 
 ## Permissions for global objects
 
-To add State based permissions on a model it is necessary to define `coordinatorPermissions` on the Model.
+To add State based permissions on a model it is necessary to define `stateCoordinatorPermissions` on the Model.
 
 
 ## Simple State based permissions
 
 The minimum required to add state based permissions to a model is to define:
-- `coordinatorPermissions` on the model
+- `stateCoordinatorPermissions` on the model
 - `getState` on the model
 - Inherit from `AdminPermissions` for the ModelAdmin
 - Define `stateFilterLookup` on the ModelAdmin

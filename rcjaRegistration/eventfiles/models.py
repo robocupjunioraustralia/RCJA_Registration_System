@@ -44,7 +44,7 @@ class MentorEventFileType(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         # Only superusers can edit file type
         return eventCoordinatorViewPermissions(level)
 
@@ -88,7 +88,7 @@ class EventAvailableFileType(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         # Only superusers can edit file type
         return eventCoordinatorEditPermissions(level)
 
@@ -155,7 +155,7 @@ class MentorEventFileUpload(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         # May want to make this editable by admin, or at least creatable
         return eventCoordinatorEditPermissions(level)
 
