@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels, getFilteringPermissionLevels
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, strictCheckStateCoordinatorPermissionLevels, getFilteringPermissionLevels
 
 from .models import State, Region
 
@@ -103,7 +103,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             return []
 
         # User must have full permissions to view coordinators
-        if checkStatePermissionsLevels(request, obj, ['full']):
+        if strictCheckStateCoordinatorPermissionLevels(request, obj, ['full']):
             return self.inlines + [
                 CoordinatorInline,
             ]

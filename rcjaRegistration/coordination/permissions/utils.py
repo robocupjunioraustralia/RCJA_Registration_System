@@ -48,12 +48,12 @@ def checkCoordinatorPermission(request, model, obj, permission):
     if isGlobalObject(model, obj) and permission == 'view':
         return True
 
-    # Can now assume that object is not global and user is not superuser or global coordinator
-
-    # Can't do state coordinator check if object is none
-    # Return True because already tested that has the Django permission
+    # Return True if object is None
+    # Already tested that has the Django permission and can't do any further checks
     if obj is None:
         return True
+
+    # State coordinator check
 
     # Check state coordinator permissions
     for coordinator in request.user.coordinator_set.filter(state=obj.getState()):
@@ -63,27 +63,32 @@ def checkCoordinatorPermission(request, model, obj, permission):
     # If nothing granting access, return False
     return False
 
-def commonCheckStatePermissions(request, obj):
-    # First check super user
+def strictCheckStateCoordinatorPermissionLevels(request, obj, permisisonLevels):
+    """
+    Returns True if:
+    - user is super user
+    - user has a permission in the supplied permissionLevels for the specified object
+    Checks state coordinator and global coordinator permissions
+    """
+    # Check user is active. Should be covered by Django checks, but additional safety.
+    if not request.user.is_active:
+        return False
+
+    # Return true if super user
     if request.user.is_superuser:
         return True
 
-    # If no object return True because can't do state level filtering
+    # Strict check = obj must not be None
     if obj is None:
-        return True
+        return False
 
-    # Check state level filtering is possible
+    # Strict state check = obj must have a State
     if not hasattr(obj, 'getState'):
-        return True
-
-    return False
-
-def checkStatePermissionsLevels(request, obj, permisisonLevels):
-    if commonCheckStatePermissions(request, obj):
-        return True
+        return False
 
     # Check coordinator object
-    return Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user, permissionLevel__in=permisisonLevels).exists()
+    # Check for both global coordinator (state=None) and state coordinator (state=obj.getState())
+    return request.user.coordinator_set.filter(Q(state=None) | Q(state=obj.getState()), permissionLevel__in=permisisonLevels).exists()
 
 def reverseStatePermisisons(model, permissions):
     levels = []
