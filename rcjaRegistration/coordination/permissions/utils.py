@@ -67,8 +67,8 @@ def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
     """
     Returns True if:
     - user is super user
-    - user has a permission in the supplied permissionLevels for the specified object
-    Checks state coordinator and global coordinator permissions
+    - user is global coordinator of specified permission level
+    - user has a permission level in the supplied permissionLevels for the state of specified object
     """
     # Check user is active. Should be covered by Django checks, but additional safety.
     if not request.user.is_active:
@@ -82,7 +82,7 @@ def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
     if obj is None:
         return False
 
-    # Strict state check = obj must have a State
+    # Strict check = obj must have a State
     if not hasattr(obj, 'getState'):
         return False
 
