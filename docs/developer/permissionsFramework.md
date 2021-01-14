@@ -20,3 +20,28 @@ The minimum required to add state based permissions to a model is to define:
 - Define `stateFilterLookup` on the ModelAdmin
 
 To filter foreign keys that link to that model, you must define `fieldsToFilterRequest` on the ModelAdmin for the Model with the field.
+
+
+## Definitions
+
+### `stateCoordinatorPermissions`
+Defined on the model class.
+Must be defined if admin inherits from `AdminPermissions`.
+Defines the permissions for a state level coordinator
+
+### `globalCoordinatorPermissions`
+Defined on the model class.
+Defines the permissiosn that apply to coordinators of all states (a coordinator where state=None). If not defined global coordinators will inherit permissions from `stateCoordinatorPermissions`.
+
+### `getState`
+Defined on the model class.
+
+### `stateFilterLookup`
+Defined on the admin class.
+String using double underscore notation to the coordinator for the model via the state field.
+
+### `globalFilterLookup`
+Defined on the admin class.
+None if no state based filtering for the model and should return the entire unfiltered queryset if the user has the required permissions.
+String using double underscore notation to the state for the model if state filtering, in which case the objects with no state will be returned.
+Leave undefined to not return global objects to state coordinators - will still be returned for global coordinators and super users.
