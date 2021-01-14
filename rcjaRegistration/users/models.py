@@ -6,7 +6,6 @@ import django.apps as djangoApps
 from common.models import SaveDeleteMixin
 
 from django.contrib.auth.models import Permission
-from coordination.models import Coordinator
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
@@ -110,7 +109,7 @@ class User(SaveDeleteMixin, AbstractUser):
 
     def updateUserPermissions(self):
         # Get coordinator objects for this user
-        coordinators = Coordinator.objects.filter(user=self)
+        coordinators = self.coordinator_set.all()
 
         # Staff flag
         self.is_staff = self.is_superuser or coordinators.exists()
@@ -121,10 +120,21 @@ class User(SaveDeleteMixin, AbstractUser):
         # Get permissions for all models for all states that this user is a coordinator of
         permissionsToAdd = []
 
+        def addPermissions(permissionsToAdd, model, coordinator, permissionsLookupName):
+            if hasattr(model, permissionsLookupName):
+                permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, permissionsLookupName)(coordinator.permissionLevel))
+
+        # Add permissions for each coordinator object
         for coordinator in coordinators:
             for model in djangoApps.apps.get_models():
-                if hasattr(model, 'stateCoordinatorPermissions'):
-                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'stateCoordinatorPermissions')(coordinator.permissionLevel))
+
+                # If global coordinator add global permissions if they are defined
+                # Otherwise add state permissions
+                if coordinator.state is None and hasattr(model, 'globalCoordinatorPermissions'):
+                    addPermissions(permissionsToAdd, model, coordinator, 'globalCoordinatorPermissions')
+
+                else:
+                    addPermissions(permissionsToAdd, model, coordinator, 'stateCoordinatorPermissions')
 
         # Add permissions to user
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
