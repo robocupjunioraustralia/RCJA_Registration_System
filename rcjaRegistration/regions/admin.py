@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels, reversePermisisons
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels, getFilteringPermissionLevels
 
 from .models import State, Region
 

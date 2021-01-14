@@ -39,10 +39,28 @@ def checkStatePermissionsLevels(request, obj, permisisonLevels):
     # Check coordinator object
     return Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user, permissionLevel__in=permisisonLevels).exists()
 
-def reversePermisisons(obj, permissions):
+def reverseStatePermisisons(model, permissions):
     levels = []
     for level in Coordinator.permissionLevelOptions:
         for permission in permissions:
-            if permission in obj.stateCoordinatorPermissions(level[0]):
+            if permission in model.stateCoordinatorPermissions(level[0]):
                 levels.append(level[0])
     return levels
+
+def reverseGlobalPermisisons(model, permissions):
+    if not hasattr(model, 'globalCoordinatorPermissions'):
+        return reverseStatePermisisons(model, permissions)
+
+    levels = []
+    for level in Coordinator.permissionLevelOptions:
+        for permission in permissions:
+            if permission in model.globalCoordinatorPermissions(level[0]):
+                levels.append(level[0])
+    return levels
+
+def getFilteringPermissionLevels(model, permissions, permissionLevelOverride=None):
+    # But what if empty list?
+    statePermissionLevels = permissionLevelOverride or reverseStatePermisisons(model, permissions)
+    globalPermissionLevels = permissionLevelOverride or reverseGlobalPermisisons(model, permissions)
+
+    return statePermissionLevels, globalPermissionLevels
