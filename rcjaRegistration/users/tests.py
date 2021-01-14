@@ -1112,7 +1112,7 @@ class TestUserAdminPermissions(TestCase):
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Delete')
 
-    def testNonsuperuserChangeLoads_readonly_noState_fullcoordinator(self):
+    def testNonsuperuserChangeLoads_noState_fullcoordinator(self):
         self.user2.homeState = None
         self.user2.save()
 
@@ -1120,8 +1120,8 @@ class TestUserAdminPermissions(TestCase):
         response = self.client.get(reverse('admin:users_user_change', args=(self.user2.id,)))
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, 'View user')
-        self.assertNotContains(response, 'Change user')
+        self.assertNotContains(response, 'View user')
+        self.assertContains(response, 'Change user')
 
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Delete')
