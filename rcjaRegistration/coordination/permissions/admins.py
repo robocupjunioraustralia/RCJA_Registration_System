@@ -1,4 +1,4 @@
-from .utils import checkStatePermissions, getFilteringPermissionLevels
+from .utils import checkStatePermissions, getFilteringPermissionLevels, checkCoordinatorPermission
 
 from coordination.models import Coordinator
 
@@ -128,41 +128,13 @@ class BaseAdminPermissions:
     # Add permisison only needed for inline, defined there
 
     def has_view_permission(self, request, obj=None):
-        # Check django permissions
-        if not super().has_view_permission(request, obj=obj):
-            return False
-        
-        # Allow viewing of global objects
-        if hasattr(obj, 'getState') and obj.getState() is None:
-            return True
-
-        # Check state permissions
-        return checkStatePermissions(request, obj, 'view')
+        return super().has_view_permission(request, obj=obj) and checkCoordinatorPermission(request, self.model, obj, 'view')
 
     def has_change_permission(self, request, obj=None):
-        # Check django permissions
-        if not super().has_change_permission(request, obj=obj):
-            return False
-
-        # Only superuser can change or delete global objects
-        if hasattr(obj, 'getState') and obj.getState() is None and not request.user.is_superuser:
-            return False
-
-        # Check state permissions
-        return checkStatePermissions(request, obj, 'change', permissionsModel=self.model)
+        return super().has_change_permission(request, obj=obj) and checkCoordinatorPermission(request, self.model, obj, 'change')
 
     def has_delete_permission(self, request, obj=None):
-        # Check django permissions
-        if not super().has_delete_permission(request, obj=obj):
-            return False
-
-        # Only superuser can change or delete global objects
-        if hasattr(obj, 'getState') and obj.getState() is None and not request.user.is_superuser:
-            return False
-
-        # Check state permissions
-        return checkStatePermissions(request, obj, 'delete', permissionsModel=self.model)
-
+        return super().has_delete_permission(request, obj=obj) and checkCoordinatorPermission(request, self.model, obj, 'delete')
 
 class AdminPermissions(BaseAdminPermissions):
     def get_form(self, request, obj=None, **kwargs):
@@ -176,9 +148,4 @@ class InlineAdminPermissions(BaseAdminPermissions):
         return super().get_formset(request, obj, **kwargs)
 
     def has_add_permission(self, request, obj):
-        # Check django permissions
-        if not super().has_add_permission(request, obj):
-            return False
-
-        # Check state permissions
-        return checkStatePermissions(request, obj, 'add', permissionsModel=self.model)
+        return super().has_add_permission(request, obj) and checkCoordinatorPermission(request, self.model, obj, 'add')
