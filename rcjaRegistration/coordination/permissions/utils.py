@@ -63,7 +63,7 @@ def checkCoordinatorPermission(request, model, obj, permission):
     # If nothing granting access, return False
     return False
 
-def strictCheckStateCoordinatorPermissionLevels(request, obj, permisisonLevels):
+def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
     """
     Returns True if:
     - user is super user
