@@ -1,5 +1,4 @@
-from common.baseTests.adminPermissions import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator
-from common.baseTests.populateDatabase import createEvents, createTeams
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams
 
 from django.test import TestCase
 from django.urls import reverse
