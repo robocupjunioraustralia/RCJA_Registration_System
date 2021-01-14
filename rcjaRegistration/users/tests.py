@@ -1123,7 +1123,7 @@ class TestUserAdminPermissions(TestCase):
         self.assertNotContains(response, 'View user')
         self.assertContains(response, 'Change user')
 
-        self.assertNotContains(response, 'Save')
+        self.assertContains(response, 'Save')
         self.assertNotContains(response, 'Delete')
 
     # Password change load
