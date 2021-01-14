@@ -1,2 +1,2 @@
 from .admins import AdminPermissions, InlineAdminPermissions
-from .utils import checkStatePermissions, checkStatePermissionsLevels, getFilteringPermissionLevels
+from .utils import checkStatePermissionsLevels, checkCoordinatorPermission, getFilteringPermissionLevels

@@ -78,20 +78,6 @@ def commonCheckStatePermissions(request, obj):
 
     return False
 
-def checkStatePermissions(request, obj, permission, permissionsModel=None):
-    if commonCheckStatePermissions(request, obj):
-        return True
-
-    if permissionsModel is None:
-        permissionsModel = obj
-
-    # Check state level permission for object
-    for coordinator in Coordinator.objects.filter(Q(state=None) | Q(state=obj.getState()), user=request.user):
-        if permission in permissionsModel.stateCoordinatorPermissions(coordinator.permissionLevel):
-            return True
-
-    return False
-
 def checkStatePermissionsLevels(request, obj, permisisonLevels):
     if commonCheckStatePermissions(request, obj):
         return True

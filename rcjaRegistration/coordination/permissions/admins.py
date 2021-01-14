@@ -1,4 +1,4 @@
-from .utils import checkStatePermissions, getFilteringPermissionLevels, checkCoordinatorPermission
+from .utils import getFilteringPermissionLevels, checkCoordinatorPermission
 
 class BaseAdminPermissions:
     @classmethod
