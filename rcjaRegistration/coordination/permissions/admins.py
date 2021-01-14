@@ -1,7 +1,5 @@
 from .utils import checkStatePermissions, getFilteringPermissionLevels, checkCoordinatorPermission
 
-from coordination.models import Coordinator
-
 class BaseAdminPermissions:
     @classmethod
     def filterQuerysetByState(cls, queryset, request, statePermissionLevels, globalPermissionLevels):
