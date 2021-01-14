@@ -56,7 +56,7 @@ def checkCoordinatorPermission(request, model, obj, permission):
         return True
 
     # Check state coordinator permissions
-    for coordinator in Coordinator.objects.filter(state=obj.getState(), user=request.user):
+    for coordinator in request.user.coordinator_set.filter(state=obj.getState()):
         if permission in model.stateCoordinatorPermissions(coordinator.permissionLevel):
             return True
 
