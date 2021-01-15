@@ -45,8 +45,8 @@ def checkCoordinatorPermission(request, model, obj, permission):
     # Global coordinator editing globals is handled above. This is only for state coordinators, who can only view global objects
     # And they can only view global objects if they have the permission in stateCoordinatorPermissions, the checking of which is handled above by Django permissions check
     # For an admin inline, this will check against the parent
-    if isGlobalObject(model, obj) and permission == 'view':
-        return True
+    if isGlobalObject(model, obj):
+        return permission == 'view'
 
     # Return True if object is None
     # Already tested that has the Django permission and can't do any further checks
