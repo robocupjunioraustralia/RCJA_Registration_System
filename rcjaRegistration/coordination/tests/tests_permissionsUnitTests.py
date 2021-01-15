@@ -155,9 +155,7 @@ class Test_checkCoordinatorPermission(TestCase):
     @patch('django.contrib.auth.get_permission_codename', return_value='')
     @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
     def testDeniedStateCoordinator_wrongState(self, mock_codename, mock_has_perms):
-        self.request.user = self.user_state1_fullcoordinator
-        self.coord_state1_fullcoordinator.state = self.state2
-        self.coord_state1_fullcoordinator.save()
+        self.request.user = self.user_state2_fullcoordinator
 
         @classmethod
         def statePerms(cls, level):
