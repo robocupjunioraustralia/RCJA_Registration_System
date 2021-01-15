@@ -90,28 +90,26 @@ def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
     # Check for both global coordinator (state=None) and state coordinator (state=obj.getState())
     return request.user.coordinator_set.filter(Q(state=None) | Q(state=obj.getState()), permissionLevel__in=permisisonLevels).exists()
 
-def reverseStatePermisisons(model, permissions):
-    levels = []
-    for level in Coordinator.permissionLevelOptions:
-        for permission in permissions:
-            if permission in model.stateCoordinatorPermissions(level[0]):
-                levels.append(level[0])
-    return levels
+def getFilteringPermissionLevels(objectModel, permissions, permissionLevelOverride=None):
+    def reversePermissionsBase(permissionModel, objectModel, permissionsLookupName, permissions):
+        levels = []
+        for level in permissionModel.permissionLevelOptions:
+            for permission in permissions:
+                if permission in objectModel.permissionsLookupName(level[0]):
+                    levels.append(level[0])
+        return levels
 
-def reverseGlobalPermisisons(model, permissions):
-    if not hasattr(model, 'globalCoordinatorPermissions'):
-        return reverseStatePermisisons(model, permissions)
+    def reverseStatePermisisons(objectModel, permissions):
+        return reversePermissionsBase(Coordinator, objectModel, 'stateCoordinatorPermissions', permissions)
 
-    levels = []
-    for level in Coordinator.permissionLevelOptions:
-        for permission in permissions:
-            if permission in model.globalCoordinatorPermissions(level[0]):
-                levels.append(level[0])
-    return levels
+    def reverseGlobalPermisisons(objectModel, permissions):
+        if not hasattr(objectModel, 'globalCoordinatorPermissions'):
+            return reverseStatePermisisons(objectModel, permissions)
+        
+        return reversePermissionsBase(Coordinator, objectModel, 'globalCoordinatorPermissions', permissions)
 
-def getFilteringPermissionLevels(model, permissions, permissionLevelOverride=None):
-    # But what if empty list?
-    statePermissionLevels = permissionLevelOverride or reverseStatePermisisons(model, permissions)
-    globalPermissionLevels = permissionLevelOverride or reverseGlobalPermisisons(model, permissions)
+    # Need to use ternary to check for None and not just anything that evaluates to false, such as an empty list
+    statePermissionLevels = permissionLevelOverride if permissionLevelOverride is not None else reverseStatePermisisons(objectModel, permissions)
+    globalPermissionLevels = permissionLevelOverride if permissionLevelOverride is not None else reverseGlobalPermisisons(objectModel, permissions)
 
     return statePermissionLevels, globalPermissionLevels
