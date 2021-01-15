@@ -95,7 +95,7 @@ def getFilteringPermissionLevels(objectModel, permissions, permissionLevelOverri
         levels = []
         for level in permissionModel.permissionLevelOptions:
             for permission in permissions:
-                if permission in objectModel.permissionsLookupName(level[0]):
+                if permission in getattr(objectModel, permissionsLookupName)(level[0]):
                     levels.append(level[0])
         return levels
 
