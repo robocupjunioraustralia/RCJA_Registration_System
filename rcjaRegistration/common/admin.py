@@ -3,6 +3,10 @@ from django.contrib.admin.models import DELETION
 from django.utils.html import format_html
 from django.urls import reverse
 
+# **********Global Admin Actions**********
+
+admin.site.disable_action('delete_selected') # Disable bulk delete
+
 # **********Key Value Store**********
 
 import keyvaluestore.admin

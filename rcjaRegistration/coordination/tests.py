@@ -68,13 +68,14 @@ class TestUpdateUserPermissions(TestCase):
         self.assertFalse(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
 
-    def testAdminBulkDelete(self):
+    def testAdminBulkDeleteFails(self):
         # Setup
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
 
         self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
         self.assertTrue(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
+        numCoordinators = Coordinator.objects.count()
 
         # Bulk delete coordinator
         payload = {
@@ -85,14 +86,10 @@ class TestUpdateUserPermissions(TestCase):
 
         response = self.client.post(reverse('admin:coordination_coordinator_changelist'), data=payload)
         self.user1.refresh_from_db()
-        
-        # Check delete success
-        self.assertEqual(response.status_code, 302)
-        self.assertFalse(Coordinator.objects.exists())
 
-        # Check permissions update
-        self.assertFalse(self.user1.is_staff)
-        self.assertFalse(self.user1.is_superuser)
+        # Check delete failure - bulk delete disabled
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(numCoordinators, Coordinator.objects.count())
 
 class TestCoordinatorMethods(TestCase):
     email1 = 'user1@user.com'
