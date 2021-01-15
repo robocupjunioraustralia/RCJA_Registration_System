@@ -72,7 +72,7 @@ class TestUpdateUserPermissions(TestCase):
         # Setup
         self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
 
-        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissions='full', position='Thing')
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.assertTrue(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
         numCoordinators = Coordinator.objects.count()
