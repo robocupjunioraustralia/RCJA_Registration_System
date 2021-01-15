@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch
 from common.baseTests import createStates, createUsers
-from coordination.permissions import checkCoordinatorPermission, getFilteringPermissionLevels
+from coordination.permissions import checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
 
 from users.models import User
 from coordination.models import Coordinator
@@ -35,21 +35,24 @@ class ModelTestStateGlobalPermissions(BaseModelTest):
 class ModelTestGlobal(BaseModelTest):
     pass
 
+def commonSetUp(self):
+    createStates(self)
+    createUsers(self)
+
+    self.request = RequestObj()
+    self.stateObj = ModelTestState(self.state1)
+    self.stateGlobalPermsObj = ModelTestStateGlobalPermissions(self.state1)
+    self.globalObj = ModelTestGlobal()
+
+    self.email_user_globalCoordinator = 'user11@user.com'
+
+    self.user_globalCoordinator = User.objects.create_user(email=self.email_user_globalCoordinator, password=self.password, homeState=self.state1)
+    self.globalCoordinator = Coordinator.objects.create(user=self.user_globalCoordinator, state=None, permissionLevel='full')
+
 class Test_checkCoordinatorPermission(TestCase):
     def setUp(self):
-        createStates(self)
-        createUsers(self)
+        commonSetUp(self)
 
-        self.request = RequestObj()
-        self.stateObj = ModelTestState(self.state1)
-        self.stateGlobalPermsObj = ModelTestStateGlobalPermissions(self.state1)
-        self.globalObj = ModelTestGlobal()
-
-        self.email_user_globalCoordinator = 'user11@user.com'
-
-        self.user_globalCoordinator = User.objects.create_user(email=self.email_user_globalCoordinator, password=self.password, homeState=self.state1)
-        self.globalCoordinator = Coordinator.objects.create(user=self.user_globalCoordinator, state=None, permissionLevel='full')
-    
     def testAllowedSuperuser(self):
         self.request.user = self.user_state1_super1
 
@@ -233,6 +236,71 @@ class Test_checkCoordinatorPermission(TestCase):
         self.stateObj.state = None
 
         self.assertFalse(checkCoordinatorPermission(self.request, ModelTestGlobal, self.globalObj, 'change'))
+
+class Test_checkCoordinatorPermissionLevel(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+
+    def testAllowedSuperuser(self):
+        self.request.user = self.user_state1_super1
+
+        self.assertTrue(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedInactiveSuperuser(self):
+        self.user_state1_super1.is_active = False
+        self.user_state1_super1.save()
+        self.request.user = self.user_state1_super1
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedNoneObj(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, None, ['full']))
+
+    def testDeniedNoGetState(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.globalObj, ['full']))
+
+    def testAllowedStateCoordinator(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.assertTrue(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedStateCoordinator_wrongLevel(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['other']))
+
+    def testDeniedStateCoordinator_wrongState(self):
+        self.request.user = self.user_state2_fullcoordinator
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedStateCoordinator_globalObj(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.stateObj.state = None
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testAllowedGlobalCoordinator(self):
+        self.request.user = self.user_globalCoordinator
+
+        self.assertTrue(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedGlobalCoordinator_wrongLevel(self):
+        self.request.user = self.user_globalCoordinator
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['other']))
+
+    def testAllowedGlobalCoordinator_globalObj(self):
+        self.request.user = self.user_globalCoordinator
+
+        self.stateObj.state = None
+
+        self.assertTrue(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
 
 class Test_getFilteringPermissionLevels(TestCase):
     def testStatePermissionsOneLevel(self):
