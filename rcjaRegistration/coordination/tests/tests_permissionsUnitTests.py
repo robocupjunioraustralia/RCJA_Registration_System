@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch
 from common.baseTests import createStates, createUsers
-from coordination.permissions import checkCoordinatorPermission
+from coordination.permissions import checkCoordinatorPermission, getFilteringPermissionLevels
 
 from users.models import User
 from coordination.models import Coordinator
@@ -235,3 +235,179 @@ class Test_checkCoordinatorPermission(TestCase):
         self.stateObj.state = None
 
         self.assertFalse(checkCoordinatorPermission(self.request, ModelTestGlobal, self.globalObj, 'change'))
+
+class Test_getFilteringPermissionLevels(TestCase):
+    def testStatePermissionsOneLevel(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['full']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            elif level in ['viewall', 'billingmanager']:
+                return [
+                    'view',
+                ]
+            return []
+        
+        ModelTestState.stateCoordinatorPermissions = statePerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestState, ['change'])
+        self.assertEqual(['full'], statePermissionLevels)
+        self.assertEqual(['full'], globalPermissionLevels)
+
+    def testStatePermissionsTwoLevels(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['full']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            elif level in ['viewall', 'billingmanager']:
+                return [
+                    'view',
+                ]
+            return []
+        
+        ModelTestState.stateCoordinatorPermissions = statePerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestState, ['view', 'change'])
+        self.assertEqual(['viewall', 'billingmanager', 'full', 'full'], statePermissionLevels)
+        self.assertEqual(['viewall', 'billingmanager', 'full', 'full'], globalPermissionLevels)
+
+    def testStatePermissionsOverride(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['full']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            elif level in ['viewall', 'billingmanager']:
+                return [
+                    'view',
+                ]
+            return []
+        
+        ModelTestState.stateCoordinatorPermissions = statePerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestState, ['view', 'change'], ['full'])
+        self.assertEqual(['full'], statePermissionLevels)
+        self.assertEqual(['full'], globalPermissionLevels)
+
+    def testStatePermissionsEmptyOverride(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['full']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            elif level in ['viewall', 'billingmanager']:
+                return [
+                    'view',
+                ]
+            return []
+        
+        ModelTestState.stateCoordinatorPermissions = statePerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestState, ['view', 'change'], [])
+        self.assertEqual([], statePermissionLevels)
+        self.assertEqual([], globalPermissionLevels)
+
+    def testGlobalPermissions(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['billingmanager']:
+                return [
+                    'view',
+                    'change',
+                ]
+            return []
+        
+        ModelTestGlobal.stateCoordinatorPermissions = statePerms
+
+        @classmethod
+        def globalPerms(cls, level):
+            if level in ['billingmanager']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            return []
+        
+        ModelTestGlobal.globalCoordinatorPermissions = globalPerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestGlobal, ['add'])
+        self.assertEqual([], statePermissionLevels)
+        self.assertEqual(['billingmanager'], globalPermissionLevels)
+
+    def testGlobalPermissionsOverride(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['billingmanager']:
+                return [
+                    'view',
+                    'change',
+                ]
+            return []
+        
+        ModelTestGlobal.stateCoordinatorPermissions = statePerms
+
+        @classmethod
+        def globalPerms(cls, level):
+            if level in ['billingmanager']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            return []
+        
+        ModelTestGlobal.globalCoordinatorPermissions = globalPerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestGlobal, ['add'], ['full', 'level2'])
+        self.assertEqual(['full', 'level2'], statePermissionLevels)
+        self.assertEqual(['full', 'level2'], globalPermissionLevels)
+
+    def testGlobalPermissionsEmptyOverride(self):
+        @classmethod
+        def statePerms(cls, level):
+            if level in ['billingmanager']:
+                return [
+                    'view',
+                    'change',
+                ]
+            return []
+        
+        ModelTestGlobal.stateCoordinatorPermissions = statePerms
+
+        @classmethod
+        def globalPerms(cls, level):
+            if level in ['billingmanager']:
+                return [
+                    'add',
+                    'view',
+                    'change',
+                    'delete'
+                ]
+            return []
+        
+        ModelTestGlobal.globalCoordinatorPermissions = globalPerms
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestGlobal, ['add'], [])
+        self.assertEqual([], statePermissionLevels)
+        self.assertEqual([], globalPermissionLevels)
