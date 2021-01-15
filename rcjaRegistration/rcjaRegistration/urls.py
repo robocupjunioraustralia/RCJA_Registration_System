@@ -19,9 +19,10 @@ from django.urls import path, include
 from django.views.generic.base import RedirectView
 from django.contrib.auth import views as auth_views
 from .forms import CustomAuthForm
+
 admin.site.site_header = "RCJA Admin"
-admin.site.site_title = "RCJA Admin Portal"
-admin.site.index_title = "Welcome to the RCJA Admin Portal"
+admin.site.site_title = "RCJA Admin"
+admin.site.index_title = "Administration Home"
 
 
 urlpatterns = [
