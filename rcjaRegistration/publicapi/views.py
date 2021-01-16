@@ -50,6 +50,9 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
         return self.eventsBaseQueryset(abbreviation).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
 
     # Summary event endpoint
+    # Returns all events (past and upcoming) from years with displayEventsOnWebsite=True
+    # Includes all published competitions and workshops
+    # Fewer fields returned, uses summary serializer
     @action(detail=True)
     def allEvents(self, request, abbreviation=None):
         queryset = self.eventsBaseQueryset(abbreviation).order_by('startDate')
