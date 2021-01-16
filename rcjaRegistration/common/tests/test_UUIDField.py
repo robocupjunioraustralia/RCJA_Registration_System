@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .fields import UUIDFileField
+from common.fields import UUIDFileField
 
 # Create your tests here.
 
