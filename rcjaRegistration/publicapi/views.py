@@ -8,7 +8,7 @@ from django.db.models.deletion import ProtectedError
 
 from common.apiPermissions import ReadOnly
 
-from .serializers import StateSerializer, EventSerializer
+from .serializers import StateSerializer, EventSerializer, SummaryEventSerializer
 
 from events.models import Event
 from regions.models import State
@@ -48,6 +48,12 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
     
     def pastEventsQueryset(self, abbreviation):
         return self.eventsBaseQueryset(abbreviation).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
+
+    # Summary event endpoint
+    @action(detail=True)
+    def allEvents(self, request, abbreviation=None):
+        queryset = self.eventsBaseQueryset(abbreviation).order_by('startDate')
+        return self.nestedSerializer(queryset, SummaryEventSerializer)
 
     # Upcoming events
 

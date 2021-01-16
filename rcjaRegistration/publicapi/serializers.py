@@ -97,6 +97,21 @@ class EventSerializer(serializers.ModelSerializer):
             'availabledivisions',
         ]
 
+class SummaryEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = [
+            'id',
+            'state',
+            'name',
+            'eventType',
+            # Dates
+            'startDate',
+            'endDate',
+            'registrationsOpenDate',
+            'registrationsCloseDate',
+        ]
+
 # *****Committee Member*****
 
 # class CommitteeMemberSerializer(serializers.ModelSerializer):
