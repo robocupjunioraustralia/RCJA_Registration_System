@@ -4,9 +4,10 @@ from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+import bleach
 import datetime
 
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDImageField
 
@@ -383,6 +384,9 @@ class Event(SaveDeleteMixin, models.Model):
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    def bleachedEventDetails(self):
+        return mark_safe(bleach.clean(self.eventDetails))
 
     # Image methods
 
