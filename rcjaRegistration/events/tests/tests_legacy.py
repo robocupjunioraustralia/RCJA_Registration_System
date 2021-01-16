@@ -616,6 +616,17 @@ class TestEventMethods(TestCase):
     def testDirectEnquiriesToEmail(self):
         self.assertEqual(self.event.directEnquiriesToEmail(), self.username)
 
+    def testBleachedEventDetails(self):
+        self.event.eventDetails = "<b>Hello</b> <h1>Heading</h1> <script>"
+        self.event.save()
+
+        self.assertIn('<b>Hello</b>', self.event.bleachedEventDetails())
+        self.assertNotIn('<h1>Heading</h1>', self.event.bleachedEventDetails())
+        self.assertNotIn('<script>', self.event.bleachedEventDetails())
+
+        self.assertNotIn('<h1>', self.event.bleachedEventDetails())
+        self.assertIn('&lt;h1&gt;', self.event.bleachedEventDetails())
+
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')
     self.event = Event(

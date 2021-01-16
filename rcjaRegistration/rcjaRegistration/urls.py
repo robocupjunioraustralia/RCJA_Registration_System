@@ -30,7 +30,7 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(
         template_name='registration/login.html', authentication_form=CustomAuthForm)),
     path('accounts/', include('django.contrib.auth.urls')), #login
-    # path('api/v1/', include('apiv1.urls')), # Disabled for initial release
+    path('api/v1/public/', include('publicapi.urls')),
     path('', include('events.urls')),
     path('',include('schools.urls')),
     path('',include('teams.urls')),

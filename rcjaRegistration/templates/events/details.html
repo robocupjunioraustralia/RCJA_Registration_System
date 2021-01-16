@@ -39,9 +39,9 @@
             </li>
             {% endfor %}
         </ul>
-        {% if event.details %}
+        {% if event.eventDetails %}
         <h3>Event details</h3>
-        <p> {{ event.eventDetails|escape|linebreaks }} </p>
+        <p> {{ event.bleachedEventDetails|linebreaks }} </p>
         {% endif %}
         {% if event.venue %}
         <h3>Location: {{ event.venue.name }}</h3>

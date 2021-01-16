@@ -44,6 +44,23 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+CORS_ALLOWED_ORIGINS = [
+    "https://www.robocupjunior.org.au", # For public api
+    "https://robocupjunior.org.au", # For public api
+]
+
+# Add the allowed hosts to cors
+# https unless is the default local_hosts for dev
+if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
+    for allowed_host in env('ALLOWED_HOSTS'):
+        CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
+else:
+    if isinstance(env('ALLOWED_HOSTS'), list):
+        for allowed_host in env('ALLOWED_HOSTS'):
+            CORS_ALLOWED_ORIGINS.append(f'https://{allowed_host}')
+    else:
+        CORS_ALLOWED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
+
 DEV_SETTINGS = env('DEV_SETTINGS')
 
 # Application definition
@@ -72,11 +89,13 @@ INSTALLED_APPS = [
     'keyvaluestore',
     'axes',
     'storages',
+    'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -217,10 +236,10 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         ),
-    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'DEFAULT_PERMISSION_CLASSES': ('common.apiPermissions.IsSuperUser',),
     'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
-    # 'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
-    # 'PAGE_SIZE': 50
+    'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
+    'PAGE_SIZE': 50
 }
 
 
