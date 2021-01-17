@@ -260,7 +260,6 @@ class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_Supe
         ('eventType', 'Event type'),
     ]
 
-
 class Event_Coordinators_Base(Event_Base):
     expectedListItems = 5
     expectedStrings = [

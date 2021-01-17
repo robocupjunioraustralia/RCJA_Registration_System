@@ -1,7 +1,12 @@
 {% extends "admin/base_site.html" %}
 
-{% block branding %}
 {% load static %}
+
+{% block extrahead %}
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" />
+{% endblock %}
+
+{% block branding %}
 <h1 id="site-name"><a href="{% url 'admin:index' %}">
      <img src="{% static 'favicon-32x32.png' %}">
     {{ site_header|default:_('Django administration') }}

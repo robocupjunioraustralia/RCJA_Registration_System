@@ -4,9 +4,10 @@ from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+import bleach
 import datetime
 
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDImageField
 
@@ -200,6 +201,7 @@ class Year(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
+    displayEventsOnWebsite = models.BooleanField('Display events on website', default=False)
 
     # *****Meta and clean*****
     class Meta:
@@ -261,7 +263,7 @@ class Event(SaveDeleteMixin, models.Model):
     event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
-    # Team billing settings
+    # Competition billing settings
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
     event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
     event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
@@ -382,6 +384,9 @@ class Event(SaveDeleteMixin, models.Model):
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    def bleachedEventDetails(self):
+        return mark_safe(bleach.clean(self.eventDetails))
 
     # Image methods
 
