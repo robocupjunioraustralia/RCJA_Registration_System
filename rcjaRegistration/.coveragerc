@@ -30,6 +30,9 @@ skip_covered = False
 omit = */node_modules/
         /venv/*
         /env/*
+        */tests/*
+        *tests.py
+        */baseTests/*
 
 [html]
 directory = coverage_html_report

@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from regions.models import State
+from coordination.models import Coordinator
 
 # State
 
@@ -68,28 +69,24 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
-        self.assertNotContains(response, '<label>Registration:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
-
-        self.assertNotContains(response, '<label>Global:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeGlobal"')
-
-        self.assertNotContains(response, '<label>Website:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+        self.checkEditable(response, [
+            ('typeRegistration', 'Registration'),
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
 
     def testCorrectReadonlyFields_changeGlobal(self):
         self.state3 = State.objects.create(name='State 3', abbreviation='ST3', typeGlobal=True)
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
-        self.assertContains(response, '<label>Registration:</label>')
-        self.assertNotContains(response, '<input type="checkbox" name="typeRegistration"')
-
-        self.assertNotContains(response, '<label>Global:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeGlobal"')
-
-        self.assertNotContains(response, '<label>Website:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+        self.checkReadonly(response, [
+            ('typeRegistration', 'Registration'),
+        ])
+        self.checkEditable(response, [
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
 
     def testCorrectReadonlyFields_changeOtherGlobal(self):
         self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
@@ -97,14 +94,13 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
-        self.assertNotContains(response, '<label>Registration:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeRegistration"')
-
-        self.assertContains(response, '<label>Global:</label>')
-        self.assertNotContains(response, '<input type="checkbox" name="typeGlobal"')
-
-        self.assertNotContains(response, '<label>Website:</label>')
-        self.assertContains(response, '<input type="checkbox" name="typeWebsite"')
+        self.checkReadonly(response, [
+            ('typeGlobal', 'Global'),
+        ])
+        self.checkEditable(response, [
+            ('typeRegistration', 'Registration'),
+            ('typeWebsite', 'Website'),
+        ])
 
 class State_Coordinators_Base(State_Base):
     expectedListItems = 1
@@ -134,6 +130,45 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
         ('typeGlobal', 'Global'),
         ('typeWebsite', 'Website'),
     ]
+
+    # Additional readonly field tests
+
+    def testCorrectReadonlyFields_changeNotRegistration(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
+        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissions='full', position='Text')
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.checkReadonly(response, [
+            ('typeRegistration', 'Registration'),
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
+
+    def testCorrectReadonlyFields_changeGlobal(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3', typeGlobal=True)
+        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissions='full', position='Text')
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.checkReadonly(response, [
+            ('typeRegistration', 'Registration'),
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
+
+    def testCorrectReadonlyFields_changeOtherGlobal(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
+        self.state4 = State.objects.create(name='State 4', abbreviation='ST4', typeGlobal=True)
+        Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state3, permissions='full', position='Text')
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.checkReadonly(response, [
+            ('typeRegistration', 'Registration'),
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
 
 class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
 
