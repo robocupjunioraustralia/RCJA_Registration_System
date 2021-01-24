@@ -21,9 +21,6 @@ class State_Base:
         'coordinator_set-MAX_NUM_FORMS': 1000,
     }
 
-    def updatePayload(self):
-        pass
-
 class Test_State_NotStaff(State_Base, Base_Test_NotStaff, TestCase):
     pass
 

@@ -24,9 +24,10 @@ class School_Base:
         'schooladministrator_set-MAX_NUM_FORMS': 1000,
     }
 
-    def updatePayload(self):
-        self.validPayload['state'] = self.state1.id
-        self.validPayload['region'] = self.region1.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
+        cls.validPayload['region'] = cls.region1.id
 
 class Test_School_NotStaff(School_Base, Base_Test_NotStaff, TestCase):
     pass
@@ -91,9 +92,10 @@ class SchoolAdministrator_Base:
         'school': 0,
     }
 
-    def updatePayload(self):
-        self.validPayload['user'] = self.user_state2_school3_mentor4.id # Can edit users from any state, is only the school field that is filtered
-        self.validPayload['school'] = self.school1_state1.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['user'] = cls.user_state2_school3_mentor4.id # Can edit users from any state, is only the school field that is filtered
+        cls.validPayload['school'] = cls.school1_state1.id
 
 class Test_SchoolAdministrator_NotStaff(SchoolAdministrator_Base, Base_Test_NotStaff, TestCase):
     pass
