@@ -28,17 +28,19 @@ class Team_Base:
         'student_set-MAX_NUM_FORMS': 1000,
     }
 
-    def additionalSetup(self):
-        createEvents(self)
-        createTeams(self)
+    @classmethod
+    def additionalSetup(cls):
+        createEvents(cls)
+        createTeams(cls)
 
-    def updatePayload(self):
-        self.validPayload['event'] = self.state1_openCompetition.id
-        self.validPayload['division'] = self.division3.id
-        self.validPayload['mentorUser'] = self.user_state1_school1_mentor1.id
-        self.validPayload['school'] = self.school1_state1.id
-        self.validPayload['hardwarePlatform'] = self.hardwarePlatform.id
-        self.validPayload['softwarePlatform'] = self.softwarePlatform.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['event'] = cls.state1_openCompetition.id
+        cls.validPayload['division'] = cls.division3.id
+        cls.validPayload['mentorUser'] = cls.user_state1_school1_mentor1.id
+        cls.validPayload['school'] = cls.school1_state1.id
+        cls.validPayload['hardwarePlatform'] = cls.hardwarePlatform.id
+        cls.validPayload['softwarePlatform'] = cls.softwarePlatform.id
 
 class Test_Team_NotStaff(Team_Base, Base_Test_NotStaff, TestCase):
     pass
