@@ -22,30 +22,41 @@ Add and delete pages
 class Base:
     """Base for admin permissions tests for all user test cases"""
 
-    def additionalSetup(self):
+    @classmethod
+    def additionalSetup(cls):
         """Hook for doing additional database setup"""
         pass
 
-    def updatePayload(self):
+    @classmethod
+    def updatePayload(cls):
         """Hook for updating valid payload with foreign foreign key ids"""
         pass
 
-    def setUp(self):
-        createStates(self)
-        createUsers(self)
-        createSchools(self)
-        self.additionalSetup()
+    # Runs once (per class) and uses transactions to refresh database between tests
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+        createSchools(cls)
+        cls.additionalSetup()
 
         # IDs of objects for admin being tested
         # Should be from state 1, as coordinators from state 1 should have access to this object
         # For superuser and notstaff tests, an id is still required for the string reverse
-        self.state1ObjID = getattr(self, self.state1Obj).id
+        cls.state1ObjID = getattr(cls, cls.state1Obj).id
 
         # Should be from state 2, as coordinators from state 2 should not have access to this object
         # Ignored for superuser and notstaff tests
-        self.state2ObjID = getattr(self, self.state2Obj).id
+        cls.state2ObjID = getattr(cls, cls.state2Obj).id
 
-        self.updatePayload()
+        cls.updatePayload()
+
+    objectsToRefresh = []
+
+    # Runs per test
+    def setUp(self):
+        for item in self.objectsToRefresh:
+            getattr(self, item).refresh_from_db()
 
     # Change list
 

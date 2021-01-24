@@ -20,11 +20,13 @@ class Division_Base:
         'state': 0,
     }
 
-    def additionalSetup(self):
-        createEvents(self)
+    @classmethod
+    def additionalSetup(cls):
+        createEvents(cls)
 
-    def updatePayload(self):
-        self.validPayload['state'] = self.state1.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
 
 class Test_Division_NotStaff(Division_Base, Base_Test_NotStaff, TestCase):
     pass
@@ -87,11 +89,13 @@ class Venue_Base:
         'state': 0,
     }
 
-    def additionalSetup(self):
-        createEvents(self)
+    @classmethod
+    def additionalSetup(cls):
+        createEvents(cls)
 
-    def updatePayload(self):
-        self.validPayload['state'] = self.state1.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
 
 class Test_Venue_NotStaff(Venue_Base, Base_Test_NotStaff, TestCase):
     pass
@@ -173,18 +177,22 @@ class Event_Base:
         'eventavailablefiletype_set-MAX_NUM_FORMS': 1000,
     }
 
-    def additionalSetup(self):
-        createEvents(self)
+    @classmethod
+    def additionalSetup(cls):
+        createEvents(cls)
 
-    def updatePayload(self):
-        self.validPayload['state'] = self.state1.id
-        self.validPayload['directEnquiriesTo'] = self.user_state1_super1.id
-        self.validPayload['year'] = self.year.year
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
+        cls.validPayload['directEnquiriesTo'] = cls.user_state1_super1.id
+        cls.validPayload['year'] = cls.year.year
 
 class Test_Event_NotStaff(Event_Base, Base_Test_NotStaff, TestCase):
     pass
 
 class AdditionalEventTestsMixin:
+    objectsToRefresh = ['state1_openCompetition']
+
     def testPostAddBlankState(self):
         payload = self.validPayload.copy()
         del payload['state']
