@@ -39,7 +39,7 @@ class Base:
         createUsers(cls)
         createSchools(cls)
         cls.additionalSetup()
-    
+
         # IDs of objects for admin being tested
         # Should be from state 1, as coordinators from state 1 should have access to this object
         # For superuser and notstaff tests, an id is still required for the string reverse
