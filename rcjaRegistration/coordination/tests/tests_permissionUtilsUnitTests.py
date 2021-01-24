@@ -13,7 +13,7 @@ class RequestObj:
 class BaseModelTest:
     def __init__(self):
         pass
-    
+
     class _meta:
         model_name = 'testmodelonly'
         app_label = 'testapponly'
@@ -21,14 +21,14 @@ class BaseModelTest:
 class ModelTestState(BaseModelTest):
     def __init__(self, state):
         self.state = state
-    
+
     def getState(self):
         return self.state
 
 class ModelTestStateGlobalPermissions(BaseModelTest):
     def __init__(self, state):
         self.state = state
-    
+
     def getState(self):
         return self.state
 
