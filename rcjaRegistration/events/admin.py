@@ -12,7 +12,7 @@ from django.db import models
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
 from schools.models import Campus
-from eventfiles.admin import EventAvailableFileTypeInline
+from eventfiles.adminInlines import EventAvailableFileTypeInline
 
 from regions.admin import StateAdmin
 
