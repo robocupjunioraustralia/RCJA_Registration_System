@@ -61,7 +61,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         return [
             {
                 'field': 'state',
-                'required': True,
+                'stateCoordinatorRequired': True,
                 'fieldAdmin': StateAdmin,
             }
         ]

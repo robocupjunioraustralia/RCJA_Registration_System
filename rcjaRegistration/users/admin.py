@@ -181,7 +181,7 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         return [
             {
                 'field': 'homeState',
-                'required': True,
+                'stateCoordinatorRequired': True,
                 'permissionLevels': ['full'],
                 'fieldAdmin': StateAdmin,
             }

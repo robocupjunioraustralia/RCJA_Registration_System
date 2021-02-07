@@ -156,6 +156,9 @@ class User(SaveDeleteMixin, AbstractUser):
 
     # *****Get Methods*****
 
+    def isGobalCoordinator(self, permissionLevels):
+        return self.coordinator_set.filter(state=None, permissionLevel__in=permissionLevels).exists()
+
     def fullname_or_email(self):
         return self.get_full_name() or self.email
 

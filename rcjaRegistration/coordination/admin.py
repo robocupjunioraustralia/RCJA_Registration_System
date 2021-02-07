@@ -58,7 +58,8 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         return [
             {
                 'field': 'state',
-                'required': True,
+                'stateCoordinatorRequired': True,
+                'globalCoordinatorRequired': True,
                 'permissionLevels': ['full'],
                 'fieldAdmin': StateAdmin,
             }

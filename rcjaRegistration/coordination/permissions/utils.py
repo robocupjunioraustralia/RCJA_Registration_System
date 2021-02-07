@@ -11,7 +11,7 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
 
     # Global coordinator filtering
     # Return the entire queryset if the user is a global coordinator with permissions to this model
-    if request.user.coordinator_set.filter(state=None, permissionLevel__in=globalPermissionLevels).exists():
+    if request.user.isGobalCoordinator(globalPermissionLevels):
         return queryset
 
     # Determine which filters to apply
