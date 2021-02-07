@@ -20,11 +20,10 @@ class SchoolAdministratorInline(FKActionsRemove, InlineAdminPermissions, admin.T
     ]
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj),
-                'filterNone': True
-            }
-        ]
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'campus': {
+                'queryset': Campus.objects.filter(school=obj), # Don't need to check for obj=None because not accessing an attribute
+                'filterNone': True,
+            },
+        }

@@ -142,14 +142,13 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
         return super().get_exclude(request, obj)
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'division',
-                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so will never fallback to None
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'division': {
+                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
                 'filterNone': True
-            }
-        ]
+            },
+        }
 
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -368,14 +367,13 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     fieldFilteringModel = Event
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'venue',
-                'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so will never fallback to None
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'venue': {
+                'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so user will never see fallback to None
                 'filterNone': True
-            }
-        ]
+            },
+        }
 
 class BaseWorkshopAttendanceForm(forms.ModelForm):
     def clean(self):
@@ -465,19 +463,17 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
     }
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'campus': {
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
                 'filterNone': True,
             },
-            {
-                'field': 'event',
+            'event': {
                 'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
                 'filterNone': True,
                 'useAutocomplete': True,
-            }
-        ]
+            },
+        }
 
     stateFilterLookup = 'event__state__coordinator'

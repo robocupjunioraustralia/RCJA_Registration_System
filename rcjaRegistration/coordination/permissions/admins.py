@@ -23,18 +23,25 @@ class BaseAdminPermissions:
     fkFilterFields = {}
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return []
+    def fkObjectFilterFields(cls, request, obj):
+        return {}
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Filter by object
-        objectFiltering = False
-        for fieldToFilter in self.fieldsToFilterObj(request, self.obj):
-            if db_field.name == fieldToFilter['field']:
-                if self.obj is not None or fieldToFilter.get('filterNone', False):
-                    queryset = fieldToFilter['queryset']
-                    kwargs['queryset'] = queryset
-                    objectFiltering = True
+        objectFiltering = False # Need to track if object filtering applied for this field to use in coordinator permissions filtering
+        try:
+            # Get filtering parameters for this field. If no filtering is defined for this field KeyError will be caught below.
+            filterParams = self.fkObjectFilterFields(request, self.obj)[db_field.name]
+
+            # Only filter None object if filterNone is defined in parameters and is True
+            if self.obj is not None or filterParams.get('filterNone', False):
+                queryset = filterParams['queryset'] # Set variable so it can be used as basis in coordinator permissions filtering below
+                kwargs['queryset'] = queryset
+                objectFiltering = True
+
+        except KeyError:
+            # Catch cases where field not in fkFilterFields and ignore - no filtering required
+            pass
 
         # Filter by coordinator permissions
         try:

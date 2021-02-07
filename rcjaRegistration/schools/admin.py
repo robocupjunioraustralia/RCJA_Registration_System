@@ -211,13 +211,12 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
     }
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'campus': {
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
                 'filterNone': True,
-            }
-        ]
+            },
+        }
 
     stateFilterLookup = 'school__state__coordinator'
