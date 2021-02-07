@@ -2,21 +2,21 @@
 
 The coordination app builds on the built-in Django permissions to provide a powerful framework for providing limited admin access to users based on role and state. A user can be given permissions by either:
 - Granting them superuser status - this is a very powerful role that should be only given to a small number of system administrators.
-- Creating a Coordinator object for the user, which can be assigned a state (or no state for permissions across all states) as well as a permissions level. Assigning a Coordinator Full permissions is preferred to giving them superuser status, as it provides all of the same business permissions but without some potentially destructive admin actions.
+- Creating a Coordinator object for the user, which can be assigned a state (or no state for permissions across all states) as well as a permissions level. Assigning a Coordinator Full permissions is preferred to giving them superuser status, as it provides all of the same business permissions but without some potentially destructive admin powers.
 
-A coordinator can be either a global coordinator (state = None) or a state level coordinator. A global coordinator can manage all states as well as perform some global actions.
+A coordinator can be either a global coordinator (state = None) or a state level coordinator. A global coordinator can manage all states as well as perform some global actions, such as editing some global objects.
 
 The setting of Django permissions is handled by the Coordinator app and is disabled in the frontend.
 
 ## Simple state based permissions
 
-The minimum required to add state based permissions to a model is to define:
-- `stateCoordinatorPermissions` on the model
-- `getState` on the model
-- Inherit from `AdminPermissions` for the ModelAdmin
-- Define `stateFilterLookup` on the ModelAdmin
+The minimum required to implement state based permissions on a model is to:
+- define `stateCoordinatorPermissions` on the model
+- define `getState` on the model
+- Inherit from `AdminPermissions` for the admin
+- Define `stateFilterLookup` on the admin
 
-To filter foreign keys that link to that model, you must include the foreign key field in `fkFilterFields` on the ModelAdmin for the model with the field.
+To filter foreign key fields that link to the model, you must include the foreign key field in `fkFilterFields` on the ModelAdmin for the model with the field.
 
 ## Global objects
 
