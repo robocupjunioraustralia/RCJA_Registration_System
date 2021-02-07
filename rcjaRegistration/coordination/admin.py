@@ -53,17 +53,14 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'state',
-                'stateCoordinatorRequired': True,
-                'globalCoordinatorRequired': True,
-                'permissionLevels': ['full'],
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'stateCoordinatorRequired': True,
+            'globalCoordinatorRequired': True,
+            'permissionLevels': ['full'],
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     filteringPermissionLevels = ['full']
     stateFilterLookup = 'state__coordinator'

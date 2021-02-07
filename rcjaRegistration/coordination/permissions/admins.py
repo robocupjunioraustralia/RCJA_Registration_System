@@ -20,9 +20,7 @@ class BaseAdminPermissions:
 
     # Foreign key filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return []
+    fkFilterFields = {}
 
     @classmethod
     def fieldsToFilterObj(cls, request, obj):
@@ -39,46 +37,48 @@ class BaseAdminPermissions:
                     objectFiltering = True
 
         # Filter by state
-        for fieldToFilter in self.fieldsToFilterRequest(request):
-            # Need to find the current field in the list
-            if db_field.name == fieldToFilter['field']:
-                
-                # Get admin and model classes
-                objAdmin = fieldToFilter['fieldAdmin']
-                objModel = fieldToFilter.get('fieldModel', objAdmin.fieldFilteringModel) # Use fieldModel attribute in fieldToFilter, if not specified use model specified on the target admin
+        try:
+            filterAttributes = self.fkFilterFields[db_field.name]
 
-                # Get the base queryset
-                # Use the queryset from object filtering if exists, otherwise start with all objects
-                if not objectFiltering:
-                    queryset = objModel.objects.all()
+            # Get admin and model classes
+            objAdmin = filterAttributes['fieldAdmin']
+            objModel = filterAttributes.get('fieldModel', objAdmin.fieldFilteringModel) # Use fieldModel attribute in filterAttributes, if not specified use model specified on the target admin
 
-                # Get permissions to filter queryset to
-                # Use defined permissions if present, else default to add and change on current model
-                permissionLevelOverride = fieldToFilter.get('permissionLevels', None)
-                statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.model, ['add', 'change'], permissionLevelOverride)
+            # Get the base queryset
+            # Use the queryset from object filtering if exists, otherwise start with all objects
+            if not objectFiltering:
+                queryset = objModel.objects.all()
 
-                # Filter queryset
-                queryset = objAdmin.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
+            # Get permissions to filter queryset to
+            # Use defined permissions if present, else default to add and change on current model
+            permissionLevelOverride = filterAttributes.get('permissionLevels', None)
+            statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.model, ['add', 'change'], permissionLevelOverride)
 
-                kwargs['queryset'] = queryset
+            # Filter queryset
+            queryset = objAdmin.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
 
-                # Set the field to required if specified
-                # Never want to set required for superuser - is controlled only by field options
-                if not request.user.is_superuser:
-                    # Different fields for state and global coordinator required
-                    if request.user.isGobalCoordinator(globalPermissionLevels):
-                        # Do with an if statement because never want to override to make false
-                        if fieldToFilter.get('globalCoordinatorRequired', False):
-                            kwargs['required'] = True
+            kwargs['queryset'] = queryset
 
-                    else:
-                        # Do with an if statement because never want to override to make false
-                        if fieldToFilter.get('stateCoordinatorRequired', False):
-                            kwargs['required'] = True
+            # Set the field to required if specified
+            # Never want to set required for superuser - is controlled only by field options
+            if not request.user.is_superuser:
+                # Different fields for state and global coordinator required
+                if request.user.isGobalCoordinator(globalPermissionLevels):
+                    # Do with an if statement because never want to override to make false
+                    if filterAttributes.get('globalCoordinatorRequired', False):
+                        kwargs['required'] = True
 
-                # Try and set the default to save admins time, but not if objectFiltering because might not be the ideal default
-                if queryset.count() == 1 and not objectFiltering:
-                    kwargs['initial'] = queryset.first().id
+                else:
+                    # Do with an if statement because never want to override to make false
+                    if filterAttributes.get('stateCoordinatorRequired', False):
+                        kwargs['required'] = True
+
+            # Try and set the default to save admins time, but not if objectFiltering because might not be the ideal default
+            if queryset.count() == 1 and not objectFiltering:
+                kwargs['initial'] = queryset.first().id
+
+        except KeyError:
+            pass
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

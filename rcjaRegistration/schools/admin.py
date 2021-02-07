@@ -78,14 +78,11 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'state',
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
     fieldFilteringModel = School
@@ -132,14 +129,11 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'school',
-                'fieldAdmin': SchoolAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'school': {
+            'fieldAdmin': SchoolAdmin,
+        },
+    }
 
     stateFilterLookup = 'school__state__coordinator'
 
@@ -210,14 +204,11 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'school',
-                'fieldAdmin': SchoolAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'school': {
+            'fieldAdmin': SchoolAdmin,
+        },
+    }
 
     @classmethod
     def fieldsToFilterObj(cls, request, obj):

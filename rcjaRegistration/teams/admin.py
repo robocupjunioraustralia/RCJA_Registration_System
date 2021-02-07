@@ -144,13 +144,10 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'team',
-                'fieldAdmin': TeamAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'team': {
+            'fieldAdmin': TeamAdmin,
+        },
+    }
 
     stateFilterLookup = 'team__event__state__coordinator'

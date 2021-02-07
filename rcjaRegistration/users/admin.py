@@ -176,16 +176,13 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'homeState',
-                'stateCoordinatorRequired': True,
-                'permissionLevels': ['full'],
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'homeState': {
+            'stateCoordinatorRequired': True,
+            'permissionLevels': ['full'],
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'homeState__coordinator'
 

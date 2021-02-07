@@ -56,15 +56,12 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'state',
-                'stateCoordinatorRequired': True,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'stateCoordinatorRequired': True,
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
     globalFilterLookup = 'state'
@@ -111,14 +108,11 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'state',
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
 
@@ -364,14 +358,11 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'state',
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
     fieldFilteringModel = Event
@@ -467,14 +458,11 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'event',
-                'fieldAdmin': EventAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'event': {
+            'fieldAdmin': EventAdmin,
+        },
+    }
 
     @classmethod
     def fieldsToFilterObj(cls, request, obj):

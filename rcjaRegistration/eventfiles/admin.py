@@ -5,6 +5,9 @@ from coordination.permissions import AdminPermissions, InlineAdminPermissions
 
 from .models import MentorEventFileType, EventAvailableFileType, MentorEventFileUpload
 
+from events.models import BaseEventAttendance
+from events.admin import BaseWorkshopAttendanceAdmin
+
 @admin.register(MentorEventFileType)
 class MentorEventFileTypeAdmin(AdminPermissions, admin.ModelAdmin):
     list_display = [
@@ -74,16 +77,11 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from events.admin import BaseWorkshopAttendanceAdmin
-        from events.models import BaseEventAttendance
-        return [
-            {
-                'field': 'eventAttendance',
-                'fieldModel': BaseEventAttendance,
-                'fieldAdmin': BaseWorkshopAttendanceAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'eventAttendance': {
+            'fieldModel': BaseEventAttendance,
+            'fieldAdmin': BaseWorkshopAttendanceAdmin,
+        },
+    }
 
     stateFilterLookup = 'eventAttendance__event__state__coordinator'

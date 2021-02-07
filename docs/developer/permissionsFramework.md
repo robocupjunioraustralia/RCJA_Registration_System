@@ -16,7 +16,7 @@ The minimum required to add state based permissions to a model is to define:
 - Inherit from `AdminPermissions` for the ModelAdmin
 - Define `stateFilterLookup` on the ModelAdmin
 
-To filter foreign keys that link to that model, you must define `fieldsToFilterRequest` on the ModelAdmin for the Model with the field.
+To filter foreign keys that link to that model, you must define `fkFilterFields` on the ModelAdmin for the model with the field.
 
 ## Global objects
 
