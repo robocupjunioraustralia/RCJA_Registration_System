@@ -146,7 +146,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
         return {
             'division': {
                 'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
-                'filterNone': True
+                'filterNone': True,
             },
         }
 
@@ -371,7 +371,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         return {
             'venue': {
                 'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so user will never see fallback to None
-                'filterNone': True
+                'filterNone': True,
             },
         }
 
