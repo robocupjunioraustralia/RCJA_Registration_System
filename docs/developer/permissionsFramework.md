@@ -31,6 +31,17 @@ There are three possible scenarios for global objects:
 
 ## Definitions
 
+| Name               | Defined On      | Type           | Required                                       | Explanation                    |
+| ------------- | ------------- | ------------- |
+| `stateCoordinatorPermissions` | Model | Function returns list | Unless only superusers have access. Must be defined if admin inherits from `AdminPermissions`. | Takes permission level and returns the Django permissions. |
+| `stateCoordinatorViewGlobal` | Model | Boolean | On global models if state coordinators can view global objects. |  |
+| `globalCoordinatorPermissions` | Model | Function returns list | If global coordinators should have different permissions to state coordinators. | Takes permission level and returns the Django permissions, for global coordinators. Based on the coordinator status of the user, not whether the object that this is defined on is a global object. Can be defined on models that are never global to give global coordinators different permissions. |
+| `getState` | Model | Function returns state object | If object is filtered through relationship with state. | Returns the state that this object is related to. |
+| `stateFilterLookup` | Admin | String | If object is filtered through relationship with state. | Relationship of this model to state coordinator using double underscore notation. |
+| `globalFilterLookup` | Admin | String | If object is filtered through relationship with state and state coordinators should have access to globals. | Relationship of this model to state using double underscore notation. |
+| `fkFilterFields` | Admin | Dictionary | If model has foreign key fields that need to be filtered based on coordinator permissions. |  |
+| `fkObjectFilterFields` | Admin  | Function returns dictionary | If model has foreign key fields that require custom filtering logic. |  |
+
 ### `AdminPermissions`
 The class that provides advanced coordinator permissions for the model admin. Must inherit from this class or only builtin Django permissions will apply.
 
