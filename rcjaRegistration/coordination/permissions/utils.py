@@ -49,7 +49,7 @@ def isGlobalObject(model, obj):
     # But non super users won't have access unless stateCoordinatorPermissions() is defined
     if hasattr(obj, 'getState') and obj.getState() is None:
         return True
-    
+
     return False
 
 def checkCoordinatorPermission(request, model, obj, permission):
