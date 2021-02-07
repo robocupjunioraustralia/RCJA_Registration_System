@@ -31,8 +31,8 @@ There are three possible scenarios for global objects:
 
 ## Definitions
 
-| Name               | Defined On      | Type           | Required                                       | Explanation                    |
-| ------------- | ------------- | ------------- |
+| Name                        | Defined On      | Type           | Required                                       | Explanation                    |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
 | `stateCoordinatorPermissions` | Model | Function returns list | Unless only superusers have access. Must be defined if admin inherits from `AdminPermissions`. | Takes permission level and returns the Django permissions. |
 | `stateCoordinatorViewGlobal` | Model | Boolean | On global models if state coordinators can view global objects. |  |
 | `globalCoordinatorPermissions` | Model | Function returns list | If global coordinators should have different permissions to state coordinators. | Takes permission level and returns the Django permissions, for global coordinators. Based on the coordinator status of the user, not whether the object that this is defined on is a global object. Can be defined on models that are never global to give global coordinators different permissions. |
