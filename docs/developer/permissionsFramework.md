@@ -8,18 +8,7 @@ A coordinator can be either a global coordinator (state = None) or a state level
 
 The setting of Django permissions is handled by the Coordinator app and is disabled in the frontend.
 
-## Permissions for global objects
-
-To add State based permissions on a model it is necessary to define `stateCoordinatorPermissions` on the model. If the admin inherits from `AdminPermissions` you must also define `stateCoordinatorViewGlobal = True` on the model. Inheriting from `AdminPermissions` is optional where the model is only global, but it is recommended to inherit from `AdminPermissions` so that future changes are enforced.
-
-By default superusers can edit global objects and global coordinator permissions are defined by `stateCoordinatorPermissions`. To provide global coordinators with additional permissions or if `stateCoordinatorPermissions` you must define `globalCoordinatorPermissions`.
-
-There are three possible scenarios for global objects:
-- Only superusers have access. Don't define `stateCoordinatorPermissions`, `getState` or any other permissions method. Don't inherit from `AdminPermissions`. Superuser only access is the default. For example `InvoiceSettings`.
-- Model has no connection to state. Don't define `getState`, don't define `globalFilterLookup` or `stateFilterLookup` (is impossible to do so anyway). For state coordinators to view must define `stateCoordinatorPermissions` and if want global coordinators to be able to edit (in addition to superusers) must define `globalCoordinatorPermissions`.
-- Model has a connection to state, but the state field may be None, resulting in global objects. If you want state coordinators with the appropriate permissions to be able to view global objects (with permissions as defined in `stateCoordinatorPermissions`), must set `stateCoordinatorViewGlobal = True`. Must also define `getState`. Must also inherit from `AdminPermissions` on admin. Must define both `stateFilterLookup` and `globalFilterLookup`. If state coordinator should only be able to view objects with a state do not set `stateCoordinatorViewGlobal = True` and do not define `globalFilterLookup`, but must define `stateCoordinatorPermissions`, `getState` and `stateFilterLookup`. In both cases global coordinator permissions will be defined by `globalCoordinatorPermissions` if defined or `stateCoordinatorPermissions`.
-
-## Simple State based permissions
+## Simple state based permissions
 
 The minimum required to add state based permissions to a model is to define:
 - `stateCoordinatorPermissions` on the model
@@ -29,6 +18,16 @@ The minimum required to add state based permissions to a model is to define:
 
 To filter foreign keys that link to that model, you must define `fieldsToFilterRequest` on the ModelAdmin for the Model with the field.
 
+## Global objects
+
+To add State based permissions on a model it is necessary to define `stateCoordinatorPermissions` on the model. If the admin inherits from `AdminPermissions` you must also define `stateCoordinatorViewGlobal = True` on the model. Inheriting from `AdminPermissions` is optional where the model is only global, but it is recommended to inherit from `AdminPermissions` so that future changes are enforced.
+
+By default superusers can edit global objects and global coordinator permissions are defined by `stateCoordinatorPermissions`. To provide global coordinators with additional permissions or if `stateCoordinatorPermissions` you must define `globalCoordinatorPermissions`.
+
+There are three possible scenarios for global objects:
+- Only superusers have access. Don't define `stateCoordinatorPermissions`, `getState` or any other permissions method. Don't inherit from `AdminPermissions`. Superuser only access is the default. For example `InvoiceSettings`.
+- Model has no connection to state. Don't define `getState`, don't define `globalFilterLookup` or `stateFilterLookup` (is impossible to do so anyway). For state coordinators to view must define `stateCoordinatorPermissions` and if want global coordinators to be able to edit (in addition to superusers) must define `globalCoordinatorPermissions`.
+- Model has a connection to state, but the state field may be None, resulting in global objects. If you want state coordinators with the appropriate permissions to be able to view global objects (with permissions as defined in `stateCoordinatorPermissions`), must set `stateCoordinatorViewGlobal = True`. Must also define `getState`. Must also inherit from `AdminPermissions` on admin. Must define both `stateFilterLookup` and `globalFilterLookup`. If state coordinator should only be able to view objects with a state do not set `stateCoordinatorViewGlobal = True` and do not define `globalFilterLookup`, but must define `stateCoordinatorPermissions`, `getState` and `stateFilterLookup`. In both cases global coordinator permissions will be defined by `globalCoordinatorPermissions` if defined or `stateCoordinatorPermissions`.
 
 ## Definitions
 
