@@ -23,6 +23,8 @@ class HardwarePlatform(models.Model):
     def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
 
+    stateCoordinatorViewGlobal = True
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
@@ -53,6 +55,8 @@ class SoftwarePlatform(models.Model):
     @classmethod
     def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # *****Save & Delete Methods*****
 

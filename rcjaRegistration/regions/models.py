@@ -130,6 +130,8 @@ class Region(models.Model):
         
         return []
 
+    stateCoordinatorViewGlobal = True
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****

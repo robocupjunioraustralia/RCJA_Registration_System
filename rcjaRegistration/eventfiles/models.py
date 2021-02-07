@@ -48,6 +48,8 @@ class MentorEventFileType(models.Model):
         # Only superusers can edit file type
         return eventCoordinatorViewPermissions(level)
 
+    stateCoordinatorViewGlobal = True
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****

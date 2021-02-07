@@ -61,6 +61,8 @@ class DivisionCategory(models.Model):
     def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
 
+    stateCoordinatorViewGlobal = True
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
@@ -109,6 +111,8 @@ class Division(models.Model):
     @classmethod
     def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -212,6 +216,8 @@ class Year(models.Model):
     @classmethod
     def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # *****Save & Delete Methods*****
 

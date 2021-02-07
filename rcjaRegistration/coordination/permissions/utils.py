@@ -14,36 +14,25 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
     if request.user.isGobalCoordinator(globalPermissionLevels):
         return queryset
 
-    # Determine which filters to apply
-    stateFiltering = bool(stateFilterLookup)
-    globalFiltering = bool(globalFilterLookup) or globalFilterLookup is None # Because None means no relationship to state
-
-    # If no filtering applied return base queryset
-    if not (stateFiltering or globalFiltering):
+    if not (stateFilterLookup or globalFilterLookup):
         return queryset
 
     stateQueryset = queryset.none()
     globalQueryset = queryset.none()
 
     # State filtering
-    if stateFiltering:
+    if stateFilterLookup:
         stateQueryset = queryset.filter(**{
             f'{stateFilterLookup}__in': request.user.coordinator_set.all(),
             f'{stateFilterLookup}__permissionLevel__in': statePermissionLevels,
         })
 
     # Global object filtering
-    if globalFiltering:
-        if globalFilterLookup is None:
-            # Means no relationship to state
-            # Simply return the full queryset
-            return queryset
-        
-        else:
-            # Means model has a relationship to state, want only stateless objects
-            globalQueryset = queryset.filter(**{
-                globalFilterLookup: None,                    
-            })
+    if globalFilterLookup:
+        # Means model has a relationship to state, want only stateless objects
+        globalQueryset = queryset.filter(**{
+            globalFilterLookup: None,
+        })
 
     return (stateQueryset | globalQueryset).distinct()
 
@@ -88,7 +77,7 @@ def checkCoordinatorPermission(request, model, obj, permission):
     # And they can only view global objects if they have the permission in stateCoordinatorPermissions, the checking of which is handled above by Django permissions check
     # For an admin inline, this will check against the parent
     if isGlobalObject(model, obj):
-        return permission == 'view'
+        return permission == 'view' and getattr(model, 'stateCoordinatorViewGlobal', False)
 
     # Return True if object is None
     # Already tested that has the Django permission and can't do any further checks

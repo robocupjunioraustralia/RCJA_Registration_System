@@ -493,4 +493,3 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         ]
 
     stateFilterLookup = 'event__state__coordinator'
-
