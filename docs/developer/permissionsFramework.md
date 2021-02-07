@@ -16,7 +16,7 @@ The minimum required to add state based permissions to a model is to define:
 - Inherit from `AdminPermissions` for the ModelAdmin
 - Define `stateFilterLookup` on the ModelAdmin
 
-To filter foreign keys that link to that model, you must define `fkFilterFields` on the ModelAdmin for the model with the field.
+To filter foreign keys that link to that model, you must include the foreign key field in `fkFilterFields` on the ModelAdmin for the model with the field.
 
 ## Global objects
 
@@ -58,3 +58,10 @@ String using double underscore notation to the coordinator for the model via the
 Defined on the admin class.
 String using double underscore notation to the state for the model if state filtering, in which case the objects with no state will be returned.
 
+### `fkFilterFields`
+Defined on the admin class.
+A dictionary of dictionaries that defines foreign key fields that should have their queryset filtered using the coordinator permissions. Can also specify whether a field should be required for state and global coordinators.
+
+### `fkObjectFilterFields`
+Defined on the admin class.
+Returns a dictionary of dictionaries that specifies the filtering of foreign key querysets based only on the current object and the request. Useful where custom field filtering logic is required. Must handle cases where obj=None.
