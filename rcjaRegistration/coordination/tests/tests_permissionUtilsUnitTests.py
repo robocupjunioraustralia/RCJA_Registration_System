@@ -35,6 +35,9 @@ class ModelTestStateGlobalPermissions(BaseModelTest):
 class ModelTestGlobal(BaseModelTest):
     pass
 
+class ModelTestGlobalStateViewGlobal(BaseModelTest):
+    stateCoordinatorViewGlobal = True
+
 def commonSetUp(self):
     createStates(self)
     createUsers(self)
@@ -183,17 +186,31 @@ class Test_checkCoordinatorPermission(TestCase):
 
     @patch('django.contrib.auth.get_permission_codename', return_value='')
     @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
-    def testAllowedStateCoordinator_noStateObjView(self, mock_codename, mock_has_perms):
+    def testDeniedStateCoordinator_noStateObjView(self, mock_codename, mock_has_perms):
         self.request.user = self.user_state1_fullcoordinator
 
         @classmethod
         def statePerms(cls, level):
             return []
-        
+
         ModelTestState.stateCoordinatorPermissions = statePerms
         self.stateObj.state = None
 
-        self.assertTrue(checkCoordinatorPermission(self.request, ModelTestState, self.stateObj, 'view'))
+        self.assertFalse(checkCoordinatorPermission(self.request, ModelTestState, self.stateObj, 'view'))
+
+    @patch('django.contrib.auth.get_permission_codename', return_value='')
+    @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
+    def testAllowedStateCoordinator_noStateObjViewStateViewGlobal(self, mock_codename, mock_has_perms):
+        self.request.user = self.user_state1_fullcoordinator
+
+        @classmethod
+        def statePerms(cls, level):
+            return []
+
+        ModelTestGlobalStateViewGlobal.stateCoordinatorPermissions = statePerms
+        self.stateObj.state = None
+
+        self.assertTrue(checkCoordinatorPermission(self.request, ModelTestGlobalStateViewGlobal, self.stateObj, 'view'))
 
     @patch('django.contrib.auth.get_permission_codename', return_value='')
     @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
@@ -211,17 +228,29 @@ class Test_checkCoordinatorPermission(TestCase):
 
     @patch('django.contrib.auth.get_permission_codename', return_value='')
     @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
-    def testAllowedStateCoordinator_globalObjView(self, mock_codename, mock_has_perms):
+    def testDeniedStateCoordinator_globalObjView(self, mock_codename, mock_has_perms):
         self.request.user = self.user_state1_fullcoordinator
 
         @classmethod
         def statePerms(cls, level):
             return []
-        
-        ModelTestGlobal.stateCoordinatorPermissions = statePerms
-        self.stateObj.state = None
 
-        self.assertTrue(checkCoordinatorPermission(self.request, ModelTestGlobal, self.globalObj, 'view'))
+        ModelTestGlobal.stateCoordinatorPermissions = statePerms
+
+        self.assertFalse(checkCoordinatorPermission(self.request, ModelTestGlobal, self.globalObj, 'view'))
+
+    @patch('django.contrib.auth.get_permission_codename', return_value='')
+    @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
+    def testAllowedStateCoordinator_globalObjViewStateViewGlobal(self, mock_codename, mock_has_perms):
+        self.request.user = self.user_state1_fullcoordinator
+
+        @classmethod
+        def statePerms(cls, level):
+            return []
+
+        ModelTestGlobalStateViewGlobal.stateCoordinatorPermissions = statePerms
+
+        self.assertTrue(checkCoordinatorPermission(self.request, ModelTestGlobalStateViewGlobal, self.globalObj, 'view'))
 
     @patch('django.contrib.auth.get_permission_codename', return_value='')
     @patch('django.contrib.auth.models.PermissionsMixin.has_perm', return_value=True)
