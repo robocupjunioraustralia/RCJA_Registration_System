@@ -1,55 +1,13 @@
-from .utils import getFilteringPermissionLevels, checkCoordinatorPermission
+from .utils import coordinatorFilterQueryset, getFilteringPermissionLevels, checkCoordinatorPermission
 
 class BaseAdminPermissions:
     @classmethod
-    def filterQuerysetByState(cls, queryset, request, statePermissionLevels, globalPermissionLevels):
-        # Return complete queryset if super user
-        if request.user.is_superuser:
-            return queryset
-
-        # Global coordinator filtering
-        # Return the entire queryset if the user is a global coordinator with permissions to this model
-        if request.user.coordinator_set.filter(state=None, permissionLevel__in=globalPermissionLevels).exists():
-            return queryset
-
+    def filterQueryset(cls, queryset, request, statePermissionLevels, globalPermissionLevels):
         # Determine which filters to apply
-        stateFiltering = hasattr(cls, 'stateFilterLookup')
-        globalFiltering = hasattr(cls, 'globalFilterLookup')
-
-        # If no filtering applied return base queryset
-        if not (stateFiltering or globalFiltering):
-            return queryset
-
-        stateQueryset = queryset.none()
-        globalQueryset = queryset.none()
-
-        # State filtering
-        if stateFiltering:
-
-            filterString = cls.stateFilterLookup
-
-            stateQueryset = queryset.filter(**{
-                f'{filterString}__in': request.user.coordinator_set.all(),
-                f'{filterString}__permissionLevel__in': statePermissionLevels,
-            })
-
-        # Global object filtering
-        if globalFiltering:
-
-            filterString = cls.globalFilterLookup
-
-            if filterString is None:
-                # Means no relationship to state
-                # Simply return the full queryset
-                return queryset
-            
-            else:
-                # Means model has a relationship to state, want only stateless objects
-                globalQueryset = queryset.filter(**{
-                    filterString: None,                    
-                })
-
-        return (stateQueryset | globalQueryset).distinct()
+        stateFilterLookup = getattr(cls, 'stateFilterLookup', False)
+        globalFilterLookup = getattr(cls, 'globalFilterLookup', False)
+    
+        return coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
 
     def get_queryset(self, request):
         # Get base queryset
@@ -58,7 +16,7 @@ class BaseAdminPermissions:
         permissionLevelOverride = getattr(self, 'filteringPermissionLevels', None)
         statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.model, ['view', 'change'], permissionLevelOverride)
 
-        return self.filterQuerysetByState(queryset, request, statePermissionLevels, globalPermissionLevels)
+        return self.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
 
     # Foreign key filtering
 
@@ -96,7 +54,7 @@ class BaseAdminPermissions:
                     permissionLevelOverride = fieldToFilter.get('permissionLevels', None)
                     statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.model, ['add', 'change'], permissionLevelOverride)
 
-                    queryset = objAdmin.filterQuerysetByState(queryset, request, statePermissionLevels, globalPermissionLevels)
+                    queryset = objAdmin.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
 
                     kwargs['queryset'] = queryset
 

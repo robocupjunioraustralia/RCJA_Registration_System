@@ -4,6 +4,48 @@ from django.contrib.auth import get_permission_codename
 
 from coordination.models import Coordinator
 
+def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
+    # Return complete queryset if super user
+    if request.user.is_superuser:
+        return queryset
+
+    # Global coordinator filtering
+    # Return the entire queryset if the user is a global coordinator with permissions to this model
+    if request.user.coordinator_set.filter(state=None, permissionLevel__in=globalPermissionLevels).exists():
+        return queryset
+
+    # Determine which filters to apply
+    stateFiltering = bool(stateFilterLookup)
+    globalFiltering = bool(globalFilterLookup) or globalFilterLookup is None # Because None means no relationship to state
+
+    # If no filtering applied return base queryset
+    if not (stateFiltering or globalFiltering):
+        return queryset
+
+    stateQueryset = queryset.none()
+    globalQueryset = queryset.none()
+
+    # State filtering
+    if stateFiltering:
+        stateQueryset = queryset.filter(**{
+            f'{stateFilterLookup}__in': request.user.coordinator_set.all(),
+            f'{stateFilterLookup}__permissionLevel__in': statePermissionLevels,
+        })
+
+    # Global object filtering
+    if globalFiltering:
+        if globalFilterLookup is None:
+            # Means no relationship to state
+            # Simply return the full queryset
+            return queryset
+        
+        else:
+            # Means model has a relationship to state, want only stateless objects
+            globalQueryset = queryset.filter(**{
+                globalFilterLookup: None,                    
+            })
+
+    return (stateQueryset | globalQueryset).distinct()
 
 def isGlobalObject(model, obj):
     # Why model and obj?
