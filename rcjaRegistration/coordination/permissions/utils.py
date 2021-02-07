@@ -14,6 +14,7 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
     if request.user.isGobalCoordinator(globalPermissionLevels):
         return queryset
 
+    # If no filtering applied return base queryset
     if not (stateFilterLookup or globalFilterLookup):
         return queryset
 
