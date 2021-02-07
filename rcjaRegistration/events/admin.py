@@ -230,7 +230,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         }),
         ('Details', {
             'description': "More options will be available after you click save",
-            'fields': ('directEnquiriesTo', 'venue',)
+            'fields': ('directEnquiriesTo',)
         }),
     )
 
