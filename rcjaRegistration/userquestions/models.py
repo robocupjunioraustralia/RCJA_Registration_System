@@ -54,7 +54,7 @@ class QuestionResponse(models.Model):
             return [
                 'view',
             ]
-        
+
         return []
 
     # Used in state coordinator permission checking
