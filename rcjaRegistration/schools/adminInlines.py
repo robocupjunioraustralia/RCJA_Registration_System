@@ -24,6 +24,5 @@ class SchoolAdministratorInline(FKActionsRemove, InlineAdminPermissions, admin.T
         return {
             'campus': {
                 'queryset': Campus.objects.filter(school=obj), # Don't need to check for obj=None because not accessing an attribute
-                'filterNone': True,
             },
         }

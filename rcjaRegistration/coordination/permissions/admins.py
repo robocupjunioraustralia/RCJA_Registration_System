@@ -33,11 +33,10 @@ class BaseAdminPermissions:
             # Get filtering parameters for this field. If no filtering is defined for this field KeyError will be caught below.
             filterParams = self.fkObjectFilterFields(request, self.obj)[db_field.name]
 
-            # Only filter None object if filterNone is defined in parameters and is True
-            if self.obj is not None or filterParams.get('filterNone', False):
-                queryset = filterParams['queryset'] # Set variable so it can be used as basis in coordinator permissions filtering below
-                kwargs['queryset'] = queryset
-                objectFiltering = True
+            # Filter queryset
+            queryset = filterParams['queryset'] # Set variable so it can be used as basis in coordinator permissions filtering below
+            kwargs['queryset'] = queryset
+            objectFiltering = True
 
         except KeyError:
             # Catch cases where field not in fkFilterFields and ignore - no filtering required
