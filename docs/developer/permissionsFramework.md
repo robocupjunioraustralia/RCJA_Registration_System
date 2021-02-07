@@ -1,6 +1,6 @@
 # Permissions Framework
 
-The coordination app builds on the built-in Django permissions to provides a powerful framework for providing limited admin access to users based on role and state. A use can be given permissions by either:
+The coordination app builds on the built-in Django permissions to provide a powerful framework for providing limited admin access to users based on role and state. A user can be given permissions by either:
 - Granting them superuser status - this is a very powerful role that should be only given to a small number of system administrators.
 - Creating a Coordinator object for the user, which can be assigned a state (or no state for permissions across all states) as well as a permissions level. Assigning a Coordinator Full permissions is preferred to giving them superuser status, as it provides all of the same business permissions but without some potentially destructive admin actions.
 
