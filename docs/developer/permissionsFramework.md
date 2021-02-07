@@ -12,7 +12,7 @@ The setting of Django permissions is handled by the Coordinator app and is disab
 
 To add State based permissions on a model it is necessary to define `stateCoordinatorPermissions` on the model. If the admin inherits from `AdminPermissions` you must also define `stateCoordinatorViewGlobal = True` on the model. Inheriting from `AdminPermissions` is optional where the model is only global, but it is recommended to inherit from `AdminPermissions` so that future changes are enforced.
 
-By default only superusers can edit global objects. To allow global coordinators to edit you must also define `globalCoordinatorPermissions`.
+By default superusers can edit global objects and global coordinator permissions are defined by `stateCoordinatorPermissions`. To provide global coordinators with additional permissions or if `stateCoordinatorPermissions` you must define `globalCoordinatorPermissions`.
 
 There are three possible scenarios for global objects:
 - Only superusers have access. Don't define `stateCoordinatorPermissions`, `getState` or any other permissions method. Don't inherit from `AdminPermissions`. Superuser only access is the default. For example `InvoiceSettings`.
