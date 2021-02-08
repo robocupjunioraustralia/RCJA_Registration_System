@@ -89,21 +89,24 @@ class TestUserModelMethods(TestCase):
         self.assertEqual(str(user2), "not@test.com")
 
 class TestUserForm(TestCase):
+    validPayload = {
+        'first_name': 'First',
+        'last_name': 'Last',
+        'email': 'not@test.com',
+        'mobileNumber': '12345',
+        'homeState': 0,
+        'homeRegion': 0,
+    }
     def setUp(self):
         unitTestsSetup(self)
+        self.validPayload['homeState'] = self.state1.id
+        self.validPayload['homeRegion'] = self.region1.id
 
     def createForm(self, data):
         return UserForm(data=data)
 
     def testValid(self):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'not@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-        })
+        form = self.createForm(self.validPayload)
 
         self.assertEqual(form.is_valid(), True)
 
@@ -118,90 +121,54 @@ class TestUserForm(TestCase):
         self.assertEqual(form.errors["homeState"], ["This field is required."])
         self.assertEqual(form.errors["homeRegion"], ["This field is required."])
 
-    def testEmailSame(self):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'test@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-        })
+    def testEmailExists(self):
+        payload = self.validPayload.copy()
+        payload['email'] = 'test@test.com'
+        form = self.createForm(payload)
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.errors["email"], ["User with this email address already exists."])
 
-    def testEmailDifferentCase(self):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'TEST@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-        })
+    def testEmailDifferentCaseExists(self):
+        payload = self.validPayload.copy()
+        payload['email'] = 'TEST@test.com'
+        form = self.createForm(payload)
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.errors["email"], ["User with this email address already exists."])
 
 class TestUserSignupForm(TestUserForm):
+    validPayload = {
+        'first_name': 'First',
+        'last_name': 'Last',
+        'email': 'not@test.com',
+        'mobileNumber': '12345',
+        'homeState': 0,
+        'homeRegion': 0,
+    }
     def createForm(self, data):
         return UserSignupForm(data=data)
 
-    def testValid(self):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'not@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-            'password': 'pass',
-            'passwordConfirm': 'pass',
-        })
-
-        self.assertEqual(form.is_valid(), True)
-
     def testPasswordRequired(self):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'not@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-        })
+        payload = self.validPayload.copy()
+        del payload['password']
+        del payload['passwordConfirm']
+        form = self.createForm(payload)
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.non_field_errors(), ["Password must not be blank"])
 
     def testPasswordNotSame(self):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'not@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-            'password': 'pass',
-            'passwordConfirm': 'pass2',
-        })
+        payload = self.validPayload.copy()
+        payload['passwordConfirm'] = 'pass2'
+        form = self.createForm(payload)
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.non_field_errors(), ["Passwords do not match"])
 
     @patch('users.forms.validate_password', side_effect = Mock(side_effect=ValidationError('Password too short')))
     def testPasswordNotValid(self, mocked_validate_password):
-        form = self.createForm({
-            'first_name': 'First',
-            'last_name': 'Last',
-            'email': 'not@test.com',
-            'mobileNumber': '12345',
-            'homeState': self.state1.id,
-            'homeRegion': self.region1.id,
-            'password': 'pass',
-            'passwordConfirm': 'pass',
-        })
+        form = self.createForm(self.validPayload)
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.non_field_errors(), ["Password too short"])
