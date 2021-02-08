@@ -16,7 +16,6 @@ class SchoolAdministratorInline(FKActionsRemove, InlineAdminPermissions, admin.T
     ]
     autocomplete_fields = [
         'user',
-        'campus',
     ]
 
     @classmethod

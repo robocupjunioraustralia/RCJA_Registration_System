@@ -184,7 +184,6 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
     autocomplete_fields = [
         'user',
         'school',
-        'campus',
     ]
     actions = [
         'export_as_csv'

@@ -126,9 +126,6 @@ class YearAdmin(AdminPermissions, admin.ModelAdmin):
 class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = AvailableDivision
     extra = 0
-    autocomplete_fields = [
-        'division',
-    ]
 
     def get_exclude(self, request, obj=None):
         if obj:
@@ -250,7 +247,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     autocomplete_fields = [
         'state',
         'directEnquiriesTo',
-        'venue',
     ]
     inlines = [
         AvailableDivisionInline,
@@ -409,7 +405,6 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'division',
         'mentorUser',
         'school',
-        'campus',
     ]
     list_filter = [
         'event',
@@ -468,7 +463,6 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
             },
             'event': {
                 'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
-                'useAutocomplete': True,
             },
         }
 

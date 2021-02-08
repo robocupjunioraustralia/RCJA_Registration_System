@@ -88,17 +88,6 @@ class BaseAdminPermissions:
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def get_autocomplete_fields(self, request):
-        autocompleteFields = super().get_autocomplete_fields(request)
-
-        objectFilteredFields = self.fkObjectFilterFields(request, self.obj)
-
-        for field in objectFilteredFields.keys():
-            if not objectFilteredFields[field].get('useAutocomplete', False):
-                while field in autocompleteFields: autocompleteFields.remove(field)
-
-        return autocompleteFields
-
     # Permissions
 
     # Add permisison only needed for inline, defined there
