@@ -1,164 +1,105 @@
-from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase, modify_settings
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Admin_Test
+
+from django.test import TestCase
 from django.urls import reverse
-from django.test import Client
 from django.http import HttpRequest
-from django.core.exceptions import ValidationError
 
+from regions.models import State
 from coordination.models import Coordinator
-from users.models import User
-from regions.models import State, Region
 
-# Create your tests here.
+# Coordinator
 
-def commonSetUp(self):
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-    self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+class Coordinator_Base:
+    modelURLName = 'coordination_coordinator'
+    state1Obj = 'coord_state1_fullcoordinator'
+    state2Obj = 'coord_state2_fullcoordinator'
+    validPayload = {
+        'user': 0,
+        'state': 0,
+        'permissionLevel': 'full',
+        'position': 'Position',
+    }
 
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
+        cls.validPayload['user'] = cls.user_state1_school1_mentor1.id
 
-    self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
-    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
+class Test_Coordinator_NotStaff(Coordinator_Base, Base_Test_NotStaff, TestCase):
+    pass
 
-    email1 = 'user1@user.com'
-    email2 = 'user2@user.com'
-    email3 = 'user3@user.com'
-    emailsuper = 'user4@user.com'
-    password = 'chdj48958DJFHJGKDFNM'
+class Test_Coordinator_SuperUser(Coordinator_Base, Base_Test_SuperUser, TestCase):
+    expectedListItems = 4
+    expectedStrings = [
+        'user2@user.com',
+        'user3@user.com',
+        'user4@user.com',
+        'user5@user.com',
+    ]
+    expectedMissingStrings = []
 
-class TestCoordinatorAdmin(TestCase):
-    email1 = 'user1@user.com'
-    email2 = 'user2@user.com'
-    email3 = 'user3@user.com'
-    emailsuper = 'user4@user.com'
-    password = 'chdj48958DJFHJGKDFNM'
-
-    def setUp(self):
-        commonSetUp(self)
-        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
-        self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
-
-    def testCoordinatorListLoads_superuser(self):
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_changelist'))
-        self.assertEqual(response.status_code, 200)
-
-    def testCoordinatorChangeLoads_superuser(self):
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_change', args=(self.coord1.id,)))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Save')
-
-    def testCoordinatorListContent_superuser(self):
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_changelist'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.email1)
-        self.assertContains(response, self.email2)
-
-    def testCoordinatorDeleteLoads_superuser(self):
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_delete', args=(self.coord1.id,)))
-        self.assertEqual(response.status_code, 200)
-
-    def testCoordinatorListNonStaff_denied(self):
-        self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_changelist'))
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, 302)
 
-    def testCoordinatorListLoads_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_changelist'))
+class Coordinator_Coordinators_Base(Coordinator_Base):
+    expectedListItems = 2
+    expectedStrings = [
+        'user2@user.com',
+        'user3@user.com',
+    ]
+    expectedMissingStrings = [
+        'user4@user.com',
+        'user5@user.com',
+    ]
+
+class Test_Coordinator_FullCoordinator(Coordinator_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
 
-    def testCoordinatorListContent_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_changelist'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.email1)
-        self.assertNotContains(response, self.email2)
-
-    def testCoordinatorChangeLoads_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_change', args=(self.coord1.id,)))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Save')
-
-    def testCoordinatorChangeDenied_wrongState_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_change', args=(self.coord2.id,)))
-        self.assertEqual(response.status_code, 302)
-
-    def testCoordinatorChangeDenied_viewPermission_coordinator(self):
-        self.coord1.permissionLevel = 'viewall'
-        self.coord1.save()
-
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        response = self.client.get(reverse('admin:coordination_coordinator_change', args=(self.coord1.id,)))
-        self.assertEqual(response.status_code, 403)
-
-    def testChangePostDenied_coordinator(self):
-        self.coord1.permissionLevel = 'viewall'
-        self.coord1.save()
-
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': self.state1.id,
-            'permissionLevel': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
-        self.assertEqual(response.status_code, 403)
-
-    # Coordinator FK filtering
-
-    # State field
-    def testStateFieldSucces_superuser(self):
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': self.state1.id,
-            'permissionLevel': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
-
-    def testStateFieldSucces_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': self.state1.id,
-            'permissionLevel': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
-
-    def testStateFieldDenied_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': self.state2.id,
-            'permissionLevel': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
+    def testPostAddWrongState(self):
+        payload = self.validPayload.copy()
+        payload['state'] = self.state2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
-    def testStateFieldBlankDenied_coordinator(self):
-        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        payload = {
-            'user': self.user3.id,
-            'state': '',
-            'permissionLevel': 'full',
-            'position': 'Thing',
-        }
-        response = self.client.post(reverse('admin:coordination_coordinator_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Please correct the error below.')
-        self.assertContains(response, 'This field is required.')
+class Test_Coordinator_GlobalFullCoordinator(Test_Coordinator_FullCoordinator):
+    wrongStateCode = 200
+    expectedListItems = 4
+    expectedStrings = [
+        'user2@user.com',
+        'user3@user.com',
+        'user4@user.com',
+        'user5@user.com',
+    ]
+    expectedMissingStrings = []
+
+    @classmethod
+    def additionalSetup(cls):
+        cls.coord_state1_fullcoordinator.state = None
+        cls.coord_state1_fullcoordinator.save()
+
+    def testPostAddWrongState(self):
+        payload = self.validPayload.copy()
+        payload['state'] = self.state2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+class Test_Coordinator_ViewCoordinator(Coordinator_Base, Base_Admin_Test, TestCase):
+    listLoadsCode = 403
+    changeLoadsCode = 403
+    addLoadsCode = 403
+    deleteLoadsCode = 403
+
+    def setUp(self):
+        super().setUp()
+        self.client.login(request=HttpRequest(), username=self.email_user_state1_viewcoordinator, password=self.password)
