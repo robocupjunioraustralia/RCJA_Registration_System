@@ -3,9 +3,9 @@
 from django.db import migrations, models
 
 def forwards_func(apps, schema_editor):
-    # We get the model from the versioned app registry;
-    # if we directly import it, it'll be the wrong version
-    User = apps.get_model("users", "User")
+    # Normally need to get the model from the versioned app registry;
+    # But need to access updateUserPermissions so directly import
+    from users.models import User
     for user in User.objects.all():
         user.updateUserPermissions()
 
