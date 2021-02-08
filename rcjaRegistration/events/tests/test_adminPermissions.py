@@ -74,6 +74,33 @@ class Test_Division_FullCoordinator(Division_Coordinators_Base, Base_Test_FullCo
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
+class Test_Division_GlobalFullCoordinator(Test_Division_FullCoordinator):
+    expectedListItems = 4
+    expectedStrings = [
+        'Division 1',
+        'Division 2',
+        'Division 3',
+        'Division 4',
+    ]
+    expectedMissingStrings = []
+
+    @classmethod
+    def additionalSetup(cls):
+        cls.coord_state1_fullcoordinator.state = None
+        cls.coord_state1_fullcoordinator.save()
+
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 302)
+
+    def testPostAddWrongState(self):
+        payload = self.validPayload.copy()
+        payload['state'] = self.state2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 302)
+
 class Test_Division_ViewCoordinator(Division_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass
 
