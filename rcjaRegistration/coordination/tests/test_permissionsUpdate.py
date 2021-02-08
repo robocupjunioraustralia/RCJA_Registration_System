@@ -1,9 +1,6 @@
-from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase, modify_settings
+from django.test import TestCase
 from django.urls import reverse
-from django.test import Client
 from django.http import HttpRequest
-from django.core.exceptions import ValidationError
 
 from coordination.models import Coordinator
 from users.models import User
