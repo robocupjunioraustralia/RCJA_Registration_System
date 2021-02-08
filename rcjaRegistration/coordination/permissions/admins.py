@@ -78,7 +78,7 @@ class BaseAdminPermissions:
                     if filterParams.get('stateCoordinatorRequired', False):
                         kwargs['required'] = True
 
-            # Try and set the default to save admins time, but not if objectFiltering because might result in the ideal default
+            # Try and set the default to save admins time, but not if objectFiltering because might not result in the ideal default
             if queryset.count() == 1 and not objectFiltering:
                 kwargs['initial'] = queryset.first().id
 
