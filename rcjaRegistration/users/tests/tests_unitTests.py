@@ -88,6 +88,55 @@ class TestUserModelMethods(TestCase):
         user2 = User(email='not@test.com')
         self.assertEqual(str(user2), "not@test.com")
 
+class TestUpdateUserPermissions(TestCase):
+    def setUp(self):
+        unitTestsSetup(self)
+
+    def testNotStaff(self):
+        self.user1.is_staff = True
+        self.assertTrue(self.user1.is_staff)
+
+        self.user1.updateUserPermissions()
+
+        self.assertFalse(self.user1.is_staff)
+
+    def testStaffSuperuser(self):
+        self.user1.is_superuser = True
+        self.assertFalse(self.user1.is_staff)
+
+        self.user1.updateUserPermissions()
+
+        self.assertTrue(self.user1.is_staff)
+
+    def testStaffCoordinator(self):
+        self.assertFalse(self.user1.is_staff)
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.is_staff)
+
+    def testNotCoordiantorNoPermissions(self):
+        self.assertFalse(self.user1.user_permissions.exists())
+        self.user1.updateUserPermissions()
+
+        self.assertFalse(self.user1.user_permissions.exists())
+
+    def testCoordiantorPermissions(self):
+        self.assertFalse(self.user1.user_permissions.exists())
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.exists())
+
+    def testCoordinatorRemovedClearsPermisisons(self):
+        self.coord1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.exists())
+        self.assertTrue(self.user1.is_staff)
+
+        self.coord1.delete()
+
+        self.assertFalse(self.user1.user_permissions.exists())
+        self.assertFalse(self.user1.is_staff)
+
 class TestUserForm(TestCase):
     validPayload = {
         'first_name': 'First',
