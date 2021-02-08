@@ -27,6 +27,8 @@ class BaseAdminPermissions:
         return {}
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+
         # Filter by object
         objectFiltering = False # Need to track if object filtering applied for this field to use in coordinator permissions filtering
         try:
@@ -35,7 +37,7 @@ class BaseAdminPermissions:
 
             # Filter queryset
             queryset = filterParams['queryset'] # Set variable so it can be used as basis in coordinator permissions filtering below
-            kwargs['queryset'] = queryset
+            field.queryset = queryset
             objectFiltering = True
 
         except KeyError:
@@ -63,7 +65,7 @@ class BaseAdminPermissions:
 
             # Filter queryset
             queryset = objAdmin.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
-            kwargs['queryset'] = queryset
+            field.queryset = queryset
 
             # Set the field to required if specified in parameters
             required = False
@@ -75,17 +77,17 @@ class BaseAdminPermissions:
 
             # Do with an if statement because never want to override to make false
             if required:
-                kwargs['required'] = True
+                field.required = True
 
             # Try and set the default to save admins time, if there is only one option and the field is required
-            if queryset.count() == 1 and required:
-                kwargs['initial'] = queryset.first().id
+            if queryset.count() == 1 and field.required:
+                field.initial = queryset.first().id
 
         except KeyError:
             # Catch cases where field not in fkFilterFields and ignore - no filtering required
             pass
 
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+        return field
 
     # Permissions
 
