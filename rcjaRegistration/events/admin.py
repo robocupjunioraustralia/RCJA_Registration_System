@@ -13,6 +13,8 @@ from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDiv
 from regions.models import State
 from schools.models import Campus
 from eventfiles.adminInlines import EventAvailableFileTypeInline
+from teams.models import Team
+from workshops.models import WorkshopAttendee
 
 from regions.admin import StateAdmin
 
@@ -307,6 +309,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     fkAddEditButtons = [
         'venue',
     ]
+    autocompleteFilters = {
+        'teams/team/': Team,
+        'workshops/workshopattendee/': WorkshopAttendee,
+    }
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
