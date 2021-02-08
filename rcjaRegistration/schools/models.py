@@ -188,8 +188,6 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
     def preSave(self):
         if self.pk:
             self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
-
-        if self.pk:
             self.previousSchool = SchoolAdministrator.objects.get(pk=self.pk).school
 
     def postSave(self):
