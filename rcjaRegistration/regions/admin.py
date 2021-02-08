@@ -1,8 +1,10 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermissionLevel
 
 from .models import State, Region
+from events.models import Event, Division, Venue
+from schools.models import School
 
 # Register your models here.
 
@@ -77,6 +79,12 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     inlines = [
     ]
+    autocompleteFilters = {
+        'events/event/': Event,
+        'events/division/': Division,
+        'events/venue/': Venue,
+        'schools/school/': School,
+    }
 
     def get_readonly_fields(self, request, obj):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -117,24 +125,10 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = queryset.filter(typeRegistration=True)
 
-        # Filter by state
+        # Filter by state for objects that should have full permission level only
         for url in ['users/user/', 'coordination/coordinator/']:
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = self.filterQueryset(queryset, request, ['full'], ['full'])
-
-        from events.models import Event, Division, Venue
-        from schools.models import School
-        urlPairs = {
-            'events/event/': Event,
-            'events/division/': Division,
-            'events/venue/': Venue,
-            'schools/school/': School,
-        }
-
-        for url in urlPairs:
-            if url in request.META.get('HTTP_REFERER', ''):
-                statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(urlPairs[url], ['add', 'change'])
-                queryset = self.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
 
         return super().get_search_results(request, queryset, search_term)
 
