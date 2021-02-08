@@ -21,7 +21,7 @@ def commonSetUp(self):
     self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
-class TestUpdateUserPermissions(TestCase):
+class TestCoordinatorChangeUpdatesUserPermissions(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
