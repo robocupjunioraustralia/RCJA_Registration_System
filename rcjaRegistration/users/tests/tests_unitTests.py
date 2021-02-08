@@ -97,6 +97,7 @@ class TestUserForm(TestCase):
         'homeState': 0,
         'homeRegion': 0,
     }
+
     def setUp(self):
         unitTestsSetup(self)
         self.validPayload['homeState'] = self.state1.id
@@ -108,12 +109,12 @@ class TestUserForm(TestCase):
     def testValid(self):
         form = self.createForm(self.validPayload)
 
-        self.assertEqual(form.is_valid(), True)
+        self.assertTrue(form.is_valid())
 
     def testFieldsRequired(self):
         form = self.createForm({})
 
-        self.assertEqual(form.is_valid(), False)
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.errors["first_name"], ["This field is required."])
         self.assertEqual(form.errors["last_name"], ["This field is required."])
         self.assertEqual(form.errors["email"], ["This field is required."])
@@ -126,7 +127,7 @@ class TestUserForm(TestCase):
         payload['email'] = 'test@test.com'
         form = self.createForm(payload)
 
-        self.assertEqual(form.is_valid(), False)
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.errors["email"], ["User with this email address already exists."])
 
     def testEmailDifferentCaseExists(self):
@@ -134,7 +135,7 @@ class TestUserForm(TestCase):
         payload['email'] = 'TEST@test.com'
         form = self.createForm(payload)
 
-        self.assertEqual(form.is_valid(), False)
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.errors["email"], ["User with this email address already exists."])
 
 class TestUserSignupForm(TestUserForm):
@@ -145,7 +146,10 @@ class TestUserSignupForm(TestUserForm):
         'mobileNumber': '12345',
         'homeState': 0,
         'homeRegion': 0,
+        'password': 'pass',
+        'passwordConfirm': 'pass',
     }
+
     def createForm(self, data):
         return UserSignupForm(data=data)
 
@@ -155,7 +159,7 @@ class TestUserSignupForm(TestUserForm):
         del payload['passwordConfirm']
         form = self.createForm(payload)
 
-        self.assertEqual(form.is_valid(), False)
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(), ["Password must not be blank"])
 
     def testPasswordNotSame(self):
@@ -163,12 +167,12 @@ class TestUserSignupForm(TestUserForm):
         payload['passwordConfirm'] = 'pass2'
         form = self.createForm(payload)
 
-        self.assertEqual(form.is_valid(), False)
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(), ["Passwords do not match"])
 
     @patch('users.forms.validate_password', side_effect = Mock(side_effect=ValidationError('Password too short')))
     def testPasswordNotValid(self, mocked_validate_password):
         form = self.createForm(self.validPayload)
 
-        self.assertEqual(form.is_valid(), False)
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(), ["Password too short"])
