@@ -20,9 +20,9 @@ To filter foreign key fields that link to the model, you must include the foreig
 
 ## Global objects
 
-To add State based permissions on a model it is necessary to define `stateCoordinatorPermissions` on the model. If the admin inherits from `AdminPermissions` you must also define `stateCoordinatorViewGlobal = True` on the model. Inheriting from `AdminPermissions` is optional where the model is only global, but it is recommended to inherit from `AdminPermissions` so that future changes are enforced.
+To provide state coordinators permissions on a model it is necessary to define `stateCoordinatorPermissions` on the model, even if the model is global. If the admin inherits from `AdminPermissions` you must also define `stateCoordinatorViewGlobal = True` on the model. Inheriting from `AdminPermissions` is optional where the model is only global, but it is recommended to inherit from `AdminPermissions` so that future changes are enforced.
 
-By default superusers can edit global objects and global coordinator permissions are defined by `stateCoordinatorPermissions`. To provide global coordinators with additional permissions or if `stateCoordinatorPermissions` you must define `globalCoordinatorPermissions`.
+By default superusers can edit global objects and global coordinator permissions are defined by `stateCoordinatorPermissions`. To provide global coordinators with additional permissions or if `stateCoordinatorPermissions` is not defined you must define `globalCoordinatorPermissions`.
 
 There are three possible scenarios for global objects:
 - Only superusers have access. Don't define `stateCoordinatorPermissions`, `getState` or any other permissions method. Don't inherit from `AdminPermissions`. Superuser only access is the default. For example `InvoiceSettings`.
