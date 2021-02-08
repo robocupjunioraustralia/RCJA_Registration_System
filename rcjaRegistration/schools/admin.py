@@ -53,6 +53,10 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'region',
         'postcode',
     ]
+    autocompleteFilters = {
+        'schools/campus/': Campus,
+        'schools/schooladministrator/': SchoolAdministrator,
+    }
 
     # Set forceDetailsUpdate if a field is blank
     def save_model(self, request, obj, form, change):

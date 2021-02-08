@@ -92,6 +92,9 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     exportFieldsManyRelations = [
         'student_set',
     ]
+    autocompleteFilters = {
+        'teams/student/': Student,
+    }
 
     eventTypeMapping = 'competition'
 
