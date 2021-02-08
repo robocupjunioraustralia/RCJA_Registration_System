@@ -38,10 +38,9 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
     return (stateQueryset | globalQueryset).distinct()
 
 def isGlobalObject(model, obj):
-    # Why model and obj?
-
     # Models without getState are global across all states
     # But non super users won't have access unless stateCoordinatorPermissions() is defined
+    # Use model (rather than obj) in case obj is none, checking if getState is defined on the class
     if not hasattr(model, 'getState'):
         return True
 
