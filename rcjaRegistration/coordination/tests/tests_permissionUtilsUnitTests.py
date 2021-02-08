@@ -1,10 +1,11 @@
 from django.test import TestCase
 from unittest.mock import patch
-from common.baseTests import createStates, createUsers
-from coordination.permissions import checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
+from common.baseTests import createStates, createUsers, createEvents
+from coordination.permissions import coordinatorFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
 
 from users.models import User
 from coordination.models import Coordinator
+from events.models import Event
 
 class RequestObj:
     def __init__(self):
@@ -506,3 +507,89 @@ class Test_getFilteringPermissionLevels(TestCase):
         statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(ModelTestGlobal, ['add'], [])
         self.assertEqual([], statePermissionLevels)
         self.assertEqual([], globalPermissionLevels)
+
+class Test_coordinatorFilterQueryset(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+
+        cls.baseQS = User.objects.all()
+
+    def setUp(self):
+        self.request = RequestObj()
+
+    def testSuperuser(self):
+        self.request.user = self.user_state1_super1
+        
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertEqual(self.baseQS, qs)
+
+    def testGlobalFull(self):
+        self.coord_state1_fullcoordinator.state = None
+        self.coord_state1_fullcoordinator.save()
+        self.request.user = self.user_state1_fullcoordinator
+        
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertEqual(self.baseQS, qs)
+
+    def testGlobalWronglevel(self):
+        self.coord_state1_fullcoordinator.state = None
+        self.coord_state1_fullcoordinator.save()
+        self.request.user = self.user_state1_fullcoordinator
+        
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['wrong'], ['wrong'], 'homeState__coordinator', False)
+
+        self.assertFalse(qs.exists())
+
+    def testNoperms(self):
+        self.request.user = self.user_notstaff
+        
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertFalse(qs.exists())
+
+    def testNoLookups(self):
+        self.request.user = self.user_notstaff
+        
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], False, False)
+
+        self.assertEqual(self.baseQS, qs)
+
+    def testCoordinatorNoGlobals(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.assertTrue(self.baseQS.filter(homeState=self.state2).exists())
+        self.assertTrue(self.baseQS.filter(homeState=None).exists())
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertEqual(7, qs.count())
+        self.assertFalse(qs.filter(homeState=self.state2).exists())
+        self.assertFalse(qs.filter(homeState=None).exists())
+
+    def testCoordinatorGlobals(self):
+        self.request.user = self.user_state1_fullcoordinator
+
+        self.assertTrue(self.baseQS.filter(homeState=self.state2).exists())
+        self.assertTrue(self.baseQS.filter(homeState=None).exists())
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', 'homeState')
+
+        self.assertEqual(8, qs.count())
+        self.assertFalse(qs.filter(homeState=self.state2).exists())
+        self.assertTrue(qs.filter(homeState=None).exists())
+
+    def testCoordinatorMixedPermissions(self):
+        createEvents(self)
+        self.request.user = self.user_notstaff
+        Coordinator.objects.create(user=self.user_notstaff, state=self.state1, permissionLevel='eventmanager', position='Position')
+        Coordinator.objects.create(user=self.user_notstaff, state=self.state2, permissionLevel='schoolmanager', position='Position')
+
+        baseqs = Event.objects.all()
+        self.assertTrue(baseqs.filter(state=self.state2).exists())
+
+        qs = coordinatorFilterQueryset(baseqs, self.request, ['eventmanager', 'viewall'], ['eventmanager', 'viewall'], 'state__coordinator', False)
+
+        self.assertEqual(5, qs.count())
+        self.assertFalse(qs.filter(state=self.state2).exists())
