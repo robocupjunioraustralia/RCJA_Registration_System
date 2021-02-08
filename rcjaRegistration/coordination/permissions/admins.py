@@ -107,6 +107,20 @@ class AdminPermissions(BaseAdminPermissions):
         self.obj = obj
         return super().get_form(request, obj, **kwargs)
 
+    autocompleteFilters = {}
+
+    # Filter autocompletes to valid options
+    def get_search_results(self, request, queryset, search_term):
+        # Check if url in the http referer to determine if these search results are for an autocomplete
+        for url in self.autocompleteFilters:
+            if url in request.META.get('HTTP_REFERER', ''):
+
+                # Get permission levels that assign add or change permisisons for the target object, then get filter queryset of this admin to those permission levels 
+                statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.autocompleteFilters[url], ['add', 'change'])
+                queryset = self.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
+
+        return super().get_search_results(request, queryset, search_term)
+
 class InlineAdminPermissions(BaseAdminPermissions):
     # Set parent obj on class so available to inline
     def get_formset(self, request, obj=None, **kwargs):
