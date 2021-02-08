@@ -75,6 +75,7 @@ class Test_Division_FullCoordinator(Division_Coordinators_Base, Base_Test_FullCo
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Division_GlobalFullCoordinator(Test_Division_FullCoordinator):
+    wrongStateCode = 200
     expectedListItems = 4
     expectedStrings = [
         'Division 1',
@@ -86,6 +87,7 @@ class Test_Division_GlobalFullCoordinator(Test_Division_FullCoordinator):
 
     @classmethod
     def additionalSetup(cls):
+        super().additionalSetup()
         cls.coord_state1_fullcoordinator.state = None
         cls.coord_state1_fullcoordinator.save()
 
