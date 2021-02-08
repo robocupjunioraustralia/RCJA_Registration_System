@@ -63,7 +63,7 @@ class School(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         if level in ['full', 'schoolmanager']:
             return [
                 'add',
@@ -132,8 +132,8 @@ class Campus(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
-        return School.coordinatorPermissions(level)
+    def stateCoordinatorPermissions(cls, level):
+        return School.stateCoordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -176,8 +176,8 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
-        return School.coordinatorPermissions(level)
+    def stateCoordinatorPermissions(cls, level):
+        return School.stateCoordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -188,8 +188,6 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
     def preSave(self):
         if self.pk:
             self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
-
-        if self.pk:
             self.previousSchool = SchoolAdministrator.objects.get(pk=self.pk).school
 
     def postSave(self):

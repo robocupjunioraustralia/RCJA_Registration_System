@@ -1,5 +1,5 @@
 from django.contrib import admin
-from coordination.adminPermissions import AdminPermissions
+from coordination.permissions import AdminPermissions
 from django.contrib import messages
 
 from .models import WorkshopAttendee

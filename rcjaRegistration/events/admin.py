@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.db.models import F, Q
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from coordination.models import Coordinator
 from django.contrib import messages
 from django import forms
 from django.forms import TextInput, Textarea
@@ -11,7 +12,11 @@ from django.db import models
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
 from schools.models import Campus
-from eventfiles.admin import EventAvailableFileTypeInline
+from eventfiles.adminInlines import EventAvailableFileTypeInline
+from teams.models import Team
+from workshops.models import WorkshopAttendee
+
+from regions.admin import StateAdmin
 
 # Register your models here.
 
@@ -53,33 +58,15 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
-        return [
-            {
-                'field': 'state',
-                'required': True,
-                'fieldModel': State,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'stateCoordinatorRequired': True,
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
-    @classmethod
-    def stateFilteringAttributes(cls, request):
-        from coordination.models import Coordinator
-        from coordination.adminPermissions import reversePermisisons
-
-        # Check for global coordinator
-        if Coordinator.objects.filter(user=request.user, state=None).exists():
-            return [Q(state__coordinator__permissions__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)]
-
-        # Default to filtering by state
-        return [
-            Q(state__coordinator__in = Coordinator.objects.filter(user=request.user)) | Q(state=None),
-            Q(state__coordinator__permissions__in = reversePermisisons(Division, ['view', 'change'])) | Q(state=None)
-        ]
+    stateFilterLookup = 'state__coordinator'
+    globalFilterLookup = 'state'
 
 @admin.register(Venue)
 class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -123,17 +110,11 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
-        return [
-            {
-                'field': 'state',
-                'fieldModel': State,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
 
@@ -147,9 +128,6 @@ class YearAdmin(AdminPermissions, admin.ModelAdmin):
 class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.TabularInline):
     model = AvailableDivision
     extra = 0
-    autocomplete_fields = [
-        'division',
-    ]
 
     def get_exclude(self, request, obj=None):
         if obj:
@@ -163,14 +141,12 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
         return super().get_exclude(request, obj)
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'division',
-                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so will never fallback to None
-                'filterNone': True
-            }
-        ]
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'division': {
+                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
+            },
+        }
 
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -273,7 +249,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     autocomplete_fields = [
         'state',
         'directEnquiriesTo',
-        'venue',
     ]
     inlines = [
         AvailableDivisionInline,
@@ -334,6 +309,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     fkAddEditButtons = [
         'venue',
     ]
+    autocompleteFilters = {
+        'teams/team/': Team,
+        'workshops/workshopattendee/': WorkshopAttendee,
+    }
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
@@ -379,29 +358,22 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
-        return [
-            {
-                'field': 'state',
-                'fieldModel': State,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
+    fieldFilteringModel = Event
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'venue',
-                'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so will never fallback to None
-                'filterNone': True
-            }
-        ]
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'venue': {
+                'queryset': Venue.objects.filter(state=obj.state) if obj is not None else Venue.objects.none(), # Field not displayed on create so user will never see fallback to None
+            },
+        }
 
 class BaseWorkshopAttendanceForm(forms.ModelForm):
     def clean(self):
@@ -439,7 +411,6 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'division',
         'mentorUser',
         'school',
-        'campus',
     ]
     list_filter = [
         'event',
@@ -484,33 +455,21 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from events.admin import EventAdmin
-        from events.models import Event
-        return [
-            {
-                'field': 'event',
-                'fieldModel': Event,
-                'fieldAdmin': EventAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'event': {
+            'fieldAdmin': EventAdmin,
+        },
+    }
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
-                'filterNone': True,
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'campus': {
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
             },
-            {
-                'field': 'event',
+            'event': {
                 'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
-                'filterNone': True,
-                'useAutocomplete': True,
-            }
-        ]
+            },
+        }
 
     stateFilterLookup = 'event__state__coordinator'
-
