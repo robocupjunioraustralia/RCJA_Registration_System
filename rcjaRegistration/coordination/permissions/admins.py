@@ -66,20 +66,19 @@ class BaseAdminPermissions:
             kwargs['queryset'] = queryset
 
             # Set the field to required if specified in parameters
+            required = False
             if not request.user.is_superuser: # Never want to set required for superuser - is controlled only by field options on the model
-                # Different settings for state and global coordinator
-                if request.user.isGobalCoordinator(globalPermissionLevels):
-                    # Do with an if statement because never want to override to make false
-                    if filterParams.get('globalCoordinatorRequired', False):
-                        kwargs['required'] = True
-
+                if request.user.isGobalCoordinator(globalPermissionLevels): # Different settings for state and global coordinator
+                    required = filterParams.get('globalCoordinatorRequired', False)
                 else:
-                    # Do with an if statement because never want to override to make false
-                    if filterParams.get('stateCoordinatorRequired', False):
-                        kwargs['required'] = True
+                    required = filterParams.get('stateCoordinatorRequired', False)
 
-            # Try and set the default to save admins time, but not if objectFiltering because might not result in the ideal default
-            if queryset.count() == 1 and not objectFiltering:
+            # Do with an if statement because never want to override to make false
+            if required:
+                kwargs['required'] = True
+
+            # Try and set the default to save admins time, if there is only one option and the field is required
+            if queryset.count() == 1 and required:
                 kwargs['initial'] = queryset.first().id
 
         except KeyError:
