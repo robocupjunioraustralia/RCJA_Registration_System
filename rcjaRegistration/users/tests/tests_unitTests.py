@@ -137,6 +137,56 @@ class TestUpdateUserPermissions(TestCase):
         self.assertFalse(self.user1.user_permissions.exists())
         self.assertFalse(self.user1.is_staff)
 
+    def testCorrectPermissionsAddedFullState(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='view').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='add').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='change').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='delete').exists())
+
+    def testCorrectPermissionsAddedViewallState(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='viewall', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='view').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='add').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='change').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='delete').exists())
+
+    def testCorrectPermissionsAddedFullGlobal(self):
+        Coordinator.objects.create(user=self.user1, state=None, permissionLevel='full', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='view').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='add').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='change').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='delete').exists())
+
+    def testCorrectPermissionsAddedViewallGlobal(self):
+        Coordinator.objects.create(user=self.user1, state=None, permissionLevel='viewall', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='view').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='add').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='change').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='delete').exists())
+
+    def testCorrectPermissionsAddedBillingmanager(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='billingmanager', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='school').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='schooladministrator').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='campus').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='invoice').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='event').exists())
+
+    def testCorrectPermissionsAddedSchoolmanager(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='schoolmanager', position='Position') # Calls update user permissions
+
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='school').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='schooladministrator').exists())
+        self.assertTrue(self.user1.user_permissions.filter(codename__contains='campus').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='invoice').exists())
+        self.assertFalse(self.user1.user_permissions.filter(codename__contains='event').exists())
+
 class TestUserForm(TestCase):
     validPayload = {
         'first_name': 'First',
