@@ -6,12 +6,12 @@ from django.http import HttpRequest
 from django.core.exceptions import ValidationError
 from unittest.mock import patch, Mock
 
-from .models import User
+from users.models import User
 from schools.models import School, SchoolAdministrator
 from regions.models import State, Region
 from coordination.models import Coordinator
 
-from .forms import UserForm, UserSignupForm
+from users.forms import UserForm, UserSignupForm
 
 # Unit Tests
 
