@@ -108,6 +108,7 @@ class State(SaveDeleteMixin, models.Model):
 
 class Region(models.Model):
     # Foreign keys
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global region. Global divisions are only editable by global administrators.')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
