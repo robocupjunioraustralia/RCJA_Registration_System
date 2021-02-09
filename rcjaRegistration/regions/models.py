@@ -140,6 +140,10 @@ class Region(models.Model):
 
     stateCoordinatorViewGlobal = True
 
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
+
     # *****Save & Delete Methods*****
 
     # *****Methods*****
