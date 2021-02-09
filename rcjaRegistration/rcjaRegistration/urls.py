@@ -32,6 +32,7 @@ urlpatterns = [
     # This is done in production as everything is stored in S3
     # See https://docs.djangoproject.com/en/3.1/topics/auth/default/#all-authentication-views
     path('accounts/login/', auth_views.LoginView.as_view(authentication_form=CustomAuthForm, redirect_authenticated_user=True), name='login'),
+    # Login user after password reset and redirect to the password change done page, which uses the logged in base template
     path('accounts/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(post_reset_login=True, success_url=reverse_lazy('password_change_done')), name='password_reset_confirm'),
     path('accounts/', include('django.contrib.auth.urls')),
 
