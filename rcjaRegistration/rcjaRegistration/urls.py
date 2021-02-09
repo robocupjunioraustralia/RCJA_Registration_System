@@ -27,8 +27,7 @@ admin.site.index_title = "Administration Home"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view(
-        template_name='registration/login.html', authentication_form=CustomAuthForm)),
+    path('accounts/login/', auth_views.LoginView.as_view(authentication_form=CustomAuthForm)),
     path('accounts/', include('django.contrib.auth.urls')), #login
     path('api/v1/public/', include('publicapi.urls')),
     path('', include('events.urls')),
