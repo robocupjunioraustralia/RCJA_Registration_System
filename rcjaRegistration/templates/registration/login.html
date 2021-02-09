@@ -51,11 +51,12 @@
                       {{ form.password }}
                     </div>
                   </div>
+                  <input type="hidden" name="next" value="{{ next }}">
                   <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
                 </form>
                 <br><br>
                 <div style="display:flex; justify-content: center;">
-                  <a href="/accounts/signup"><button class="ui small teal button" type="" value="Sign Up"> Create account </button></a>
+                  <a href="{% url 'users:signup' %}"><button class="ui small teal button" type="" value="Sign Up"> Create account </button></a>
                   <a href="{% url 'password_reset' %}"><button class="ui small teal button" type="" value="Forgot password">Forgot password </button></a>
                 </div>
               </div>

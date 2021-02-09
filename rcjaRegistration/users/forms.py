@@ -3,6 +3,7 @@ from django.forms import ModelForm
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.views.decorators.debug import sensitive_variables
 
 from users.models import User
 
@@ -30,6 +31,7 @@ class UserSignupForm(UserForm):
     password = forms.CharField(widget=forms.PasswordInput)
     passwordConfirm = forms.CharField(widget=forms.PasswordInput)
 
+    @sensitive_variables('cleaned_data', 'password', 'passwordConfirm')
     def clean(self):
         # Check password
         cleaned_data = super().clean()

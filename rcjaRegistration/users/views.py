@@ -9,6 +9,7 @@ from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.urls import reverse
+from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
@@ -79,6 +80,8 @@ def details(request):
 
     return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
 
+@sensitive_post_parameters('password', 'passwordConfirm')
+@sensitive_variables('form', 'cleaned_data')
 def signup(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
