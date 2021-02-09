@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, reverse_lazy
 from django.views.generic.base import RedirectView
 from django.contrib.auth import views as auth_views
 from .forms import CustomAuthForm
@@ -27,9 +27,16 @@ admin.site.index_title = "Administration Home"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view(
-        template_name='registration/login.html', authentication_form=CustomAuthForm)),
-    path('accounts/', include('django.contrib.auth.urls')), #login
+    # Authentication urls and overrides
+    # Static must be hosted on different domain for redirect_authenticated_user to be secure
+    # This is done in production as everything is stored in S3
+    # See https://docs.djangoproject.com/en/3.1/topics/auth/default/#all-authentication-views
+    path('accounts/login/', auth_views.LoginView.as_view(authentication_form=CustomAuthForm, redirect_authenticated_user=True), name='login'),
+    # Login user after password reset and redirect to the password change done page, which uses the logged in base template
+    path('accounts/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(post_reset_login=True, success_url=reverse_lazy('password_change_done')), name='password_reset_confirm'),
+    path('accounts/', include('django.contrib.auth.urls')),
+
+    # Project urls
     path('api/v1/public/', include('publicapi.urls')),
     path('', include('events.urls')),
     path('',include('schools.urls')),
@@ -38,5 +45,4 @@ urlpatterns = [
     path('',include('users.urls')),
     path('',include('invoices.urls')),
     path('',include('eventfiles.urls')),
-    # path('',RedirectView.as_view(url='/events/dashboard', permanent=False), name='index'),   
 ]

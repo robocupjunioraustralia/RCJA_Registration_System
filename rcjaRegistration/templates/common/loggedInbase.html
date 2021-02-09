@@ -32,7 +32,7 @@
         <div class="item">
             <img src="{% static 'favicon-32x32.png' %}">
         </div>
-        <a class="item" href="/">
+        <a class="item" href="{% url 'events:dashboard' %}">
             <i class="home icon"></i>
             Dashboard
         </a>  
@@ -79,7 +79,7 @@
             
         </a>
         <div class = "ui tablet only computer only grid menu-set">
-            <a class="item" href="/">
+            <a class="item" href="{% url 'events:dashboard' %}">
                 <i class="home icon"></i>
                 Dashboard
             </a>  
