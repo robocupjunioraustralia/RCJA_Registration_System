@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, reverse_lazy
 from django.views.generic.base import RedirectView
 from django.contrib.auth import views as auth_views
 from .forms import CustomAuthForm
@@ -27,7 +27,8 @@ admin.site.index_title = "Administration Home"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view(authentication_form=CustomAuthForm)),
+    path('accounts/login/', auth_views.LoginView.as_view(authentication_form=CustomAuthForm), name='login'),
+    path('accounts/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(post_reset_login=True, success_url=reverse_lazy('password_change_done')), name='password_reset_confirm'),
     path('accounts/', include('django.contrib.auth.urls')), #login
     path('api/v1/public/', include('publicapi.urls')),
     path('', include('events.urls')),
