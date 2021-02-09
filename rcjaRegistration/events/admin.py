@@ -55,6 +55,12 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
     autocomplete_fields = [
         'state',
     ]
+    fields = [
+        'name',
+        'category',
+        'state',
+        'description',
+    ]
 
     # State based filtering
 
