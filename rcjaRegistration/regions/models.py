@@ -65,7 +65,7 @@ class State(SaveDeleteMixin, models.Model):
             return [
                 'view',
             ]
-        
+
         return []
 
     # Used in state coordinator permission checking
@@ -124,11 +124,18 @@ class Region(models.Model):
     # *****Permissions*****
     @classmethod
     def stateCoordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager', 'billingmanager']:
+        if level == 'full':
+            return [
+                'add',
+                'view',
+                'change',
+                'delete',
+            ]
+        elif level in ['viewall', 'eventmanager', 'billingmanager', 'schoolmanager', 'webeditor']:
             return [
                 'view',
             ]
-        
+
         return []
 
     stateCoordinatorViewGlobal = True

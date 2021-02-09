@@ -143,3 +143,15 @@ class RegionAdmin(AdminPermissions, admin.ModelAdmin):
         'name',
         'description',
     ]
+
+    # State based filtering
+
+    fkFilterFields = {
+        'state': {
+            'stateCoordinatorRequired': True,
+            'fieldAdmin': StateAdmin,
+        },
+    }
+
+    stateFilterLookup = 'state__coordinator'
+    globalFilterLookup = 'state'
