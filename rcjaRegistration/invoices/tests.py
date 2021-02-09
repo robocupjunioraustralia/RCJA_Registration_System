@@ -130,7 +130,7 @@ class TestInvoiceDetailPermissions(TestCase):
 
     def testSuccessCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -147,7 +147,7 @@ class TestInvoiceDetailPermissions(TestCase):
 
     def testDeniedCoordinator_NotCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -157,7 +157,7 @@ class TestInvoiceDetailPermissions(TestCase):
 
     def testDeniedCoordinator_WrongState(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -167,7 +167,7 @@ class TestInvoiceDetailPermissions(TestCase):
 
     def testDeniedCoordinator_WrongPermissionLevel(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='schoolmanager')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='schoolmanager')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
@@ -325,7 +325,7 @@ class TestPaypalViewPermissions(TestCase):
     def testDeniedCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -346,7 +346,7 @@ class TestPaypalViewPermissions(TestCase):
     def testDeniedCoordinator_NotCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email3, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -357,7 +357,7 @@ class TestPaypalViewPermissions(TestCase):
     def testDeniedCoordinator_WrongState(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -368,7 +368,7 @@ class TestPaypalViewPermissions(TestCase):
     def testDeniedCoordinator_WrongPermissionLevel(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='schoolmanager')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='schoolmanager')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
@@ -508,7 +508,7 @@ class TestSetInvoiceToPermissions(TestCase):
 
     def testDeniedCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:setInvoiceTo', kwargs= {'invoiceID':self.invoice.id})
@@ -600,7 +600,7 @@ class TestSetCampusInvoiceePermissions(TestCase):
 
     def testDeniedCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
@@ -791,7 +791,7 @@ class TestEditInvoicePOAJAXPermissions(TestCase):
 
     def testDeniedCoordinator(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissions='viewall')
+        self.coordinator = Coordinator.objects.create(user=self.user2, state=self.state1, permissionLevel='viewall')
         self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
 
         url = reverse('invoices:invoicePOAJAX', kwargs= {'invoiceID':self.invoice.id})

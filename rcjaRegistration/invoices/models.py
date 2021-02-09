@@ -66,7 +66,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         if level == 'full':
             return [
                 'add',
@@ -428,8 +428,8 @@ class InvoicePayment(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
-        return Invoice.coordinatorPermissions(level)
+    def stateCoordinatorPermissions(cls, level):
+        return Invoice.stateCoordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):

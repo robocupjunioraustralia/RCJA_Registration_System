@@ -6,6 +6,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
+from coordination.permissions import checkCoordinatorPermission
 
 import datetime
 
@@ -82,8 +83,7 @@ def dashboard(request):
     return render(request, 'events/dashboard.html', context)
 
 def coordinatorEventDetailsPermissions(request, event):
-    from coordination.adminPermissions import checkStatePermissions
-    return checkStatePermissions(request, event, 'view')
+    return checkCoordinatorPermission(request, Event, event, 'view')
 
 def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):

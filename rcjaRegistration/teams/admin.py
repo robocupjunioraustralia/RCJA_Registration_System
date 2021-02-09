@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 
 from .models import HardwarePlatform, SoftwarePlatform, Team, Student
@@ -92,8 +92,15 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     exportFieldsManyRelations = [
         'student_set',
     ]
+    autocompleteFilters = {
+        'teams/student/': Student,
+    }
 
     eventTypeMapping = 'competition'
+
+    # State based filtering
+
+    fieldFilteringModel = Team
 
 @admin.register(Student)
 class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -140,14 +147,10 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'team',
-                'fieldModel': Team,
-                'fieldAdmin': TeamAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'team': {
+            'fieldAdmin': TeamAdmin,
+        },
+    }
 
     stateFilterLookup = 'team__event__state__coordinator'

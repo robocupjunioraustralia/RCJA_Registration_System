@@ -1,5 +1,4 @@
-from common.baseTests.adminPermissions import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator
-from common.baseTests.populateDatabase import createEvents, createTeams
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams
 
 from django.test import TestCase
 from django.urls import reverse
@@ -127,6 +126,14 @@ class Test_Team_SuperUser(AdditionalTeamPostTestsMixin, Team_Base, Base_Test_Sup
     ]
     expectedMissingStrings = []
 
+    def testPostWorkshopEvent(self):
+        payload = self.validPayload.copy()
+        payload['event'] = self.state1_openWorkshop.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the errors below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
 class Team_Coordinators_Base(Team_Base):
     expectedListItems = 2
     expectedStrings = [
@@ -144,6 +151,14 @@ class Test_Team_FullCoordinator(AdditionalTeamPostTestsMixin, Team_Coordinators_
     def testPostAddWrongEvent(self):
         payload = self.validPayload.copy()
         payload['event'] = self.state2_openCompetition.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please correct the errors below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testPostWorkshopEvent(self):
+        payload = self.validPayload.copy()
+        payload['event'] = self.state1_openWorkshop.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Please correct the errors below.')

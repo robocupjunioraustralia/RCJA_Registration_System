@@ -1,6 +1,6 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermission
 from django.utils.html import format_html, escape
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
@@ -110,7 +110,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         # Also to provide object level permissions
         for invoice in queryset:
             # Check has permission to edit this invoice
-            if not checkStatePermissions(request, invoice, 'change'):
+            if not checkCoordinatorPermission(request, Invoice, invoice, 'change'):
                 errorMessage = addErrorMessage(errorMessage, "Couldn't update some invoices as didn't have permission.")
                 continue
 

@@ -1,8 +1,9 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions
+from coordination.permissions import AdminPermissions
 
 from .models import Coordinator
+from regions.admin import StateAdmin
 
 # Register your models here.
 
@@ -12,13 +13,13 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         'userName',
         'userEmail',
         'state',
-        'permissions',
+        'permissionLevel',
         'position'
     ]
     fields = [
         'user',
         'state',
-        'permissions',
+        'permissionLevel',
         'position'
     ]
     autocomplete_fields = [
@@ -27,7 +28,7 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
     ]
     list_filter = [
         'state',
-        'permissions',
+        'permissionLevel',
     ]
     search_fields = [
         'user__first_name',
@@ -35,7 +36,7 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         'user__email',
         'state__name',
         'state__abbreviation',
-        'permissions',
+        'permissionLevel',
         'position',
     ]
     actions = [
@@ -46,25 +47,20 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         'userName',
         'userEmail',
         'state',
-        'permissions',
+        'permissionLevel',
         'position',
     ]
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
-        return [
-            {
-                'field': 'state',
-                'required': True,
-                'permissions': ['full'],
-                'fieldModel': State,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'stateCoordinatorRequired': True,
+            'globalCoordinatorRequired': True,
+            'permissionLevels': ['full'],
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
-    stateFilteringPermissions = ['full']
+    filteringPermissionLevels = ['full']
     stateFilterLookup = 'state__coordinator'
