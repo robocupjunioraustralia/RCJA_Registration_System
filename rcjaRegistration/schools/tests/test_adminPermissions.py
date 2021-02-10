@@ -6,7 +6,7 @@ from django.urls import reverse
 # School
 
 class School_Base:
-    modelPluralName = 'Schools'
+    modelName = 'School'
     modelURLName = 'schools_school'
     state1Obj = 'school1_state1'
     state2Obj = 'school3_state2'
@@ -85,7 +85,7 @@ class Test_School_ViewCoordinator(School_Coordinators_Base, Base_Test_ViewCoordi
 # School Administrator
 
 class SchoolAdministrator_Base:
-    modelPluralName = 'School Administrators'
+    modelName = 'School administrator'
     modelURLName = 'schools_schooladministrator'
     state1Obj = 'schooladmin_mentor1'
     state2Obj = 'schooladmin_mentor4'
