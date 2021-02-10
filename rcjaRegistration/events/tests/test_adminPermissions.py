@@ -11,6 +11,7 @@ from teams.models import Team
 # Division
 
 class Division_Base:
+    modelPluralName = 'Divisions'
     modelURLName = 'events_division'
     state1Obj = 'division1_state1'
     state2Obj = 'division2_state2'
@@ -116,6 +117,7 @@ class Test_Division_ViewCoordinator(Division_Coordinators_Base, Base_Test_ViewCo
 # Venue
 
 class Venue_Base:
+    modelPluralName = 'Venues'
     modelURLName = 'events_venue'
     state1Obj = 'venue1_state1'
     state2Obj = 'venue3_state2'
@@ -185,6 +187,7 @@ class Test_Venue_ViewCoordinator(Venue_Coordinators_Base, Base_Test_ViewCoordina
 # Event
 
 class Event_Base:
+    modelPluralName = 'Events'
     modelURLName = 'events_event'
     state1Obj = 'state1_openCompetition'
     state2Obj = 'state2_openCompetition'

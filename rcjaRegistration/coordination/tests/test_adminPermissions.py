@@ -10,6 +10,7 @@ from coordination.models import Coordinator
 # Coordinator
 
 class Coordinator_Base:
+    modelPluralName = 'Coordinators'
     modelURLName = 'coordination_coordinator'
     state1Obj = 'coord_state1_fullcoordinator'
     state2Obj = 'coord_state2_fullcoordinator'
