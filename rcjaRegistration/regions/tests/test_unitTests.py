@@ -2,7 +2,6 @@ from common.baseTests import createStates
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from regions.models import State, Region
 from users.models import User
 from schools.models import School
 
