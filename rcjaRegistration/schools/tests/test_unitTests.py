@@ -2,9 +2,7 @@ from common.baseTests import createStates
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from users.models import User
 from schools.models import School
-
 
 class TestSchoolRegionFieldClean(TestCase):
     @classmethod
