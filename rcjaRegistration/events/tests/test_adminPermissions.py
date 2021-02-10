@@ -14,6 +14,7 @@ class Division_Base:
     modelURLName = 'events_division'
     state1Obj = 'division1_state1'
     state2Obj = 'division2_state2'
+    globalObj = 'division3'
     validPayload = {
         'name': 'New Division',
         'state': 0,
@@ -47,6 +48,7 @@ class Test_Division_SuperUser(Division_Base, Base_Test_SuperUser, TestCase):
         self.assertEqual(response.status_code, 302)
 
 class Division_Coordinators_Base(Division_Base):
+    globalChangeLoadsCode = 200
     expectedListItems = 3
     expectedStrings = [
         'Division 1',
@@ -102,6 +104,11 @@ class Test_Division_GlobalFullCoordinator(Test_Division_FullCoordinator):
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, 302)
+
+    def testGlobalChangeEditable(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertContains(response, 'Save and continue editing')
 
 class Test_Division_ViewCoordinator(Division_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass
