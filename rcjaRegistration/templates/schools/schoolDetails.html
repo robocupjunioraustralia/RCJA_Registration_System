@@ -68,11 +68,11 @@
                         </div>
                         <div class="field">
                             <label>State: </label>
-                            {{form.state}}
+                            {{form.state|attr:"id:stateField"}}
                         </div>
                         <div class="field">
                             <label> Region: </label>
-                            {{form.region}}
+                            {{form.region|attr:"id:regionField"}}
                         </div>
                         <div class="field">
                             <label> Postcode: </label>
@@ -219,4 +219,7 @@ function getCookie(name) {
       $('#id_campus_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
     });
 </script>
+
+{% include "common/regionsFieldJS.html" with stateFieldID="stateField" regionFieldID="regionField" %}
+
 {% endblock %}

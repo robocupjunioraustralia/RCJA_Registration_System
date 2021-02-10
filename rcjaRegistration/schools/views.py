@@ -15,6 +15,8 @@ from django.db import IntegrityError, transaction
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
 
+from regions.utils import getRegionsLookup
+
 @login_required
 def create(request):
     if request.method == 'POST':
@@ -134,4 +136,4 @@ def details(request):
             # Add error to the form
             form.add_error(None, e.message)
 
-    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
+    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset, 'regionsLookup': getRegionsLookup()})
