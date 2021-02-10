@@ -16,6 +16,8 @@ from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm
 from schools.models import School
 
+from regions.utils import getRegionsLookup
+
 @login_required
 def details(request):
     # Schools
@@ -78,7 +80,7 @@ def details(request):
             # Add error to the form
             form.add_error(None, e.message)
 
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
+    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'regionsLookup': getRegionsLookup()})
 
 @sensitive_post_parameters('password', 'passwordConfirm')
 @sensitive_variables('form', 'cleaned_data')
