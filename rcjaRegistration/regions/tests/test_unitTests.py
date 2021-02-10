@@ -13,6 +13,9 @@ class TestRegionClean(TestCase):
         createStates(cls)
 
     def testValidNoState(self):
+        School.objects.create(name='New School', abbreviation='new', state=self.state2, region=self.region2_state1)
+        User.objects.create(email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
+
         self.assertEqual(self.region1.clean(), None)
 
     def testValidState(self):
