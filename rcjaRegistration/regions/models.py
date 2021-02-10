@@ -121,6 +121,21 @@ class Region(models.Model):
         verbose_name = 'Region'
         ordering = ['name']
 
+    def clean(self):
+        errors = []
+
+        # Check state change is compatible with existing linked objects
+        if self.state:
+            if self.user_set.exclude(homeState=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing users in this region'))
+
+            if self.school_set.exclude(state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing schools in this region'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
     def stateCoordinatorPermissions(cls, level):
