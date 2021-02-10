@@ -141,6 +141,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 class RegionAdmin(AdminPermissions, admin.ModelAdmin):
     list_display = [
         'name',
+        'state',
         'description',
     ]
     autocomplete_fields = [
