@@ -49,6 +49,9 @@ class Base:
         # Ignored for superuser and notstaff tests
         cls.state2ObjID = getattr(cls, cls.state2Obj).id
 
+        # Set the global object id if it is specified or None if not applicable - applicable tests only run if not none
+        cls.globalObjID = getattr(cls, cls.globalObj).id if hasattr(cls, 'globalObj') else None
+
         cls.updatePayload()
 
     objectsToRefresh = []
@@ -76,6 +79,11 @@ class Base:
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.assertEqual(response.status_code, self.changeLoadsCode)
 
+    def testGlobalChangeLoads(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertEqual(response.status_code, self.globalChangeLoadsCode)
+
     # Delete
 
     def testDeleteLoads(self):
@@ -86,6 +94,7 @@ class Base_Test_NotStaff(Base):
     """Test admin access with a user that has no admin/ staff permissions"""
     listLoadsCode = 302
     changeLoadsCode = 302
+    globalChangeLoadsCode = 302
     addLoadsCode = 302
     deleteLoadsCode = 302
 
@@ -187,6 +196,7 @@ class Base_Test_SuperUser(DoesLoadBase):
     """Test admin access with a superuser"""
     listLoadsCode = 200
     changeLoadsCode = 200
+    globalChangeLoadsCode = 200
     addLoadsCode = 200
     deleteLoadsCode = 200
     addPostCode = 302
@@ -207,6 +217,7 @@ class Base_Test_FullCoordinator(CoordinatorBase):
     """Test admin access with a coordinator with full permisisons to state 1"""
     listLoadsCode = 200
     changeLoadsCode = 200
+    globalChangeLoadsCode = 403 # Default to 403 so access must be explicitly specified on tests for global objects
     addLoadsCode = 200
     deleteLoadsCode = 200
     addPostCode = 302
@@ -220,10 +231,16 @@ class Base_Test_FullCoordinator(CoordinatorBase):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.assertContains(response, 'Save and continue editing')
 
+    def testGlobalChangeEditable(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertContains(response, 'Save and continue editing')
+
 class Base_Test_ViewCoordinator(CoordinatorBase):
     """Test admin access with a coordinator with view permisisons to state 1"""
     listLoadsCode = 200
     changeLoadsCode = 200
+    globalChangeLoadsCode = 403 # Default to 403 so access must be explicitly specified on tests for global objects
     addLoadsCode = 403
     deleteLoadsCode = 403
     addPostCode = 403
@@ -238,3 +255,10 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Save and continue editing')
         self.assertContains(response, 'Close')
+
+    def testGlobalChangeReadOnly(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertNotContains(response, 'Save')
+            self.assertNotContains(response, 'Save and continue editing')
+            self.assertContains(response, 'Close')
