@@ -121,7 +121,7 @@ class DoesLoadBase(Base):
     """Provides additional tests for users that have admin permisisons"""
     def testListCorrectNumber(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
-        self.assertContains(response, f'{self.expectedListItems} {self.modelPluralName}')
+        self.assertContains(response, f'{self.expectedListItems} {self.modelName}')
 
     def testListCorrectContent(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))

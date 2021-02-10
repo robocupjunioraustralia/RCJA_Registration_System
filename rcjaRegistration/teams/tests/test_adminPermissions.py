@@ -11,7 +11,7 @@ from schools.models import SchoolAdministrator
 # Team
 
 class Team_Base:
-    modelPluralName = 'Teams'
+    modelName = 'Team'
     modelURLName = 'teams_team'
     state1Obj = 'state1_event1_team1'
     state2Obj = 'state2_event1_team3'

@@ -9,7 +9,7 @@ from coordination.models import Coordinator
 # State
 
 class State_Base:
-    modelPluralName = 'States'
+    modelName = 'State'
     modelURLName = 'regions_state'
     state1Obj = 'state1'
     state2Obj = 'state2'
