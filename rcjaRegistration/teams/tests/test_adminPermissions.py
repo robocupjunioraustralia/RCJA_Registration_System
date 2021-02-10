@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams, POST_VALIDATION_FAILURE, POST_SUCCESS
 
 from django.test import TestCase
 from django.urls import reverse
@@ -51,7 +51,7 @@ class AdditionalTeamPostTestsMixin:
         payload = self.validPayload.copy()
         del payload['event']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'This field is required.')
 
@@ -78,7 +78,7 @@ class AdditionalTeamPostTestsMixin:
         del payload['school']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, f"School must not be blank because {self.user_state1_school1_mentor1.fullname_or_email()} is an administrator of multiple schools. Please select a school.")
 
@@ -88,14 +88,14 @@ class AdditionalTeamPostTestsMixin:
         payload = self.validPayload.copy()
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
 
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, POST_SUCCESS)
 
     def testNotAdminOfSchool(self):
         payload = self.validPayload.copy()
         payload['mentorUser'] = self.user_state1_school2_mentor3.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, f"is not an administrator of")
 
@@ -104,7 +104,7 @@ class AdditionalTeamPostTestsMixin:
         del payload['school']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_event1_team1.id,)), data=payload)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, f"remove {self.school1_state1} from this team while {self.user_state1_school1_mentor1.fullname_or_email()} is still an admin of this school.")
 
@@ -130,7 +130,7 @@ class Test_Team_SuperUser(AdditionalTeamPostTestsMixin, Team_Base, Base_Test_Sup
         payload = self.validPayload.copy()
         payload['event'] = self.state1_openWorkshop.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
@@ -152,7 +152,7 @@ class Test_Team_FullCoordinator(AdditionalTeamPostTestsMixin, Team_Coordinators_
         payload = self.validPayload.copy()
         payload['event'] = self.state2_openCompetition.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
@@ -160,7 +160,7 @@ class Test_Team_FullCoordinator(AdditionalTeamPostTestsMixin, Team_Coordinators_
         payload = self.validPayload.copy()
         payload['event'] = self.state1_openWorkshop.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 

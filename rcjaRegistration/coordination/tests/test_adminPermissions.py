@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Admin_Test
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Admin_Test, POST_VALIDATION_FAILURE, GET_DENIED_ALL, GET_SUCCESS, POST_SUCCESS
 
 from django.test import TestCase
 from django.urls import reverse
@@ -42,7 +42,7 @@ class Test_Coordinator_SuperUser(Coordinator_Base, Base_Test_SuperUser, TestCase
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, POST_SUCCESS)
 
 class Coordinator_Coordinators_Base(Coordinator_Base):
     expectedListItems = 2
@@ -60,7 +60,7 @@ class Test_Coordinator_FullCoordinator(Coordinator_Coordinators_Base, Base_Test_
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
 
@@ -68,12 +68,12 @@ class Test_Coordinator_FullCoordinator(Coordinator_Coordinators_Base, Base_Test_
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Coordinator_GlobalFullCoordinator(Test_Coordinator_FullCoordinator):
-    wrongStateCode = 200
+    wrongStateCode = GET_SUCCESS
     expectedListItems = 4
     expectedStrings = [
         'user2@user.com',
@@ -92,13 +92,13 @@ class Test_Coordinator_GlobalFullCoordinator(Test_Coordinator_FullCoordinator):
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, POST_SUCCESS)
 
 class Test_Coordinator_ViewCoordinator(Coordinator_Base, Base_Admin_Test, TestCase):
-    listLoadsCode = 403
-    changeLoadsCode = 403
-    addLoadsCode = 403
-    deleteLoadsCode = 403
+    listLoadsCode = GET_DENIED_ALL
+    changeLoadsCode = GET_DENIED_ALL
+    addLoadsCode = GET_DENIED_ALL
+    deleteLoadsCode = GET_DENIED_ALL
 
     def setUp(self):
         super().setUp()

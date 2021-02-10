@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, ADDDELETE_PAGE_DENIED_VIEWONLY, POST_DENIED
 
 from django.test import TestCase
 from django.urls import reverse
@@ -109,9 +109,9 @@ class State_Coordinators_Base(State_Base):
     ]
 
 class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
-    addLoadsCode = 403
-    deleteLoadsCode = 403
-    addPostCode = 403
+    addLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+    deleteLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+    addPostCode = POST_DENIED
 
     # Inlines
 
