@@ -74,7 +74,7 @@ class TestSchoolRegionFieldClean(TestCase):
 
         self.assertRaises(ValidationError, school.clean)
 
-    def testNoStateRegionInalid(self):
+    def testNoStateRegionInvalid(self):
         # State and region are required fields but not handled by clean
         school = School(
             name='New School',
