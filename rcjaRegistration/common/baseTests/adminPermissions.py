@@ -213,6 +213,13 @@ class CoordinatorBase(DoesLoadBase):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state2ObjID,)))
         self.assertEqual(response.status_code, self.wrongStateCode)
 
+    def testGlobalChangeEditable(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertNotContains(response, 'Save')
+            self.assertNotContains(response, 'Save and continue editing')
+            self.assertContains(response, 'Close')
+
 class Base_Test_FullCoordinator(CoordinatorBase):
     """Test admin access with a coordinator with full permisisons to state 1"""
     listLoadsCode = 200
@@ -230,11 +237,6 @@ class Base_Test_FullCoordinator(CoordinatorBase):
     def testChangeEditable(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.assertContains(response, 'Save and continue editing')
-
-    def testGlobalChangeEditable(self):
-        if self.globalObjID is not None:
-            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
-            self.assertContains(response, 'Save and continue editing')
 
 class Base_Test_ViewCoordinator(CoordinatorBase):
     """Test admin access with a coordinator with view permisisons to state 1"""
@@ -255,10 +257,3 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Save and continue editing')
         self.assertContains(response, 'Close')
-
-    def testGlobalChangeReadOnly(self):
-        if self.globalObjID is not None:
-            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
-            self.assertNotContains(response, 'Save')
-            self.assertNotContains(response, 'Save and continue editing')
-            self.assertContains(response, 'Close')
