@@ -1,6 +1,10 @@
 from common.baseTests import createStates
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.db.models import Q
+
+from regions.utils import getRegionsLookup
+from regions.models import State, Region
 
 from users.models import User
 from schools.models import School
@@ -46,3 +50,44 @@ class TestRegionMethods(TestCase):
 
     def testStr(self):
         self.assertEqual('Region 1', str(self.region1))
+
+class TestGetRegionsLookup(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+
+    def testLookupLength(self):
+        self.state1.typeRegistration = False
+        self.state1.save()
+
+        lookup = getRegionsLookup()
+
+        self.assertEqual(State.objects.filter(typeRegistration=True).count() + 1, len(lookup))
+
+    def testRegistrationIn(self):
+        lookup = getRegionsLookup()
+
+        self.assertIn(self.state1.id, [x.id for x in lookup])
+
+    def testNotRegistrationNotIn(self):
+        self.state1.typeRegistration = False
+        self.state1.save()
+
+        lookup = getRegionsLookup()
+
+        self.assertNotIn(self.state1.id, [x.id for x in lookup])
+
+    def testBlankIn(self):
+        lookup = getRegionsLookup()
+
+        self.assertIn('', [x.id for x in lookup])
+
+    def testStateContent(self):
+        lookup = getRegionsLookup()
+
+        self.assertEqual(2, lookup[1].regions.count())
+
+    def testBlankContent(self):
+        lookup = getRegionsLookup()
+
+        self.assertEqual(1, lookup[0].regions.count())
