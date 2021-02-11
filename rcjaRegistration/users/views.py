@@ -101,7 +101,7 @@ def signup(request):
     else:
         form = UserSignupForm()
 
-    return render(request, 'registration/signup.html', {'form': form})
+    return render(request, 'registration/signup.html', {'form': form, 'regionsLookup': getRegionsLookup()})
 
 def termsAndConditions(request):
     if request.user.is_authenticated:
