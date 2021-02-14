@@ -78,6 +78,8 @@ INSTALLED_APPS = [
     'schools.apps.SchoolsConfig',
     'workshops.apps.WorkshopsConfig',
     'common.apps.CommonConfig',
+    'dal', # Must be before django.contrib.admin
+    'dal_select2', # Must be before django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
