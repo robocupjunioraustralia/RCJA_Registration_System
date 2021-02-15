@@ -28,8 +28,8 @@ class UserForm(ModelForm):
 
 class UserSignupForm(UserForm):
     # Password fields
-    password = forms.CharField(strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}))
-    passwordConfirm = forms.CharField(strip=False, widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}))
+    password = forms.CharField(strip=False, widget=forms.PasswordInput(attrs={'placeholder':'Password', 'autocomplete': 'new-password'}))
+    passwordConfirm = forms.CharField(strip=False, widget=forms.PasswordInput(attrs={'placeholder':'Confirm password', 'autocomplete': 'new-password'}))
 
     @sensitive_variables('cleaned_data', 'password', 'passwordConfirm')
     def clean(self):
