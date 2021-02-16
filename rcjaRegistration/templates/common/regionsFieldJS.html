@@ -1,5 +1,5 @@
 <script>
-  var regionLookups = {
+  const regionLookups = {
     {% for state in regionsLookup %}
       '{{ state.id }}': [
         {% for region in state.regions %}
@@ -10,30 +10,30 @@
   };
 
   $(document).ready(function () {
-    homeStateeHandler($('#{{ stateFieldID }}').val());
+    homeStateHandler($('#{{ stateFieldID }}').val());
     // console.log('loaded');
   });
 
   $('#{{ stateFieldID }}').change(function () {
-    homeStateeHandler(this.value);
+    homeStateHandler(this.value);
   });
 
-  const homeStateeHandler = (newDisplayString) => {
-      var selectedRegionID = $("#{{ regionFieldID }} option:selected").val();
+  const homeStateHandler = (newDisplayString) => {
+      let selectedRegionID = $("#{{ regionFieldID }} option:selected").val();
       $("#{{ regionFieldID }}").empty();
 
-      var selectedStateID = $("#{{ stateFieldID }} option:selected").val();
+      let selectedStateID = $("#{{ stateFieldID }} option:selected").val();
 
       regions = regionLookups[selectedStateID];
       // console.log(regions);
 
-      var opt = document.createElement('option');
+      let opt = document.createElement('option');
       opt.text = '---------';
       opt.value = '';
       $("#{{ regionFieldID }}").append(opt);
 
       for (i = 0; i < regions.length; i++) {
-        var opt = document.createElement('option');
+        let opt = document.createElement('option');
 
         opt.text = regions[i]['name'];
         opt.value = regions[i]['id'];
