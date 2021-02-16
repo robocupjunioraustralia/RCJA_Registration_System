@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, POST_VALIDATION_FAILURE, GET_SUCCESS, POST_SUCCESS
 
 from django.test import TestCase
 from django.urls import reverse
@@ -11,9 +11,11 @@ from teams.models import Team
 # Division
 
 class Division_Base:
+    modelName = 'Division'
     modelURLName = 'events_division'
     state1Obj = 'division1_state1'
     state2Obj = 'division2_state2'
+    globalObj = 'division3'
     validPayload = {
         'name': 'New Division',
         'state': 0,
@@ -44,9 +46,10 @@ class Test_Division_SuperUser(Division_Base, Base_Test_SuperUser, TestCase):
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, POST_SUCCESS)
 
 class Division_Coordinators_Base(Division_Base):
+    globalChangeLoadsCode = GET_SUCCESS
     expectedListItems = 3
     expectedStrings = [
         'Division 1',
@@ -62,7 +65,7 @@ class Test_Division_FullCoordinator(Division_Coordinators_Base, Base_Test_FullCo
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
 
@@ -70,12 +73,12 @@ class Test_Division_FullCoordinator(Division_Coordinators_Base, Base_Test_FullCo
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Division_GlobalFullCoordinator(Test_Division_FullCoordinator):
-    wrongStateCode = 200
+    wrongStateCode = GET_SUCCESS
     expectedListItems = 4
     expectedStrings = [
         'Division 1',
@@ -95,13 +98,18 @@ class Test_Division_GlobalFullCoordinator(Test_Division_FullCoordinator):
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, POST_SUCCESS)
 
     def testPostAddWrongState(self):
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+    def testGlobalChangeEditable(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertContains(response, 'Save and continue editing')
 
 class Test_Division_ViewCoordinator(Division_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass
@@ -109,6 +117,7 @@ class Test_Division_ViewCoordinator(Division_Coordinators_Base, Base_Test_ViewCo
 # Venue
 
 class Venue_Base:
+    modelName = 'Venue'
     modelURLName = 'events_venue'
     state1Obj = 'venue1_state1'
     state2Obj = 'venue3_state2'
@@ -141,7 +150,7 @@ class Test_Venue_SuperUser(Venue_Base, Base_Test_SuperUser, TestCase):
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'This field is required.')
 
@@ -160,7 +169,7 @@ class Test_Venue_FullCoordinator(Venue_Coordinators_Base, Base_Test_FullCoordina
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'This field is required.')
 
@@ -168,7 +177,7 @@ class Test_Venue_FullCoordinator(Venue_Coordinators_Base, Base_Test_FullCoordina
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
@@ -178,6 +187,7 @@ class Test_Venue_ViewCoordinator(Venue_Coordinators_Base, Base_Test_ViewCoordina
 # Event
 
 class Event_Base:
+    modelName = 'Event'
     modelURLName = 'events_event'
     state1Obj = 'state1_openCompetition'
     state2Obj = 'state2_openCompetition'
@@ -225,7 +235,7 @@ class AdditionalEventTestsMixin:
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'This field is required.')
 
@@ -344,7 +354,7 @@ class Test_Event_FullCoordinator(AdditionalEventTestsMixin, Event_Coordinators_B
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 

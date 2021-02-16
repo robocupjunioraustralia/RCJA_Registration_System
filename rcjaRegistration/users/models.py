@@ -79,6 +79,10 @@ class User(SaveDeleteMixin, AbstractUser):
         if User.objects.filter(email__iexact=self.email).exclude(pk=self.pk).exists():
             raise ValidationError({'email': _('User with this email address already exists.')})
 
+        # Validate region state
+        if self.homeRegion and self.homeRegion.state is not None and self.homeRegion.state != self.homeState:
+            raise ValidationError("Region not valid for selected state")
+
     # *****Permissions*****
     @classmethod
     def stateCoordinatorPermissions(cls, level):

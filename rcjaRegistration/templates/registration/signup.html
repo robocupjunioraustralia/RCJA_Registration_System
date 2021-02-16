@@ -62,11 +62,11 @@
                 <div class="two fields">
                   <div class="field">
                     <label>Home state: </label>
-                    {{form.homeState}}
+                    {{form.homeState|attr:"id:homeStateField"}}
                   </div>
                   <div class="field">
                     <label> Home region: </label>
-                    {{form.homeRegion}}
+                    {{form.homeRegion|attr:"id:homeRegionField"}}
                   </div>
                 </div>
 
@@ -116,4 +116,7 @@
   });
 
 </script>
+
+{% include "common/regionsFieldJS.html" with stateFieldID="homeStateField" regionFieldID="homeRegionField" %}
+
 {% endblock %}

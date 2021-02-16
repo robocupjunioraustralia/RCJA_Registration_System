@@ -1,4 +1,3 @@
-
 from django.db.models import Q
 from django.contrib.auth import get_permission_codename
 

@@ -12,7 +12,9 @@ def createStates(self):
     self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
     self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
 
-    self.region1 = Region.objects.create(name='Region 1', description='test desc')
+    self.region1 = Region.objects.create(name='Region 1')
+    self.region2_state1 = Region.objects.create(name='Region 2', state=self.state1)
+    self.region3_state2 = Region.objects.create(name='Region 3', state=self.state2)
 
 def createUsers(self):
     self.email_user_state1_super1 = 'super1@user.com'
