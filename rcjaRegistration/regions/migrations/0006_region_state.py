@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='region',
             name='state',
-            field=models.ForeignKey(blank=True, help_text='Leave blank for a global region. Global divisions are only editable by global administrators.', limit_choices_to={'typeRegistration': True}, null=True, on_delete=django.db.models.deletion.PROTECT, to='regions.State', verbose_name='State'),
+            field=models.ForeignKey(blank=True, help_text='Leave blank for a global region. Global regions are only editable by global administrators.', limit_choices_to={'typeRegistration': True}, null=True, on_delete=django.db.models.deletion.PROTECT, to='regions.State', verbose_name='State'),
         ),
         migrations.RunPython(forwards_func, reverse_func),
     ]
