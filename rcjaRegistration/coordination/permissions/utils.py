@@ -1,9 +1,19 @@
 from django.db.models import Q
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_permission_codename
 
 from coordination.models import Coordinator
 
 def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
+    # Check user and is authenticated
+    # Queryset filtering should not be attempted for users not logged in.
+    if request.user is None or not request.user.is_authenticated:
+        raise PermissionDenied
+
+    # Check user is active. Queryset filtering should not be attempted for inactive users.
+    if not request.user.is_active:
+        raise PermissionDenied
+
     # Return complete queryset if super user
     if request.user.is_superuser:
         return queryset
@@ -51,6 +61,11 @@ def isGlobalObject(model, obj):
     return False
 
 def checkCoordinatorPermission(request, model, obj, permission):
+    # Check user exists and is authenticated
+    # Should probably never be passed request.user = None but better to check
+    if request.user is None or not request.user.is_authenticated:
+        return False
+
     # Check user is active. Should be covered by Django checks, but additional safety.
     if not request.user.is_active:
         return False
@@ -100,6 +115,11 @@ def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
     - user is global coordinator of specified permission level
     - user has a permission level in the supplied permissionLevels for the state of specified object
     """
+    # Check user exists and is authenticated
+    # Should probably never be passed request.user = None but better to check
+    if request.user is None or not request.user.is_authenticated:
+        return False
+
     # Check user is active. Should be covered by Django checks, but additional safety.
     if not request.user.is_active:
         return False
