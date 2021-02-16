@@ -19,21 +19,21 @@
   });
 
   const homeStateHandler = (newDisplayString) => {
-      var selectedRegionID = $("#{{ regionFieldID }} option:selected").val();
+      let selectedRegionID = $("#{{ regionFieldID }} option:selected").val();
       $("#{{ regionFieldID }}").empty();
 
-      var selectedStateID = $("#{{ stateFieldID }} option:selected").val();
+      let selectedStateID = $("#{{ stateFieldID }} option:selected").val();
 
       regions = regionLookups[selectedStateID];
       // console.log(regions);
 
-      var opt = document.createElement('option');
+      let opt = document.createElement('option');
       opt.text = '---------';
       opt.value = '';
       $("#{{ regionFieldID }}").append(opt);
 
       for (i = 0; i < regions.length; i++) {
-        var opt = document.createElement('option');
+        let opt = document.createElement('option');
 
         opt.text = regions[i]['name'];
         opt.value = regions[i]['id'];
