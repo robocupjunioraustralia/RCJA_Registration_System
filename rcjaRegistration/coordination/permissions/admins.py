@@ -116,7 +116,7 @@ class AdminPermissions(BaseAdminPermissions):
             for url in self.autocompleteFilters:
                 if url in request.META.get('HTTP_REFERER', ''):
 
-                    # Get permission levels that assign add or change permisisons for the target object, then get filter queryset of this admin to those permission levels 
+                    # Get permission levels that assign add or change permisisons for the target object, then get filter queryset of this admin to those permission levels
                     statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.autocompleteFilters[url], ['add', 'change'])
                     queryset = self.filterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels)
 
