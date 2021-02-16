@@ -3,6 +3,7 @@ from unittest.mock import patch
 from common.baseTests import createStates, createUsers, createEvents
 from coordination.permissions import coordinatorFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
 from django.contrib.auth.models import AnonymousUser
+from django.core.exceptions import PermissionDenied
 
 from users.models import User
 from coordination.models import Coordinator
@@ -541,6 +542,7 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.request = RequestObj()
 
     def testSuperuser(self):
+        self.user_state1_super1.refresh_from_db()
         self.request.user = self.user_state1_super1
         
         qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
@@ -568,16 +570,12 @@ class Test_coordinatorFilterQueryset(TestCase):
     def testNoUser(self):
         self.request.user = None
 
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
-
-        self.assertFalse(qs.exists())
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNotAuthenticated(self):
         self.request.user = AnonymousUser()
 
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
-
-        self.assertFalse(qs.exists())
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNoperms(self):
         self.request.user = self.user_notstaff
@@ -591,9 +589,7 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.user_state1_super1.save()
         self.request.user = self.user_state1_super1
 
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
-
-        self.assertFalse(qs.exists())
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNoLookups(self):
         self.request.user = self.user_notstaff
