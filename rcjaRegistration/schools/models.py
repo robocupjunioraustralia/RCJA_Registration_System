@@ -57,6 +57,10 @@ class School(SaveDeleteMixin, models.Model):
             if len(self.postcode) < 4:
                 errors.append(ValidationError('Postcode too short'))
 
+        # Validate region state
+        if self.region and self.region.state is not None and self.region.state != self.state:
+            errors.append(ValidationError("Region not valid for selected state"))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)

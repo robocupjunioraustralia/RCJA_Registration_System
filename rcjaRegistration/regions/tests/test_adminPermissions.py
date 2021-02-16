@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, ADDDELETE_PAGE_DENIED_VIEWONLY, POST_DENIED, GET_SUCCESS, POST_SUCCESS, POST_VALIDATION_FAILURE
 
 from django.test import TestCase
 from django.urls import reverse
@@ -9,6 +9,7 @@ from coordination.models import Coordinator
 # State
 
 class State_Base:
+    modelName = 'State'
     modelURLName = 'regions_state'
     state1Obj = 'state1'
     state2Obj = 'state2'
@@ -109,9 +110,9 @@ class State_Coordinators_Base(State_Base):
     ]
 
 class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
-    addLoadsCode = 403
-    deleteLoadsCode = 403
-    addPostCode = 403
+    addLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+    deleteLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+    addPostCode = POST_DENIED
 
     # Inlines
 
@@ -183,3 +184,102 @@ class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordina
         ('typeGlobal', 'Global'),
         ('typeWebsite', 'Website'),
     ]
+
+# Region
+
+class Region_Base:
+    modelName = 'Region'
+    modelURLName = 'regions_region'
+    state1Obj = 'region2_state1'
+    state2Obj = 'region3_state2'
+    globalObj = 'region1'
+    validPayload = {
+        'name': 'New Region',
+        'state': 0,
+    }
+
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
+
+class Test_Region_NotStaff(Region_Base, Base_Test_NotStaff, TestCase):
+    pass
+
+class Test_Region_SuperUser(Region_Base, Base_Test_SuperUser, TestCase):
+    expectedListItems = 3
+    expectedStrings = [
+        'Region 1',
+        'Region 2',
+        'Region 3',
+    ]
+    expectedMissingStrings = []
+
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+class Region_Coordinators_Base(Region_Base):
+    globalChangeLoadsCode = GET_SUCCESS
+    expectedListItems = 2
+    expectedStrings = [
+        'Region 1',
+        'Region 2',
+    ]
+    expectedMissingStrings = [
+        'Region 3',
+    ]
+
+class Test_Region_FullCoordinator(Region_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'This field is required.')
+
+    def testPostAddWrongState(self):
+        payload = self.validPayload.copy()
+        payload['state'] = self.state2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+class Test_Region_GlobalFullCoordinator(Test_Region_FullCoordinator):
+    wrongStateCode = GET_SUCCESS
+    expectedListItems = 3
+    expectedStrings = [
+        'Region 1',
+        'Region 2',
+        'Region 3',
+    ]
+    expectedMissingStrings = []
+
+    @classmethod
+    def additionalSetup(cls):
+        super().additionalSetup()
+        cls.coord_state1_fullcoordinator.state = None
+        cls.coord_state1_fullcoordinator.save()
+
+    def testPostAddBlankState(self):
+        payload = self.validPayload.copy()
+        del payload['state']
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+    def testPostAddWrongState(self):
+        payload = self.validPayload.copy()
+        payload['state'] = self.state2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+    def testGlobalChangeEditable(self):
+        if self.globalObjID is not None:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
+            self.assertContains(response, 'Save and continue editing')
+
+class Test_Region_ViewCoordinator(Region_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
+    pass

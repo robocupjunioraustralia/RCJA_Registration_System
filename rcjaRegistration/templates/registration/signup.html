@@ -2,10 +2,6 @@
 {% load widget_tweaks %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
-{% load static %}
 <title> Create account </title>
 {% include 'common/loginBase.html'%}
 {% endblock %}
@@ -58,19 +54,19 @@
                 </div>
                 <div class="field">
                   <label>Password</label>
-                  {{ form.password|attr:"placeholder:Password"|attr:"type:password" }}
+                  {{ form.password }}
                 </div>
                 <div class="field">
-                  {{ form.passwordConfirm|attr:"placeholder:Confirm password"|attr:"type:password" }}
+                  {{ form.passwordConfirm }}
                 </div>
                 <div class="two fields">
                   <div class="field">
                     <label>Home state: </label>
-                    {{form.homeState}}
+                    {{form.homeState|attr:"id:homeStateField"}}
                   </div>
                   <div class="field">
                     <label> Home region: </label>
-                    {{form.homeRegion}}
+                    {{form.homeRegion|attr:"id:homeRegionField"}}
                   </div>
                 </div>
 
@@ -98,6 +94,7 @@
     $('.ui.form')
       .form({
         on: 'blur',
+        shouldTrim: false,
         inline: true,
         fields: {
           registerPassword: {
@@ -119,4 +116,7 @@
   });
 
 </script>
+
+{% include "common/regionsFieldJS.html" with stateFieldID="homeStateField" regionFieldID="homeRegionField" %}
+
 {% endblock %}

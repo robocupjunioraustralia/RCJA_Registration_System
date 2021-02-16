@@ -1,8 +1,5 @@
-from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase, modify_settings
-from django.urls import reverse
-from django.test import Client
-from django.http import HttpRequest
+from common.baseTests import createStates
+from django.test import TestCase
 from django.core.exceptions import ValidationError
 from unittest.mock import patch, Mock
 
@@ -275,3 +272,71 @@ class TestUserSignupForm(TestUserForm):
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(), ["Password too short"])
+
+class TestUserRegionFieldClean(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+
+    def testNoStateNoRegionValid(self):
+        user = User(
+            email='test@test.com',
+            homeState=None,
+            homeRegion=None,
+        )
+
+        self.assertEqual(user.clean(), None)
+
+    def testStateNoRegionValid(self):
+        user = User(
+            email='test@test.com',
+            homeState=self.state1,
+            homeRegion=None,
+        )
+
+        self.assertEqual(user.clean(), None)
+
+    def testNoStateGlobalRegionValid(self):
+        user = User(
+            email='test@test.com',
+            homeState=None,
+            homeRegion=self.region1,
+        )
+
+        self.assertEqual(user.clean(), None)
+
+    def testStateGlobalRegionValid(self):
+        user = User(
+            email='test@test.com',
+            homeState=self.state1,
+            homeRegion=self.region1,
+        )
+
+        self.assertEqual(user.clean(), None)
+
+    def testCorrectStateRegionValid(self):
+        user = User(
+            email='test@test.com',
+            homeState=self.state1,
+            homeRegion=self.region2_state1,
+        )
+
+        self.assertEqual(user.clean(), None)
+
+    def testIncorrectStateRegionInvalid(self):
+        user = User(
+            email='test@test.com',
+            homeState=self.state2,
+            homeRegion=self.region2_state1,
+        )
+
+        self.assertRaises(ValidationError, user.clean)
+
+    def testNoStateRegionInvalid(self):
+        user = User(
+            email='test@test.com',
+            homeState=None,
+            homeRegion=self.region2_state1,
+        )
+
+        self.assertRaises(ValidationError, user.clean)
