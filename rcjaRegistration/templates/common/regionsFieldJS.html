@@ -1,5 +1,5 @@
 <script>
-  var regionLookups = {
+  const regionLookups = {
     {% for state in regionsLookup %}
       '{{ state.id }}': [
         {% for region in state.regions %}
@@ -10,15 +10,15 @@
   };
 
   $(document).ready(function () {
-    homeStateeHandler($('#{{ stateFieldID }}').val());
+    homeStateHandler($('#{{ stateFieldID }}').val());
     // console.log('loaded');
   });
 
   $('#{{ stateFieldID }}').change(function () {
-    homeStateeHandler(this.value);
+    homeStateHandler(this.value);
   });
 
-  const homeStateeHandler = (newDisplayString) => {
+  const homeStateHandler = (newDisplayString) => {
       var selectedRegionID = $("#{{ regionFieldID }} option:selected").val();
       $("#{{ regionFieldID }}").empty();
 
