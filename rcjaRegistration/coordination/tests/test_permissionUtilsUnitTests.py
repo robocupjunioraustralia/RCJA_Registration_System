@@ -2,6 +2,7 @@ from django.test import TestCase
 from unittest.mock import patch
 from common.baseTests import createStates, createUsers, createEvents
 from coordination.permissions import coordinatorFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
+from django.contrib.auth.models import AnonymousUser
 
 from users.models import User
 from coordination.models import Coordinator
@@ -56,6 +57,16 @@ def commonSetUp(self):
 class Test_checkCoordinatorPermission(TestCase):
     def setUp(self):
         commonSetUp(self)
+
+    def testDeniedNoUser(self):
+        self.request.user = None
+
+        self.assertFalse(checkCoordinatorPermission(self.request, ModelTestState, self.stateObj, 'change'))
+
+    def testDeniedNotAuthenticated(self):
+        self.request.user = AnonymousUser()
+
+        self.assertFalse(checkCoordinatorPermission(self.request, ModelTestState, self.stateObj, 'change'))
 
     def testAllowedSuperuser(self):
         self.request.user = self.user_state1_super1
@@ -270,6 +281,16 @@ class Test_checkCoordinatorPermission(TestCase):
 class Test_checkCoordinatorPermissionLevel(TestCase):
     def setUp(self):
         commonSetUp(self)
+
+    def testDeniedNoUser(self):
+        self.request.user = None
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedNotAuthenticated(self):
+        self.request.user = AnonymousUser()
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
 
     def testAllowedSuperuser(self):
         self.request.user = self.user_state1_super1
@@ -544,9 +565,32 @@ class Test_coordinatorFilterQueryset(TestCase):
 
         self.assertFalse(qs.exists())
 
+    def testNoUser(self):
+        self.request.user = None
+
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertFalse(qs.exists())
+
+    def testNotAuthenticated(self):
+        self.request.user = AnonymousUser()
+
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertFalse(qs.exists())
+
     def testNoperms(self):
         self.request.user = self.user_notstaff
         
+        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+
+        self.assertFalse(qs.exists())
+
+    def testInactiveSuperuser(self):
+        self.user_state1_super1.is_active = False
+        self.user_state1_super1.save()
+        self.request.user = self.user_state1_super1
+
         qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
 
         self.assertFalse(qs.exists())
