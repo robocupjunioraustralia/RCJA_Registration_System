@@ -61,7 +61,7 @@ def isGlobalObject(model, obj):
     return False
 
 def checkCoordinatorPermission(request, model, obj, permission):
-    # Check user and is authenticated
+    # Check user exists and is authenticated
     # Should probably never be passed request.user = None but better to check
     if request.user is None or not request.user.is_authenticated:
         return False
@@ -115,7 +115,7 @@ def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
     - user is global coordinator of specified permission level
     - user has a permission level in the supplied permissionLevels for the state of specified object
     """
-    # Check user and is authenticated
+    # Check user exists and is authenticated
     # Should probably never be passed request.user = None but better to check
     if request.user is None or not request.user.is_authenticated:
         return False
