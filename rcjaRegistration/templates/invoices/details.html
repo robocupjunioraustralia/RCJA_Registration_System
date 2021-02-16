@@ -6,9 +6,9 @@
   <title>Invoice - {{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
-  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css'>
-  <!-- <link rel="stylesheet" href="./style.css"> -->
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.js"></script>
 </head>
 
 <body>
@@ -44,7 +44,7 @@
         </div>
         <div class="content">
           <ul>
-            <li><strong>{{ invoice.school.name }}{% if invoice.campusInvoicingEnabled %} , {{invoice.campus|default:'No'}} Campus {% endif %}</strong></li>
+            <li><strong>{{ invoice.school.name }}{% if invoice.campusInvoicingEnabled %}, {{invoice.campus|default:'No'}} Campus {% endif %}</strong></li>
             <li><strong>{{ invoice.invoiceToUser.get_full_name }}</strong></li>
             <li>{{ invoice.invoiceToUser.email }}</li>
             <li>Invoice Date: {{ invoice.invoicedDate }}</li>
@@ -162,9 +162,6 @@
       </div>
     </div>
   </div>
-  <!-- partial -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js'></script>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
 </body>
 
 </html>
