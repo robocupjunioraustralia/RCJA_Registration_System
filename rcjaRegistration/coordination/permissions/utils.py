@@ -11,7 +11,7 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
         raise PermissionDenied
 
     # Check user is active. Queryset filtering should not be attempted for inactive users.
-    if not request.user.is_active:
+    if not (request.user.is_active and request.user.is_staff):
         raise PermissionDenied
 
     # Return complete queryset if super user
@@ -67,7 +67,7 @@ def checkCoordinatorPermission(request, model, obj, permission):
         return False
 
     # Check user is active. Should be covered by Django checks, but additional safety.
-    if not request.user.is_active:
+    if not (request.user.is_active and request.user.is_staff):
         return False
 
     # Return true if super user
@@ -121,7 +121,7 @@ def checkCoordinatorPermissionLevel(request, obj, permisisonLevels):
         return False
 
     # Check user is active. Should be covered by Django checks, but additional safety.
-    if not request.user.is_active:
+    if not (request.user.is_active and request.user.is_staff):
         return False
 
     # Return true if super user

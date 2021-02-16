@@ -76,7 +76,12 @@ class Test_checkCoordinatorPermission(TestCase):
 
     def testDeniedInactiveSuperuser(self):
         self.user_state1_super1.is_active = False
-        self.user_state1_super1.save()
+        self.request.user = self.user_state1_super1
+
+        self.assertFalse(checkCoordinatorPermission(self.request, ModelTestState, self.stateObj, 'change'))
+
+    def testDeniedNotStaffSuperuser(self):
+        self.user_state1_super1.is_staff = False
         self.request.user = self.user_state1_super1
 
         self.assertFalse(checkCoordinatorPermission(self.request, ModelTestState, self.stateObj, 'change'))
@@ -300,7 +305,12 @@ class Test_checkCoordinatorPermissionLevel(TestCase):
 
     def testDeniedInactiveSuperuser(self):
         self.user_state1_super1.is_active = False
-        self.user_state1_super1.save()
+        self.request.user = self.user_state1_super1
+
+        self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
+
+    def testDeniedNotStaffSuperuser(self):
+        self.user_state1_super1.is_staff = False
         self.request.user = self.user_state1_super1
 
         self.assertFalse(checkCoordinatorPermissionLevel(self.request, self.stateObj, ['full']))
@@ -585,8 +595,15 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.assertFalse(qs.exists())
 
     def testInactiveSuperuser(self):
+        self.user_state1_super1.refresh_from_db()
         self.user_state1_super1.is_active = False
-        self.user_state1_super1.save()
+        self.request.user = self.user_state1_super1
+
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
+
+    def testNotStaffSuperuser(self):
+        self.user_state1_super1.refresh_from_db()
+        self.user_state1_super1.is_staff = False
         self.request.user = self.user_state1_super1
 
         self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
