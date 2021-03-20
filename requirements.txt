@@ -18,7 +18,7 @@ docutils==0.15.2
 idna==2.10
 jmespath==0.10.0
 packaging==20.8
-Pillow==7.2.0
+Pillow==8.1.1
 psycopg2-binary==2.8.5
 pyparsing==2.4.7
 python-dateutil==2.8.1
