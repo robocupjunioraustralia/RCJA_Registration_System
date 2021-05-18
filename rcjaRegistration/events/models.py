@@ -512,6 +512,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
+    notes = models.TextField('Notes', blank=True)
 
     # *****Meta and clean*****
     class Meta:
