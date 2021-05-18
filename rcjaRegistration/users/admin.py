@@ -163,6 +163,7 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'is_staff',
         'is_superuser',
         'is_active',
+        'strSchools',
     ]
     exportFieldsManyRelations = ['questionresponse_set']
 
