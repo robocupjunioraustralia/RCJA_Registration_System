@@ -574,7 +574,7 @@ def newCommonSetUp(self):
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
         self.region2 = Region.objects.create(name='Test Region2', description='test desc')
 
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
+        self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1, homeRegion=self.region1)
         self.user3 = User.objects.create_user(email=self.email3, password=self.password)
         self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
 
