@@ -88,6 +88,8 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'homeRegion',
+        'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
         'notes',

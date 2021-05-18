@@ -572,6 +572,7 @@ def newCommonSetUp(self):
         self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
         self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
+        self.region2 = Region.objects.create(name='Test Region2', description='test desc')
 
         self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
         self.user3 = User.objects.create_user(email=self.email3, password=self.password)
@@ -579,7 +580,7 @@ def newCommonSetUp(self):
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
         self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region2, postcode="1234")
 
         self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
         self.campus2 = Campus.objects.create(school=self.school1, name='Campus 2')
@@ -997,6 +998,18 @@ class TestTeamMethods(TestCase):
 
     def testHomeState_noSchool(self):
         self.assertEqual(self.team1.homeState(), self.state1)
+
+    def testHomeRegion_school(self):
+        self.assertEqual(self.team3.homeRegion(), self.region2)
+
+    def testHomeRegion_noSchool(self):
+        self.assertEqual(self.team1.homeRegion(), self.region1)
+
+    def testSchoolPostcode_school(self):
+        self.assertEqual(self.team3.schoolPostcode(), "1234")
+
+    def testSchoolPostcode_noSchool(self):
+        self.assertEqual(self.team1.schoolPostcode(), None)
 
     def testEventAttendanceType(self):
         self.assertEqual(self.team1.eventAttendanceType(), 'team')

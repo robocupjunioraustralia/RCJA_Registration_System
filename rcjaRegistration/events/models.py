@@ -612,6 +612,18 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         return self.mentorUser.homeState
     homeState.short_description = 'Home state'
 
+    def homeRegion(self):
+        if self.school:
+            return self.school.region
+        return self.mentorUser.homeRegion
+    homeRegion.short_description = 'Home region'
+
+    def schoolPostcode(self):
+        if self.school:
+            return self.school.postcode
+        return None
+    schoolPostcode.short_description = 'School postcode'
+
     def mentorUserName(self):
         return self.mentorUser.fullname_or_email()
     mentorUserName.short_description = 'Mentor'
