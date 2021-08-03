@@ -1,7 +1,7 @@
 asgiref==3.2.10
 bleach==3.3.0
-boto3==1.14.38
-botocore==1.17.38
+boto3==1.18.12
+botocore==1.21.12
 certifi==2020.6.20
 chardet==3.0.4
 Django==3.1.12
@@ -23,11 +23,11 @@ psycopg2-binary==2.8.5
 pyparsing==2.4.7
 python-dateutil==2.8.1
 pytz==2020.1
-requests==2.24.0
-s3transfer==0.3.3
+requests==2.26.0
+s3transfer==0.5.0
 six==1.15.0
 sqlparse==0.3.1
 uritemplate==3.0.1
-urllib3==1.25.10
+urllib3==1.26.5
 webencodings==0.5.1
 whitenoise==5.2.0
