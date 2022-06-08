@@ -23,6 +23,7 @@ from .forms import CustomAuthForm
 admin.site.site_header = "RCJA Admin"
 admin.site.site_title = "RCJA Admin"
 admin.site.index_title = "Administration Home"
+admin.site.enable_nav_sidebar = False
 
 
 urlpatterns = [

@@ -179,7 +179,6 @@ class Student(models.Model):
     # Dictionary of values for each header
     def csvValues(self):
         studentNumber = self.getStudentNumber()
-        print(self.birthday)
         return {
             f'Member {studentNumber} First Name': self.firstName,
             f'Member {studentNumber} Last Name': self.lastName,

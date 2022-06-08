@@ -1042,7 +1042,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, "Cannot delete some instances of model &#x27;Campus&#x27; because they are referenced through a protected foreign key:")
+        self.assertContains(response, "Cannot delete some instances of model &#x27;Campus&#x27; because they are referenced through protected foreign keys:")
         Campus.objects.get(name='test 1')
         self.assertEqual(Campus.objects.count(), numberExistingCampuses)
 

@@ -447,6 +447,8 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school',
         'campus',
         'homeState',
+        'homeRegion',
+        'schoolPostcode',
     ]
 
     form = BaseWorkshopAttendanceForm
