@@ -2,6 +2,8 @@ from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
+from django.forms import Textarea
+from django.db import models
 
 from .models import HardwarePlatform, SoftwarePlatform, Team, Student
 
@@ -43,7 +45,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform',)
+            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
         }),
     )
     add_fieldsets = (
@@ -58,7 +60,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform',)
+            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
         }),
     )
 
@@ -86,8 +88,11 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'homeRegion',
+        'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
+        'notes',
     ]
     exportFieldsManyRelations = [
         'student_set',
@@ -97,6 +102,10 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     }
 
     eventTypeMapping = 'competition'
+
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':2, 'cols':40})},
+    }
 
     # State based filtering
 

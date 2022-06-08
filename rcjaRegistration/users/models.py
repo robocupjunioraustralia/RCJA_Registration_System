@@ -163,6 +163,14 @@ class User(SaveDeleteMixin, AbstractUser):
     def isGobalCoordinator(self, permissionLevels):
         return self.coordinator_set.filter(state=None, permissionLevel__in=permissionLevels).exists()
 
+    def strSchoolNames(self):
+        return ", ".join(map(lambda x: str(x.school), self.schooladministrator_set.all()))
+    strSchoolNames.short_description = "Schools"
+
+    def strSchoolPostcodes(self):
+        return ", ".join(map(lambda x: str(x.school.postcode) if x.school.postcode else "", self.schooladministrator_set.all()))
+    strSchoolPostcodes.short_description = "School postcodes"
+
     def fullname_or_email(self):
         return self.get_full_name() or self.email
 

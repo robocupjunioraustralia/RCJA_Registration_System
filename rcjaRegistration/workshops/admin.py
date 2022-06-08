@@ -82,6 +82,8 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'homeRegion',
+        'schoolPostcode',
     ]
 
     eventTypeMapping = 'workshop'
