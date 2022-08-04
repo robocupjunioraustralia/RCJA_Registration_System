@@ -41,7 +41,7 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
 
     list_filter = [
         'fileType',
-        'eventAttendance__event',
+        ('eventAttendance__event', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'fileType__name',

@@ -121,8 +121,8 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'team',
     ]
     list_filter = [
-        'team__event',
-        'team__division',
+        ('team__event', admin.RelatedOnlyFieldListFilter),
+        ('team__division', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'firstName',
