@@ -1,5 +1,5 @@
 from django.contrib import admin
-from coordination.adminPermissions import InlineAdminPermissions
+from coordination.permissions import InlineAdminPermissions
 from common.adminMixins import FKActionsRemove
 
 from .models import SchoolAdministrator, Campus
@@ -16,15 +16,12 @@ class SchoolAdministratorInline(FKActionsRemove, InlineAdminPermissions, admin.T
     ]
     autocomplete_fields = [
         'user',
-        'campus',
     ]
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj),
-                'filterNone': True
-            }
-        ]
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'campus': {
+                'queryset': Campus.objects.filter(school=obj), # Don't need to check for obj=None because not accessing an attribute
+            },
+        }

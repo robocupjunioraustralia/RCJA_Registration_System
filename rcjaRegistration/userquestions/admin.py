@@ -1,5 +1,5 @@
 from django.contrib import admin
-from coordination.adminPermissions import InlineAdminPermissions
+from coordination.permissions import InlineAdminPermissions
 
 from .models import Question, QuestionResponse
 

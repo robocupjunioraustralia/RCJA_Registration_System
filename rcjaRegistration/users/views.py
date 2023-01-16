@@ -9,11 +9,14 @@ from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.urls import reverse
+from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm
 from schools.models import School
+
+from regions.utils import getRegionsLookup
 
 @login_required
 def details(request):
@@ -77,8 +80,10 @@ def details(request):
             # Add error to the form
             form.add_error(None, e.message)
 
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools})
+    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'regionsLookup': getRegionsLookup()})
 
+@sensitive_post_parameters('password', 'passwordConfirm')
+@sensitive_variables('form', 'cleaned_data')
 def signup(request):
     if request.method == 'POST':
         form = UserSignupForm(request.POST)
@@ -96,7 +101,7 @@ def signup(request):
     else:
         form = UserSignupForm()
 
-    return render(request, 'registration/signup.html', {'form': form})
+    return render(request, 'registration/signup.html', {'form': form, 'regionsLookup': getRegionsLookup()})
 
 def termsAndConditions(request):
     if request.user.is_authenticated:

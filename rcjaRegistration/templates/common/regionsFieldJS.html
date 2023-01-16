@@ -1,0 +1,49 @@
+<script>
+  const regionLookups = {
+    {% for state in regionsLookup %}
+      '{{ state.id }}': [
+        {% for region in state.regions %}
+          {'id': {{ region.id }}, 'name': '{{ region.name }}'},
+        {% endfor %}
+      ],
+    {% endfor %}
+  };
+
+  $(document).ready(function () {
+    homeStateHandler($('#{{ stateFieldID }}').val());
+    // console.log('loaded');
+  });
+
+  $('#{{ stateFieldID }}').change(function () {
+    homeStateHandler(this.value);
+  });
+
+  const homeStateHandler = (newDisplayString) => {
+      let selectedRegionID = $("#{{ regionFieldID }} option:selected").val();
+      $("#{{ regionFieldID }}").empty();
+
+      let selectedStateID = $("#{{ stateFieldID }} option:selected").val();
+
+      regions = regionLookups[selectedStateID];
+      // console.log(regions);
+
+      let opt = document.createElement('option');
+      opt.text = '---------';
+      opt.value = '';
+      $("#{{ regionFieldID }}").append(opt);
+
+      for (i = 0; i < regions.length; i++) {
+        let opt = document.createElement('option');
+
+        opt.text = regions[i]['name'];
+        opt.value = regions[i]['id'];
+        if (opt.value == selectedRegionID) {
+          opt.selected = true;
+        }
+        // console.log(opt);
+
+        $("#{{ regionFieldID }}").append(opt);
+    }
+  }
+
+</script>

@@ -55,7 +55,7 @@ class State(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         if level == 'full':
             return [
                 'view',
@@ -65,7 +65,7 @@ class State(SaveDeleteMixin, models.Model):
             return [
                 'view',
             ]
-        
+
         return []
 
     # Used in state coordinator permission checking
@@ -108,6 +108,7 @@ class State(SaveDeleteMixin, models.Model):
 
 class Region(models.Model):
     # Foreign keys
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global region. Global regions are only editable by global administrators.')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -120,15 +121,43 @@ class Region(models.Model):
         verbose_name = 'Region'
         ordering = ['name']
 
+    def clean(self):
+        errors = []
+
+        # Check state change is compatible with existing linked objects
+        if self.state:
+            if self.user_set.exclude(homeState=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing users in this region'))
+
+            if self.school_set.exclude(state=self.state).exists():
+                errors.append(ValidationError('State not compatible with existing schools in this region'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
-        if level in ['full', 'viewall', 'eventmanager', 'billingmanager']:
+    def stateCoordinatorPermissions(cls, level):
+        if level == 'full':
+            return [
+                'add',
+                'view',
+                'change',
+                'delete',
+            ]
+        elif level in ['viewall', 'eventmanager', 'billingmanager', 'schoolmanager', 'webeditor']:
             return [
                 'view',
             ]
-        
+
         return []
+
+    stateCoordinatorViewGlobal = True
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.state
 
     # *****Save & Delete Methods*****
 

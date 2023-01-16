@@ -2,13 +2,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
-
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
 
 from .models import User
 
 from userquestions.admin import QuestionResponseInline
+from regions.admin import StateAdmin
 
 # Unregister group
 admin.site.unregister(Group)
@@ -139,10 +139,10 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'homeRegion__name',
     ]
     list_filter = DjangoUserAdmin.list_filter + (
-        'homeState',
-        'homeRegion',
+        ('homeState', admin.RelatedOnlyFieldListFilter),
+        ('homeRegion', admin.RelatedOnlyFieldListFilter),
         User_QuestionResponse_Filter,
-        'baseeventattendance__event',
+        ('baseeventattendance__event', admin.RelatedOnlyFieldListFilter),
     )
     autocomplete_fields = [
         'homeState',
@@ -163,6 +163,8 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'is_staff',
         'is_superuser',
         'is_active',
+        'strSchoolNames',
+        'strSchoolPostcodes',
     ]
     exportFieldsManyRelations = ['questionresponse_set']
 
@@ -176,19 +178,13 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
-        return [
-            {
-                'field': 'homeState',
-                'required': True,
-                'permissions': ['full'],
-                'fieldModel': State,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'homeState': {
+            'stateCoordinatorRequired': True,
+            'permissionLevels': ['full'],
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'homeState__coordinator'
 

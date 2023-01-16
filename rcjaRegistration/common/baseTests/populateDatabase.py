@@ -12,7 +12,9 @@ def createStates(self):
     self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
     self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
 
-    self.region1 = Region.objects.create(name='Region 1', description='test desc')
+    self.region1 = Region.objects.create(name='Region 1')
+    self.region2_state1 = Region.objects.create(name='Region 2', state=self.state1)
+    self.region3_state2 = Region.objects.create(name='Region 3', state=self.state2)
 
 def createUsers(self):
     self.email_user_state1_super1 = 'super1@user.com'
@@ -42,10 +44,10 @@ def createUsers(self):
     self.user_state2_school3_mentor4 = User.objects.create_user(email=self.email_user_state2_school3_mentor4, password=self.password, homeState=self.state2)
     self.user_state1_independent_mentor5 = User.objects.create_user(email=self.email_user_state1_independent_mentor5, password=self.password, homeState=self.state1)
 
-    self.coord_state1_fullcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state1, permissions='full', position='Text')
-    self.coord_state1_viewcoordinator = Coordinator.objects.create(user=self.user_state1_viewcoordinator, state=self.state1, permissions='viewall', position='Text')
-    self.coord_state2_fullcoordinator = Coordinator.objects.create(user=self.user_state2_fullcoordinator, state=self.state2, permissions='full', position='Text')
-    self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state2_viewcoordinator, state=self.state2, permissions='viewall', position='Text')
+    self.coord_state1_fullcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state1, permissionLevel='full', position='Text')
+    self.coord_state1_viewcoordinator = Coordinator.objects.create(user=self.user_state1_viewcoordinator, state=self.state1, permissionLevel='viewall', position='Text')
+    self.coord_state2_fullcoordinator = Coordinator.objects.create(user=self.user_state2_fullcoordinator, state=self.state2, permissionLevel='full', position='Text')
+    self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state2_viewcoordinator, state=self.state2, permissionLevel='viewall', position='Text')
 
 def createSchools(self):
     self.school1_state1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)

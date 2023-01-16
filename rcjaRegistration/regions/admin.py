@@ -1,8 +1,10 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions, checkStatePermissionsLevels
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermissionLevel
 
 from .models import State, Region
+from events.models import Event, Division, Venue
+from schools.models import School
 
 # Register your models here.
 
@@ -77,6 +79,12 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     inlines = [
     ]
+    autocompleteFilters = {
+        'events/event/': Event,
+        'events/division/': Division,
+        'events/venue/': Venue,
+        'schools/school/': School,
+    }
 
     def get_readonly_fields(self, request, obj):
         readonly_fields = super().get_readonly_fields(request, obj)
@@ -103,7 +111,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             return []
 
         # User must have full permissions to view coordinators
-        if checkStatePermissionsLevels(request, obj, ['full']):
+        if checkCoordinatorPermissionLevel(request, obj, ['full']):
             return self.inlines + [
                 CoordinatorInline,
             ]
@@ -113,39 +121,41 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     # Filter autocompletes to valid options
     def get_search_results(self, request, queryset, search_term):
         # Filter by typeRegistration
-        for url in ['users/user/', 'events/event/', 'events/division/', 'events/venue/', 'schools/school/']:
+        for url in ['users/user/', 'events/event/', 'events/division/', 'events/venue/', 'schools/school/', 'regions/region/']:
             if url in request.META.get('HTTP_REFERER', ''):
                 queryset = queryset.filter(typeRegistration=True)
 
-        # Filter by state
-        from coordination.adminPermissions import reversePermisisons
-        for url in ['users/user/', 'coordination/coordinator/']:
+        # Filter by state for objects that should have full permission level only
+        for url in ['users/user/', 'coordination/coordinator/', 'regions/region/']:
             if url in request.META.get('HTTP_REFERER', ''):
-                queryset = self.filterQuerysetByState(queryset, request, ['full'])
-
-        from events.models import Event, Division, Venue
-        from schools.models import School
-        urlPairs = {
-            'events/event/': Event,
-            'events/division/': Division,
-            'events/venue/': Venue,
-            'schools/school/': School,
-        }
-
-        for url in urlPairs:
-            if url in request.META.get('HTTP_REFERER', ''):
-                permissionLevels = reversePermisisons(urlPairs[url], ['add', 'change'])
-                queryset = self.filterQuerysetByState(queryset, request, permissionLevels)
+                queryset = self.filterQueryset(queryset, request, ['full'], ['full'])
 
         return super().get_search_results(request, queryset, search_term)
 
     # State based filtering
 
     stateFilterLookup = 'coordinator'
+    fieldFilteringModel = State
 
 @admin.register(Region)
 class RegionAdmin(AdminPermissions, admin.ModelAdmin):
     list_display = [
         'name',
+        'state',
         'description',
     ]
+    autocomplete_fields = [
+        'state',
+    ]
+
+    # State based filtering
+
+    fkFilterFields = {
+        'state': {
+            'stateCoordinatorRequired': True,
+            'fieldAdmin': StateAdmin,
+        },
+    }
+
+    stateFilterLookup = 'state__coordinator'
+    globalFilterLookup = 'state'

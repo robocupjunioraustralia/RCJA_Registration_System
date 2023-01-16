@@ -1,9 +1,11 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from .adminInlines import SchoolAdministratorInline
 
 from .models import School, Campus, SchoolAdministrator
+
+from regions.admin import StateAdmin
 
 # Register your models here.
 
@@ -21,8 +23,8 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'postcode',
     ]
     list_filter = [
-        'state',
-        'region'
+        ('state', admin.RelatedOnlyFieldListFilter),
+        ('region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'state__name',
@@ -51,6 +53,10 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'region',
         'postcode',
     ]
+    autocompleteFilters = {
+        'schools/campus/': Campus,
+        'schools/schooladministrator/': SchoolAdministrator,
+    }
 
     # Set forceDetailsUpdate if a field is blank
     def save_model(self, request, obj, form, change):
@@ -76,19 +82,14 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        from regions.admin import StateAdmin
-        from regions.models import State
-        return [
-            {
-                'field': 'state',
-                'fieldModel': State,
-                'fieldAdmin': StateAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'state': {
+            'fieldAdmin': StateAdmin,
+        },
+    }
 
     stateFilterLookup = 'state__coordinator'
+    fieldFilteringModel = School
 
     # Actions
 
@@ -105,8 +106,8 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'postcode',
     ]
     list_filter = [
-        'school__state',
-        'school__region',
+        ('school__state', admin.RelatedOnlyFieldListFilter),
+        ('school__region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'name',
@@ -132,15 +133,11 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'school',
-                'fieldModel': School,
-                'fieldAdmin': SchoolAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'school': {
+            'fieldAdmin': SchoolAdmin,
+        },
+    }
 
     stateFilterLookup = 'school__state__coordinator'
 
@@ -174,8 +171,8 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
         'campus'
     ]
     list_filter = [
-        'school__state',
-        'school__region'
+        ('school__state', admin.RelatedOnlyFieldListFilter),
+        ('school__region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'user__first_name',
@@ -191,7 +188,6 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
     autocomplete_fields = [
         'user',
         'school',
-        'campus',
     ]
     actions = [
         'export_as_csv'
@@ -211,24 +207,18 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'school',
-                'fieldModel': School,
-                'fieldAdmin': SchoolAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'school': {
+            'fieldAdmin': SchoolAdmin,
+        },
+    }
 
     @classmethod
-    def fieldsToFilterObj(cls, request, obj):
-        return [
-            {
-                'field': 'campus',
-                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(),
-                'filterNone': True,
-            }
-        ]
+    def fkObjectFilterFields(cls, request, obj):
+        return {
+            'campus': {
+                'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
+            },
+        }
 
     stateFilterLookup = 'school__state__coordinator'

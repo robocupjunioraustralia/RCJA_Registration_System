@@ -1,7 +1,9 @@
 from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
-from coordination.adminPermissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
+from django.forms import Textarea
+from django.db import models
 
 from .models import HardwarePlatform, SoftwarePlatform, Team, Student
 
@@ -43,7 +45,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform',)
+            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
         }),
     )
     add_fieldsets = (
@@ -58,7 +60,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform',)
+            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
         }),
     )
 
@@ -86,14 +88,28 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'homeRegion',
+        'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
+        'notes',
     ]
     exportFieldsManyRelations = [
         'student_set',
     ]
+    autocompleteFilters = {
+        'teams/student/': Student,
+    }
 
     eventTypeMapping = 'competition'
+
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':2, 'cols':40})},
+    }
+
+    # State based filtering
+
+    fieldFilteringModel = Team
 
 @admin.register(Student)
 class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -105,8 +121,8 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'team',
     ]
     list_filter = [
-        'team__event',
-        'team__division',
+        ('team__event', admin.RelatedOnlyFieldListFilter),
+        ('team__division', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'firstName',
@@ -140,14 +156,10 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
 
     # State based filtering
 
-    @classmethod
-    def fieldsToFilterRequest(cls, request):
-        return [
-            {
-                'field': 'team',
-                'fieldModel': Team,
-                'fieldAdmin': TeamAdmin,
-            }
-        ]
+    fkFilterFields = {
+        'team': {
+            'fieldAdmin': TeamAdmin,
+        },
+    }
 
     stateFilterLookup = 'team__event__state__coordinator'
