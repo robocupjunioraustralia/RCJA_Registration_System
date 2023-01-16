@@ -20,8 +20,10 @@ class HardwarePlatform(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # *****Save & Delete Methods*****
 
@@ -51,8 +53,10 @@ class SoftwarePlatform(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # *****Save & Delete Methods*****
 
@@ -130,7 +134,7 @@ class Student(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -175,7 +179,6 @@ class Student(models.Model):
     # Dictionary of values for each header
     def csvValues(self):
         studentNumber = self.getStudentNumber()
-        print(self.birthday)
         return {
             f'Member {studentNumber} First Name': self.firstName,
             f'Member {studentNumber} Last Name': self.lastName,

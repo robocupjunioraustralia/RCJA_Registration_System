@@ -1,4 +1,4 @@
-from common.baseTests.adminPermissions import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, POST_VALIDATION_FAILURE
 
 from django.test import TestCase
 from django.urls import reverse
@@ -6,6 +6,7 @@ from django.urls import reverse
 # School
 
 class School_Base:
+    modelName = 'School'
     modelURLName = 'schools_school'
     state1Obj = 'school1_state1'
     state2Obj = 'school3_state2'
@@ -24,9 +25,10 @@ class School_Base:
         'schooladministrator_set-MAX_NUM_FORMS': 1000,
     }
 
-    def updatePayload(self):
-        self.validPayload['state'] = self.state1.id
-        self.validPayload['region'] = self.region1.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['state'] = cls.state1.id
+        cls.validPayload['region'] = cls.region1.id
 
 class Test_School_NotStaff(School_Base, Base_Test_NotStaff, TestCase):
     pass
@@ -45,7 +47,7 @@ class Test_School_SuperUser(School_Base, Base_Test_SuperUser, TestCase):
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
 
@@ -65,7 +67,7 @@ class Test_School_FullCoordinator(School_Coordinators_Base, Base_Test_FullCoordi
         payload = self.validPayload.copy()
         del payload['state']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
 
@@ -73,7 +75,7 @@ class Test_School_FullCoordinator(School_Coordinators_Base, Base_Test_FullCoordi
         payload = self.validPayload.copy()
         payload['state'] = self.state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
@@ -83,6 +85,7 @@ class Test_School_ViewCoordinator(School_Coordinators_Base, Base_Test_ViewCoordi
 # School Administrator
 
 class SchoolAdministrator_Base:
+    modelName = 'School administrator'
     modelURLName = 'schools_schooladministrator'
     state1Obj = 'schooladmin_mentor1'
     state2Obj = 'schooladmin_mentor4'
@@ -91,9 +94,10 @@ class SchoolAdministrator_Base:
         'school': 0,
     }
 
-    def updatePayload(self):
-        self.validPayload['user'] = self.user_state2_school3_mentor4.id # Can edit users from any state, is only the school field that is filtered
-        self.validPayload['school'] = self.school1_state1.id
+    @classmethod
+    def updatePayload(cls):
+        cls.validPayload['user'] = cls.user_state2_school3_mentor4.id # Can edit users from any state, is only the school field that is filtered
+        cls.validPayload['school'] = cls.school1_state1.id
 
 class Test_SchoolAdministrator_NotStaff(SchoolAdministrator_Base, Base_Test_NotStaff, TestCase):
     pass
@@ -111,7 +115,7 @@ class Test_SchoolAdministrator_SuperUser(SchoolAdministrator_Base, Base_Test_Sup
         payload = self.validPayload.copy()
         del payload['school']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'This field is required.')
 
@@ -130,7 +134,7 @@ class Test_SchoolAdministrator_FullCoordinator(SchoolAdministrator_Coordinators_
         payload = self.validPayload.copy()
         del payload['school']
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'This field is required.')
 
@@ -138,7 +142,7 @@ class Test_SchoolAdministrator_FullCoordinator(SchoolAdministrator_Coordinators_
         payload = self.validPayload.copy()
         payload['school'] = self.school4_state2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.') # Multiple errors because of checkRequiredFieldsNotNone validation
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 

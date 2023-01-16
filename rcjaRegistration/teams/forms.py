@@ -22,7 +22,7 @@ class StudentForm(forms.ModelForm):
 class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
+        fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform', 'notes']
 
     def __init__(self, *args, user, event, **kwargs):
         super().__init__(*args, user=user, event=event, **kwargs)

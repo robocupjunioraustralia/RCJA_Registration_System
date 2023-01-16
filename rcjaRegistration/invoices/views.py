@@ -4,7 +4,7 @@ from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
-
+from coordination.permissions import checkCoordinatorPermission
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
@@ -28,8 +28,7 @@ def mentorInvoicePermissions(request, invoice):
     return request.user.schooladministrator_set.filter(school=invoice.school).exists() or invoice.invoiceToUser == request.user
 
 def coordinatorInvoiceDetailsPermissions(request, invoice):
-    from coordination.adminPermissions import checkStatePermissions
-    return checkStatePermissions(request, invoice, 'view')
+    return checkCoordinatorPermission(request, Invoice, invoice, 'view')
 
 @login_required
 def details(request, invoiceID):

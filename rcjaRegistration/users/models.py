@@ -6,7 +6,6 @@ import django.apps as djangoApps
 from common.models import SaveDeleteMixin
 
 from django.contrib.auth.models import Permission
-from coordination.models import Coordinator
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
@@ -80,9 +79,13 @@ class User(SaveDeleteMixin, AbstractUser):
         if User.objects.filter(email__iexact=self.email).exclude(pk=self.pk).exists():
             raise ValidationError({'email': _('User with this email address already exists.')})
 
+        # Validate region state
+        if self.homeRegion and self.homeRegion.state is not None and self.homeRegion.state != self.homeState:
+            raise ValidationError("Region not valid for selected state")
+
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         if level in ['full']:
             return [
                 'add',
@@ -110,7 +113,7 @@ class User(SaveDeleteMixin, AbstractUser):
 
     def updateUserPermissions(self):
         # Get coordinator objects for this user
-        coordinators = Coordinator.objects.filter(user=self)
+        coordinators = self.coordinator_set.all()
 
         # Staff flag
         self.is_staff = self.is_superuser or coordinators.exists()
@@ -121,10 +124,21 @@ class User(SaveDeleteMixin, AbstractUser):
         # Get permissions for all models for all states that this user is a coordinator of
         permissionsToAdd = []
 
+        def addPermissions(permissionsToAdd, model, coordinator, permissionsLookupName):
+            if hasattr(model, permissionsLookupName):
+                permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, permissionsLookupName)(coordinator.permissionLevel))
+
+        # Add permissions for each coordinator object
         for coordinator in coordinators:
             for model in djangoApps.apps.get_models():
-                if hasattr(model, 'coordinatorPermissions'):
-                    permissionsToAdd += map(lambda x: f'{x}_{model._meta.object_name.lower()}', getattr(model, 'coordinatorPermissions')(coordinator.permissions))
+
+                # If global coordinator add global permissions if they are defined
+                # Otherwise add state permissions
+                if coordinator.state is None and hasattr(model, 'globalCoordinatorPermissions'):
+                    addPermissions(permissionsToAdd, model, coordinator, 'globalCoordinatorPermissions')
+
+                else:
+                    addPermissions(permissionsToAdd, model, coordinator, 'stateCoordinatorPermissions')
 
         # Add permissions to user
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
@@ -145,6 +159,17 @@ class User(SaveDeleteMixin, AbstractUser):
         self.save(update_fields=['currentlySelectedSchool'])
 
     # *****Get Methods*****
+
+    def isGobalCoordinator(self, permissionLevels):
+        return self.coordinator_set.filter(state=None, permissionLevel__in=permissionLevels).exists()
+
+    def strSchoolNames(self):
+        return ", ".join(map(lambda x: str(x.school), self.schooladministrator_set.all()))
+    strSchoolNames.short_description = "Schools"
+
+    def strSchoolPostcodes(self):
+        return ", ".join(map(lambda x: str(x.school.postcode) if x.school.postcode else "", self.schooladministrator_set.all()))
+    strSchoolPostcodes.short_description = "School postcodes"
 
     def fullname_or_email(self):
         return self.get_full_name() or self.email

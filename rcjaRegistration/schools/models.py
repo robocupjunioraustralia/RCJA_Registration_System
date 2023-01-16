@@ -57,13 +57,17 @@ class School(SaveDeleteMixin, models.Model):
             if len(self.postcode) < 4:
                 errors.append(ValidationError('Postcode too short'))
 
+        # Validate region state
+        if self.region and self.region.state is not None and self.region.state != self.state:
+            errors.append(ValidationError("Region not valid for selected state"))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         if level in ['full', 'schoolmanager']:
             return [
                 'add',
@@ -132,8 +136,8 @@ class Campus(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
-        return School.coordinatorPermissions(level)
+    def stateCoordinatorPermissions(cls, level):
+        return School.stateCoordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -176,8 +180,8 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
-        return School.coordinatorPermissions(level)
+    def stateCoordinatorPermissions(cls, level):
+        return School.stateCoordinatorPermissions(level)
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -188,8 +192,6 @@ class SchoolAdministrator(SaveDeleteMixin, models.Model):
     def preSave(self):
         if self.pk:
             self.previousUser = SchoolAdministrator.objects.get(pk=self.pk).user
-
-        if self.pk:
             self.previousSchool = SchoolAdministrator.objects.get(pk=self.pk).school
 
     def postSave(self):

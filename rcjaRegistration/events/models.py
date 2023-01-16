@@ -58,8 +58,10 @@ class DivisionCategory(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # *****Save & Delete Methods*****
 
@@ -76,6 +78,7 @@ class DivisionCategory(models.Model):
 
 class Division(models.Model):
     # Foreign keys
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -83,7 +86,6 @@ class Division(models.Model):
     name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
     category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
 
     # *****Meta and clean*****
     class Meta:
@@ -107,8 +109,10 @@ class Division(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # Used in state coordinator permission checking
     def getState(self):
@@ -164,7 +168,7 @@ class Venue(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -210,8 +214,10 @@ class Year(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
 
     # *****Save & Delete Methods*****
 
@@ -332,7 +338,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -471,7 +477,7 @@ class AvailableDivision(models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -506,6 +512,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
+    notes = models.TextField('Notes', blank=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -546,7 +553,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Permissions*****
     @classmethod
-    def coordinatorPermissions(cls, level):
+    def stateCoordinatorPermissions(cls, level):
         return eventCoordinatorEditPermissions(level)
 
     # Used in state coordinator permission checking
@@ -604,6 +611,18 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
             return self.school.state
         return self.mentorUser.homeState
     homeState.short_description = 'Home state'
+
+    def homeRegion(self):
+        if self.school:
+            return self.school.region
+        return self.mentorUser.homeRegion
+    homeRegion.short_description = 'Home region'
+
+    def schoolPostcode(self):
+        if self.school:
+            return self.school.postcode
+        return None
+    schoolPostcode.short_description = 'School postcode'
 
     def mentorUserName(self):
         return self.mentorUser.fullname_or_email()
