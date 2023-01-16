@@ -27,7 +27,7 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         'state',
     ]
     list_filter = [
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
         'permissionLevel',
     ]
     search_fields = [
