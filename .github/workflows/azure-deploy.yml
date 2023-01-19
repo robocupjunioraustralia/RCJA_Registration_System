@@ -40,6 +40,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+    - name: Request approval
+      id: request_approval
+      uses: actions/request-approval@v2
+      with:
+        reviewers: ${{ secrets.APPROVERS }}
     - name: Download migrations
       uses: actions/download-artifact@v2
       with:
