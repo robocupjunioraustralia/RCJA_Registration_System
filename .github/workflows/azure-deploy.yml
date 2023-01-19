@@ -1,0 +1,76 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m venv env
+        source env/bin/activate
+        pip install -r requirements.txt
+    - name: Generate SQL migrations
+      run: |
+        source env/bin/activate
+        python manage.py makemigrations --dry-run > migrations.sql
+    - name: Save migrations as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: migrations.sql
+        path: migrations.sql
+    - name: Build and push Docker image
+      run: |
+        docker build -t rcjaRegistration:${{ github.sha }} .
+        docker login robocupjunioraustralia.azurecr.io -u ${{ secrets.AZURE_REGISTRY_USERNAME }} -p ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+        docker tag rcjaRegistration:${{ github.sha }} robocupjunioraustralia.azurecr.io/rcjaRegistration:${{ github.sha }}
+        docker push robocupjunioraustralia.azurecr.io/rcjaRegistration:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Request approval
+      id: request_approval
+      uses: actions/request-approval@v2
+      with:
+        reviewers: ${{ secrets.APPROVERS }}
+    - name: Download migrations
+      uses: actions/download-artifact@v2
+      with:
+        name: migrations.sql
+    - name: Migrate database
+      run: |
+        source env/bin/activate
+        cat migrations.sql | python manage.py dbshell
+        python manage.py makemigrations
+        python manage.py migrate
+      env:
+        DATABASE_URL: ${DATABASE_URL}
+        SECRET_KEY: ${SECRET_KEY}
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: my-django-app
+        container-image: robocupjunioraustralia.azurecr.io/rcjaRegistration:${{ github.sha }}
+        slot-name: production
+        resource-group: my-resource-group
+        app-settings:
+          - DATABASE_URL=${DATABASE_URL}
+          - SECRET_KEY=${SECRET_KEY}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+
