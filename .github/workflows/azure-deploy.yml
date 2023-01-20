@@ -30,12 +30,17 @@ jobs:
 #      with:
 #        name: migrations.sql
 #        path: migrations.sql
+    - name: 'Docker login'
+      uses: azure/docker-login@v1
+      with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
     - name: Build and push Docker image
       run: |
-        docker build -t rcja-registration:${{ github.sha }} .
-        docker login robocupjunioraustralia.azurecr.io -u ${{ secrets.AZURE_REGISTRY_USERNAME }} -p ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-        docker tag rcja-registration:${{ github.sha }} robocupjunioraustralia.azurecr.io/rcja-registration:${{ github.sha }}
-        docker push robocupjunioraustralia.azurecr.io/rcja-registration:${{ github.sha }}
+        docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
 
   deploy:
     needs: build
