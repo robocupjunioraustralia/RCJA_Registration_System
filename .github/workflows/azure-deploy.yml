@@ -55,8 +55,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: rcjaregistration
-        container-image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+        images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
         slot-name: production
-        resource-group: rcja.app
 
 
