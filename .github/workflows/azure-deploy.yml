@@ -47,6 +47,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: azure-prod
     steps:
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
@@ -54,9 +58,5 @@ jobs:
         container-image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
         slot-name: production
         resource-group: rcja.app
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
 
 
