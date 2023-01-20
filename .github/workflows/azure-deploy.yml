@@ -32,10 +32,10 @@ jobs:
 #        path: migrations.sql
     - name: Build and push Docker image
       run: |
-        docker build -t rcjaRegistration:${{ github.sha }} .
+        docker build -t rcja-registration:${{ github.sha }} .
         docker login robocupjunioraustralia.azurecr.io -u ${{ secrets.AZURE_REGISTRY_USERNAME }} -p ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-        docker tag rcjaRegistration:${{ github.sha }} robocupjunioraustralia.azurecr.io/rcjaRegistration:${{ github.sha }}
-        docker push robocupjunioraustralia.azurecr.io/rcjaRegistration:${{ github.sha }}
+        docker tag rcja-registration:${{ github.sha }} robocupjunioraustralia.azurecr.io/rcja-registration:${{ github.sha }}
+        docker push robocupjunioraustralia.azurecr.io/rcja-registration:${{ github.sha }}
 
   deploy:
     needs: build
@@ -62,10 +62,10 @@ jobs:
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
-        app-name: my-django-app
-        container-image: robocupjunioraustralia.azurecr.io/rcjaRegistration:${{ github.sha }}
+        app-name: rcjaregistration
+        container-image: robocupjunioraustralia.azurecr.io/rcja-registration:${{ github.sha }}
         slot-name: production
-        resource-group: my-resource-group
+        resource-group: rcja.app
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
