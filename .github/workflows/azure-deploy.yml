@@ -24,7 +24,7 @@ jobs:
     - name: Generate SQL migrations
       run: |
         source env/bin/activate
-        python manage.py makemigrations --dry-run > migrations.sql
+        python rcjaRegistration/manage.py makemigrations --dry-run > migrations.sql
     - name: Save migrations as an artifact
       uses: actions/upload-artifact@v2
       with:
