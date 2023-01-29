@@ -29,6 +29,7 @@ env = environ.Env(
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
     DEV_SETTINGS=(bool, False),
+    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -217,7 +218,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 SERVER_EMAIL = 'system@enter.robocupjunior.org.au'
-DEFAULT_FROM_EMAIL = 'system@enter.robocupjunior.org.au'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 # REST
 
