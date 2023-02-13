@@ -418,7 +418,7 @@ class InvoicePayment(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    amountPaid = models.DecimalField('Amount paid', decimal_places=2, max_digits=10)
+    amountPaid = models.PositiveIntegerField('Amount paid')
     datePaid = models.DateField('Date paid')
 
     # *****Meta and clean*****
