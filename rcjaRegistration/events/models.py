@@ -260,7 +260,7 @@ class Event(SaveDeleteMixin, models.Model):
     registrationsCloseDate = models.DateField('Registration close date')
 
     # Team details
-    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=5)
+    maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=4)
     event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
     event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
