@@ -21,15 +21,6 @@ jobs:
         python -m venv env
         source env/bin/activate
         pip install -r requirements.txt
-#    - name: Generate SQL migrations
-#      run: |
-#        source env/bin/activate
-#        python rcjaRegistration/manage.py makemigrations --dry-run > migrations.sql
-#    - name: Save migrations as an artifact
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: migrations.sql
-#        path: migrations.sql
     - name: 'Docker login'
       uses: azure/docker-login@v1
       with:
@@ -56,6 +47,10 @@ jobs:
       with:
         app-name: rcjaregistration
         images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
-        slot-name: production
+        slot-name: staging
+    - name: Swap slots
+      run: |
+        az webapp deployment slot swap -s 'staging' -n rcjaregistration
+        az webapp stop -s 'staging' -n rcjaregistration
 
 
