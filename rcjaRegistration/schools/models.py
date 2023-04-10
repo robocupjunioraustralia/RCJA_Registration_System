@@ -36,10 +36,10 @@ class School(SaveDeleteMixin, models.Model):
 
         # Case insenstive abbreviation and name unique check
         if School.objects.filter(name__iexact=self.name).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('School with this name exists. Please ask your school administrator to add you.'))
+            errors.append(ValidationError('School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'))
 
         if School.objects.filter(abbreviation__iexact=self.abbreviation).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('School with this abbreviation exists. Please ask your school administrator to add you.'))
+            errors.append(ValidationError('School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'))
 
         # Validate school not using name or abbreviation reserved for independent entries
         if self.abbreviation.upper() == 'IND':

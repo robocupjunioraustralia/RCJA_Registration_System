@@ -58,6 +58,12 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
         queryset = self.eventsBaseQueryset(abbreviation).order_by('startDate')
         return self.nestedSerializer(queryset, SummaryEventSerializer)
 
+    # Detailed event endpoint
+    @action(detail=True)
+    def allEventsDetailed(self, request, abbreviation=None):
+        queryset = self.eventsBaseQueryset(abbreviation).order_by('startDate')
+        return self.nestedSerializer(queryset, EventSerializer)
+
     # Upcoming events
 
     @action(detail=True)

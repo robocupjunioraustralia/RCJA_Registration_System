@@ -121,6 +121,18 @@ class TestEvents(TestCase):
         self.assertContains(response, 'State 1 Open Workshop')
         self.assertContains(response, 'State 1 Past Competition')
 
+    def testAllEventsDetailedLoads(self):
+        response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
+        self.assertEqual(response.status_code, 200)
+
+    def testAllEventsInAllEventsDetailed(self):
+        response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
+        self.assertContains(response, 'State 1 Open Competition')
+        self.assertContains(response, 'State 1 Closed Competition 1')
+        self.assertContains(response, 'State 1 Closed Competition 2')
+        self.assertContains(response, 'State 1 Open Workshop')
+        self.assertContains(response, 'State 1 Past Competition')
+
     # Upcoming events
 
     def testUpcomingEventsLoads(self):
