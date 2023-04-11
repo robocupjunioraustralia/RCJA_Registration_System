@@ -42,13 +42,16 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Start slot
+      run: |
+        az webapp start -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
         app-name: rcjaregistration
         images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
         slot-name: staging
-    - name: Swap slots
+    - name: Swap slots and stop staging
       run: |
         az webapp deployment slot swap -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
         az webapp stop -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
