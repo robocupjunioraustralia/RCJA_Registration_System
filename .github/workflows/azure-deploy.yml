@@ -50,7 +50,7 @@ jobs:
         slot-name: staging
     - name: Swap slots
       run: |
-        az webapp deployment slot swap -s 'staging' -n rcjaregistration -g rcja.app
-        az webapp stop -s 'staging' -n rcjaregistration -g rcja.app
+        az webapp deployment slot swap -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+        az webapp stop -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
 
 
