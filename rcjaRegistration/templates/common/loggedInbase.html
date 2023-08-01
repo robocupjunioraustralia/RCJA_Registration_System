@@ -135,25 +135,51 @@
         {% block content %}
         {% endblock %} 
     </div>
-<div class="footer">
-  <p>RCJA Registration System. This site is in beta. For the bext experience, use Chrome on a computer. View the source on <a href = "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System"> GitHub. </a></p>
-</div></body>
+    <footer>
+        <a href="https://robocupjunior.org.au">RoboCup Junior Australia</a>
+        <span> - </span>
+        <a href="mailto:digitalplatforms@robocupjunior.org.au?subject=Support%2FFeedback%3A%20Registration%20System">Support and Feedback</a>
+        <span> - </span>
+        <a href="https://rcja.app/contributors">Contributors</a>
+        <span> - </span>
+        <a href="https://rcja.app">RCJA Portal</a>
+        <span> - </span>
+        <a href="https://facebook.com/robocupjunioraustralia/"><i class="facebook icon"></i></a>
+        <a href="https://instagram.com/robocupjunioraustralia"><i class="instagram icon"></i></a>
+        <a href="https://twitter.com/rcj_australia"><i class="twitter icon"></i></a>
+        <a href="https://linkedin.com/company/rcja"><i class="linkedin icon"></i></a>
+        <a href="https://youtube.com/user/RobocupJuniorAust"><i class="youtube icon"></i></a>
+    </footer>
+</body>
 
 <style>
-.footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  min-height:1rem;
-  margin-top:1rem;
-  background-color: #c9c9c9;
-  color: black;
-  text-align: center;
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    min-height: 24px;
+    text-align: center;
+    background-color: #CCC;
+    font-size: 16px;
+}
+
+footer a {
+    color: #222;
+}
+
+footer a:not(:has(i)) {
+    text-decoration: underline;
+}
+
+footer span {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+footer i {
+    text-decoration: none;
 }
 </style>
-
-
     
 <script>
 function toggleSidebar() {

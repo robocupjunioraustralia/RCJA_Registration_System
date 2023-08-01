@@ -33,9 +33,9 @@
         {{studentform.yearLevel}}
             
       </div>
-      <div class="field">
+      <div style="display: none" class="field">
         {{studentform.birthday.label_tag}}
-        {{studentform.birthday|attr:"type:date"|attr:"placeholder:yyyy-mm-dd"}}
+        {{studentform.birthday|attr:"type:date"|attr:"placeholder:yyyy-mm-dd"|attr:"value:1970-01-01"}}
             
       </div>
       <div class="field">

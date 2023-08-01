@@ -123,9 +123,9 @@
                 </div>
               </div>
               <div id="studentOnlyFields"style="display:none">
-                <div class = "field">
+                <div style="display: none" class = "field">
                   <label>Birthday:</label>
-                    {{form.birthday|attr:"type:date"|attr:"id:birthdayForm"|attr:"placeholder:yyyy-mm-dd"}}
+                    {{form.birthday|attr:"type:date"|attr:"id:birthdayForm"|attr:"placeholder:yyyy-mm-dd"|attr:"value:1970-01-01"}}
                 </div>
               </div>
 
