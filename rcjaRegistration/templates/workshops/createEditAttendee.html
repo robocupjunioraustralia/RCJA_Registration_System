@@ -123,10 +123,6 @@
                 </div>
               </div>
               <div id="studentOnlyFields"style="display:none">
-                <div style="display: none" class = "field">
-                  <label>Birthday:</label>
-                    {{form.birthday|attr:"type:date"|attr:"id:birthdayForm"|attr:"placeholder:yyyy-mm-dd"|attr:"value:1970-01-01"}}
-                </div>
               </div>
 
               <input class="primary ui button" type="submit" value="Save" />
@@ -159,7 +155,6 @@ const attendeeTypeHandler = (newDisplayString) => {
   
     $("#yearLevelForm").attr("placeholder", "Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)");
     $("#emailForm").attr("required", true);
-    $("#birthdayForm").attr("required", false);
   }
   if( newDisplayString=== "student") {
     $("#studentOnlyFields").show("slow");
@@ -167,7 +162,6 @@ const attendeeTypeHandler = (newDisplayString) => {
 
     $("#yearLevelForm").attr("placeholder", "Enter a year level");
     $("#emailForm").attr("required", false);
-    $("#birthdayForm").attr("required", true);
   }
 }
 

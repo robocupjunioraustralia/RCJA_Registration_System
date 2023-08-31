@@ -151,7 +151,6 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'lastName',
         'yearLevel',
         'gender',
-        'birthday',
     ]
 
     # State based filtering

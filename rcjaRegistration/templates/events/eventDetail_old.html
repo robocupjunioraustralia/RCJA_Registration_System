@@ -16,7 +16,6 @@
                     <th> Last Name</th> 
                     <th> Year Level</th>
                     <th> Gender </th>
-                    <th> Birthday </th>
                 </thead>
                 <tbody>
                     {% for student in team.student_set.all %}
@@ -25,7 +24,6 @@
                             <td>{{student.lastName}}</td>
                             <td>{{student.yearLevel}}</td>
                             <td>{{student.gender}}</td>
-                            <td>{{student.birthday}}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

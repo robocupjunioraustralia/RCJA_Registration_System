@@ -11,13 +11,7 @@ import datetime
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ['firstName','lastName','yearLevel','gender','birthday']
-
-    birthday = forms.DateField( #coerce type to yyyy-mm-dd so html5 date will prefill correctly
-    #this does not affect the display of the field to the user, as that is localised on the clientside
-        widget=forms.DateInput(format='%Y-%m-%d'),
-        # input_formats=('%Y-%m-%d', )
-        )
+        fields = ['firstName','lastName','yearLevel','gender']
 
 class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
