@@ -45,10 +45,12 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             Team,
             Student,
             form = StudentForm,
+            min_num=1,
             extra = 1 if team is None else 0,
             max_num = event.maxMembersPerTeam,
             can_delete = team is not None,
             validate_max = True,
+            validate_min=True,
         )
 
     def get(self, request, eventID=None, teamID=None):
