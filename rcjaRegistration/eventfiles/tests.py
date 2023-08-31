@@ -288,7 +288,6 @@ class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFile
         data = {
             'fileUpload': self.jpegFile,
             'fileType': self.fileType1.id,
-            'comments': 'hello'
         }
         self.assertEqual(MentorEventFileUpload.objects.count(), 1)
         response = self.client.post(self.url(), data=data)
@@ -298,7 +297,6 @@ class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFile
         self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user2)
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
-        self.assertEqual(MentorEventFileUpload.objects.first().comments, "hello")
 
 # File upload delete
 

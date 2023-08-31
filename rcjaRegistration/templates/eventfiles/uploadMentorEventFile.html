@@ -114,11 +114,6 @@
                             </div>
                             {% endif %}
 
-                            <div style="display: none" class="field">
-                                <label>Comments:</label>
-                                {{form.comments}}
-                            </div>
-
                             <input class="primary ui button" type="submit" value="Save" />
                             <a href="{% url 'teams:details' eventAttendance.id %}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
 
