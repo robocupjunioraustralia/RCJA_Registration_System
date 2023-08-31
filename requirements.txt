@@ -4,7 +4,7 @@ boto3==1.18.12
 botocore==1.21.12
 certifi==2023.7.22
 chardet==3.0.4
-Django==3.2.9
+Django==4.2.4
 django-appconf==1.0.4
 django-axes==5.4.3
 django-cors-headers==3.6.0
