@@ -30,12 +30,6 @@ jobs:
       run: |
         docker-compose exec -T web coverage report
         docker-compose exec -T web coverage xml
-    - uses: codecov/codecov-action@v1.0.3
-      with:
-        token: ${{secrets.CODECOV_TOKEN}} #required
-        file: ./rcjaRegistration/coverage.xml #optional
-        flags: unittests #optional
-        name: codecov-umbrella #optional
     - name: Tear down Docker Compose stack
       run: |
         docker-compose down
