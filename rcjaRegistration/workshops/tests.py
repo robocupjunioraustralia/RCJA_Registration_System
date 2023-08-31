@@ -93,7 +93,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last2',
             yearLevel='10',
             gender='male',
-            birthday=datetime.datetime.today()
         )
 
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
@@ -199,20 +198,6 @@ class TestWorkshopAttendeeClean(TestCase):
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 
-    def testStudentMissingBirthday(self):
-        self.attendee3 = WorkshopAttendee(
-            event=self.event,
-            mentorUser=self.user1,
-            school=self.school1,
-            division=self.division1,
-            attendeeType='student',
-            firstName='First1',
-            lastName='Last1',
-            yearLevel='10',
-            gender='male',
-        )
-        self.assertRaises(ValidationError, self.attendee3.clean)
-
     def testTeacherValidYearLevel(self):
         self.attendee3 = WorkshopAttendee(
             event=self.event,
@@ -254,7 +239,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last1',
             yearLevel='9',
             gender='male',
-            birthday=datetime.datetime.today()
         )
         self.assertEqual(self.attendee3.clean(), None)
 
@@ -269,7 +253,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last1',
             yearLevel='3-5',
             gender='male',
-            birthday=datetime.datetime.today()
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 

@@ -152,7 +152,6 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload,follow=False)
@@ -177,7 +176,6 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.newEvent.id}), data=payload, follow=False)
@@ -201,7 +199,6 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"test",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
@@ -227,7 +224,6 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"5",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.newEvent.id}),data=payload)
@@ -251,7 +247,6 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
             "student_set-0-firstName":"test",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"5",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:create',kwargs={'eventID':self.oldEvent.id}),data=payload)
@@ -341,7 +336,6 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"teststringhere",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.oldEventTeam.id}),data=payload)
@@ -364,7 +358,6 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"First 1",
             "student_set-0-lastName":"Last 1",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -389,12 +382,10 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"First 1",
             "student_set-0-lastName":"Last 1",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male",
             "student_set-1-firstName":"First 2",
             "student_set-1-lastName":"Last 2",
             "student_set-1-yearLevel":"1",
-            "student_set-1-birthday":"1111-11-11",
             "student_set-1-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -420,17 +411,14 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"First 1",
             "student_set-0-lastName":"Last 1",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male",
             "student_set-1-firstName":"First 2",
             "student_set-1-lastName":"Last 2",
             "student_set-1-yearLevel":"1",
-            "student_set-1-birthday":"1111-11-11",
             "student_set-1-gender":"male",
             "student_set-2-firstName":"First 3",
             "student_set-2-lastName":"Last 3",
             "student_set-2-yearLevel":"1",
-            "student_set-2-birthday":"1111-11-11",
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -441,8 +429,8 @@ class TestTeamEdit(TestCase):
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
 
     def testAddStudentOverLimitIgnored_editedTotal(self):
-        self.student1 = Student.objects.create(team=self.newEventTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
-        self.student2 = Student.objects.create(team=self.newEventTeam, firstName='First 2', lastName='Last 2', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
+        self.student1 = Student.objects.create(team=self.newEventTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='male')
+        self.student2 = Student.objects.create(team=self.newEventTeam, firstName='First 2', lastName='Last 2', yearLevel=1, gender='male')
         existingStudents = self.newEventTeam.student_set.count()
         payload = {
             'student_set-TOTAL_FORMS':2,
@@ -458,12 +446,10 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"New 1",
             "student_set-0-lastName":"Last 1",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male",
             "student_set-2-firstName":"First 3",
             "student_set-2-lastName":"Last 3",
             "student_set-2-yearLevel":"1",
-            "student_set-2-birthday":"1111-11-11",
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -477,8 +463,8 @@ class TestTeamEdit(TestCase):
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
 
     def testAddStudentOverLimitFails(self):
-        self.student1 = Student.objects.create(team=self.newEventTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
-        self.student2 = Student.objects.create(team=self.newEventTeam, firstName='First 2', lastName='Last 2', yearLevel=1, gender='male', birthday=datetime.datetime.today().date())
+        self.student1 = Student.objects.create(team=self.newEventTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='male')
+        self.student2 = Student.objects.create(team=self.newEventTeam, firstName='First 2', lastName='Last 2', yearLevel=1, gender='male')
         existingStudents = self.newEventTeam.student_set.count()
         payload = {
             'student_set-TOTAL_FORMS':3,
@@ -494,12 +480,10 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"New 1",
             "student_set-0-lastName":"Last 1",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male",
             "student_set-2-firstName":"First 3",
             "student_set-2-lastName":"Last 3",
             "student_set-2-yearLevel":"1",
-            "student_set-2-birthday":"1111-11-11",
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -522,7 +506,6 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"teststringhere",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -539,7 +522,6 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"teststringhere",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"1",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
@@ -559,7 +541,6 @@ class TestTeamEdit(TestCase):
             "student_set-0-firstName":"test2",
             "student_set-0-lastName":"test",
             "student_set-0-yearLevel":"test",
-            "student_set-0-birthday":"1111-11-11",
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}),data=payload)
