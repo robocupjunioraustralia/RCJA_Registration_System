@@ -4,6 +4,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import Group
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from dal import autocomplete
+from django import forms
 
 from .models import User
 
@@ -14,6 +17,8 @@ from regions.admin import StateAdmin
 admin.site.unregister(Group)
 
 # User admin
+
+# **********Inlines**********
 
 class SchoolAdministratorInline(InlineAdminPermissions, admin.TabularInline):
     from schools.models import SchoolAdministrator
@@ -42,6 +47,8 @@ class CoordinatorInline(FKActionsRemove, InlineAdminPermissions, admin.TabularIn
     verbose_name = "Coordinator of"
     verbose_name_plural = "Coordinator of"
 
+# **********Filters**********
+
 class User_QuestionResponse_Filter(admin.SimpleListFilter):
     title = "Question"
     parameter_name = "question"
@@ -59,6 +66,22 @@ class User_QuestionResponse_Filter(admin.SimpleListFilter):
             return queryset.filter(questionresponse__response = True, questionresponse__question__id = int(self.value()))
         except (ValueError,TypeError):
             return queryset
+
+# **********Forms**********
+
+class UserCreationAutocompleteForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        widgets = {
+            'homeRegion': autocomplete.ModelSelect2(url='regions:region-autocomplete', forward=['homeState']),
+        }
+
+class UserChangeAutocompleteForm(UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        widgets = {
+            'homeRegion': autocomplete.ModelSelect2(url='regions:region-autocomplete', forward=['homeState']),
+        }
+
+# **********Admins**********
 
 @admin.register(User)
 class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMixin):
@@ -167,6 +190,9 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'strSchoolPostcodes',
     ]
     exportFieldsManyRelations = ['questionresponse_set']
+
+    form = UserChangeAutocompleteForm
+    add_form = UserCreationAutocompleteForm
 
     # Set forceDetailsUpdate if a field is blank
     def save_model(self, request, obj, form, change):

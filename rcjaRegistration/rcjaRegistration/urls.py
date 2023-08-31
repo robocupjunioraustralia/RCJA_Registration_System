@@ -46,4 +46,5 @@ urlpatterns = [
     path('',include('users.urls')),
     path('',include('invoices.urls')),
     path('',include('eventfiles.urls')),
+    path('',include('regions.urls')),
 ]
