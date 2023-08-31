@@ -354,11 +354,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
     # Filter in team and workshop autocompletes
     def get_search_results(self, request, queryset, search_term):
-        if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
-            queryset = queryset.filter(eventType='competition', status='published')
+        if 'autocomplete' in request.path_info:
+            if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
+                queryset = queryset.filter(eventType='competition', status='published')
 
-        if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
-            queryset = queryset.filter(eventType='workshop', status='published')
+            if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
+                queryset = queryset.filter(eventType='workshop', status='published')
 
         return super().get_search_results(request, queryset, search_term)
 
