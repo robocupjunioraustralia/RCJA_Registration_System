@@ -23,8 +23,8 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'postcode',
     ]
     list_filter = [
-        'state',
-        'region'
+        ('state', admin.RelatedOnlyFieldListFilter),
+        ('region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'state__name',
@@ -106,8 +106,8 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'postcode',
     ]
     list_filter = [
-        'school__state',
-        'school__region',
+        ('school__state', admin.RelatedOnlyFieldListFilter),
+        ('school__region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'name',
@@ -171,8 +171,8 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
         'campus'
     ]
     list_filter = [
-        'school__state',
-        'school__region'
+        ('school__state', admin.RelatedOnlyFieldListFilter),
+        ('school__region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'user__first_name',

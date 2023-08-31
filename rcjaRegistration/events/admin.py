@@ -40,7 +40,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
     ]
     list_filter = [
         'category',
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
     ]
     actions = [
         'export_as_csv',
@@ -99,7 +99,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         'address',
     ]
     list_filter = [
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
     ]
     actions = [
         'export_as_csv',
@@ -266,7 +266,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'status',
         'eventType',
         'year',
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
         'globalEvent',
     ]
     search_fields = [
@@ -419,8 +419,8 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school',
     ]
     list_filter = [
-        'event',
-        'division',
+        ('event', admin.RelatedOnlyFieldListFilter),
+        ('division', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'school__state__name',

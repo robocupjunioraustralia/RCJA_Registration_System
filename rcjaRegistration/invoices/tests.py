@@ -908,7 +908,6 @@ def createStudents(self):
                     lastName='Last name',
                     yearLevel=5,
                     gender='other',
-                    birthday=datetime.datetime.today(),
                 )
             )
 

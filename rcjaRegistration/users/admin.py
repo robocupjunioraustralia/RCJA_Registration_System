@@ -139,10 +139,10 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'homeRegion__name',
     ]
     list_filter = DjangoUserAdmin.list_filter + (
-        'homeState',
-        'homeRegion',
+        ('homeState', admin.RelatedOnlyFieldListFilter),
+        ('homeRegion', admin.RelatedOnlyFieldListFilter),
         User_QuestionResponse_Filter,
-        'baseeventattendance__event',
+        ('baseeventattendance__event', admin.RelatedOnlyFieldListFilter),
     )
     autocomplete_fields = [
         'homeState',

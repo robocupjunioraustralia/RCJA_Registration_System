@@ -13,10 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import environ
 import sys
+from opencensus.trace import config_integration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+config_integration.trace_integrations(['postgresql'])
 env = environ.Env(
     DEBUG=(bool, False),
     SENDGRID_API_KEY=(str, 'API_KEY'),
@@ -29,6 +30,8 @@ env = environ.Env(
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
     DEV_SETTINGS=(bool, False),
+    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
+    APPLICATIONINSIGHTS_CONNECTION_STRING=(str, '')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -108,7 +111,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.redirectsMiddleware.RedirectMiddleware',
     'axes.middleware.AxesMiddleware',
+    'opencensus.ext.django.middleware.OpencensusMiddleware',
 ]
+
+if not DEV_SETTINGS:
+    OPENCENSUS = {
+        'TRACE': {
+            'SAMPLER': 'opencensus.trace.samplers.ProbabilitySampler(rate=1)',
+            'EXPORTER': 'opencensus.ext.azure.trace_exporter.AzureExporter(connection_string="' + env('APPLICATIONINSIGHTS_CONNECTION_STRING') + '")'
+        }
+    }
 
 ROOT_URLCONF = 'rcjaRegistration.urls'
 
@@ -219,7 +231,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 SERVER_EMAIL = 'system@enter.robocupjunior.org.au'
-DEFAULT_FROM_EMAIL = 'system@enter.robocupjunior.org.au'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 # REST
 

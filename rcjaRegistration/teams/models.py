@@ -125,7 +125,6 @@ class Student(models.Model):
     yearLevel = models.PositiveIntegerField('Year level')
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
-    birthday = models.DateField('Birthday')
 
     # *****Meta and clean*****
     class Meta:
@@ -173,7 +172,6 @@ class Student(models.Model):
             {'header': f'Member {studentNumber} Last Name', 'order': f'{studentNumber}b'},
             {'header': f'Member {studentNumber} Year Level', 'order': f'{studentNumber}c'},
             {'header': f'Member {studentNumber} Gender', 'order': f'{studentNumber}d'},
-            {'header': f'Member {studentNumber} Birthday', 'order': f'{studentNumber}e'},
         ]
 
     # Dictionary of values for each header
@@ -184,7 +182,6 @@ class Student(models.Model):
             f'Member {studentNumber} Last Name': self.lastName,
             f'Member {studentNumber} Year Level': self.yearLevel,
             f'Member {studentNumber} Gender': self.get_gender_display(),
-            f'Member {studentNumber} Birthday': self.birthday.strftime("%d/%m/%Y"),
         }
 
     # *****Email methods*****
