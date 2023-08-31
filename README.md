@@ -1,8 +1,8 @@
 # RCJA Registration System
 
-![](https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System/workflows/Django%20Build%20Tests/badge.svg
-)
-[![codecov](https://codecov.io/gh/MelbourneHighSchoolRobotics/RCJA_Registration_System/branch/main/graph/badge.svg?token=TGG6NwrrJw)](https://codecov.io/gh/MelbourneHighSchoolRobotics/RCJA_Registration_System)
+![](https://github.com/robocupjunioraustralia/RCJA_Registration_System/actions/workflows/django-ci.yml/badge.svg)
+
+[![codecov](https://codecov.io/gh/robocupjunioraustralia/RCJA_Registration_System/graph/badge.svg?token=TGG6NwrrJw)](https://codecov.io/gh/robocupjunioraustralia/RCJA_Registration_System)
 
 ## Development Getting Started
 
