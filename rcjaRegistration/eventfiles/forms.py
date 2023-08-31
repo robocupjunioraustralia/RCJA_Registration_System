@@ -11,7 +11,6 @@ class MentorEventFileUploadForm(ModelForm):
         fields = [
             'fileUpload',
             'fileType',
-            'comments',
         ]
 
     # Override init to filter fileType

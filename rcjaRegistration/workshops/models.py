@@ -24,9 +24,6 @@ class WorkshopAttendee(BaseEventAttendance):
     # Required for teachers
     email = models.EmailField('Email', blank=True)
 
-    # Required for students
-    birthday = models.DateField('Birthday', null=True, blank=True)
-
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Workshop attendee'
@@ -40,7 +37,7 @@ class WorkshopAttendee(BaseEventAttendance):
 
         # Check student fields are filled out
         if self.attendeeType == 'student':
-            for field in ['birthday']:
+            for field in []:
                 if not getattr(self, field, None):
                     errors.append(ValidationError('{} must not be blank for student attendee'.format(self._meta.get_field(field).verbose_name)))
 

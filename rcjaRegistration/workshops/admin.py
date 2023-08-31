@@ -30,9 +30,6 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details', {
             'fields': ('attendeeType', 'firstName', 'lastName', 'yearLevel', 'gender')
         }),
-        ('Required details for students', {
-            'fields': ('birthday',)
-        }),
         ('Required details for teachers', {
             'fields': ('email',)
         }),
@@ -47,9 +44,6 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         }),
         ('Required details', {
             'fields': ('attendeeType', 'firstName', 'lastName', 'yearLevel', 'gender')
-        }),
-        ('Required details for students', {
-            'fields': ('birthday',)
         }),
         ('Required details for teachers', {
             'fields': ('email',)
@@ -73,7 +67,6 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'attendeeType',
         'yearLevel',
         'gender',
-        'birthday',
         'event',
         'division',
         'mentorUserName',
