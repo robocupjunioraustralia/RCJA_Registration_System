@@ -45,7 +45,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
     )
     add_fieldsets = (
@@ -60,7 +60,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
     )
 
@@ -92,7 +92,6 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
-        'notes',
     ]
     exportFieldsManyRelations = [
         'student_set',
