@@ -7,13 +7,6 @@ from django.urls import reverse
 
 admin.site.disable_action('delete_selected') # Disable bulk delete
 
-# **********Key Value Store**********
-
-import keyvaluestore.admin
-
-# Disable key-value store admin
-admin.site.unregister(keyvaluestore.admin.KeyValueStore)
-
 # **********Axes**********
 
 import axes.admin
