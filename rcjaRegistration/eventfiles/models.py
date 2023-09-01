@@ -144,7 +144,7 @@ class MentorEventFileUpload(models.Model):
             extension = self.fileUpload.name.rsplit('.', 1)[1]
         except IndexError:
             raise ValidationError("File must have a file extension")
-        if self.fileType.allowedFileTypes and extension not in self.fileType.allowedFileTypes:
+        if self.fileType.allowedFileTypes and extension.lower() not in self.fileType.allowedFileTypes.lower():
             errors.append(ValidationError(f'File not of allowed type, must be: {self.fileType.allowedFileTypes}'))
 
         # Check within size limit
