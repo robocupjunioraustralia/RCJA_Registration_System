@@ -83,8 +83,8 @@ def details(request):
     if request.method == 'POST':
         # Create Post versions of forms
         form = SchoolEditForm(request.POST, instance=school)
-        campusFormset = CampusInlineFormset(request.POST, instance=school, error_messages={"missing_management_form": "Error in form data, please reload page."})
-        schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user}, error_messages={"missing_management_form": "Error in form data, please reload page."})
+        campusFormset = CampusInlineFormset(request.POST, instance=school, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
+        schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user}, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
 
         # Check all forms are valid, don't want short circuit logic because want errors to be raised from all forms even if one is invalid
         if all([x.is_valid() for x in (form, campusFormset, schoolAdministratorFormset)]):

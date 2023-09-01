@@ -77,7 +77,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         newTeam = team is None
 
-        formset = self.StudentInLineFormSet(request.POST, instance=team, error_messages={"missing_management_form": "Error in form data, please reload page."})
+        formset = self.StudentInLineFormSet(request.POST, instance=team, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
         form = TeamForm(request.POST, instance=team, user=request.user, event=event)
         form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 

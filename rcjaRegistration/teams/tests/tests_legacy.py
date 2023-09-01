@@ -423,7 +423,7 @@ class TestTeamEdit(TestCase):
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, "Please submit 2 or fewer forms.")
+        self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
@@ -488,7 +488,7 @@ class TestTeamEdit(TestCase):
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, "Please submit 2 or fewer forms.")
+        self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
         self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")

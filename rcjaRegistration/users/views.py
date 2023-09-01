@@ -51,7 +51,7 @@ def details(request):
     if request.method == 'POST':
         # Create Post versions of forms
         form = UserForm(request.POST, instance=request.user)
-        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials, error_messages={"missing_management_form": "Error in form data, please reload page."})
+        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
 
         # Don't redirect to home if use was forced here and no schools, so user can create a school
         displayAgain = request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool

@@ -96,7 +96,7 @@ class Division(models.Model):
         errors = []
 
         # Check changing state won't cause conflict
-        if self.state:
+        if self.pk and self.state:
             if self.baseeventattendance_set.exclude(event__state=self.state).exists():
                 errors.append(ValidationError('State not compatible with existing event attendances in this division'))
 
@@ -159,7 +159,7 @@ class Venue(models.Model):
         checkRequiredFieldsNotNone(self, ['state'])
 
         # Check changing state won't cause conflict
-        if self.event_set.exclude(state=self.state).exists():
+        if self.pk and self.event_set.exclude(state=self.state).exists():
             errors.append(ValidationError('State not compatible with existing events with this venue'))
 
         # Raise any errors
@@ -300,7 +300,7 @@ class Event(SaveDeleteMixin, models.Model):
         checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
 
         # Validate status
-        if self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
+        if self.pk and self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
             errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
         # Check close and end date after start dates
@@ -317,7 +317,7 @@ class Event(SaveDeleteMixin, models.Model):
         if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
             errors.append(ValidationError('Both special rate number and fee must either be blank or not blank'))
 
-        if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
+        if self.pk and (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
             errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
 
         if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.event_billingType != 'team':
@@ -361,8 +361,9 @@ class Event(SaveDeleteMixin, models.Model):
 
             # Set billing type to team or event if eventType is workshop
             self.event_billingType = 'team'
-            self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
-            self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
+            if self.pk:
+                self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
+                self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
 
     # *****Methods*****
 

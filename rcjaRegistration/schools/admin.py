@@ -65,7 +65,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
                 obj.forceSchoolDetailsUpdate = True
         
         # For existing campuses
-        if obj.campus_set.filter(postcode=None).exists():
+        if obj.pk and obj.campus_set.filter(postcode=None).exists():
             obj.forceSchoolDetailsUpdate = True
 
         super().save_model(request, obj, form, change)

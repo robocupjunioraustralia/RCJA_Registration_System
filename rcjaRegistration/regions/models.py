@@ -125,7 +125,7 @@ class Region(models.Model):
         errors = []
 
         # Check state change is compatible with existing linked objects
-        if self.state:
+        if self.pk and self.state:
             if self.user_set.exclude(homeState=self.state).exists():
                 errors.append(ValidationError('State not compatible with existing users in this region'))
 
