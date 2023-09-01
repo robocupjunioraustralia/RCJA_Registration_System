@@ -11,11 +11,13 @@ admin.site.disable_action('delete_selected') # Disable bulk delete
 
 import axes.admin
 from axes.admin import AccessLogAdmin as AxesAccessLogAdmin
-from axes.admin import AccessAttemptAdmin as AxesAccessAttempAdmin
-from axes.models import AccessLog, AccessAttempt
+from axes.admin import AccessAttemptAdmin as AxesAccessAttemptAdmin
+from axes.admin import AccessFailureLogAdmin as AxesAccessFailureLogAdmin
+from axes.models import AccessLog, AccessAttempt, AccessFailureLog
 
 admin.site.unregister(axes.admin.AccessLog)
 admin.site.unregister(axes.admin.AccessAttempt)
+admin.site.unregister(axes.admin.AccessFailureLog)
 
 @admin.register(AccessLog)
 class AccessLogAdmin(AxesAccessLogAdmin):
@@ -27,10 +29,19 @@ class AccessLogAdmin(AxesAccessLogAdmin):
         return False
 
 @admin.register(AccessAttempt)
-class AccessAttempAdmin(AxesAccessAttempAdmin):
+class AccessAttemptAdmin(AxesAccessAttemptAdmin):
     def has_change_permission(self, request, obj=None):
         return False
     def has_add_permission(self, request, obj=None):
+        return False
+
+@admin.register(AccessFailureLog)
+class AccessFailureLogAdmin(AxesAccessFailureLogAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
         return False
 
 # **********Rest Token**********
