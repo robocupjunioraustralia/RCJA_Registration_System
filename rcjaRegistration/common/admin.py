@@ -39,7 +39,7 @@ from rest_framework.authtoken.admin import TokenAdmin as RestTokenAdmin
 from rest_framework.authtoken.models import Token
 import rest_framework
 
-admin.site.unregister(rest_framework.authtoken.admin.Token)
+admin.site.unregister(rest_framework.authtoken.admin.TokenProxy)
 
 @admin.register(Token)
 class TokenAdmin(RestTokenAdmin):
