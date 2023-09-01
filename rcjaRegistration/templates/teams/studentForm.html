@@ -28,7 +28,11 @@
             
       </div>
     </div>
-    <div class = "four fields">
+    {% if formset.can_delete %}
+    <div class = "three fields">
+    {% else %}
+    <div class = "two fields">
+    {% endif %}
       <div class="field"> 
         {{studentform.yearLevel.label_tag}}
         {{studentform.yearLevel}}
