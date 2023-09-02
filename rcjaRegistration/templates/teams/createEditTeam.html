@@ -53,7 +53,7 @@
             {% endif %}
 
             <!-- Error messaging -->
-            {% if form.errors %}
+            {% if form.errors or form.non_field_errors %}
             <div class="ui message left-aligned-text">
               <div class="">
                 <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
@@ -109,7 +109,7 @@
 
               <!-- Students -->
               <h2>Students</h2>
-              {% if formset.errors %}
+              {% if formset.non_form_errors %}
                 <div class="ui message left-aligned-text">
                     <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                     {{ formset.non_form_errors }}

@@ -51,34 +51,25 @@ def details(request):
     if request.method == 'POST':
         # Create Post versions of forms
         form = UserForm(request.POST, instance=request.user)
-        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials)
+        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
 
         # Don't redirect to home if use was forced here and no schools, so user can create a school
         displayAgain = request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool
 
-        try:
-            if all([x.is_valid() for x in (form, questionFormset)]):
-                # Save user
-                user = form.save(commit=False)
-                user.forceDetailsUpdate = False
-                user.save()
+        if all([x.is_valid() for x in (form, questionFormset)]):
+            # Save user
+            user = form.save(commit=False)
+            user.forceDetailsUpdate = False
+            user.save()
 
-                # Save question response questionFormset
-                questionFormset.save() 
+            # Save question response questionFormset
+            questionFormset.save() 
 
-                # Stay on page if continue_editing in response or if must display again, else redirect to home
-                if displayAgain or 'continue_editing' in request.POST:
-                    return redirect(reverse('users:details'))
+            # Stay on page if continue_editing in response or if must display again, else redirect to home
+            if displayAgain or 'continue_editing' in request.POST:
+                return redirect(reverse('users:details'))
 
-                return redirect(reverse('events:dashboard'))
-
-        # To catch missing management data
-        except ValidationError as e:
-            # Reset the formsets so that are valid and won't cause an error when passed to render
-            questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-
-            # Add error to the form
-            form.add_error(None, e.message)
+            return redirect(reverse('events:dashboard'))
 
     return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'regionsLookup': getRegionsLookup()})
 

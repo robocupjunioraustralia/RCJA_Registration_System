@@ -89,13 +89,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'keyvaluestore',
     'axes',
     'storages',
     'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -153,7 +154,7 @@ AUTHENTICATION_BACKENDS = [
 AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
-AXES_META_PRECEDENCE_ORDER = [
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
    'HTTP_X_FORWARDED_FOR',
 ]
 # 20 failed attempts results in hour long lockout

@@ -589,6 +589,8 @@ class Test_coordinatorFilterQueryset(TestCase):
 
     def testNoperms(self):
         self.request.user = self.user_notstaff
+        self.user_notstaff.is_active = True
+        self.user_notstaff.is_staff = True
         
         qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
 
@@ -609,7 +611,7 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNoLookups(self):
-        self.request.user = self.user_notstaff
+        self.request.user = self.user_state1_fullcoordinator
         
         qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], False, False)
 

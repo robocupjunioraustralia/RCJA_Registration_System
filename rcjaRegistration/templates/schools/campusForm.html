@@ -2,9 +2,10 @@
 {{campusForm.id|attr:"type:hidden"}}
 <div class="ui segment">
     <h4 class="ui dividing header">Campus {{forloop.counter}}</h4>
-    {% if campusForm.errors %}
+    {% if campusForm.errors or campusForm.non_field_errors %}
     <div class="ui message left-aligned-text">
         <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+        {{ campusForm.non_field_errors }}
         <ul>
             {% for field in campusForm %}
             {% if field.errors %}
