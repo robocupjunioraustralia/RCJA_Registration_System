@@ -83,57 +83,47 @@ def details(request):
     if request.method == 'POST':
         # Create Post versions of forms
         form = SchoolEditForm(request.POST, instance=school)
-        campusFormset = CampusInlineFormset(request.POST, instance=school)
-        schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user})
+        campusFormset = CampusInlineFormset(request.POST, instance=school, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
+        schoolAdministratorFormset = SchoolAdministratorInlineFormset(request.POST, instance=school, form_kwargs={'user': request.user}, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
 
-        try:
-            # Check all forms are valid, don't want short circuit logic because want errors to be raised from all forms even if one is invalid
-            if all([x.is_valid() for x in (form, campusFormset, schoolAdministratorFormset)]):
+        # Check all forms are valid, don't want short circuit logic because want errors to be raised from all forms even if one is invalid
+        if all([x.is_valid() for x in (form, campusFormset, schoolAdministratorFormset)]):
 
-                # Save school
-                school = form.save(commit=False)
-                school.forceSchoolDetailsUpdate = False
+            # Save school
+            school = form.save(commit=False)
+            school.forceSchoolDetailsUpdate = False
 
-                # Want all data to save or none to save
-                try:
-                    with transaction.atomic():
-                        school.save()
+            # Want all data to save or none to save
+            try:
+                with transaction.atomic():
+                    school.save()
 
-                        # Save administrators formset
-                        # Do this before saving the campuses so if a campus is deleted the SET_NULL removes the relation, rather than getting a FK error
-                        schoolAdministratorFormset.save()
+                    # Save administrators formset
+                    # Do this before saving the campuses so if a campus is deleted the SET_NULL removes the relation, rather than getting a FK error
+                    schoolAdministratorFormset.save()
 
-                        # Save campus formset
-                        campusFormset.save()
+                    # Save campus formset
+                    campusFormset.save()
 
-                # Catch deletion of protected objects
-                except ProtectedError as e:
-                    form.add_error(None, e.args[0])
-                    return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
+            # Catch deletion of protected objects
+            except ProtectedError as e:
+                form.add_error(None, e.args[0])
+                return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset})
 
-                # Handle new administrator
-                if form.cleaned_data['addAdministratorEmail']:
-                    user, created = User.objects.get_or_create(
-                        email__iexact=form.cleaned_data['addAdministratorEmail'],
-                        defaults={
-                            'email': form.cleaned_data['addAdministratorEmail'],
-                            'forceDetailsUpdate': True,
-                            })
-                    SchoolAdministrator.objects.get_or_create(school=school, user=user)
+            # Handle new administrator
+            if form.cleaned_data['addAdministratorEmail']:
+                user, created = User.objects.get_or_create(
+                    email__iexact=form.cleaned_data['addAdministratorEmail'],
+                    defaults={
+                        'email': form.cleaned_data['addAdministratorEmail'],
+                        'forceDetailsUpdate': True,
+                        })
+                SchoolAdministrator.objects.get_or_create(school=school, user=user)
 
-                # Stay on page if continue_editing in response, else redirect to home
-                if 'continue_editing' in request.POST:
-                    return redirect(reverse('schools:details'))
+            # Stay on page if continue_editing in response, else redirect to home
+            if 'continue_editing' in request.POST:
+                return redirect(reverse('schools:details'))
 
-                return redirect(reverse('events:dashboard'))
-
-        # To catch missing management data
-        except ValidationError as e:
-            # Reset the formsets so that are valid and won't cause an error when passed to render
-            campusFormset = CampusInlineFormset(instance=school)
-            schoolAdministratorFormset = SchoolAdministratorInlineFormset(instance=school, form_kwargs={'user': request.user})
-
-            # Add error to the form
-            form.add_error(None, e.message)
+            return redirect(reverse('events:dashboard'))
 
     return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset, 'regionsLookup': getRegionsLookup()})

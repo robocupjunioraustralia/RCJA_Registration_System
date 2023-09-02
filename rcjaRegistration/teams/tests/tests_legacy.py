@@ -143,7 +143,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
@@ -166,7 +166,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
@@ -190,7 +190,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
@@ -215,7 +215,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"Test",
             "division":self.division.id,
@@ -238,7 +238,7 @@ class TestTeamCreate(TestCase): #TODO more comprehensive tests, check teams actu
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"Testnew",
             "division":self.division.id,
@@ -326,7 +326,7 @@ class TestTeamEdit(TestCase):
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
@@ -348,7 +348,7 @@ class TestTeamEdit(TestCase):
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
@@ -423,7 +423,7 @@ class TestTeamEdit(TestCase):
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, "Please submit 2 or fewer forms.")
+        self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
@@ -488,7 +488,7 @@ class TestTeamEdit(TestCase):
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
         self.assertEquals(response.status_code, 200)
-        self.assertContains(response, "Please submit 2 or fewer forms.")
+        self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
         self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
@@ -498,6 +498,9 @@ class TestTeamEdit(TestCase):
 
     def testMissingManagementFormData(self):
         payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
             "school":self.newSchool.id,
@@ -514,6 +517,9 @@ class TestTeamEdit(TestCase):
 
     def testMissingManagementFormData_invalidForm(self):
         payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
             "school":self.newSchool.id,
@@ -532,7 +538,7 @@ class TestTeamEdit(TestCase):
         payload = {
             'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.newEvent.maxMembersPerTeam,
             "name":"test+team",
             "division":self.division.id,
@@ -1026,10 +1032,14 @@ class TestTeamCreationFormValidation_School(TestCase):
     def testValidCreate(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+8",
             "division":self.division1.id,
             'hardwarePlatform': self.hardware.id,
@@ -1039,16 +1049,37 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 2)
 
+    def testInValidCreate_noStudents(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        payload = {
+            'student_set-TOTAL_FORMS':0,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "name":"Team+8",
+            "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Please submit at least 1 form.")
+        self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
+
     def testInValidCreate_schoolEventMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         self.event.event_maxTeamsPerSchool = 1
         self.event.save()
 
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+3",
             "division":self.division1.id,
             'hardwarePlatform': self.hardware.id,
@@ -1066,10 +1097,14 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.event.save()
 
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+3",
             "division":self.division1.id,
             'hardwarePlatform': self.hardware.id,
@@ -1087,10 +1122,14 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.availableDivision.save()
 
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+3",
             "division":self.division1.id,
             'hardwarePlatform': self.hardware.id,
@@ -1108,10 +1147,14 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.availableDivision.save()
 
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+3",
             "division":self.division1.id,
             'hardwarePlatform': self.hardware.id,
@@ -1126,10 +1169,14 @@ class TestTeamCreationFormValidation_School(TestCase):
     def testInValidCreate_division(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+3",
             "division":self.division2.id,
             'hardwarePlatform': self.hardware.id,
@@ -1143,10 +1190,14 @@ class TestTeamCreationFormValidation_School(TestCase):
     def testInValidCreate_divisionMissing(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         payload = {
-            'student_set-TOTAL_FORMS':0,
+            'student_set-TOTAL_FORMS':1,
             "student_set-INITIAL_FORMS":0,
-            "student_set-MIN_NUM_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
             "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
             "name":"Team+3",
             'hardwarePlatform': self.hardware.id,
             'softwarePlatform': self.software.id,

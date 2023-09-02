@@ -29,7 +29,7 @@
           {% endif %}
         <div class = "form form-group left-aligned-text">
         <h1> My details </h1>
-            {% if form.errors %}
+            {% if form.errors or form.non_field_errors %}
             
             <!-- Error messaging -->
             <div class="ui message left-aligned-text">
@@ -83,7 +83,7 @@
               </div>
 
               <!-- Questions -->
-              {% if questionFormset.errors %}
+              {% if questionFormset.non_form_errors %}
                 <div class="ui message left-aligned-text">
                     <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                     {{ questionFormset.non_form_errors }}
