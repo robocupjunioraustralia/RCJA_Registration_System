@@ -100,8 +100,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         if not request.user.is_superuser:
             readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal', 'typeWebsite']
         elif obj.typeRegistration:
-            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal']
-        elif obj.typeGlobal:
             readonly_fields = readonly_fields + ['typeRegistration']
 
         return readonly_fields
