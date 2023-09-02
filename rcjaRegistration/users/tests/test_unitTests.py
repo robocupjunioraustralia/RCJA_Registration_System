@@ -25,7 +25,7 @@ class TestUserManager(TestCase):
         self.assertRaises(User.DoesNotExist, lambda : User.objects.get_by_natural_key('not@test.com'))
 
 def unitTestsSetup(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
     self.region1 = Region.objects.create(name='Region 1')
 
     # Use create (instead of create_user) here beause not setting password and testing the user object and manager

@@ -19,7 +19,7 @@ def commonSetUp(obj):
     obj.password = 'password'
     obj.user = user = User.objects.create_user(email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
-        typeRegistration=True,
+        typeCompetition=True, typeUserRegistration=True,
         name='Victoria',
         abbreviation='VIC'
     )
@@ -400,7 +400,7 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
         self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
@@ -703,7 +703,7 @@ class TestAvailableDivisionClean(TestCase):
         self.assertRaises(ValidationError, self.availableDivision.clean)
 
     def testStateValidation(self):
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         self.division2 = Division.objects.create(name='Division 2', state=self.state2)
         self.availableDivision.division=self.division2
         self.assertRaises(ValidationError, self.availableDivision.clean)
@@ -720,7 +720,7 @@ class TestDivisionClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
 
     def testSuccessValidation_noState(self):
         self.division1.clean()
@@ -746,7 +746,7 @@ class TestDivisionMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
 
     def testStrNoState(self):
         self.assertEqual(str(self.division1), 'Division 1')
@@ -770,7 +770,7 @@ class TestVenueClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         createVenues(self)
 
     def testSuccess(self):
@@ -788,7 +788,7 @@ class TestVenueMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         createVenues(self)
 
     def testGetState(self):

@@ -30,7 +30,7 @@ class AuthViewTests(TestCase):
 
     def setUp(self):
         self.user = user = User.objects.create_user(email='admin@test.com', password='admin')
-        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
+        self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["homeState"] = self.newState.id
@@ -150,7 +150,7 @@ class TestEditDetails(TestCase):
             'homeRegion': 1,
         }
 
-        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
+        self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["homeState"] = self.newState.id
@@ -269,8 +269,8 @@ class TestUserSave(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email=self.email, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(typeRegistration=True, name='New South Wales', abbreviation='NSW')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='New South Wales', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Region 1')
         self.region2 = Region.objects.create(name='Region 2')
 
@@ -398,8 +398,8 @@ class TestTermsAndConditionsView(TestCase):
 def adminSetUp(self):
     self.user1 = User.objects.create_user(email=self.email1, password=self.password)
 
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='South Australia', abbreviation='SA')
 
     self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
     self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
@@ -743,8 +743,8 @@ class TestUserAdminInlinesAndFields(TestCase):
         self.assertNotContains(response, '<input type="checkbox" name="is_superuser"')
 
 def adminPermissionsSetUp(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='South Australia', abbreviation='SA')
 
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, homeState=self.state1, is_staff=True, is_superuser=True)
     self.usersuper2 = User.objects.create_user(email=self.emaulsuper2, password=self.password, homeState=self.state2, is_staff=True, is_superuser=True)

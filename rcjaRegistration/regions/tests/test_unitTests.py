@@ -57,20 +57,20 @@ class TestGetRegionsLookup(TestCase):
         createStates(cls)
 
     def testLookupLength(self):
-        self.state1.typeRegistration = False
+        self.state1.typeUserRegistration = False
         self.state1.save()
 
         lookup = getRegionsLookup()
 
-        self.assertEqual(State.objects.filter(typeRegistration=True).count() + 1, len(lookup))
+        self.assertEqual(State.objects.filter(typeUserRegistration=True).count() + 1, len(lookup))
 
     def testRegistrationIn(self):
         lookup = getRegionsLookup()
 
         self.assertIn(self.state1.id, [x.id for x in lookup])
 
-    def testNotRegistrationNotIn(self):
-        self.state1.typeRegistration = False
+    def testNotUserRegistrationNotIn(self):
+        self.state1.typeUserRegistration = False
         self.state1.save()
 
         lookup = getRegionsLookup()

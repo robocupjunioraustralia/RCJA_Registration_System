@@ -9,8 +9,8 @@ from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 import datetime
 
 def createStates(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
-    self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
+    self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
 
     self.region1 = Region.objects.create(name='Region 1')
     self.region2_state1 = Region.objects.create(name='Region 2', state=self.state1)

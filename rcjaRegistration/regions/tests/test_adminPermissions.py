@@ -47,7 +47,8 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
     # Readonly fields
 
     expectedAddEditableFields = [
-        ('typeRegistration', 'Registration'),
+        ('typeCompetition', 'Competition'),
+        ('typeUserRegistration', 'User registration'),
         ('typeGlobal', 'Global'),
         ('typeWebsite', 'Website'),
     ]
@@ -57,7 +58,8 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
         ('typeWebsite', 'Website'),
     ]
     expectedChangeReadonlyFields = [
-        ('typeRegistration', 'Registration'), # Existing states are typeRegistration=True
+        ('typeCompetition', 'Competition'), # Existing states are typeCompetition=True and typeUserRegistration=True
+        ('typeUserRegistration', 'User registration'),
     ]
 
     # Additional readonly field tests
@@ -68,7 +70,8 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
         self.checkEditable(response, [
-            ('typeRegistration', 'Registration'),
+            ('typeCompetition', 'Competition'),
+            ('typeUserRegistration', 'User registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
         ])
@@ -81,7 +84,8 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
         self.checkReadonly(response, [
         ])
         self.checkEditable(response, [
-            ('typeRegistration', 'Registration'),
+            ('typeCompetition', 'Competition'),
+            ('typeUserRegistration', 'User registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
         ])
@@ -96,7 +100,8 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
             ('typeGlobal', 'Global'),
         ])
         self.checkEditable(response, [
-            ('typeRegistration', 'Registration'),
+            ('typeCompetition', 'Competition'),
+            ('typeUserRegistration', 'User registration'),
             ('typeWebsite', 'Website'),
         ])
 
@@ -124,7 +129,8 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
     # Readonly fields
 
     expectedChangeReadonlyFields = [
-        ('typeRegistration', 'Registration'),
+        ('typeCompetition', 'Competition'),
+        ('typeUserRegistration', 'User registration'),
         ('typeGlobal', 'Global'),
         ('typeWebsite', 'Website'),
     ]
@@ -138,7 +144,8 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
         self.checkReadonly(response, [
-            ('typeRegistration', 'Registration'),
+            ('typeCompetition', 'Competition'),
+            ('typeUserRegistration', 'User registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
         ])
@@ -150,7 +157,8 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
         self.checkReadonly(response, [
-            ('typeRegistration', 'Registration'),
+            ('typeCompetition', 'Competition'),
+            ('typeUserRegistration', 'User registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
         ])
@@ -163,7 +171,8 @@ class Test_State_FullCoordinator(State_Coordinators_Base, Base_Test_FullCoordina
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
         self.checkReadonly(response, [
-            ('typeRegistration', 'Registration'),
+            ('typeCompetition', 'Competition'),
+            ('typeUserRegistration', 'User registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
         ])
@@ -180,7 +189,8 @@ class Test_State_ViewCoordinator(State_Coordinators_Base, Base_Test_ViewCoordina
     # Readonly fields
 
     expectedChangeReadonlyFields = [
-        ('typeRegistration', 'Registration'),
+        ('typeCompetition', 'Competition'),
+        ('typeUserRegistration', 'User registration'),
         ('typeGlobal', 'Global'),
         ('typeWebsite', 'Website'),
     ]
