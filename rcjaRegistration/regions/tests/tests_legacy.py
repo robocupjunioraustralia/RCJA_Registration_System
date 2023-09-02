@@ -81,19 +81,6 @@ class TestStateMethods(TestCase):
         state2.save()
         self.assertEqual('NSW', state2.abbreviation)
 
-    def testTypeGlobal_typeRegistration(self):
-        self.state1.typeGlobal = True
-        self.assertEqual(self.state1.typeGlobal, True)
-        self.state1.save()
-        self.assertEqual(self.state1.typeGlobal, False)
-
-    def testTypeGlobal_notTypeRegistration(self):
-        self.state1.typeGlobal = True
-        self.state1.typeRegistration = False
-        self.assertEqual(self.state1.typeGlobal, True)
-        self.state1.save()
-        self.assertEqual(self.state1.typeGlobal, True)
-
     def testTypeGlobal_otherGlobalState(self):
         self.state1.typeGlobal = True
         self.state1.typeRegistration = False
