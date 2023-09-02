@@ -16,7 +16,7 @@ class School(SaveDeleteMixin, models.Model):
     name = models.CharField('Name', max_length=100, unique=True)
     abbreviation = models.CharField('Abbreviation', max_length=5, unique=True, help_text="Abbreviation is used in the schedule and scoring system")
     # Details
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, limit_choices_to={'typeRegistration': True}) # Needed because null on initial data import
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, limit_choices_to={'typeUserRegistration': True}) # Needed because null on initial data import
     region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True)
     postcode = models.CharField('Postcode', max_length=4, null=True, blank=True)
     # Flags

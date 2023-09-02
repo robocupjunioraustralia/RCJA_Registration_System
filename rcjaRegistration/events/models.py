@@ -78,7 +78,7 @@ class DivisionCategory(models.Model):
 
 class Division(models.Model):
     # Foreign keys
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True}, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeCompetition': True}, help_text='Leave blank for a global division. Global divisions are only editable by global administrators.')
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -135,7 +135,7 @@ class Division(models.Model):
 
 class Venue(models.Model):
     # Foreign keys
-    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
+    state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, limit_choices_to={'typeCompetition': True})
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -235,7 +235,7 @@ class Year(models.Model):
 class Event(SaveDeleteMixin, models.Model):
     # Foreign keys
     year = models.ForeignKey(Year, verbose_name='Year', on_delete=models.PROTECT)
-    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT, limit_choices_to={'typeRegistration': True})
+    state = models.ForeignKey('regions.State', verbose_name = 'State', on_delete=models.PROTECT, limit_choices_to={'typeCompetition': True})
     globalEvent = models.BooleanField('Global event', default=False, help_text='Global events appear to users as not belonging to a state. Recommeneded for national events. Billing still uses state based settings.')
 
     # Creation and update time
