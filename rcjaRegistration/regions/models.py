@@ -76,7 +76,7 @@ class State(SaveDeleteMixin, models.Model):
 
     def preSave(self):
         self.abbreviation = self.abbreviation.upper()
-        
+
         # Can only be one global state - should be redundant due to admin permissions
         if self.typeGlobal:
             State.objects.exclude(pk=self.pk).update(typeGlobal=False)
