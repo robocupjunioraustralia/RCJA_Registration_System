@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
