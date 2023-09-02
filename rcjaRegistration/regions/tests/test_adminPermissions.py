@@ -64,7 +64,7 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
 
     # Additional readonly field tests
 
-    def testCorrectReadonlyFields_changeNotRegistration(self):
+    def testCorrectReadonlyFields_changeNotUserRegistration_NotCompetition(self):
         self.state3 = State.objects.create(name='State 3', abbreviation='ST3')
 
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
@@ -74,6 +74,34 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
             ('typeUserRegistration', 'User registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
+        ])
+
+    def testCorrectReadonlyFields_changeNotUserRegistration_Competition(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3', typeCompetition=True)
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.checkEditable(response, [
+            ('typeUserRegistration', 'User registration'),
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
+        self.checkReadonly(response, [
+            ('typeCompetition', 'Competition'),
+        ])
+
+    def testCorrectReadonlyFields_changeUserRegistration_NotCompetition(self):
+        self.state3 = State.objects.create(name='State 3', abbreviation='ST3', typeUserRegistration=True)
+
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
+
+        self.checkEditable(response, [
+            ('typeCompetition', 'Competition'),
+            ('typeGlobal', 'Global'),
+            ('typeWebsite', 'Website'),
+        ])
+        self.checkReadonly(response, [
+            ('typeUserRegistration', 'User registration'),
         ])
 
     def testCorrectReadonlyFields_changeGlobal(self):
