@@ -53,11 +53,11 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
     ]
     expectedAddReadonlyFields = []
     expectedChangeEditableFields = [
+        ('typeGlobal', 'Global'),
         ('typeWebsite', 'Website'),
     ]
     expectedChangeReadonlyFields = [
         ('typeRegistration', 'Registration'), # Existing states are typeRegistration=True
-        ('typeGlobal', 'Global'),
     ]
 
     # Additional readonly field tests
@@ -79,9 +79,9 @@ class Test_State_SuperUser(State_Base, Base_Test_SuperUser, TestCase):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state3.id,)))
 
         self.checkReadonly(response, [
-            ('typeRegistration', 'Registration'),
         ])
         self.checkEditable(response, [
+            ('typeRegistration', 'Registration'),
             ('typeGlobal', 'Global'),
             ('typeWebsite', 'Website'),
         ])
