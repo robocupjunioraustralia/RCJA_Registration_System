@@ -2,12 +2,6 @@
 
 from django.db import migrations, models
 
-def forwards_func(apps, schema_editor):
-    pass
-
-def reverse_func(apps, schema_editor):
-    pass
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -41,5 +35,4 @@ class Migration(migrations.Migration):
             name='permissionLevel',
             field=models.CharField(choices=[('viewall', 'View all'), ('eventmanager', 'Event manager'), ('schoolmanager', 'School manager'), ('billingmanager', 'Billing manager'), ('webeditor', 'Web editor'), ('full', 'Full')], max_length=20, verbose_name='Permission level'),
         ),
-        migrations.RunPython(forwards_func, reverse_func),
     ]
