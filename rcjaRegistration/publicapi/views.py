@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-
+from django.db.models import F, Q
 from django.core.exceptions import ValidationError
 from rest_framework import status, viewsets
 from rest_framework.response import Response
@@ -39,7 +39,7 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
     def eventsBaseQueryset(self, abbreviation):
         state = get_object_or_404(State, abbreviation__iexact=abbreviation, typeWebsite=True)
         if state.typeGlobal:
-            return Event.objects.filter(globalEvent=True, status='published', year__displayEventsOnWebsite=True)
+            return Event.objects.filter(Q(globalEvent=True) | Q(globalEvent=False, state=state), status='published', year__displayEventsOnWebsite=True)
         else:
             return Event.objects.filter(globalEvent=False, state=state, status='published', year__displayEventsOnWebsite=True)
 
