@@ -165,6 +165,18 @@ class User(SaveDeleteMixin, AbstractUser):
     def isGobalCoordinator(self, permissionLevels):
         return self.coordinator_set.filter(state=None, permissionLevel__in=permissionLevels).exists()
 
+    def adminViewableStates(self):
+        from regions.models import State
+        from regions.admin import StateAdmin
+        from coordination.permissions import coordinatorFilterQueryset_user, getFilteringPermissionLevels
+
+        stateFilterLookup = getattr(StateAdmin, 'stateFilterLookup', False)
+        globalFilterLookup = getattr(StateAdmin, 'globalFilterLookup', False)
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(State, ['view', 'change'])
+
+        return coordinatorFilterQueryset_user(State.objects.all(), self, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
+
     def strSchoolNames(self):
         return ", ".join(map(lambda x: str(x.school), self.schooladministrator_set.all()))
     strSchoolNames.short_description = "Schools"

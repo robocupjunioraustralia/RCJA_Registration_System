@@ -93,6 +93,40 @@
         </div>
         <div class = "right menu">
             {% if user.is_staff %}
+                <div class="ui dropdown simple item" >
+                    <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
+                    {% if user.currentlySelectedAdminYear %}
+                    {{ user.currentlySelectedAdminYear }}
+                    {% else %}
+                    Year
+                    {% endif %}
+                    </span>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        {% for year in years %}
+                            <a href="{% url 'users:setCurrentAdminYear' year.year %}" class="item">{{ year }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            {% if user.is_staff %}
+                <div class="ui dropdown simple item" >
+                    <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
+                    {% if user.currentlySelectedAdminState and user.currentlySelectedAdminState in user.adminViewableStates %}
+                    {{ user.currentlySelectedAdminState.abbreviation }}
+                    {% else %}
+                    State
+                    {% endif %}
+                    </span>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        {% for state in user.adminViewableStates %}
+                            <a href="{% url 'users:setCurrentAdminState' state.id %}" class="item">{{ state }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            {% if user.is_staff %}
             <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
                 <i class="id badge icon"></i>
                 Admin
