@@ -1,2 +1,2 @@
 from .admins import AdminPermissions, InlineAdminPermissions
-from .utils import coordinatorFilterQueryset, coordinatorFilterQueryset_user, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
+from .utils import coordinatorFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels

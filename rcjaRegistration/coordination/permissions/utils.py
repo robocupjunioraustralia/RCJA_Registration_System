@@ -4,7 +4,7 @@ from django.contrib.auth import get_permission_codename
 
 from coordination.models import Coordinator
 
-def coordinatorFilterQueryset_user(queryset, user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
+def coordinatorFilterQueryset(queryset, user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
     # Check user and is authenticated
     # Queryset filtering should not be attempted for users not logged in.
     if user is None or not user.is_authenticated:
@@ -45,9 +45,6 @@ def coordinatorFilterQueryset_user(queryset, user, statePermissionLevels, global
         })
 
     return (stateQueryset | globalQueryset).distinct()
-
-def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
-    return coordinatorFilterQueryset_user(queryset, request.user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
 
 def isGlobalObject(model, obj):
     # Models without getState are global across all states

@@ -7,7 +7,7 @@ class BaseAdminPermissions:
         stateFilterLookup = getattr(cls, 'stateFilterLookup', False)
         globalFilterLookup = getattr(cls, 'globalFilterLookup', False)
     
-        return coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
+        return coordinatorFilterQueryset(queryset, request.user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
 
     def get_queryset(self, request):
         # Get base queryset
