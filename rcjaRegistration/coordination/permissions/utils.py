@@ -4,23 +4,23 @@ from django.contrib.auth import get_permission_codename
 
 from coordination.models import Coordinator
 
-def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
+def coordinatorFilterQueryset_user(queryset, user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
     # Check user and is authenticated
     # Queryset filtering should not be attempted for users not logged in.
-    if request.user is None or not request.user.is_authenticated:
+    if user is None or not user.is_authenticated:
         raise PermissionDenied
 
     # Check user is active. Queryset filtering should not be attempted for inactive users.
-    if not (request.user.is_active and request.user.is_staff):
+    if not (user.is_active and user.is_staff):
         raise PermissionDenied
 
     # Return complete queryset if super user
-    if request.user.is_superuser:
+    if user.is_superuser:
         return queryset
 
     # Global coordinator filtering
     # Return the entire queryset if the user is a global coordinator with permissions to this model
-    if request.user.isGobalCoordinator(globalPermissionLevels):
+    if user.isGobalCoordinator(globalPermissionLevels):
         return queryset
 
     # If no filtering applied return base queryset
@@ -33,7 +33,7 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
     # State filtering
     if stateFilterLookup:
         stateQueryset = queryset.filter(**{
-            f'{stateFilterLookup}__in': request.user.coordinator_set.all(),
+            f'{stateFilterLookup}__in': user.coordinator_set.all(),
             f'{stateFilterLookup}__permissionLevel__in': statePermissionLevels,
         })
 
@@ -45,6 +45,9 @@ def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPe
         })
 
     return (stateQueryset | globalQueryset).distinct()
+
+def coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
+    return coordinatorFilterQueryset_user(queryset, request.user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
 
 def isGlobalObject(model, obj):
     # Models without getState are global across all states
