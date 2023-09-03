@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('coordination', '0006_auto_20200504_2218'),
+        ('users', '0005_user_currentlyselectedadminstate_and_more'),
     ]
 
     operations = [
