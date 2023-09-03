@@ -17,6 +17,7 @@ from userquestions.forms import QuestionResponseForm
 from schools.models import School
 
 from regions.utils import getRegionsLookup
+from coordination.permissions import checkCoordinatorPermission
 
 @login_required
 def details(request):
@@ -99,3 +100,37 @@ def termsAndConditions(request):
         return render(request,'termsAndConditions/termsAndConditionsLoggedIn.html')
     else:
         return render(request,'termsAndConditions/termsAndConditionsNoAuth.html') 
+
+@login_required
+def setCurrentAdminYear(request, year):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    from events.models import Year
+    year = get_object_or_404(Year, pk=year)
+
+    # Set current year on user
+    request.user.currentlySelectedAdminYear = year
+    request.user.save(update_fields=['currentlySelectedAdminYear'])
+    
+    return redirect('/')
+
+@login_required
+def setCurrentAdminState(request, stateID):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    from regions.models import State
+    state = get_object_or_404(State, pk=stateID)
+
+    # Check permissions
+    if not checkCoordinatorPermission(request, State, state, 'view'):
+        raise PermissionDenied("You do not have permission to view this state")
+
+    # Set current school on user
+    request.user.currentlySelectedAdminState = state
+    request.user.save(update_fields=['currentlySelectedAdminState'])
+    
+    return redirect('/')
