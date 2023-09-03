@@ -4,11 +4,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 def forwards_func(apps, schema_editor):
-    # Normally need to get the model from the versioned app registry;
-    # But need to access updateUserPermissions so directly import
-    from users.models import User
-    for user in User.objects.all():
-        user.updateUserPermissions()
+    pass
 
 def reverse_func(apps, schema_editor):
     pass

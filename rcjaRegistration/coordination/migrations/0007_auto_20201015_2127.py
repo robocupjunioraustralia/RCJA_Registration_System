@@ -3,11 +3,7 @@
 from django.db import migrations, models
 
 def forwards_func(apps, schema_editor):
-    # Normally need to get the model from the versioned app registry;
-    # But need to access updateUserPermissions so directly import
-    from users.models import User
-    for user in User.objects.all():
-        user.updateUserPermissions()
+    pass
 
 def reverse_func(apps, schema_editor):
     pass
@@ -16,7 +12,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('coordination', '0006_auto_20200504_2218'),
-        ('users', '0005_user_currentlyselectedadminstate_and_more'),
     ]
 
     operations = [
