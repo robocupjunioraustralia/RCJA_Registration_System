@@ -416,7 +416,7 @@ class Event(SaveDeleteMixin, models.Model):
     bannerImageFilesize.short_description = 'Size'
 
     def __str__(self):
-        if not self.globalEvent:
+        if not (self.globalEvent or self.state.typeGlobal):
             return f'{self.name} {self.year} ({self.state.abbreviation})'
         else:
             return f'{self.name} {self.year}'
