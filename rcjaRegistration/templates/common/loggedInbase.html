@@ -112,7 +112,9 @@
             {% if user.is_staff %}
                 <div class="ui dropdown simple item" >
                     <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
-                    {% if user.currentlySelectedAdminState and user.currentlySelectedAdminState in user.adminViewableStates %}
+                    {% if user.currentlySelectedAdminState is None %}
+                    All
+                    {% elif user.currentlySelectedAdminState in user.adminViewableStates %}
                     {{ user.currentlySelectedAdminState.abbreviation }}
                     {% else %}
                     State
@@ -120,6 +122,7 @@
                     </span>
                     <i class="dropdown icon"></i>
                     <div class="menu">
+                        <a href="{% url 'users:setCurrentAdminState' 0 %}" class="item">All States</a>
                         {% for state in user.adminViewableStates %}
                             <a href="{% url 'users:setCurrentAdminState' state.id %}" class="item">{{ state }}</a>
                         {% endfor %}

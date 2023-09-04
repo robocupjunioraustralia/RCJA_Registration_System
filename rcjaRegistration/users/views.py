@@ -131,15 +131,22 @@ def setCurrentAdminState(request, stateID):
     if not request.user.is_staff:
         raise PermissionDenied("Must be staff")
 
-    from regions.models import State
-    state = get_object_or_404(State, pk=stateID)
+    if stateID == 0:
+        request.user.currentlySelectedAdminState = None
 
-    # Check permissions
-    if not checkCoordinatorPermission(request, State, state, 'view'):
-        raise PermissionDenied("You do not have permission to view this state")
+    else:
 
-    # Set current school on user
-    request.user.currentlySelectedAdminState = state
+        from regions.models import State
+        state = get_object_or_404(State, pk=stateID)
+
+        # Check permissions
+        if not checkCoordinatorPermission(request, State, state, 'view'):
+            raise PermissionDenied("You do not have permission to view this state")
+
+        # Set current state on user
+        request.user.currentlySelectedAdminState = state
+
+    # Save field
     request.user.save(update_fields=['currentlySelectedAdminState'])
     
     referrer = request.META.get('HTTP_REFERER', '')
