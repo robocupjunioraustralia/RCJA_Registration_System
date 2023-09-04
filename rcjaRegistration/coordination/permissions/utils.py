@@ -46,6 +46,19 @@ def coordinatorFilterQueryset(queryset, user, statePermissionLevels, globalPermi
 
     return (stateQueryset | globalQueryset).distinct()
 
+def selectedFilterQueryset(cls, queryset, user):
+    selectedFilterDict = {}
+
+    stateSelectedFilterLookup = getattr(cls, 'stateSelectedFilterLookup', None)
+    if stateSelectedFilterLookup and user.currentlySelectedAdminState:
+        selectedFilterDict[stateSelectedFilterLookup] = user.currentlySelectedAdminState
+
+    yearSelectedFilterLookup = getattr(cls, 'yearSelectedFilterLookup', None)
+    if yearSelectedFilterLookup and user.currentlySelectedAdminYear:
+        selectedFilterDict[yearSelectedFilterLookup] = user.currentlySelectedAdminYear
+
+    return queryset.filter(**selectedFilterDict)
+
 def isGlobalObject(model, obj):
     # Models without getState are global across all states
     # But non super users won't have access unless stateCoordinatorPermissions() is defined

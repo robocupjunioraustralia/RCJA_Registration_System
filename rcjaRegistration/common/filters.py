@@ -1,21 +1,11 @@
 from django.contrib import admin
+from coordination.permissions import selectedFilterQueryset
 
 class FilteredRelatedOnlyFieldListFilter(admin.RelatedOnlyFieldListFilter):
     def field_choices(self, field, request, model_admin):
-
-        selectedFilterDict = {}
-
-        stateSelectedFilterLookup = getattr(model_admin, 'stateSelectedFilterLookup', None)
-        if stateSelectedFilterLookup and request.user.currentlySelectedAdminState:
-            selectedFilterDict[stateSelectedFilterLookup] = request.user.currentlySelectedAdminState
-
-        yearSelectedFilterLookup = getattr(model_admin, 'yearSelectedFilterLookup', None)
-        if yearSelectedFilterLookup and request.user.currentlySelectedAdminYear:
-            selectedFilterDict[yearSelectedFilterLookup] = request.user.currentlySelectedAdminYear
-
+        qs = model_admin.get_queryset(request)
         pk_qs = (
-            model_admin.get_queryset(request)
-            .filter(**selectedFilterDict)
+            selectedFilterQueryset(model_admin, qs, request.user)
             .distinct()
             .values_list("%s__pk" % self.field_path, flat=True)
         )
