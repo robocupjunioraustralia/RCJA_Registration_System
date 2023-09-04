@@ -10,6 +10,9 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.urls import reverse
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.encoding import iri_to_uri
+from urllib.parse import urlparse
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
@@ -114,7 +117,13 @@ def setCurrentAdminYear(request, year):
     request.user.currentlySelectedAdminYear = year
     request.user.save(update_fields=['currentlySelectedAdminYear'])
     
-    return redirect('/')
+    referrer = request.META.get('HTTP_REFERER', '')
+    parsed = urlparse(referrer)
+    uri = iri_to_uri(parsed.path)
+    if url_has_allowed_host_and_scheme(uri, None):
+        return redirect(uri)
+    else:
+        return redirect('/')
 
 @login_required
 def setCurrentAdminState(request, stateID):
@@ -133,4 +142,10 @@ def setCurrentAdminState(request, stateID):
     request.user.currentlySelectedAdminState = state
     request.user.save(update_fields=['currentlySelectedAdminState'])
     
-    return redirect('/')
+    referrer = request.META.get('HTTP_REFERER', '')
+    parsed = urlparse(referrer)
+    uri = iri_to_uri(parsed.path)
+    if url_has_allowed_host_and_scheme(uri, None):
+        return redirect(uri)
+    else:
+        return redirect('/')
