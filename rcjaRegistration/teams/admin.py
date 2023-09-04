@@ -4,6 +4,7 @@ from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 from django.forms import Textarea
 from django.db import models
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
 from .models import HardwarePlatform, SoftwarePlatform, Team, Student
 
@@ -120,8 +121,8 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'team',
     ]
     list_filter = [
-        ('team__event', admin.RelatedOnlyFieldListFilter),
-        ('team__division', admin.RelatedOnlyFieldListFilter),
+        ('team__event', FilteredRelatedOnlyFieldListFilter),
+        ('team__division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'firstName',
@@ -161,3 +162,6 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
     }
 
     statePermissionsFilterLookup = 'team__event__state__coordinator'
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'team__event__state'
+    yearSelectedFilterLookup = 'team__event__year'
