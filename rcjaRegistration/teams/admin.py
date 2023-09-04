@@ -160,4 +160,4 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         },
     }
 
-    stateFilterLookup = 'team__event__state__coordinator'
+    statePermissionsFilterLookup = 'team__event__state__coordinator'

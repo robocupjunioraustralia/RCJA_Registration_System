@@ -170,12 +170,12 @@ class User(SaveDeleteMixin, AbstractUser):
         from regions.admin import StateAdmin
         from coordination.permissions import coordinatorFilterQueryset, getFilteringPermissionLevels
 
-        stateFilterLookup = getattr(StateAdmin, 'stateFilterLookup', False)
-        globalFilterLookup = getattr(StateAdmin, 'globalFilterLookup', False)
+        statePermissionsFilterLookup = getattr(StateAdmin, 'statePermissionsFilterLookup', False)
+        globalPermissionsFilterLookup = getattr(StateAdmin, 'globalPermissionsFilterLookup', False)
 
         statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(State, ['view', 'change'])
 
-        return coordinatorFilterQueryset(State.objects.all(), self, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
+        return coordinatorFilterQueryset(State.objects.all(), self, statePermissionLevels, globalPermissionLevels, statePermissionsFilterLookup, globalPermissionsFilterLookup)
 
     def strSchoolNames(self):
         return ", ".join(map(lambda x: str(x.school), self.schooladministrator_set.all()))

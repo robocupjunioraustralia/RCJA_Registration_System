@@ -4,7 +4,7 @@ from django.contrib.auth import get_permission_codename
 
 from coordination.models import Coordinator
 
-def coordinatorFilterQueryset(queryset, user, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup):
+def coordinatorFilterQueryset(queryset, user, statePermissionLevels, globalPermissionLevels, statePermissionsFilterLookup, globalPermissionsFilterLookup):
     # Check user and is authenticated
     # Queryset filtering should not be attempted for users not logged in.
     if user is None or not user.is_authenticated:
@@ -24,24 +24,24 @@ def coordinatorFilterQueryset(queryset, user, statePermissionLevels, globalPermi
         return queryset
 
     # If no filtering applied return base queryset
-    if not (stateFilterLookup or globalFilterLookup):
+    if not (statePermissionsFilterLookup or globalPermissionsFilterLookup):
         return queryset
 
     stateQueryset = queryset.none()
     globalQueryset = queryset.none()
 
     # State filtering
-    if stateFilterLookup:
+    if statePermissionsFilterLookup:
         stateQueryset = queryset.filter(**{
-            f'{stateFilterLookup}__in': user.coordinator_set.all(),
-            f'{stateFilterLookup}__permissionLevel__in': statePermissionLevels,
+            f'{statePermissionsFilterLookup}__in': user.coordinator_set.all(),
+            f'{statePermissionsFilterLookup}__permissionLevel__in': statePermissionLevels,
         })
 
     # Global object filtering
-    if globalFilterLookup:
+    if globalPermissionsFilterLookup:
         # Means model has a relationship to state, want only stateless objects
         globalQueryset = queryset.filter(**{
-            globalFilterLookup: None,
+            globalPermissionsFilterLookup: None,
         })
 
     return (stateQueryset | globalQueryset).distinct()

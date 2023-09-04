@@ -84,4 +84,4 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         },
     }
 
-    stateFilterLookup = 'eventAttendance__event__state__coordinator'
+    statePermissionsFilterLookup = 'eventAttendance__event__state__coordinator'

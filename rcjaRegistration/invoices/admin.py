@@ -144,7 +144,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     markPaidToday.short_description = "Mark paid today"
     markPaidToday.allowed_permissions = ('change',)
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
 
     def detailURL(self, instance):
         return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url())

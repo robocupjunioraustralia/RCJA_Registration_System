@@ -186,7 +186,7 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         },
     }
 
-    stateFilterLookup = 'homeState__coordinator'
+    statePermissionsFilterLookup = 'homeState__coordinator'
 
     # Only superuser can change permissions on users
     def get_readonly_fields(self, request, obj=None):

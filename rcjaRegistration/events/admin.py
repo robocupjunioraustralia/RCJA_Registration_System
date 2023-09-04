@@ -71,8 +71,8 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
-    globalFilterLookup = 'state'
+    statePermissionsFilterLookup = 'state__coordinator'
+    globalPermissionsFilterLookup = 'state'
 
 @admin.register(Venue)
 class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -122,7 +122,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
 
 @admin.register(Year)
 class YearAdmin(AdminPermissions, admin.ModelAdmin):
@@ -370,7 +370,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
     fieldFilteringModel = Event
 
     @classmethod
@@ -480,4 +480,4 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
             },
         }
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
