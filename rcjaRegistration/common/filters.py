@@ -6,11 +6,11 @@ class FilteredRelatedOnlyFieldListFilter(admin.RelatedOnlyFieldListFilter):
         selectedFilterDict = {}
 
         stateSelectedFilterLookup = getattr(model_admin, 'stateSelectedFilterLookup', None)
-        if stateSelectedFilterLookup:
+        if stateSelectedFilterLookup and request.user.currentlySelectedAdminState:
             selectedFilterDict[stateSelectedFilterLookup] = request.user.currentlySelectedAdminState
 
         yearSelectedFilterLookup = getattr(model_admin, 'yearSelectedFilterLookup', None)
-        if yearSelectedFilterLookup:
+        if yearSelectedFilterLookup and request.user.currentlySelectedAdminYear:
             selectedFilterDict[yearSelectedFilterLookup] = request.user.currentlySelectedAdminYear
 
         pk_qs = (
