@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - fix/azure_deployment_2
 
 jobs:
   build:
