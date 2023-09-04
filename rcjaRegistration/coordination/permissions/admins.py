@@ -13,6 +13,20 @@ class BaseAdminPermissions:
         # Get base queryset
         queryset = super().get_queryset(request)
 
+        if getattr(self, 'filterQuerysetOnSelected', False):
+
+            selectedFilterDict = {}
+
+            stateSelectedFilterLookup = getattr(self, 'stateSelectedFilterLookup', None)
+            if stateSelectedFilterLookup:
+                selectedFilterDict[stateSelectedFilterLookup] = request.user.currentlySelectedAdminState
+
+            yearSelectedFilterLookup = getattr(self, 'yearSelectedFilterLookup', None)
+            if yearSelectedFilterLookup:
+                selectedFilterDict[yearSelectedFilterLookup] = request.user.currentlySelectedAdminYear
+
+            queryset = queryset.filter(**selectedFilterDict)
+
         permissionLevelOverride = getattr(self, 'filteringPermissionLevels', None)
         statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.model, ['view', 'change'], permissionLevelOverride)
 
