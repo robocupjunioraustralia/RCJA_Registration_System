@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 import django.apps as djangoApps
 from common.models import SaveDeleteMixin
+from django.core.exceptions import PermissionDenied
 
 from django.contrib.auth.models import Permission
 
@@ -175,7 +176,10 @@ class User(SaveDeleteMixin, AbstractUser):
 
         statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(State, ['view', 'change'])
 
-        return coordinatorFilterQueryset(State.objects.all(), self, statePermissionLevels, globalPermissionLevels, statePermissionsFilterLookup, globalPermissionsFilterLookup)
+        try:
+            return coordinatorFilterQueryset(State.objects.all(), self, statePermissionLevels, globalPermissionLevels, statePermissionsFilterLookup, globalPermissionsFilterLookup)
+        except PermissionDenied:
+            return State.objects.none()
 
     def strSchoolNames(self):
         return ", ".join(map(lambda x: str(x.school), self.schooladministrator_set.all()))
