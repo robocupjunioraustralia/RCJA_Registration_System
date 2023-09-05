@@ -122,16 +122,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # Filter autocompletes to valid options
     def get_search_results(self, request, queryset, search_term):
-        # Filter by typeCompetition
-        for url in ['events/event/', 'events/division/', 'events/venue/']:
-            if url in request.META.get('HTTP_REFERER', ''):
-                queryset = queryset.filter(typeCompetition=True)
-
-        # Filter by typeUserRegistration
-        for url in ['users/user/', 'schools/school/', 'regions/region/']:
-            if url in request.META.get('HTTP_REFERER', ''):
-                queryset = queryset.filter(typeUserRegistration=True)
-
         # Filter by state for objects that should have full permission level only
         for url in ['users/user/', 'coordination/coordinator/', 'regions/region/']:
             if url in request.META.get('HTTP_REFERER', ''):
