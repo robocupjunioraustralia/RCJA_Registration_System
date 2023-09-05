@@ -11,5 +11,5 @@ COPY rcjaRegistration /app
 RUN chmod +x /app/migration.sh
 
 CMD ["/start.sh"]
-CMD ["/app/migration.sh"]
-ENTRYPOINT ["/entrypoint.sh"]
+
+ENTRYPOINT ["/app/migration.sh"]
