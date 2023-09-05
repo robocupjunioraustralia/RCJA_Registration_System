@@ -85,6 +85,25 @@ class TestUserModelMethods(TestCase):
         user2 = User(email='not@test.com')
         self.assertEqual(str(user2), "not@test.com")
 
+    def test_adminViewableStates_notStaff(self):
+        self.assertFalse(self.user1.adminViewableStates().exists())
+
+    def test_adminViewableStates_superUser(self):
+        self.user1.is_superuser = True
+        self.user1.save()
+
+        qs = self.user1.adminViewableStates()
+        self.assertTrue(qs.exists())
+        self.assertQuerysetEqual(qs, State.objects.all(), ordered=False)
+
+    def test_adminViewableStates_coordinator(self):
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Position')
+
+        qs = self.user1.adminViewableStates()
+        self.assertTrue(qs.exists())
+        self.assertQuerysetEqual(qs, State.objects.filter(id=self.state1.id), ordered=False)
+
 class TestUpdateUserPermissions(TestCase):
     def setUp(self):
         unitTestsSetup(self)
