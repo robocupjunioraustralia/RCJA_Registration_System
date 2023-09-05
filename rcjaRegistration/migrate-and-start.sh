@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Migrate the Database at startup of project"
+echo "Start Database Migration"
 
 manage.py migrate --noinput
 manage.py collectstatic --noinput
