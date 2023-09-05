@@ -34,7 +34,7 @@ class Test_StaffRequired(TestCase):
         cls.year = Year.objects.create(year=2021, displayEventsOnWebsite=True)
 
     def setUp(self):
-        self.login = self.client.login(request=HttpRequest(), username=self.user_notstaff, password=self.password)
+        self.login = self.client.login(request=HttpRequest(), username=self.email_user_notstaff, password=self.password)
 
     def testsetCurrentAdminYear(self):
         self.assertEqual(self.user_notstaff.currentlySelectedAdminYear, None)
