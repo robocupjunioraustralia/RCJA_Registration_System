@@ -620,7 +620,7 @@ class Test_coordinatorFilterQueryset(TestCase):
     def testNoStateLookups(self):
         self.request.user = self.user_state1_fullcoordinator
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], False, 'homeState')
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], False, 'homeState')
 
         self.assertQuerysetEqual(self.baseQS.filter(homeState=None), qs, ordered=False)
 
