@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - fix/azure_deployment_2
 
 jobs:
   build:
@@ -52,9 +51,9 @@ jobs:
         app-name: rcjaregistration
         images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
         slot-name: staging
-    # - name: Swap slots and stop staging
-    #   run: |
-    #     az webapp deployment slot swap -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
-    #     az webapp stop -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+    - name: Swap slots and stop staging
+      run: |
+        az webapp deployment slot swap -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+        az webapp stop -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
 
 
