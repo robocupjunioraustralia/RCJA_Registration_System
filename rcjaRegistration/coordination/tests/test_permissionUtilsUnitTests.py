@@ -1,13 +1,13 @@
 from django.test import TestCase
 from unittest.mock import patch
 from common.baseTests import createStates, createUsers, createEvents
-from coordination.permissions import coordinatorFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
+from coordination.permissions import coordinatorFilterQueryset, selectedFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 
 from users.models import User
 from coordination.models import Coordinator
-from events.models import Event
+from events.models import Event, Year
 
 class RequestObj:
     def __init__(self):
@@ -659,3 +659,49 @@ class Test_coordinatorFilterQueryset(TestCase):
 
         self.assertEqual(5, qs.count())
         self.assertFalse(qs.filter(state=self.state2).exists())
+
+class ModelAdminTest:
+    def __init__(self):
+        pass
+
+class Test_selectedFilterQueryset(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+        createEvents(cls)
+        cls.year2 = Year.objects.create(year=2022, displayEventsOnWebsite=True)
+
+        cls.baseQS = Event.objects.all()
+
+    def testNoLookups(self):
+        self.user_state1_super1.currentlySelectedAdminState = self.state1
+        self.user_state1_super1.currentlySelectedAdminYear = self.year2
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+
+    def testNoSelection(self):
+        ModelAdminTest.stateSelectedFilterLookup = 'state'
+        ModelAdminTest.yearSelectedFilterLookup = 'year'
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+
+    def testStateLookup(self):
+        self.user_state1_super1.currentlySelectedAdminState = self.state1
+        ModelAdminTest.stateSelectedFilterLookup = 'state'
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertQuerysetEqual(Event.objects.filter(state=self.state1), qs, ordered=False)
+
+    def testYearLookup(self):
+        self.user_state1_super1.currentlySelectedAdminYear = self.year2
+        ModelAdminTest.yearSelectedFilterLookup = 'year'
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertFalse(qs.exists())
