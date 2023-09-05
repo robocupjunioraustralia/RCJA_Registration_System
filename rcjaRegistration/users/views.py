@@ -104,6 +104,15 @@ def termsAndConditions(request):
     else:
         return render(request,'termsAndConditions/termsAndConditionsNoAuth.html') 
 
+def redirectCurrentPage(request):
+    referrer = request.META.get('HTTP_REFERER', '')
+    parsed = urlparse(referrer)
+    uri = iri_to_uri(parsed.path)
+    if url_has_allowed_host_and_scheme(uri, None):
+        return redirect(uri)
+    else:
+        return redirect('/')
+
 @login_required
 def setCurrentAdminYear(request, year):
     # Restrict to staff
@@ -117,13 +126,7 @@ def setCurrentAdminYear(request, year):
     request.user.currentlySelectedAdminYear = year
     request.user.save(update_fields=['currentlySelectedAdminYear'])
     
-    referrer = request.META.get('HTTP_REFERER', '')
-    parsed = urlparse(referrer)
-    uri = iri_to_uri(parsed.path)
-    if url_has_allowed_host_and_scheme(uri, None):
-        return redirect(uri)
-    else:
-        return redirect('/')
+    return redirectCurrentPage(request)
 
 @login_required
 def setCurrentAdminState(request, stateID):
@@ -149,10 +152,4 @@ def setCurrentAdminState(request, stateID):
     # Save field
     request.user.save(update_fields=['currentlySelectedAdminState'])
     
-    referrer = request.META.get('HTTP_REFERER', '')
-    parsed = urlparse(referrer)
-    uri = iri_to_uri(parsed.path)
-    if url_has_allowed_host_and_scheme(uri, None):
-        return redirect(uri)
-    else:
-        return redirect('/')
+    return redirectCurrentPage(request)
