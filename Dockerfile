@@ -8,5 +8,8 @@ RUN pip install -r /tmp/requirements.txt
 COPY app.json /app
 COPY rcjaRegistration /app
 
+RUN chmod +x /app/migrate-and-start.sh
+
 CMD ["/start.sh"]
-ENTRYPOINT ["/entrypoint.sh"]
+
+ENTRYPOINT ["/app/migrate-and-start.sh"]
