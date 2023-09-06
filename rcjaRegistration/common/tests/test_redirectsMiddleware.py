@@ -62,3 +62,13 @@ class Test_redirectsMiddleware_notStaff(TestCase):
         response = self.client.get(reverse('events:dashboard'))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('schools:details'))
+
+    def testNoRedirectNoSchool(self):
+        self.user.currentlySelectedSchool.forceSchoolDetailsUpdate = True
+        self.user.currentlySelectedSchool.save()
+
+        self.user.currentlySelectedSchool = None
+        self.user.save()
+
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertEqual(response.status_code, 200)
