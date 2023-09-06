@@ -1,8 +1,9 @@
 {% extends 'common/loggedInbase.html' %}
+{% load static %}
 
 {% block head %}
 
-<title> Changelog </title>
+<title> Admin changes </title>
 
 <style>
  .left-aligned-text {
@@ -17,8 +18,12 @@
   <div class = "">
     <div class="ui center aligned grid ">
       <div class = "twelve wide mobile six wide computer column ui">
-        <h1>Changelog</h1>
-        <p>Content</p>
+        <h1>Recent Administration Changes</h1>
+        <h2>6 September 2023</h2>
+
+        <p>Admin pages can now be filtered by year and state to improve page load times. To enable this filtering select from the dropdowns in the top right corner of the page:</p>
+        <img src="{% static 'adminChangelog/yearStateFilter.png' %}"><br><br>
+
         <a href="/"><button class="ui large blue button"> Home </button></a>
       </div>
     </div>
