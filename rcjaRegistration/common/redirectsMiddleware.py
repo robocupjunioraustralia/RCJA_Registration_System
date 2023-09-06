@@ -21,6 +21,8 @@ class RedirectMiddleware:
                     redirectTo = reverse('users:details')
                 elif request.user.currentlySelectedSchool and request.user.currentlySelectedSchool.forceSchoolDetailsUpdate:
                     redirectTo = reverse('schools:details')
+                elif request.user.is_staff and request.user.adminChangelogVersionShown != request.user.ADMIN_CHANGELOG_CURRENT_VERSION:
+                    redirectTo = reverse('users:details')
             except School.DoesNotExist:
                 pass # If school just deleted don't attempt redirection
 
