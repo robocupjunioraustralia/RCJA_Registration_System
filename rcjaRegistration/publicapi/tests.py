@@ -90,7 +90,7 @@ class TestStates(TestCase):
 
     def testPaginationTwoPagesLink(self):
         for i in range(50):
-            self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name=f'New State {i}', abbreviation=f'NS{i}', typeWebsite=True)
+            self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name=f'New State {i}', abbreviation=f'N{i}', typeWebsite=True)
         
         response = self.client.get('/api/v1/public/states/')
         self.assertTrue('Link' in response.headers)
@@ -101,7 +101,7 @@ class TestStates(TestCase):
 
     def testPaginationPageTwoLoads(self):
         for i in range(50):
-            self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name=f'New State {i}', abbreviation=f'NS{i}', typeWebsite=True)
+            self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name=f'New State {i}', abbreviation=f'N{i}', typeWebsite=True)
         
         response = self.client.get('/api/v1/public/states/?page=2')
         self.assertEqual(response.status_code, 200)
