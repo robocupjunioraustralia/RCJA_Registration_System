@@ -28,7 +28,7 @@ class Test_LoginRequired(TestCase):
 
     def testadminChangelog(self):
         response = self.client.get(reverse('users:adminChangelog'))
-        self.assertEqual(response.url, f"/accounts/login/?next=/user/adminChangelog")
+        self.assertEqual(response.url, f"/accounts/login/?next=/user/adminChangelog/")
         self.assertEqual(response.status_code, 302)
 
 class Test_StaffRequired(TestCase):
