@@ -8,4 +8,5 @@ urlpatterns = [
     path('termsAndConditions', views.termsAndConditions, name="termsAndConditions"),
     path('user/setCurrentAdminYear/<int:year>', views.setCurrentAdminYear, name='setCurrentAdminYear'),
     path('user/setCurrentAdminState/<int:stateID>', views.setCurrentAdminState, name='setCurrentAdminState'),
+    path('user/adminChangelog/', views.adminChangelog, name='adminChangelog'),
 ]

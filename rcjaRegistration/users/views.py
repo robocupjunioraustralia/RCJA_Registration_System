@@ -153,3 +153,11 @@ def setCurrentAdminState(request, stateID):
     request.user.save(update_fields=['currentlySelectedAdminState'])
     
     return redirectCurrentPage(request)
+
+@login_required
+def adminChangelog(request):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    return render(request, 'users/adminChangelog.html')
