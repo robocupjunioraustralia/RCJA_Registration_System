@@ -569,8 +569,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
-    def postSave(self):
-        # Create invoice
+    def createInvoices(self):
         if self.campusInvoicingEnabled():
             # Get or create invoice with matching campus
             Invoice.objects.get_or_create(
@@ -595,6 +594,11 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
                 event=self.event,
                 school=None
             )
+
+    def postSave(self):
+        # Create invoice
+        if self.event.paidEvent():
+            self.createInvoices()
 
     # *****Methods*****
 
