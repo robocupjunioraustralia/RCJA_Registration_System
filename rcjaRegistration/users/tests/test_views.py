@@ -26,6 +26,11 @@ class Test_LoginRequired(TestCase):
         self.assertEqual(response.url, f"/accounts/login/?next=/user/setCurrentAdminState/{self.state1.id}")
         self.assertEqual(response.status_code, 302)
 
+    def testadminChangelog(self):
+        response = self.client.get(reverse('users:adminChangelog'))
+        self.assertEqual(response.url, f"/accounts/login/?next=/user/adminChangelog")
+        self.assertEqual(response.status_code, 302)
+
 class Test_StaffRequired(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -55,6 +60,23 @@ class Test_StaffRequired(TestCase):
         # Check no update to value
         self.user_notstaff.refresh_from_db()
         self.assertEqual(self.user_notstaff.currentlySelectedAdminState, None)
+
+    def testadminChangelog(self):
+        response = self.client.get(reverse('users:adminChangelog'))
+        self.assertEqual(response.status_code, 403)
+
+class Test_pageLoads(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+
+    def setUp(self):
+        self.login = self.client.login(request=HttpRequest(), username=self.email_user_state1_fullcoordinator, password=self.password)
+
+    def testadminChangelog(self):
+        response = self.client.get(reverse('users:adminChangelog'))
+        self.assertEqual(response.status_code, 200)
 
 class Test_response_setCurrentAdminYear(TestCase):
     @classmethod
