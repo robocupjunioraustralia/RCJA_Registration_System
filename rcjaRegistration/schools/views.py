@@ -11,6 +11,7 @@ from django.forms import modelformset_factory, inlineformset_factory
 from django.db.models import ProtectedError
 from django.urls import reverse
 from django.db import IntegrityError, transaction
+from coordination.permissions import checkCoordinatorPermission
 
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
@@ -127,3 +128,22 @@ def details(request):
             return redirect(reverse('events:dashboard'))
 
     return render(request, 'schools/schoolDetails.html', {'form': form, 'campusFormset': campusFormset, 'schoolAdministratorFormset':schoolAdministratorFormset, 'regionsLookup': getRegionsLookup()})
+
+@login_required
+def adminMergeSchools(request, school1ID, school2ID):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    school1 = get_object_or_404(School, pk=school1ID)
+    school2 = get_object_or_404(School, pk=school2ID)
+
+    if not (
+        checkCoordinatorPermission(request, School, school1, 'change') and
+        checkCoordinatorPermission(request, School, school1, 'delete') and
+        checkCoordinatorPermission(request, School, school2, 'change') and
+        checkCoordinatorPermission(request, School, school2, 'delete')
+    ):
+        raise PermissionDenied("No permission on selected schools")
+
+    
