@@ -591,10 +591,10 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
             else:
                 # Get invoice for this user for independent entry
                 Invoice.objects.get_or_create(
-                invoiceToUser=self.mentorUser,
-                event=self.event,
-                school=None
-            )
+                    invoiceToUser=self.mentorUser,
+                    event=self.event,
+                    school=None
+                )
 
     def postSave(self):
         self.createInvoices()
