@@ -597,7 +597,7 @@ class TestEventMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.division1 = Division.objects.create(name='Division 1')
-        self.event = Event(
+        self.event = Event.objects.create(
             year=self.year,
             state=self.newState,
             name='Event 1',
@@ -673,6 +673,32 @@ class TestEventMethods(TestCase):
 
         self.assertNotIn('<h1>', self.event.bleachedEventDetails())
         self.assertIn('&lt;h1&gt;', self.event.bleachedEventDetails())
+
+    def testPaidEvent_defaultEntryFee(self):
+        self.assertTrue(self.event.paidEvent())
+
+    def testPaidEvent_free(self):
+        self.event.event_defaultEntryFee = 0
+        self.assertFalse(self.event.paidEvent())
+
+    def testPaidEvent_specialRateFee(self):
+        self.event.event_defaultEntryFee = 0
+        self.event.event_specialRateFee = 5
+        self.assertTrue(self.event.paidEvent())
+
+    def testPaidEvent_free_withDivision(self):
+        self.event.event_defaultEntryFee = 0
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+
+        self.assertFalse(self.event.paidEvent())
+
+    def testPaidEvent_division_entryFee(self):
+        self.event.event_defaultEntryFee = 0
+        self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
+        self.availableDivision.division_entryFee = 5
+        self.availableDivision.save()
+
+        self.assertTrue(self.event.paidEvent())
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')

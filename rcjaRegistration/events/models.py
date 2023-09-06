@@ -375,6 +375,12 @@ class Event(SaveDeleteMixin, models.Model):
     def published(self):
         return self.status == 'published'
 
+    def paidEvent(self):
+        if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
+            return True
+
+        return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
+
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
     directEnquiriesToName.short_description = 'Direct enquiries to'
