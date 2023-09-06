@@ -52,7 +52,7 @@ def commonSetUp(self):
 
     self.email_user_globalCoordinator = 'user11@user.com'
 
-    self.user_globalCoordinator = User.objects.create_user(email=self.email_user_globalCoordinator, password=self.password, homeState=self.state1)
+    self.user_globalCoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_globalCoordinator, password=self.password, homeState=self.state1)
     self.globalCoordinator = Coordinator.objects.create(user=self.user_globalCoordinator, state=None, permissionLevel='full')
 
 class Test_checkCoordinatorPermission(TestCase):

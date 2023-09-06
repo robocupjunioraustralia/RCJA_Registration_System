@@ -29,7 +29,7 @@ class AuthViewTests(TestCase):
         }
 
     def setUp(self):
-        self.user = user = User.objects.create_user(email='admin@test.com', password='admin')
+        self.user = user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='admin@test.com', password='admin')
         self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
@@ -123,7 +123,7 @@ class AuthViewTests(TestCase):
         self.assertTemplateUsed(response, 'registration/logged_out.html')
 
     def testUserCreatedLogsOut(self):
-        user = User.objects.create_user(
+        user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, 
             email=self.email,
             password=self.password
         )
@@ -156,7 +156,7 @@ class TestEditDetails(TestCase):
         self.validPayload["homeState"] = self.newState.id
         self.validPayload["homeRegion"] = self.newRegion.id
 
-        self.user1 = User.objects.create_user(email=self.email, password=self.password)
+        self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email, password=self.password)
 
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
 
@@ -267,7 +267,7 @@ class TestUserSave(TestCase):
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email, password=self.password)
 
         self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='New South Wales', abbreviation='NSW')
@@ -373,7 +373,7 @@ class TestTermsAndConditionsView(TestCase):
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.email, password=self.password)
+        self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email, password=self.password)
 
     def testPageLoads_loggedOut(self):
         response = self.client.get(path=reverse('users:termsAndConditions'))
@@ -396,14 +396,14 @@ class TestTermsAndConditionsView(TestCase):
         self.assertTemplateUsed(response, 'termsAndConditions/termsAndConditionsLoggedIn.html')
 
 def adminSetUp(self):
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
 
     self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
     self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='South Australia', abbreviation='SA')
 
-    self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
-    self.user3 = User.objects.create_user(email=self.email3, password=self.password, homeState=self.state1)
-    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
+    self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password, homeState=self.state2)
+    self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password, homeState=self.state1)
+    self.usersuper = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
 class TestUserAdmin(TestCase):
     email1 = 'user1@user.com'
@@ -746,10 +746,10 @@ def adminPermissionsSetUp(self):
     self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
     self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='South Australia', abbreviation='SA')
 
-    self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, homeState=self.state1, is_staff=True, is_superuser=True)
-    self.usersuper2 = User.objects.create_user(email=self.emaulsuper2, password=self.password, homeState=self.state2, is_staff=True, is_superuser=True)
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password, homeState=self.state1)
-    self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state2)
+    self.usersuper = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.emailsuper, password=self.password, homeState=self.state1, is_staff=True, is_superuser=True)
+    self.usersuper2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.emaulsuper2, password=self.password, homeState=self.state2, is_staff=True, is_superuser=True)
+    self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password, homeState=self.state1)
+    self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password, homeState=self.state2)
     
     self.coord1 = Coordinator.objects.create(user=self.user1, permissionLevel='full', position='Thing')
 
