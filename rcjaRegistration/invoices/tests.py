@@ -31,10 +31,10 @@ class TestInvoiceGlobalSettings(TestCase):
         self.assertRaises(ValidationError, obj2.clean)
 
 def commonSetUp(self):
-        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
-        self.user3 = User.objects.create_user(email=self.email3, password=self.password)
-        self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True)
+        self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
+        self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password)
+        self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True)
 
         self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='NSW', abbreviation='NSW')

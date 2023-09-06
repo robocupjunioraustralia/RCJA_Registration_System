@@ -1,17 +1,20 @@
-from .utils import coordinatorFilterQueryset, getFilteringPermissionLevels, checkCoordinatorPermission
+from .utils import coordinatorFilterQueryset, selectedFilterQueryset, getFilteringPermissionLevels, checkCoordinatorPermission
 
 class BaseAdminPermissions:
     @classmethod
     def filterQueryset(cls, queryset, request, statePermissionLevels, globalPermissionLevels):
         # Determine which filters to apply
-        stateFilterLookup = getattr(cls, 'stateFilterLookup', False)
-        globalFilterLookup = getattr(cls, 'globalFilterLookup', False)
+        statePermissionsFilterLookup = getattr(cls, 'statePermissionsFilterLookup', False)
+        globalPermissionsFilterLookup = getattr(cls, 'globalPermissionsFilterLookup', False)
     
-        return coordinatorFilterQueryset(queryset, request, statePermissionLevels, globalPermissionLevels, stateFilterLookup, globalFilterLookup)
+        return coordinatorFilterQueryset(queryset, request.user, statePermissionLevels, globalPermissionLevels, statePermissionsFilterLookup, globalPermissionsFilterLookup)
 
     def get_queryset(self, request):
         # Get base queryset
         queryset = super().get_queryset(request)
+
+        if getattr(self, 'filterQuerysetOnSelected', False):
+            queryset = selectedFilterQueryset(self, queryset, request.user)
 
         permissionLevelOverride = getattr(self, 'filteringPermissionLevels', None)
         statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(self.model, ['view', 'change'], permissionLevelOverride)

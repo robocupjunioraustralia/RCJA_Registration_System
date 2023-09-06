@@ -17,7 +17,7 @@ import datetime
 def commonSetUp(obj):
     obj.username = 'user@user.com'
     obj.password = 'password'
-    obj.user = User.objects.create_user(email=obj.username, password=obj.password)
+    obj.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
         typeCompetition=True, typeUserRegistration=True,
         name='Victoria',
@@ -302,7 +302,7 @@ class TestEventDetailsPage_school(TestCase):
             state=self.newState,
             region=self.newRegion
         )
-        self.user2 = User.objects.create_user(email='user2@user.com', password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='user2@user.com', password=self.password)
 
         # Already one team for this user in common setup
         # Teams that should be visible
@@ -366,7 +366,7 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
             state=self.newState,
             region=self.newRegion
         )
-        self.user2 = User.objects.create_user(email='user2@user.com', password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='user2@user.com', password=self.password)
 
         # Already one team for this user in common setup
         # Teams that should be visible

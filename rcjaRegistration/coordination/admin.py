@@ -63,4 +63,4 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
     }
 
     filteringPermissionLevels = ['full']
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'

@@ -5,6 +5,7 @@ from django.utils.html import format_html, escape
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
 import datetime
 
@@ -57,7 +58,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     list_filter = [
         ('event__state', admin.RelatedOnlyFieldListFilter),
-        ('event', admin.RelatedOnlyFieldListFilter),
+        ('event', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'event__state__name',
@@ -144,7 +145,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     markPaidToday.short_description = "Mark paid today"
     markPaidToday.allowed_permissions = ('change',)
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
 
     def detailURL(self, instance):
         return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url())
@@ -162,3 +163,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'event__state'
+    yearSelectedFilterLookup = 'event__year'

@@ -10,6 +10,9 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.urls import reverse
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.encoding import iri_to_uri
+from urllib.parse import urlparse
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
@@ -17,6 +20,7 @@ from userquestions.forms import QuestionResponseForm
 from schools.models import School
 
 from regions.utils import getRegionsLookup
+from coordination.permissions import checkCoordinatorPermission
 
 @login_required
 def details(request):
@@ -99,3 +103,61 @@ def termsAndConditions(request):
         return render(request,'termsAndConditions/termsAndConditionsLoggedIn.html')
     else:
         return render(request,'termsAndConditions/termsAndConditionsNoAuth.html') 
+
+def redirectCurrentPage(request):
+    referrer = request.META.get('HTTP_REFERER', '')
+    parsed = urlparse(referrer)
+    uri = iri_to_uri(parsed.path)
+    if url_has_allowed_host_and_scheme(uri, None):
+        return redirect(uri)
+    else:
+        return redirect('/')
+
+@login_required
+def setCurrentAdminYear(request, year):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    from events.models import Year
+    year = get_object_or_404(Year, pk=year)
+
+    # Set current year on user
+    request.user.currentlySelectedAdminYear = year
+    request.user.save(update_fields=['currentlySelectedAdminYear'])
+    
+    return redirectCurrentPage(request)
+
+@login_required
+def setCurrentAdminState(request, stateID):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    if stateID == 0:
+        request.user.currentlySelectedAdminState = None
+
+    else:
+
+        from regions.models import State
+        state = get_object_or_404(State, pk=stateID)
+
+        # Check permissions
+        if not checkCoordinatorPermission(request, State, state, 'view'):
+            raise PermissionDenied("You do not have permission to view this state")
+
+        # Set current state on user
+        request.user.currentlySelectedAdminState = state
+
+    # Save field
+    request.user.save(update_fields=['currentlySelectedAdminState'])
+    
+    return redirectCurrentPage(request)
+
+@login_required
+def adminChangelog(request):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    return render(request, 'users/adminChangelog.html')

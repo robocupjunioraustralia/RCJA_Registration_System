@@ -8,6 +8,7 @@ from django import forms
 from django.forms import TextInput, Textarea
 from django.core.exceptions import ValidationError
 from django.db import models
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
@@ -71,8 +72,8 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
-    globalFilterLookup = 'state'
+    statePermissionsFilterLookup = 'state__coordinator'
+    globalPermissionsFilterLookup = 'state'
 
 @admin.register(Venue)
 class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -122,7 +123,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
 
 @admin.register(Year)
 class YearAdmin(AdminPermissions, admin.ModelAdmin):
@@ -265,7 +266,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     list_filter = [
         'status',
         'eventType',
-        'year',
         ('state', admin.RelatedOnlyFieldListFilter),
         'globalEvent',
     ]
@@ -370,8 +370,11 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
     fieldFilteringModel = Event
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'state'
+    yearSelectedFilterLookup = 'year'
 
     @classmethod
     def fkObjectFilterFields(cls, request, obj):
@@ -419,8 +422,8 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school',
     ]
     list_filter = [
-        ('event', admin.RelatedOnlyFieldListFilter),
-        ('division', admin.RelatedOnlyFieldListFilter),
+        ('event', FilteredRelatedOnlyFieldListFilter),
+        ('division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'school__state__name',
@@ -480,4 +483,7 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
             },
         }
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'event__state'
+    yearSelectedFilterLookup = 'event__year'

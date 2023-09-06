@@ -1,13 +1,13 @@
 from django.test import TestCase
 from unittest.mock import patch
 from common.baseTests import createStates, createUsers, createEvents
-from coordination.permissions import coordinatorFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
+from coordination.permissions import coordinatorFilterQueryset, selectedFilterQueryset, checkCoordinatorPermission, checkCoordinatorPermissionLevel, getFilteringPermissionLevels
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 
 from users.models import User
 from coordination.models import Coordinator
-from events.models import Event
+from events.models import Event, Year
 
 class RequestObj:
     def __init__(self):
@@ -52,7 +52,7 @@ def commonSetUp(self):
 
     self.email_user_globalCoordinator = 'user11@user.com'
 
-    self.user_globalCoordinator = User.objects.create_user(email=self.email_user_globalCoordinator, password=self.password, homeState=self.state1)
+    self.user_globalCoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_globalCoordinator, password=self.password, homeState=self.state1)
     self.globalCoordinator = Coordinator.objects.create(user=self.user_globalCoordinator, state=None, permissionLevel='full')
 
 class Test_checkCoordinatorPermission(TestCase):
@@ -555,7 +555,7 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.user_state1_super1.refresh_from_db()
         self.request.user = self.user_state1_super1
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False)
 
         self.assertEqual(self.baseQS, qs)
 
@@ -564,7 +564,7 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.coord_state1_fullcoordinator.save()
         self.request.user = self.user_state1_fullcoordinator
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False)
 
         self.assertEqual(self.baseQS, qs)
 
@@ -573,26 +573,26 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.coord_state1_fullcoordinator.save()
         self.request.user = self.user_state1_fullcoordinator
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['wrong'], ['wrong'], 'homeState__coordinator', False)
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['wrong'], ['wrong'], 'homeState__coordinator', False)
 
         self.assertFalse(qs.exists())
 
     def testNoUser(self):
         self.request.user = None
 
-        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNotAuthenticated(self):
         self.request.user = AnonymousUser()
 
-        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNoperms(self):
         self.request.user = self.user_notstaff
         self.user_notstaff.is_active = True
         self.user_notstaff.is_staff = True
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False)
 
         self.assertFalse(qs.exists())
 
@@ -601,26 +601,26 @@ class Test_coordinatorFilterQueryset(TestCase):
         self.user_state1_super1.is_active = False
         self.request.user = self.user_state1_super1
 
-        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNotStaffSuperuser(self):
         self.user_state1_super1.refresh_from_db()
         self.user_state1_super1.is_staff = False
         self.request.user = self.user_state1_super1
 
-        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False))
+        self.assertRaises(PermissionDenied, lambda: coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False))
 
     def testNoLookups(self):
         self.request.user = self.user_state1_fullcoordinator
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], False, False)
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], False, False)
 
         self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
 
     def testNoStateLookups(self):
         self.request.user = self.user_state1_fullcoordinator
         
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], False, 'homeState')
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], False, 'homeState')
 
         self.assertQuerysetEqual(self.baseQS.filter(homeState=None), qs, ordered=False)
 
@@ -629,7 +629,7 @@ class Test_coordinatorFilterQueryset(TestCase):
 
         self.assertTrue(self.baseQS.filter(homeState=self.state2).exists())
         self.assertTrue(self.baseQS.filter(homeState=None).exists())
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', False)
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', False)
 
         self.assertEqual(7, qs.count())
         self.assertFalse(qs.filter(homeState=self.state2).exists())
@@ -640,7 +640,7 @@ class Test_coordinatorFilterQueryset(TestCase):
 
         self.assertTrue(self.baseQS.filter(homeState=self.state2).exists())
         self.assertTrue(self.baseQS.filter(homeState=None).exists())
-        qs = coordinatorFilterQueryset(self.baseQS, self.request, ['full'], ['full'], 'homeState__coordinator', 'homeState')
+        qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], 'homeState__coordinator', 'homeState')
 
         self.assertEqual(8, qs.count())
         self.assertFalse(qs.filter(homeState=self.state2).exists())
@@ -655,7 +655,53 @@ class Test_coordinatorFilterQueryset(TestCase):
         baseqs = Event.objects.all()
         self.assertTrue(baseqs.filter(state=self.state2).exists())
 
-        qs = coordinatorFilterQueryset(baseqs, self.request, ['eventmanager', 'viewall'], ['eventmanager', 'viewall'], 'state__coordinator', False)
+        qs = coordinatorFilterQueryset(baseqs, self.request.user, ['eventmanager', 'viewall'], ['eventmanager', 'viewall'], 'state__coordinator', False)
 
         self.assertEqual(5, qs.count())
         self.assertFalse(qs.filter(state=self.state2).exists())
+
+class ModelAdminTest:
+    def __init__(self):
+        pass
+
+class Test_selectedFilterQueryset(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+        createEvents(cls)
+        cls.year2 = Year.objects.create(year=2022, displayEventsOnWebsite=True)
+
+        cls.baseQS = Event.objects.all()
+
+    def testNoLookups(self):
+        self.user_state1_super1.currentlySelectedAdminState = self.state1
+        self.user_state1_super1.currentlySelectedAdminYear = self.year2
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+
+    def testNoSelection(self):
+        ModelAdminTest.stateSelectedFilterLookup = 'state'
+        ModelAdminTest.yearSelectedFilterLookup = 'year'
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+
+    def testStateLookup(self):
+        self.user_state1_super1.currentlySelectedAdminState = self.state1
+        ModelAdminTest.stateSelectedFilterLookup = 'state'
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertQuerysetEqual(Event.objects.filter(state=self.state1), qs, ordered=False)
+
+    def testYearLookup(self):
+        self.user_state1_super1.currentlySelectedAdminYear = self.year2
+        ModelAdminTest.yearSelectedFilterLookup = 'year'
+
+        qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
+
+        self.assertFalse(qs.exists())
