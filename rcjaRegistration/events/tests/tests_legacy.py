@@ -17,11 +17,21 @@ import datetime
 def commonSetUp(obj):
     obj.username = 'user@user.com'
     obj.password = 'password'
-    obj.user = user = User.objects.create_user(email=obj.username, password=obj.password)
+    obj.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=obj.username, password=obj.password)
     obj.newState = State.objects.create(
-        typeRegistration=True,
+        typeCompetition=True, typeUserRegistration=True,
         name='Victoria',
         abbreviation='VIC'
+    )
+    obj.state2 = State.objects.create(
+        typeCompetition=True, typeUserRegistration=True,
+        name='New South Wales',
+        abbreviation='NSW'
+    )
+    obj.globalState = State.objects.create(
+        typeCompetition=True, typeUserRegistration=True, typeGlobal = True,
+        name='National',
+        abbreviation='NAT'
     )
     obj.newRegion = Region.objects.create(
         name='Test Region',
@@ -89,7 +99,7 @@ def commonSetUp(obj):
     obj.oldEventWithTeams.divisions.add(obj.division)
     obj.oldeventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
     obj.oldTeamStudent = Student(team=obj.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male')
-    
+
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male')
 
@@ -148,6 +158,33 @@ class TestDashboard_school(TestCase): #TODO more comprehensive tests
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response, 'test new yes reg')
 
+    def testNewEventWithoutRegoLoads(self):
+        self.newEventTeam.delete()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'test new yes reg')
+
+    def testNewEventOtherStateNotLoad(self):
+        self.newEventTeam.delete()
+        self.newEvent.state = self.state2
+        self.newEvent.save()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertNotContains(response, 'test new yes reg')
+
+    def testNewEventOtherStateGlobalEventLoad(self):
+        self.newEventTeam.delete()
+        self.newEvent.state = self.state2
+        self.newEvent.globalEvent = True
+        self.newEvent.save()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'test new yes reg')
+
+    def testNewEventGlobalStateLoad(self):
+        self.newEventTeam.delete()
+        self.newEvent.state = self.globalState
+        self.newEvent.save()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response, 'test new yes reg')
+
     def testOldEventWithTeamsLoad(self):
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response, 'test old yes reg')
@@ -166,6 +203,8 @@ class TestDashboard_independent(TestDashboard_school):
         commonSetUp(self)
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
         self.schoolAdministrator.delete()
+        self.user.homeState = self.newState
+        self.user.save()
 
     def testNewEventWithRegoLoads(self):
         self.team2 = Team.objects.create(event=self.newEvent, division=self.division, mentorUser=self.user, name='test new team 2')
@@ -180,10 +219,14 @@ class TestDashboard_independent(TestDashboard_school):
         self.assertNotContains(response, 'test old yes reg')
 
     def testStateFiltering_filtered(self):
+        self.user.homeState = None
+        self.user.save()
         response = self.client.get(reverse('events:dashboard'))
         self.assertNotContains(response, 'test new yes reg')
 
     def testStateFiltering_all(self):
+        self.user.homeState = None
+        self.user.save()
         response = self.client.get(reverse('events:dashboard'), {'viewAll': 'yes'})
         self.assertContains(response, 'test new yes reg')
 
@@ -259,7 +302,7 @@ class TestEventDetailsPage_school(TestCase):
             state=self.newState,
             region=self.newRegion
         )
-        self.user2 = User.objects.create_user(email='user2@user.com', password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='user2@user.com', password=self.password)
 
         # Already one team for this user in common setup
         # Teams that should be visible
@@ -323,7 +366,7 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
             state=self.newState,
             region=self.newRegion
         )
-        self.user2 = User.objects.create_user(email='user2@user.com', password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='user2@user.com', password=self.password)
 
         # Already one team for this user in common setup
         # Teams that should be visible
@@ -400,7 +443,7 @@ class TestEventClean(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
         )
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         self.venue1 = Venue.objects.create(name='Venue 1', state=self.newState)
         self.venue2 = Venue.objects.create(name='Venue 2', state=self.state2)
 
@@ -610,6 +653,10 @@ class TestEventMethods(TestCase):
         self.event.globalEvent = True
         self.assertEqual(str(self.event), "Event 1 2019")
 
+    def testStr_globalState(self):
+        self.event.state.typeGlobal = True
+        self.assertEqual(str(self.event), "Event 1 2019")
+
     def testDirectEnquiriesToName(self):
         self.assertEqual(self.event.directEnquiriesToName(), 'First Last')
 
@@ -703,7 +750,7 @@ class TestAvailableDivisionClean(TestCase):
         self.assertRaises(ValidationError, self.availableDivision.clean)
 
     def testStateValidation(self):
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         self.division2 = Division.objects.create(name='Division 2', state=self.state2)
         self.availableDivision.division=self.division2
         self.assertRaises(ValidationError, self.availableDivision.clean)
@@ -720,7 +767,7 @@ class TestDivisionClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
 
     def testSuccessValidation_noState(self):
         self.division1.clean()
@@ -746,7 +793,7 @@ class TestDivisionMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
 
     def testStrNoState(self):
         self.assertEqual(str(self.division1), 'Division 1')
@@ -770,7 +817,7 @@ class TestVenueClean(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         createVenues(self)
 
     def testSuccess(self):
@@ -788,7 +835,7 @@ class TestVenueMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
         newSetupEvent(self)
-        self.state2 = State.objects.create(typeRegistration=True, name="State 2", abbreviation='ST2')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
         createVenues(self)
 
     def testGetState(self):

@@ -9,8 +9,8 @@ from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 import datetime
 
 def createStates(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
-    self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
+    self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
 
     self.region1 = Region.objects.create(name='Region 1')
     self.region2_state1 = Region.objects.create(name='Region 2', state=self.state1)
@@ -31,18 +31,18 @@ def createUsers(self):
     self.email_user_state1_independent_mentor5 = 'user10@user.com'
     self.password = 'chdj48958DJFHJGKDFNM' # Complex random password so passes validation tests
 
-    self.user_state1_super1 = User.objects.create_superuser(email=self.email_user_state1_super1, password=self.password, homeState=self.state1)
-    self.user_state2_super2 = User.objects.create_superuser(email=self.email_user_state2_super2, password=self.password, homeState=self.state2)
-    self.user_notstaff = User.objects.create_user(email=self.email_user_notstaff, password=self.password)
-    self.user_state1_fullcoordinator = User.objects.create_user(email=self.email_user_state1_fullcoordinator, password=self.password, homeState=self.state1)
-    self.user_state1_viewcoordinator = User.objects.create_user(email=self.email_user_state1_viewcoordinator, password=self.password, homeState=self.state1)
-    self.user_state2_fullcoordinator = User.objects.create_user(email=self.email_user_state2_fullcoordinator, password=self.password, homeState=self.state2)
-    self.user_state2_viewcoordinator = User.objects.create_user(email=self.email_user_state2_viewcoordinator, password=self.password, homeState=self.state2)
-    self.user_state1_school1_mentor1 = User.objects.create_user(email=self.email_user_state1_school1_mentor1, password=self.password, homeState=self.state1)
-    self.user_state1_school1_mentor2 = User.objects.create_user(email=self.email_user_state1_school1_mentor2, password=self.password, homeState=self.state1)
-    self.user_state1_school2_mentor3 = User.objects.create_user(email=self.email_user_state1_school2_mentor3, password=self.password, homeState=self.state1)
-    self.user_state2_school3_mentor4 = User.objects.create_user(email=self.email_user_state2_school3_mentor4, password=self.password, homeState=self.state2)
-    self.user_state1_independent_mentor5 = User.objects.create_user(email=self.email_user_state1_independent_mentor5, password=self.password, homeState=self.state1)
+    self.user_state1_super1 = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_super1, password=self.password, homeState=self.state1)
+    self.user_state2_super2 = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_super2, password=self.password, homeState=self.state2)
+    self.user_notstaff = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_notstaff, password=self.password)
+    self.user_state1_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_fullcoordinator, password=self.password, homeState=self.state1)
+    self.user_state1_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_viewcoordinator, password=self.password, homeState=self.state1)
+    self.user_state2_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_fullcoordinator, password=self.password, homeState=self.state2)
+    self.user_state2_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_viewcoordinator, password=self.password, homeState=self.state2)
+    self.user_state1_school1_mentor1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor1, password=self.password, homeState=self.state1)
+    self.user_state1_school1_mentor2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor2, password=self.password, homeState=self.state1)
+    self.user_state1_school2_mentor3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school2_mentor3, password=self.password, homeState=self.state1)
+    self.user_state2_school3_mentor4 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_school3_mentor4, password=self.password, homeState=self.state2)
+    self.user_state1_independent_mentor5 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_independent_mentor5, password=self.password, homeState=self.state1)
 
     self.coord_state1_fullcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state1, permissionLevel='full', position='Text')
     self.coord_state1_viewcoordinator = Coordinator.objects.create(user=self.user_state1_viewcoordinator, state=self.state1, permissionLevel='viewall', position='Text')

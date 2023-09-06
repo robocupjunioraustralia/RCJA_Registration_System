@@ -18,7 +18,7 @@ def getRegionsLookup():
     regionsLookup.append(RegionLookupObj('', Region.objects.filter(state=None)))
 
     # Add regions for each state
-    for state in State.objects.filter(typeRegistration=True):
+    for state in State.objects.filter(typeUserRegistration=True):
         regionsLookup.append(RegionLookupObj(state.id, Region.objects.filter(Q(state=None) | Q(state=state))))
 
     return regionsLookup

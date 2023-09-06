@@ -45,7 +45,7 @@ def dashboard(request):
 
     # Filter open events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
-        openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True))
+        openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
 
     # Split competitions and workshops
     openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')

@@ -17,7 +17,7 @@ class TestRegionClean(TestCase):
 
     def testValidNoState(self):
         School.objects.create(name='New School', abbreviation='new', state=self.state2, region=self.region2_state1)
-        User.objects.create(email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
+        User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
 
         self.assertEqual(self.region1.clean(), None)
 
@@ -26,7 +26,7 @@ class TestRegionClean(TestCase):
         self.assertEqual(self.region2_state1.clean(), None)
 
     def testInvalidStateUser(self):
-        User.objects.create(email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
+        User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
 
         self.assertEqual(self.region2_state1.state, self.state1)
         self.assertRaises(ValidationError, self.region2_state1.clean)
@@ -57,20 +57,20 @@ class TestGetRegionsLookup(TestCase):
         createStates(cls)
 
     def testLookupLength(self):
-        self.state1.typeRegistration = False
+        self.state1.typeUserRegistration = False
         self.state1.save()
 
         lookup = getRegionsLookup()
 
-        self.assertEqual(State.objects.filter(typeRegistration=True).count() + 1, len(lookup))
+        self.assertEqual(State.objects.filter(typeUserRegistration=True).count() + 1, len(lookup))
 
     def testRegistrationIn(self):
         lookup = getRegionsLookup()
 
         self.assertIn(self.state1.id, [x.id for x in lookup])
 
-    def testNotRegistrationNotIn(self):
-        self.state1.typeRegistration = False
+    def testNotUserRegistrationNotIn(self):
+        self.state1.typeUserRegistration = False
         self.state1.save()
 
         lookup = getRegionsLookup()

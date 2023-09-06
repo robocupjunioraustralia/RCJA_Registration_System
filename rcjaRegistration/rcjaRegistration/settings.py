@@ -52,17 +52,22 @@ CORS_ALLOWED_ORIGINS = [
     "https://robocupjunior.org.au", # For public api
 ]
 
+CSRF_TRUSTED_ORIGINS = []
+
 # Add the allowed hosts to cors
 # https unless is the default local_hosts for dev
 if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
     for allowed_host in env('ALLOWED_HOSTS'):
         CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
+        CSRF_TRUSTED_ORIGINS.append(f'http://{allowed_host}:8000')
 else:
     if isinstance(env('ALLOWED_HOSTS'), list):
         for allowed_host in env('ALLOWED_HOSTS'):
             CORS_ALLOWED_ORIGINS.append(f'https://{allowed_host}')
+            CSRF_TRUSTED_ORIGINS.append(f'https://{allowed_host}')
     else:
         CORS_ALLOWED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
+        CSRF_TRUSTED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
 
 DEV_SETTINGS = env('DEV_SETTINGS')
 
@@ -134,6 +139,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rcjaRegistration.defaultContexts.yearsContext',
             ],
         },
     },

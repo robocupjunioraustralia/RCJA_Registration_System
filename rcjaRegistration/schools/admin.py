@@ -88,7 +88,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
     fieldFilteringModel = School
 
     # Actions
@@ -139,7 +139,7 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         },
     }
 
-    stateFilterLookup = 'school__state__coordinator'
+    statePermissionsFilterLookup = 'school__state__coordinator'
 
     fields = [
         'school',
@@ -221,4 +221,4 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
             },
         }
 
-    stateFilterLookup = 'school__state__coordinator'
+    statePermissionsFilterLookup = 'school__state__coordinator'

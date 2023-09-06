@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
 from .models import User
 
@@ -142,7 +143,7 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         ('homeState', admin.RelatedOnlyFieldListFilter),
         ('homeRegion', admin.RelatedOnlyFieldListFilter),
         User_QuestionResponse_Filter,
-        ('baseeventattendance__event', admin.RelatedOnlyFieldListFilter),
+        ('baseeventattendance__event', FilteredRelatedOnlyFieldListFilter),
     )
     autocomplete_fields = [
         'homeState',
@@ -186,7 +187,9 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         },
     }
 
-    stateFilterLookup = 'homeState__coordinator'
+    statePermissionsFilterLookup = 'homeState__coordinator'
+    stateSelectedFilterLookup = 'baseeventattendance__event__state'
+    yearSelectedFilterLookup = 'baseeventattendance__event__year'
 
     # Only superuser can change permissions on users
     def get_readonly_fields(self, request, obj=None):

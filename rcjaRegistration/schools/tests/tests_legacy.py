@@ -21,8 +21,8 @@ from schools.forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdminist
 # Unit Tests
 
 def schoolSetUp(self):
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
 
     self.region1 = Region.objects.create(name='Test Region', description='test desc')
     self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
@@ -437,7 +437,7 @@ class TestSchoolAdministratorForm(TestCase):
         self.campus1 = Campus.objects.create(school=self.school1, name="Campus 1")
         self.campus2 = Campus.objects.create(school=self.school2, name="Campus 2")
 
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
 
         SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
 
@@ -532,10 +532,10 @@ class TestCurrentlySelectedSchool(TestCase):
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -629,10 +629,10 @@ class TestCurrentlySelectedSchool(TestCase):
 # School frontend view permissions tests
 
 def schoolViewSetup(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
     self.region1 = Region.objects.create(name='Region 1',)
 
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
 
     self.school1 = School.objects.create(name='School 1',abbreviation='SCH1', state=self.state1, region=self.region1)
     self.school2 = School.objects.create(name='School 2',abbreviation='SCH2', state=self.state1, region=self.region1)
@@ -748,8 +748,8 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     inValidCreateCode = 200
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.username, password=self.password)
-        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
+        self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.username, password=self.password)
+        self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
@@ -785,10 +785,10 @@ class TestEditSchoolDetails(TestCase):
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.email, password=self.password)
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)

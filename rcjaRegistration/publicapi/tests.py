@@ -51,6 +51,14 @@ class TestEventsBaseQueryset(TestCase):
         qs = StateViewSet.eventsBaseQueryset(self, 'ST1')
         self.assertNotIn(self.state1_openCompetition, qs)
 
+    def testGlobalEventIncluded_globalState(self):
+        self.stateNational = State.objects.create(typeGlobal=True, typeCompetition=True, name='National', abbreviation='NAT', typeWebsite=True)
+        self.state1_openCompetition.state = self.stateNational
+        self.state1_openCompetition.save()
+
+        qs = StateViewSet.eventsBaseQueryset(self, 'NAT')
+        self.assertIn(self.state1_openCompetition, qs)
+
 # View tests
 
 class TestStates(TestCase):
@@ -75,6 +83,28 @@ class TestStates(TestCase):
 
         response = self.client.get('/api/v1/public/states/')
         self.assertJSONEqual(response.content, [{"id":self.state2.id,"name":"State 2","abbreviation":"ST2"}])
+
+    def testPaginationOnePageNoLink(self):
+        response = self.client.get('/api/v1/public/states/')
+        self.assertFalse('Link' in response.headers)
+
+    def testPaginationTwoPagesLink(self):
+        for i in range(50):
+            self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name=f'New State {i}', abbreviation=f'N{i}', typeWebsite=True)
+        
+        response = self.client.get('/api/v1/public/states/')
+        self.assertTrue('Link' in response.headers)
+        self.assertEqual(
+            response.headers['Link'],
+            '<http://testserver/api/v1/public/states/?page=2>; rel="next", <http://testserver/api/v1/public/states/?page=2>; rel="last"'
+        )
+
+    def testPaginationPageTwoLoads(self):
+        for i in range(50):
+            self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name=f'New State {i}', abbreviation=f'N{i}', typeWebsite=True)
+        
+        response = self.client.get('/api/v1/public/states/?page=2')
+        self.assertEqual(response.status_code, 200)
 
     # Details view
 
