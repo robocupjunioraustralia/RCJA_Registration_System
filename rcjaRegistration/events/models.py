@@ -375,6 +375,12 @@ class Event(SaveDeleteMixin, models.Model):
     def published(self):
         return self.status == 'published'
 
+    def paidEvent(self):
+        if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
+            return True
+
+        return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
+
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
     directEnquiriesToName.short_description = 'Direct enquiries to'
@@ -563,32 +569,35 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
+    def createInvoices(self):
+        if self.event.paidEvent():
+            if self.campusInvoicingEnabled():
+                # Get or create invoice with matching campus
+                Invoice.objects.get_or_create(
+                    school=self.school,
+                    campus=self.campus,
+                    event=self.event,
+                    defaults={'invoiceToUser': self.mentorUser}
+                )
+
+            elif self.school:
+                # Ignore campus and only look for matching school
+                Invoice.objects.get_or_create(
+                    school=self.school,
+                    event=self.event,
+                    defaults={'invoiceToUser': self.mentorUser}
+                )
+
+            else:
+                # Get invoice for this user for independent entry
+                Invoice.objects.get_or_create(
+                    invoiceToUser=self.mentorUser,
+                    event=self.event,
+                    school=None
+                )
+
     def postSave(self):
-        # Create invoice
-        if self.campusInvoicingEnabled():
-            # Get or create invoice with matching campus
-            Invoice.objects.get_or_create(
-                school=self.school,
-                campus=self.campus,
-                event=self.event,
-                defaults={'invoiceToUser': self.mentorUser}
-            )
-
-        elif self.school:
-            # Ignore campus and only look for matching school
-            Invoice.objects.get_or_create(
-                school=self.school,
-                event=self.event,
-                defaults={'invoiceToUser': self.mentorUser}
-            )
-
-        else:
-            # Get invoice for this user for independent entry
-            Invoice.objects.get_or_create(
-                invoiceToUser=self.mentorUser,
-                event=self.event,
-                school=None
-            )
+        self.createInvoices()
 
     # *****Methods*****
 

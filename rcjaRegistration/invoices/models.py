@@ -123,7 +123,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
 
     def hiddenInvoice(self):
-        return self.totalQuantity() == 0 and not self.invoicepayment_set.exists()
+        return self.invoiceAmountInclGST_unrounded() < 0.05 and not self.invoicepayment_set.exists()
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -418,7 +418,7 @@ class InvoicePayment(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    amountPaid = models.PositiveIntegerField('Amount paid')
+    amountPaid = models.FloatField('Amount paid')
     datePaid = models.DateField('Date paid')
 
     # *****Meta and clean*****
