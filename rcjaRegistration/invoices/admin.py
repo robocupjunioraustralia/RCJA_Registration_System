@@ -57,7 +57,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
     list_filter = [
-        # ('event__state', admin.RelatedOnlyFieldListFilter),
+        ('event__state', admin.RelatedOnlyFieldListFilter),
         ('event', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [

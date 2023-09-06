@@ -266,8 +266,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     list_filter = [
         'status',
         'eventType',
-        # 'year',
-        # ('state', admin.RelatedOnlyFieldListFilter),
+        ('state', admin.RelatedOnlyFieldListFilter),
         'globalEvent',
     ]
     search_fields = [
