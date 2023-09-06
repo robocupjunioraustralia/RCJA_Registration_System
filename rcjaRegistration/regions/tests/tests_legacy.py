@@ -17,8 +17,8 @@ def commonSetUp(self):
     self.user3 = User.objects.create_user(email=self.email3, password=self.password)
     self.usersuper = User.objects.create_user(email=self.emailsuper, password=self.password, is_staff=True, is_superuser=True)
 
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-    self.state2 = State.objects.create(typeRegistration=True, name='South Australia', abbreviation='SA')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='South Australia', abbreviation='SA')
 
 class TestStateClean(TestCase):
     email1 = 'user1@user.com'
@@ -81,27 +81,12 @@ class TestStateMethods(TestCase):
         state2.save()
         self.assertEqual('NSW', state2.abbreviation)
 
-    def testTypeGlobal_typeRegistration(self):
-        self.state1.typeGlobal = True
-        self.assertEqual(self.state1.typeGlobal, True)
-        self.state1.save()
-        self.assertEqual(self.state1.typeGlobal, False)
-
-    def testTypeGlobal_notTypeRegistration(self):
-        self.state1.typeGlobal = True
-        self.state1.typeRegistration = False
-        self.assertEqual(self.state1.typeGlobal, True)
-        self.state1.save()
-        self.assertEqual(self.state1.typeGlobal, True)
-
     def testTypeGlobal_otherGlobalState(self):
         self.state1.typeGlobal = True
-        self.state1.typeRegistration = False
         self.state1.save()
         self.assertEqual(self.state1.typeGlobal, True)
 
         self.state2.typeGlobal = True
-        self.state2.typeRegistration = False
         self.state2.save()
         self.assertEqual(self.state2.typeGlobal, True)
         self.state1.refresh_from_db()

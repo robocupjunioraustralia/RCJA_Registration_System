@@ -51,6 +51,14 @@ class TestEventsBaseQueryset(TestCase):
         qs = StateViewSet.eventsBaseQueryset(self, 'ST1')
         self.assertNotIn(self.state1_openCompetition, qs)
 
+    def testGlobalEventIncluded_globalState(self):
+        self.stateNational = State.objects.create(typeGlobal=True, typeCompetition=True, name='National', abbreviation='NAT', typeWebsite=True)
+        self.state1_openCompetition.state = self.stateNational
+        self.state1_openCompetition.save()
+
+        qs = StateViewSet.eventsBaseQueryset(self, 'NAT')
+        self.assertIn(self.state1_openCompetition, qs)
+
 # View tests
 
 class TestStates(TestCase):

@@ -24,7 +24,8 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
         'abbreviation',
-        'typeRegistration',
+        'typeCompetition',
+        'typeUserRegistration',
         'typeGlobal',
         'typeWebsite',
         'bankAccountName',
@@ -37,7 +38,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
             'fields': ('name', 'abbreviation')
         }),
         ('Type', {
-            'fields': ('typeRegistration', 'typeGlobal', 'typeWebsite')
+            'fields': ('typeCompetition', 'typeUserRegistration', 'typeGlobal', 'typeWebsite')
         }),
         ('Bank details', {
             'fields': ('bankAccountName', 'bankAccountBSB', 'bankAccountNumber', 'paypalEmail')
@@ -67,7 +68,8 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'pk',
         'name',
         'abbreviation',
-        'typeRegistration',
+        'typeCompetition',
+        'typeUserRegistration',
         'typeGlobal',
         'typeWebsite',
         'bankAccountName',
@@ -98,11 +100,11 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
         # Restrict changing of type fields
         if not request.user.is_superuser:
-            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal', 'typeWebsite']
-        elif obj.typeRegistration:
-            readonly_fields = readonly_fields + ['typeRegistration', 'typeGlobal']
-        elif obj.typeGlobal:
-            readonly_fields = readonly_fields + ['typeRegistration']
+            readonly_fields = readonly_fields + ['typeCompetition', 'typeUserRegistration', 'typeGlobal', 'typeWebsite']
+        if obj.typeCompetition:
+            readonly_fields = readonly_fields + ['typeCompetition']
+        if obj.typeUserRegistration:
+            readonly_fields = readonly_fields + ['typeUserRegistration']
 
         return readonly_fields
 
@@ -120,11 +122,6 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # Filter autocompletes to valid options
     def get_search_results(self, request, queryset, search_term):
-        # Filter by typeRegistration
-        for url in ['users/user/', 'events/event/', 'events/division/', 'events/venue/', 'schools/school/', 'regions/region/']:
-            if url in request.META.get('HTTP_REFERER', ''):
-                queryset = queryset.filter(typeRegistration=True)
-
         # Filter by state for objects that should have full permission level only
         for url in ['users/user/', 'coordination/coordinator/', 'regions/region/']:
             if url in request.META.get('HTTP_REFERER', ''):

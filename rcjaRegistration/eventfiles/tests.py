@@ -19,8 +19,8 @@ from .forms import MentorEventFileUploadForm
 import datetime
 
 def newCommonSetUp(self):
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.user1 = User.objects.create_user(email=self.email1, password=self.password, homeState=self.state1)
