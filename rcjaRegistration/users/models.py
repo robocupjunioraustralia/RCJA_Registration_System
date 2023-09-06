@@ -58,6 +58,11 @@ class User(SaveDeleteMixin, AbstractUser):
     objects = UserManager()
 
     # Additional fields
+    accountTypeOptions = (
+        ('user', 'User'),
+        ('mailing', 'Mailing list only'),
+    )
+    accountType = models.CharField('Type', max_length=20, choices=accountTypeOptions, default='user')
     mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True)
     homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeUserRegistration': True})
     homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True, blank=True)
