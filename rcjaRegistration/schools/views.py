@@ -146,4 +146,5 @@ def adminMergeSchools(request, school1ID, school2ID):
     ):
         raise PermissionDenied("No permission on selected schools")
 
-    
+    return render(request, 'schools/adminMergeSchools.html', {'form': {} })
+

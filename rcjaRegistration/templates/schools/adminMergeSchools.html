@@ -1,0 +1,63 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> School details </title>
+
+<style>
+    .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile six wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                
+                    <h1> HEADING </h1>
+                    {% if form.errors or form.non_field_errors %}
+                    
+                    <!-- Error messaging -->
+                    <div class="ui message left-aligned-text">
+                        <div class="">
+                            <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                            {{ form.non_field_errors }}
+
+                            <ul>
+                                {% for field in form %}
+                                {% if field.errors %}
+                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                {% endfor %}
+
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- /Error messaging -->
+                    {% endif %}
+
+                    <form method="post" class="ui form">
+                        {% csrf_token %}
+
+                        <div class="field">
+                            <label>Name: </label>
+                            {{form.name}}
+                        </div>
+
+                        <input class="primary ui button" type="submit" value="Validate" />
+                        <input class="primary ui button" type="submit"  name="continue_editing" value="Merge" />
+                        <a href = "{% url 'admin:schools_school_changelist' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
