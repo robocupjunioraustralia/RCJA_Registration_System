@@ -101,8 +101,8 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         # Restrict changing of type fields
         if not request.user.is_superuser:
             readonly_fields = readonly_fields + ['typeCompetition', 'typeUserRegistration', 'typeGlobal', 'typeWebsite']
-        if obj.typeCompetition:
-            readonly_fields = readonly_fields + ['typeCompetition']
+        # if obj.typeCompetition:
+        #     readonly_fields = readonly_fields + ['typeCompetition']
         if obj.typeUserRegistration:
             readonly_fields = readonly_fields + ['typeUserRegistration']
 
