@@ -42,7 +42,7 @@ class Base_Tests_redirectsMiddleware:
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('users:details'))
 
-class Test_redirectsMiddleware_notStaff(Base_Test_redirectsMiddleware, TestCase):
+class Test_redirectsMiddleware_notStaff(Base_Tests_redirectsMiddleware, TestCase):
     def setUp(self):
         self.login = self.client.login(request=HttpRequest(), username=self.email_user_state1_school1_mentor1, password=self.password)
         self.user = self.user_state1_school1_mentor1
