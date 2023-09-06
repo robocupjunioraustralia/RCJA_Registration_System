@@ -180,6 +180,11 @@ class MentorEventFileUpload(models.Model):
     event.short_description = 'Event'
     event.admin_order_field = 'eventAttendance__event'
 
+    def division(self):
+        return self.eventAttendance.division
+    division.short_description = "Division"
+    division.admin_order_field = 'eventAttendance__division'
+
     # File methods
 
     def filesize(self):

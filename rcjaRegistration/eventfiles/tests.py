@@ -428,6 +428,9 @@ class Test_MentorEventFileUpload_Methods(TestCase):
     def testEvent(self):
         self.assertEqual(self.uploadedFile.event(), self.event)
 
+    def testDivision(self):
+        self.assertEqual(self.uploadedFile.division(), self.division1)
+
     def testFilesize(self):
         self.assertEqual(self.uploadedFile.filesize(), "12\xa0bytes")
 
