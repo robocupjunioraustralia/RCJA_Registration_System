@@ -18,12 +18,12 @@ class Test_LoginRequired(TestCase):
 
     def testsetCurrentAdminYear(self):
         response = self.client.get(reverse('users:setCurrentAdminYear', kwargs= {'year':self.year.year}))
-        self.assertEqual(response.url, f"/accounts/login/?next=/dashboard/setCurrentAdminYear/{self.year.year}")
+        self.assertEqual(response.url, f"/accounts/login/?next=/user/setCurrentAdminYear/{self.year.year}")
         self.assertEqual(response.status_code, 302)
 
     def testsetCurrentAdminState(self):
         response = self.client.get(reverse('users:setCurrentAdminState', kwargs= {'stateID':self.state1.id}))
-        self.assertEqual(response.url, f"/accounts/login/?next=/dashboard/setCurrentAdminState/{self.state1.id}")
+        self.assertEqual(response.url, f"/accounts/login/?next=/user/setCurrentAdminState/{self.state1.id}")
         self.assertEqual(response.status_code, 302)
 
 class Test_StaffRequired(TestCase):
