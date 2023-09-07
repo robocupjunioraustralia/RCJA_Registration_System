@@ -406,6 +406,12 @@ class Event(SaveDeleteMixin, models.Model):
                 'mentorUser': user
             }
 
+    def maxEventTeamsForSchoolExceeded(self, user):
+        return self.event_maxTeamsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxTeamsPerSchool
+
+    def maxEventTeamsTotalExceeded(self):
+        return self.event_maxTeamsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxTeamsForEvent
+
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
     directEnquiriesToName.short_description = 'Direct enquiries to'

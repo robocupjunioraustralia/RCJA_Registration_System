@@ -1094,8 +1094,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Max teams for school for this event exceeded. Contact the organiser.")
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "Max teams for school for this event exceeded. Contact the organiser.", status_code=403)
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
@@ -1119,8 +1119,8 @@ class TestTeamCreationFormValidation_School(TestCase):
             'softwarePlatform': self.software.id,
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Max teams for this event exceeded. Contact the organiser.")
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "Max teams for this event exceeded. Contact the organiser.", status_code=403)
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 

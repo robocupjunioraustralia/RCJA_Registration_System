@@ -41,6 +41,13 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
     def common(self, request, event, team):
         super().common(request, event, team)
 
+        if not team:
+            if event.maxEventTeamsForSchoolExceeded(request.user):
+                raise PermissionDenied("Max teams for school for this event exceeded. Contact the organiser.")
+
+            if event.maxEventTeamsTotalExceeded():
+                raise PermissionDenied("Max teams for this event exceeded. Contact the organiser.")
+
         self.StudentInLineFormSet = inlineformset_factory(
             Team,
             Student,

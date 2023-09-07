@@ -56,8 +56,12 @@
         {% if event.registrationsOpen and event.published %}
             {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
-            {% else %}
+            {% elif not maxEventTeamsForSchoolExceeded and not maxEventTeamsTotalExceeded %}
             <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
+            {% elif maxEventTeamsForSchoolExceeded %}
+            <h1> You have registered the maximium number of allowed teams for your school for this event. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            {% else %}
+            <h1> Maximium number of teams for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
             {% endif %}
         {% elif event.published and event.registrationNotOpenYet %}
         <h1> Registration for this event hasn't opened yet. Please wait until registrations open on {{ event.registrationsOpenDate }} to register. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>

@@ -133,6 +133,8 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'maxEventTeamsForSchoolExceeded': event.maxEventTeamsForSchoolExceeded(request.user),
+        'maxEventTeamsTotalExceeded': event.maxEventTeamsTotalExceeded(),
     }
     return render(request, 'events/details.html', context)   
 
