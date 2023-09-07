@@ -406,10 +406,10 @@ class Event(SaveDeleteMixin, models.Model):
                 'mentorUser': user
             }
 
-    def maxEventTeamsForSchoolExceeded(self, user):
+    def maxEventTeamsForSchoolReached(self, user):
         return self.event_maxTeamsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxTeamsPerSchool
 
-    def maxEventTeamsTotalExceeded(self):
+    def maxEventTeamsTotalReached(self):
         return self.event_maxTeamsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxTeamsForEvent
 
     def directEnquiriesToName(self):
