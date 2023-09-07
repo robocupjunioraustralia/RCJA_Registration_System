@@ -59,6 +59,8 @@
             {% else %}
             <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
             {% endif %}
+        {% elif event.published and event.registrationNotOpenYet %}
+        <h1> Registration for this event hasn't opened yet. Please wait until registrations open on {{ event.registrationsOpenDate }} to register. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% elif event.published %}
         <h1> Registration for this event has closed. If you need to make modifications, please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% else %}

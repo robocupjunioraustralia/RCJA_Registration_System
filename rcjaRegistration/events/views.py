@@ -92,6 +92,9 @@ def eventDetailsPermissions(request, event, filterDict):
     if event.published() and event.registrationsOpen():
         return True
 
+    if event.registrationNotOpenYet():
+        return True
+
     if event.published() and BaseEventAttendance.objects.filter(**filterDict).exists():
         return True
 

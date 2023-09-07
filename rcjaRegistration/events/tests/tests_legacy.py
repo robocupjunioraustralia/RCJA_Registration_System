@@ -67,6 +67,22 @@ def commonSetUp(obj):
     )
     obj.oldEvent.divisions.add(obj.division)
 
+    obj.registrationNotOpenYetEvent = Event.objects.create(
+        year=obj.year,
+        state=obj.newState,
+        name='future event',
+        eventType='competition',
+        status='published',
+        maxMembersPerTeam=5,
+        event_defaultEntryFee = 4,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=10)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=10)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        directEnquiriesTo = obj.user     
+    )
+    obj.registrationNotOpenYetEvent.divisions.add(obj.division)
+
     obj.newEvent = Event.objects.create(
         year=obj.year,
         state=obj.newState,
@@ -283,6 +299,10 @@ class TestEventDetailsPage_school(TestCase):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
         self.assertEqual(response.status_code, 200)
 
+    def testCorrectMessage_ClosedRegoWithTeams(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertContains(response, 'Registration for this event has closed.')
+
     def testDeniedUnpublishedClosedRegoWithTeams(self):
         self.oldEventWithTeams.status = 'draft'
         self.oldEventWithTeams.save()
@@ -325,6 +345,14 @@ class TestEventDetailsPage_school(TestCase):
         for team in response.context['teams']:
             assert team.school == self.user.currentlySelectedSchool, 'No permission to view this team'
 
+    def testPageLoad_registrationNotOpenYetEvent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.registrationNotOpenYetEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testCorrectMessage_registrationNotOpenYetEvent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.registrationNotOpenYetEvent.id}))
+        self.assertContains(response, "Registration for this event hasn't opened yet.")
+
 class TestEventDetailsPage_independent(TestEventDetailsPage_school):
     def setUp(self):
         commonSetUp(self)
@@ -349,6 +377,11 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
 
         super().testLoadsClosedRegoWithTeams()
+
+    def testCorrectMessage_ClosedRegoWithTeams(self):
+        self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
+
+        super().testCorrectMessage_ClosedRegoWithTeams()
 
     def testDeniedUnpublishedClosedRegoWithTeams(self):
         self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
@@ -697,6 +730,39 @@ class TestEventMethods(TestCase):
 
         self.assertNotIn('<h1>', self.event.bleachedEventDetails())
         self.assertIn('&lt;h1&gt;', self.event.bleachedEventDetails())
+
+    def test_published_draft(self):
+        self.event.status = 'draft'
+        self.assertFalse(self.event.published())
+
+    def test_published_published(self):
+        self.assertTrue(self.event.published())
+
+    def test_registrationsOpen_open(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now()).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now()).date()
+        self.assertTrue(self.event.registrationsOpen())
+
+    def test_registrationsOpen_notOpenYet(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
+        self.assertFalse(self.event.registrationsOpen())
+
+    def test_registrationsOpen_closed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.assertFalse(self.event.registrationsOpen())
+
+    def test_registrationNotOpenYet_open(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now()).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now()).date()
+        self.assertFalse(self.event.registrationNotOpenYet())
+
+    def test_registrationNotOpenYet_notOpenYet(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
+        self.assertTrue(self.event.registrationNotOpenYet())
+
+    def test_registrationNotOpenYet_closed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.assertFalse(self.event.registrationNotOpenYet())
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')
