@@ -33,6 +33,7 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         'eventAttendance',
         'fileLinkNewTab',
         'event',
+        'division',
         'uploadedBy',
         'filesize',
         'originalFilename',
