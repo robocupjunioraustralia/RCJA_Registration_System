@@ -70,7 +70,7 @@ def newCommonSetUp(self):
 
         self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
 
-        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=5)).date())
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
 
 @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
 def createFile(self, mock_save):
@@ -456,6 +456,27 @@ class Test_EventAvailableFileType_Methods(TestCase):
 
     def testStr(self):
         self.assertEqual(str(self.availableFileType1), "Test event 1 2020 (VIC): File Type 1")
+
+class Test_EventAvailableFileType_Clean(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+    
+    def testSuccessClean(self):
+        self.assertEqual(self.availableFileType1.clean(), None)
+
+    def testUploadDeadlineBeforeRegistrationClose(self):
+        self.availableFileType1.uploadDeadline = self.event.registrationsCloseDate + datetime.timedelta(days=-1)
+        self.assertRaises(ValidationError, self.availableFileType1.clean)
+
+    def testUploadDeadlineAfterStartDate(self):
+        self.availableFileType1.uploadDeadline = self.event.startDate + datetime.timedelta(days=1)
+        self.assertRaises(ValidationError, self.availableFileType1.clean)
 
 class Test_MentorEventFileType_Methods(TestCase):
     email1 = 'user1@user.com'

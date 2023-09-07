@@ -9,6 +9,7 @@ from teams.models import Team, Student
 from events.models import Event, Division, Year, AvailableDivision, Venue
 from users.models import User
 from coordination.models import Coordinator
+from eventfiles.models import EventAvailableFileType, MentorEventFileType
 
 import datetime
 # Create your tests here.
@@ -592,6 +593,29 @@ class TestEventClean(TestCase):
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division2)
         self.event.state = self.state2
         self.assertRaises(ValidationError, self.event.clean)
+
+    # Test file upload deadline checking
+
+    def testSuccessCleanWithAvailableEventFile(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
+        self.availableFileType1.save()
+        self.assertEqual(self.event.clean(), None)
+
+    def testUploadDeadlineBeforeRegistrationClose(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.registrationsCloseDate + datetime.timedelta(days=-1))
+        self.availableFileType1.save()
+        self.assertRaises(ValidationError, self.availableFileType1.clean)
+
+    def testUploadDeadlineAfterStartDate(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.startDate + datetime.timedelta(days=1))
+        self.availableFileType1.save()
+        self.assertRaises(ValidationError, self.availableFileType1.clean)
 
 class TestEventMethods(TestCase):
     def setUp(self):
