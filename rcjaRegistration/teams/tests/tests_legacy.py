@@ -924,6 +924,14 @@ class TestInvoiceMethods(TestCase):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
 
+    def testSave_NoSchool_NoExistingInvoice_freeEvent(self):
+        self.event.event_defaultEntryFee = 0
+        self.event.save()
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 0)
+
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 0)
+
     def testSave_NoSchool_ExistingInvoice(self):
         self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=None)
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
