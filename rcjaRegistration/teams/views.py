@@ -81,7 +81,6 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         formset = self.StudentInLineFormSet(request.POST, instance=team, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
         form = TeamForm(request.POST, instance=team, user=request.user, event=event)
-        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
         if all([x.is_valid() for x in (form, formset)]):
             # Create team object but don't save so can set foreign keys

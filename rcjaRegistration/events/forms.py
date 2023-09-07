@@ -7,6 +7,7 @@ class BaseEventAttendanceFormInitMixin:
     # Override init to filter division and campus, set school and event
     def __init__(self, *args, user, event, **kwargs):
         super().__init__(*args, **kwargs)
+        self.mentorUser = user
 
         # Filter division to available divisions
         self.fields['division'].queryset = Division.objects.filter(event=event)
