@@ -24,7 +24,7 @@
             This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
             {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.{% endif %}
             {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
-            {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team limit per school for this event.{% endif %}
+            {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team per school limit for this event.{% endif %}
             {% if event.event_maxTeamsForEvent %}<br>There is a {{ event.event_maxTeamsForEvent }} team overall limit for this event.{% endif %}
         </p>
         {% if event.paymentDueDate %}<p>Payment due is due on {{ event.paymentDueDate }}.</p>{% endif %}
@@ -34,7 +34,7 @@
             <li><strong>{{ availableDivision.division.name }}</strong>
                 {% if availableDivision.division.description %}<br>{{ availableDivision.division.description }}{% endif %}
                 {% if availableDivision.division_billingType != 'event' %}<br>This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.{% endif %}
-                {% if availableDivision.division_maxTeamsPerSchool %}<br>There is a {{ availableDivision.division_maxTeamsPerSchool }} team limit per school for this division.{% endif %}
+                {% if availableDivision.division_maxTeamsPerSchool %}<br>There is a {{ availableDivision.division_maxTeamsPerSchool }} team per school limit for this division.{% endif %}
                 {% if availableDivision.division_maxTeamsForDivision %}<br>There is a {{ availableDivision.division_maxTeamsForDivision }} team overall limit for this division.{% endif %}
             </li>
             {% endfor %}
