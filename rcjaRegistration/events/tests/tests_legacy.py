@@ -608,14 +608,14 @@ class TestEventClean(TestCase):
         self.event.save()
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.registrationsCloseDate + datetime.timedelta(days=-1))
         self.availableFileType1.save()
-        self.assertRaises(ValidationError, self.availableFileType1.clean)
+        self.assertRaises(ValidationError, self.event.clean)
 
     def testUploadDeadlineAfterStartDate(self):
         self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
         self.event.save()
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.startDate + datetime.timedelta(days=1))
         self.availableFileType1.save()
-        self.assertRaises(ValidationError, self.availableFileType1.clean)
+        self.assertRaises(ValidationError, self.event.clean)
 
 class TestEventMethods(TestCase):
     def setUp(self):
