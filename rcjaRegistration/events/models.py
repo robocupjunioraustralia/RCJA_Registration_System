@@ -333,10 +333,10 @@ class Event(SaveDeleteMixin, models.Model):
             errors.append(ValidationError('Venue must be from same state as event'))
 
         # Validate file upload deadline if start date or registrations clsoe date changed
-        if self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
+        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
             errors.append(ValidationError("Event start date must on or after file upload deadlines"))
 
-        if self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
+        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
             errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
 
         # Raise any errors
