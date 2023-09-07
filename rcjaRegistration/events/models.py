@@ -391,6 +391,21 @@ class Event(SaveDeleteMixin, models.Model):
 
         return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
 
+    def getBaseEventAttendanceFilterDict(self, user):
+        # Create dict of attributes to filter teams/ workshop attendees by
+        if user.currentlySelectedSchool is not None:
+            return {
+                'event': self,
+                'school': user.currentlySelectedSchool
+            }
+        else:
+            # Independent, filter by mentor
+            return {
+                'event': self,
+                'school': None,
+                'mentorUser': user
+            }
+
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
     directEnquiriesToName.short_description = 'Direct enquiries to'
