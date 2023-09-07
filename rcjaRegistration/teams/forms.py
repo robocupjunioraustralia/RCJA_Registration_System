@@ -63,11 +63,7 @@ class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
             errors.append(ValidationError('Max teams for this event exceeded. Contact the organiser.'))
 
         # Check available division based limits
-        try:
-            availableDivsion = AvailableDivision.objects.get(division=division, event=event)
-        except AvailableDivision.DoesNotExist:
-            # This is probably redundant due to the queryset filtering in the init
-            raise ValidationError('Team division not valid')
+        availableDivsion = AvailableDivision.objects.get(division=division, event=event)
 
         if availableDivsion.division_maxTeamsPerSchool is not None and Team.objects.filter(**teamFilterDict).filter(division=division).count() + 1 > availableDivsion.division_maxTeamsPerSchool:
             errors.append(ValidationError('Max teams for school for this event division exceeded. Contact the organiser.'))

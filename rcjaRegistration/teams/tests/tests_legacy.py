@@ -1240,6 +1240,9 @@ class TestTeamForm(TestCase):
 
     def setUp(self):
         newCommonSetUp(self)
+        self.event.divisions.add(self.division1)
+        self.hardwarePlatform = HardwarePlatform.objects.create(name='H1')
+        self.softwarePlatform = SoftwarePlatform.objects.create(name='H1')
 
     def createForm(self, data):
         return TeamForm(data=data, event=self.event, user=self.user1)
@@ -1252,3 +1255,24 @@ class TestTeamForm(TestCase):
         self.assertEqual(form.errors["name"], ["This field is required."])
         self.assertEqual(form.errors["hardwarePlatform"], ["This field is required."])
         self.assertEqual(form.errors["softwarePlatform"], ["This field is required."])
+
+    def testValidForm(self):
+        form = self.createForm({
+            'division': self.division1.id,
+            'name': 'A team name',
+            'hardwarePlatform': self.hardwarePlatform.id,
+            'softwarePlatform': self.softwarePlatform.id,
+        })
+
+        self.assertTrue(form.is_valid())
+
+    def testInvalidForm_division(self):
+        form = self.createForm({
+            'division': self.division2.id,
+            'name': 'A team name',
+            'hardwarePlatform': self.hardwarePlatform.id,
+            'softwarePlatform': self.softwarePlatform.id,
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["division"], ["Select a valid choice. That choice is not one of the available choices."])
