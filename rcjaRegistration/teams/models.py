@@ -78,7 +78,6 @@ class Team(BaseEventAttendance):
 
     # Fields
     name = models.CharField('Name', max_length=50)
-    overrideEventLimits = models.BooleanField('Override event limits', default=False, editable=False)
 
     # *****Meta and clean*****
     class Meta:

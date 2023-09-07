@@ -46,7 +46,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform', 'overrideEventLimits',)
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
     )
     add_fieldsets = (
@@ -73,10 +73,6 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'name',
         'student__firstName',
         'student__lastName',
-    ]
-
-    readonly_fields = [
-        'overrideEventLimits',
     ]
 
     actions = [
