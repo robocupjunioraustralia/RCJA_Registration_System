@@ -389,6 +389,14 @@ class Test_MentorEventFileUpload_Clean(TestCase):
 
         uploadedFile.clean()
 
+    def testValidExtensionRestrictions_differentCase(self):
+        self.fileType1.allowedFileTypes = "DOC,PDF"
+        self.fileType1.save()
+
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        uploadedFile.clean()
+
     def testInvalidExtension(self):
         self.fileType1.allowedFileTypes = "png,jpeg"
         self.fileType1.save()
