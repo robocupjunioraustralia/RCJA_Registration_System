@@ -88,6 +88,23 @@ class EventAvailableFileType(models.Model):
         unique_together = ('event', 'fileType')
         ordering = ['event', 'fileType']
 
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['event'])
+
+        # Validate upload deadline
+        if self.uploadDeadline < self.event.registrationsCloseDate:
+            errors.append(ValidationError("Upload date must be on or after registrations close date"))
+
+        # Validate upload deadline
+        if self.uploadDeadline > self.event.startDate:
+            errors.append(ValidationError("Upload date must be on or before event state date"))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
     def stateCoordinatorPermissions(cls, level):
