@@ -43,10 +43,10 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         if not team:
             if event.maxEventTeamsForSchoolReached(request.user):
-                raise PermissionDenied("Max teams for school for this event exceeded. Contact the organiser.")
+                raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
 
             if event.maxEventTeamsTotalReached():
-                raise PermissionDenied("Max teams for this event exceeded. Contact the organiser.")
+                raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
 
         self.StudentInLineFormSet = inlineformset_factory(
             Team,
