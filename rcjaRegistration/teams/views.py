@@ -104,7 +104,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             formset.save()
 
             # Redirect if add another in response
-            if 'add_text' in request.POST and newTeam:
+            if 'add_text' in request.POST and newTeam and not (event.maxEventTeamsForSchoolReached(request.user) or event.maxEventTeamsTotalReached()):
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
 
             elif not newTeam:

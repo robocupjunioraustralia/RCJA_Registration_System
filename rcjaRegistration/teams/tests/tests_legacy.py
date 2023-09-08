@@ -1099,6 +1099,30 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
+    def testValidCreate_schoolEventMaxReached_redirectAddAnotherIgnored(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
+        self.event.event_maxTeamsPerSchool = 2
+        self.event.save()
+
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":self.event.maxMembersPerTeam,
+            "student_set-0-firstName": "First",
+            "student_set-0-lastName": "Last",
+            "student_set-0-yearLevel": 7,
+            "student_set-0-gender": "male",
+            "name":"Team+3",
+            "division":self.division1.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            'add_text': 'blah',
+        }
+        response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.event.id}")
+
     def testInValidCreate_overallEventMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         self.event.event_maxTeamsForEvent = 2
