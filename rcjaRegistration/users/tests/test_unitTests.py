@@ -253,6 +253,30 @@ class TestUserForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors["email"], ["User with this email address already exists."])
 
+    def test_first_name_illegalCharacter(self):
+        payload = self.validPayload.copy()
+        payload['first_name'] = 'First$'
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["first_name"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."])
+
+    def test_last_name_illegalCharacter(self):
+        payload = self.validPayload.copy()
+        payload['last_name'] = 'Last$'
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["last_name"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."])
+
+    def test_mobileNumber_illegalCharacter(self):
+        payload = self.validPayload.copy()
+        payload['mobileNumber'] = '12345^'
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["mobileNumber"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space."])
+
 class TestUserSignupForm(TestUserForm):
     validPayload = {
         'first_name': 'First',
