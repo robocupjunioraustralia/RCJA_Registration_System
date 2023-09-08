@@ -322,6 +322,20 @@ class TestTeamEdit(TestCase):
         self.assertEqual(403, response.status_code)
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
+    def testLoadsSchoolEventMaximiumReached(self):
+        self.newEvent.event_maxTeamsPerSchool = 1
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+
+    def testLoadsOverallEventMaximiumReached(self):
+        self.newEvent.event_maxTeamsForEvent = 1
+        self.newEvent.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+
     def testClosedEditReturnsError_post(self):
         payload = {
             'student_set-TOTAL_FORMS':1,
