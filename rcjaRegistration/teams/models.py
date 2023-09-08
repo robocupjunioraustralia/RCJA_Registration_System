@@ -6,6 +6,40 @@ from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, 
 
 # **********MODELS**********
 
+class PlatformCategory(models.Model):
+    # Foreign keys
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Fields
+    name = models.CharField('Name', max_length=60, unique=True)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Platform Category'
+        verbose_name_plural = 'Platform Categories'
+        ordering = ['name']
+
+    # *****Permissions*****
+    @classmethod
+    def stateCoordinatorPermissions(cls, level):
+        return eventCoordinatorViewPermissions(level)
+
+    stateCoordinatorViewGlobal = True
+
+    # *****Save & Delete Methods*****
+
+    # *****Methods*****
+
+    # *****Get Methods*****
+
+    def __str__(self):
+        return self.name
+
+    # *****CSV export methods*****
+
+    # *****Email methods*****
+
 class HardwarePlatform(models.Model):
     # Foreign keys
     # Creation and update time
@@ -13,6 +47,7 @@ class HardwarePlatform(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=50)
+    category = models.ForeignKey(PlatformCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -46,6 +81,7 @@ class SoftwarePlatform(models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     name = models.CharField('Name', max_length=50)
+    category = models.ForeignKey(PlatformCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
