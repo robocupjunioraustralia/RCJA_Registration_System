@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
 
@@ -77,7 +78,7 @@ class Team(BaseEventAttendance):
     softwarePlatform = models.ForeignKey(SoftwarePlatform, verbose_name='Software platform', on_delete=models.PROTECT, null=True, blank=True)
 
     # Fields
-    name = models.CharField('Name', max_length=50)
+    name = models.CharField('Name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
 
     # *****Meta and clean*****
     class Meta:
@@ -88,11 +89,11 @@ class Team(BaseEventAttendance):
 
     def clean(self):
         super().clean()
-        errors = []
+        errors = {}
 
         # Check team name unique
         if Team.objects.filter(event=self.event, name=self.name).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('Team with this name in this event already exists'))
+            errors['name'] = 'Team with this name in this event already exists'
 
         # Raise any errors
         if errors:
@@ -120,8 +121,8 @@ class Student(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    firstName = models.CharField('First name', max_length=50)
-    lastName = models.CharField('Last name', max_length=50)
+    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
     yearLevel = models.PositiveIntegerField('Year level')
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
