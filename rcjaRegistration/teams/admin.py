@@ -6,19 +6,35 @@ from django.forms import Textarea
 from django.db import models
 from common.filters import FilteredRelatedOnlyFieldListFilter
 
-from .models import HardwarePlatform, SoftwarePlatform, Team, Student
+from .models import PlatformCategory, HardwarePlatform, SoftwarePlatform, Team, Student
 
 from events.admin import BaseWorkshopAttendanceAdmin
 
 # Register your models here.
 
+@admin.register(PlatformCategory)
+class PlatformCategoryAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
+
 @admin.register(HardwarePlatform)
 class HardwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
-    pass
+    list_display = [
+        'name',
+        'category',
+    ]
+    list_filter = [
+        'category',
+    ]
 
 @admin.register(SoftwarePlatform)
 class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
-    pass
+    list_display = [
+        'name',
+        'category',
+    ]
+    list_filter = [
+        'category',
+    ]
 
 class StudentInline(InlineAdminPermissions, admin.TabularInline):
     model = Student
@@ -73,6 +89,11 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'name',
         'student__firstName',
         'student__lastName',
+    ]
+
+    list_filter = BaseWorkshopAttendanceAdmin.list_filter + [
+        'hardwarePlatform',
+        'softwarePlatform',
     ]
 
     actions = [
