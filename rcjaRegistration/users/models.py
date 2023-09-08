@@ -5,8 +5,11 @@ from django.core.exceptions import ValidationError
 import django.apps as djangoApps
 from common.models import SaveDeleteMixin
 from django.core.exceptions import PermissionDenied
+from django.core.validators import RegexValidator
 
 from django.contrib.auth.models import Permission
+
+import re
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
@@ -58,7 +61,7 @@ class User(SaveDeleteMixin, AbstractUser):
     objects = UserManager()
 
     # Additional fields
-    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True)
+    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_\(\)\+]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space.")])
     homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeUserRegistration': True})
     homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True, blank=True)
 
@@ -80,13 +83,24 @@ class User(SaveDeleteMixin, AbstractUser):
 
     def clean(self):
         super().clean()
+        errors = {}
+
         # Force case insentive email
         if User.objects.filter(email__iexact=self.email).exclude(pk=self.pk).exists():
-            raise ValidationError({'email': _('User with this email address already exists.')})
+            errors['email'] = _('User with this email address already exists.')
 
         # Validate region state
         if self.homeRegion and self.homeRegion.state is not None and self.homeRegion.state != self.homeState:
-            raise ValidationError("Region not valid for selected state")
+            errors['homeRegion'] = "Region not valid for selected state"
+
+        if not re.match("^[0-9a-zA-Z \-\_]*$", self.first_name):
+            errors['first_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
+
+        if not re.match("^[0-9a-zA-Z \-\_]*$", self.last_name):
+            errors['last_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
+
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod

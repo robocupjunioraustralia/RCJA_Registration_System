@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from events.models import BaseEventAttendance
 
@@ -15,8 +16,8 @@ class WorkshopAttendee(BaseEventAttendance):
     attendeeType = models.CharField('Attendee type', max_length=15, choices=attendeeTypeChoices)
 
     # Compulsory for all attendee types
-    firstName = models.CharField('First name', max_length=50)
-    lastName = models.CharField('Last name', max_length=50)
+    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
     yearLevel = models.CharField('Year level', max_length=10)
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
