@@ -12,7 +12,7 @@ import datetime
 from .models import Student, Team
 from events.models import Event
 
-from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings
 
 # Create your views here.
 
@@ -41,6 +41,13 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
     def common(self, request, event, team):
         super().common(request, event, team)
 
+        if not team:
+            if event.maxEventTeamsForSchoolReached(request.user):
+                raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+            if event.maxEventTeamsTotalReached():
+                raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
+
         self.StudentInLineFormSet = inlineformset_factory(
             Team,
             Student,
@@ -66,7 +73,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = self.StudentInLineFormSet(instance=team)
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
     def post(self, request, eventID=None, teamID=None):
         if teamID is not None:
@@ -81,7 +88,6 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         formset = self.StudentInLineFormSet(request.POST, instance=team, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
         form = TeamForm(request.POST, instance=team, user=request.user, event=event)
-        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
         if all([x.is_valid() for x in (form, formset)]):
             # Create team object but don't save so can set foreign keys
@@ -98,7 +104,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             formset.save()
 
             # Redirect if add another in response
-            if 'add_text' in request.POST and newTeam:
+            if 'add_text' in request.POST and newTeam and not (event.maxEventTeamsForSchoolReached(request.user) or event.maxEventTeamsTotalReached()):
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
 
             elif not newTeam:
@@ -106,5 +112,5 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 

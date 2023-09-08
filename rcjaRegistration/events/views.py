@@ -92,27 +92,32 @@ def eventDetailsPermissions(request, event, filterDict):
     if event.published() and event.registrationsOpen():
         return True
 
+    if event.registrationNotOpenYet():
+        return True
+
     if event.published() and BaseEventAttendance.objects.filter(**filterDict).exists():
         return True
 
     return False
+
+def getDivisionsMaxReachedWarnings(event, user):
+    # Get list of divisions that reached max number of teams
+    divisionsMaxReachedWarnings = []
+    for availableDivision in event.availabledivision_set.all():
+        if availableDivision.maxDivisionTeamsForSchoolReached(user):
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
+
+        if availableDivision.maxDivisionTeamsTotalReached():
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
+    
+    return divisionsMaxReachedWarnings
 
 @login_required
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
     # Get team and workshop attendee filter dict
-    if request.user.currentlySelectedSchool:
-        filterDict = {
-            'school': request.user.currentlySelectedSchool,
-            'event': event,
-        }
-    else:
-        filterDict = {
-            'mentorUser': request.user,
-            'school': None,
-            'event': event,
-        }
+    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
 
     if not eventDetailsPermissions(request, event, filterDict):
         raise PermissionDenied("This event is unavailable")
@@ -140,6 +145,9 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'maxEventTeamsForSchoolReached': event.maxEventTeamsForSchoolReached(request.user),
+        'maxEventTeamsTotalReached': event.maxEventTeamsTotalReached(),
+        'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
     }
     return render(request, 'events/details.html', context)   
 

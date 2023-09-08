@@ -332,6 +332,13 @@ class Event(SaveDeleteMixin, models.Model):
         if self.venue and self.venue.state != self.state:
             errors.append(ValidationError('Venue must be from same state as event'))
 
+        # Validate file upload deadline if start date or registrations clsoe date changed
+        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
+            errors.append(ValidationError("Event start date must on or after file upload deadlines"))
+
+        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
+            errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
@@ -372,6 +379,9 @@ class Event(SaveDeleteMixin, models.Model):
     def registrationsOpen(self):
         return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
 
+    def registrationNotOpenYet(self):
+        return self.registrationsOpenDate > datetime.datetime.today().date()
+
     def published(self):
         return self.status == 'published'
 
@@ -380,6 +390,27 @@ class Event(SaveDeleteMixin, models.Model):
             return True
 
         return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
+
+    def getBaseEventAttendanceFilterDict(self, user):
+        # Create dict of attributes to filter teams/ workshop attendees by
+        if user.currentlySelectedSchool is not None:
+            return {
+                'event': self,
+                'school': user.currentlySelectedSchool
+            }
+        else:
+            # Independent, filter by mentor
+            return {
+                'event': self,
+                'school': None,
+                'mentorUser': user
+            }
+
+    def maxEventTeamsForSchoolReached(self, user):
+        return self.event_maxTeamsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxTeamsPerSchool
+
+    def maxEventTeamsTotalReached(self):
+        return self.event_maxTeamsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxTeamsForEvent
 
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
@@ -496,6 +527,12 @@ class AvailableDivision(models.Model):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def maxDivisionTeamsForSchoolReached(self, user):
+        return self.division_maxTeamsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxTeamsPerSchool
+
+    def maxDivisionTeamsTotalReached(self):
+        return self.division_maxTeamsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxTeamsForDivision
 
     def __str__(self):
         return str(self.division)
