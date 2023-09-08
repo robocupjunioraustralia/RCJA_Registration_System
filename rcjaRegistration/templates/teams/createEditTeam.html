@@ -70,7 +70,15 @@
             </div>
             <!-- /Error messaging -->
             {% endif %}
-          
+
+            {% if divisionsMaxReachedWarnings and not team %}
+            <ul>
+                {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
             <form method="post" class = "ui form">
               {% csrf_token %}
               {{ formset.management_form }}

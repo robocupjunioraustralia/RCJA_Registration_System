@@ -528,6 +528,12 @@ class AvailableDivision(models.Model):
 
     # *****Get Methods*****
 
+    def maxDivisionTeamsForSchoolReached(self, user):
+        return self.division_maxTeamsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxTeamsPerSchool
+
+    def maxDivisionTeamsTotalReached(self):
+        return self.division_maxTeamsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxTeamsForDivision
+
     def __str__(self):
         return str(self.division)
 

@@ -12,7 +12,7 @@ import datetime
 from .models import Student, Team
 from events.models import Event
 
-from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings
 
 # Create your views here.
 
@@ -73,7 +73,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         form = TeamForm(instance=team, user=request.user, event=event)
         formset = self.StudentInLineFormSet(instance=team)
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
     def post(self, request, eventID=None, teamID=None):
         if teamID is not None:
@@ -112,5 +112,5 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 

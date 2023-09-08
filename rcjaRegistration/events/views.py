@@ -100,6 +100,18 @@ def eventDetailsPermissions(request, event, filterDict):
 
     return False
 
+def getDivisionsMaxReachedWarnings(event, user):
+    # Get list of divisions that reached max number of teams
+    divisionsMaxReachedWarnings = []
+    for availableDivision in event.availabledivision_set.all():
+        if availableDivision.maxDivisionTeamsForSchoolReached(user):
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
+
+        if availableDivision.maxDivisionTeamsTotalReached():
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
+    
+    return divisionsMaxReachedWarnings
+
 @login_required
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
@@ -135,6 +147,7 @@ def details(request, eventID):
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
         'maxEventTeamsForSchoolReached': event.maxEventTeamsForSchoolReached(request.user),
         'maxEventTeamsTotalReached': event.maxEventTeamsTotalReached(),
+        'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
     }
     return render(request, 'events/details.html', context)   
 

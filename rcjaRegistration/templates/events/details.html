@@ -39,6 +39,13 @@
             </li>
             {% endfor %}
         </ul>
+        {% if divisionsMaxReachedWarnings %}
+        <ul>
+            {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+            <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         {% if event.eventDetails %}
         <h3>Event details</h3>
         <p> {{ event.bleachedEventDetails|linebreaks }} </p>

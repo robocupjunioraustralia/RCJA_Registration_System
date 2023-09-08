@@ -1145,7 +1145,8 @@ class TestTeamCreationFormValidation_School(TestCase):
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Max teams for school for this event division exceeded. Contact the organiser.")
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertContains(response, "Division 1: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
@@ -1170,7 +1171,8 @@ class TestTeamCreationFormValidation_School(TestCase):
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Max teams for this event division exceeded. Contact the organiser.")
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertContains(response, "Division 1: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
@@ -1212,7 +1214,7 @@ class TestTeamCreationFormValidation_School(TestCase):
         }
         response = self.client.post(reverse('teams:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Required field is missing")
+        self.assertContains(response, "This field is required.")
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
 
 class TestTeamCreationFormValidation_Independent(TestTeamCreationFormValidation_School):
