@@ -2,8 +2,7 @@ from django.db import models
 from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 from django.core.exceptions import ValidationError
-
-import re
+from django.core.validators import RegexValidator, MinLengthValidator
 
 # **********MODELS**********
 
@@ -13,12 +12,35 @@ class School(SaveDeleteMixin, models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=100, unique=True)
-    abbreviation = models.CharField('Abbreviation', max_length=5, unique=True, help_text="Abbreviation is used in the schedule and scoring system")
+    name = models.CharField(
+        'Name',
+        max_length=100,
+        unique=True,
+        validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")]
+    )
+    abbreviation = models.CharField(
+        'Abbreviation',
+        max_length=5,
+        unique=True,
+        help_text="Abbreviation is used in the schedule and scoring system",
+        validators=[
+            RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."),
+            MinLengthValidator(3, message="Abbreviation must be at least three characters")
+        ]
+    )
     # Details
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, limit_choices_to={'typeUserRegistration': True}) # Needed because null on initial data import
     region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True)
-    postcode = models.CharField('Postcode', max_length=4, null=True, blank=True)
+    postcode = models.CharField(
+        'Postcode',
+        max_length=4,
+        null=True,
+        blank=True,
+        validators=[
+            RegexValidator(regex="^[0-9]*$", message="Postcode must be numeric"),
+            MinLengthValidator(4, message="Postcode too short")
+        ]
+    )
     # Flags
     forceSchoolDetailsUpdate = models.BooleanField('Force details update', default=False)
 
@@ -28,38 +50,26 @@ class School(SaveDeleteMixin, models.Model):
         ordering = ['name']
 
     def clean(self):
-        errors = []
-
-        # Check min length of abbreviation
-        if not self.abbreviation or len(self.abbreviation) < 3:
-            errors.append(ValidationError('Abbreviation must be at least three characters'))
+        errors = {}
 
         # Case insenstive abbreviation and name unique check
         if School.objects.filter(name__iexact=self.name).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'))
+            errors['name'] = 'School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'
 
         if School.objects.filter(abbreviation__iexact=self.abbreviation).exclude(pk=self.pk).exists():
-            errors.append(ValidationError('School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'))
+            errors['abbreviation'] = 'School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'
 
         # Validate school not using name or abbreviation reserved for independent entries
         if self.abbreviation.upper() == 'IND':
-            errors.append(ValidationError('IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.'))
+            errors['abbreviation'] = 'IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.'
 
         # TODO: use regex to catch similar
         if self.name.upper() == 'INDEPENDENT':
-            errors.append(ValidationError('Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.'))
-
-        # Validate postcode
-        if self.postcode is not None:
-            if not re.match(r"(^[0-9]+$)", self.postcode):
-                errors.append(ValidationError('Postcode must be numeric'))
-
-            if len(self.postcode) < 4:
-                errors.append(ValidationError('Postcode too short'))
+            errors['name'] = 'Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.'
 
         # Validate region state
         if self.region and self.region.state is not None and self.region.state != self.state:
-            errors.append(ValidationError("Region not valid for selected state"))
+            errors['region'] = "Region not valid for selected state"
 
         # Raise any errors
         if errors:
@@ -109,8 +119,17 @@ class Campus(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=100)
-    postcode = models.CharField('Postcode', max_length=4, null=True, blank=True)
+    name = models.CharField('Name', max_length=100, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    postcode = models.CharField(
+        'Postcode',
+        max_length=4,
+        null=True,
+        blank=True,
+        validators=[
+            RegexValidator(regex="^[0-9]*$", message="Postcode must be numeric"),
+            MinLengthValidator(4, message="Postcode too short")
+        ]
+    )
 
     # *****Meta and clean*****
     class Meta:
@@ -118,21 +137,6 @@ class Campus(models.Model):
         verbose_name_plural = 'Campuses'
         ordering = ['school', 'name']
         unique_together = ('school', 'name')
-
-    def clean(self):
-        errors = []
-
-        # Validate postcode
-        if self.postcode is not None:
-            if not re.match(r"(^[0-9]+$)", self.postcode):
-                errors.append(ValidationError('Postcode must be numeric'))
-
-            if len(self.postcode) < 4:
-                errors.append(ValidationError('Postcode too short'))
-
-        # Raise any errors
-        if errors:
-            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
