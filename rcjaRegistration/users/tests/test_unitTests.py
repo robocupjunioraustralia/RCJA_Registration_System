@@ -277,6 +277,17 @@ class TestUserForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors["mobileNumber"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space."])
 
+    def test_invalidRegion(self):
+        self.extraState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Extra State', abbreviation='ext')
+        self.extraRegion = Region.objects.create(name='Extra Region', state=self.extraState)
+
+        payload = self.validPayload.copy()
+        payload['homeRegion'] = self.extraRegion
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["homeRegion"], ["Region not valid for selected state"])
+
 class TestUserSignupForm(TestUserForm):
     validPayload = {
         'first_name': 'First',
