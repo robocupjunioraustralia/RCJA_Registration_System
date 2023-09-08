@@ -40,7 +40,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         user=obj.user
     )
     obj.year = Year.objects.create(year=2019)
-    obj.division = Division.objects.create(name='test')
+    obj.division = Division.objects.create(name='Division 1 Name')
 
     obj.oldEvent = Event.objects.create(
         year=obj.year,
@@ -72,7 +72,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
         directEnquiriesTo = obj.user     
     )
-    obj.newEvent.divisions.add(obj.division)
+    obj.newEventAvailableDivision = AvailableDivision.objects.create(division=obj.division, event=obj.newEvent)
 
     obj.oldEventWithTeams = Event.objects.create(
         year=obj.year,
@@ -322,19 +322,49 @@ class TestTeamEdit(TestCase):
         self.assertEqual(403, response.status_code)
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
-    def testLoadsSchoolEventMaximiumReached(self):
+    def testLoadsSchoolEventMaximumReached(self):
         self.newEvent.event_maxTeamsPerSchool = 1
         self.newEvent.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
 
-    def testLoadsOverallEventMaximiumReached(self):
+    def testLoadsOverallEventMaximumReached(self):
         self.newEvent.event_maxTeamsForEvent = 1
         self.newEvent.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
+
+    def testLoadsSchoolDivisionMaximumReached(self):
+        self.newEventAvailableDivision.division_maxTeamsPerSchool = 1
+        self.newEventAvailableDivision.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+
+    def testLoadsOverallDivisionMaximumReached(self):
+        self.newEventAvailableDivision.division_maxTeamsForDivision = 1
+        self.newEventAvailableDivision.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertEqual(200, response.status_code)
+
+    def testDivisionQSValidSchoolDivisionMaximumReached(self):
+        self.newEventAvailableDivision.division_maxTeamsPerSchool = 1
+        self.newEventAvailableDivision.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertContains(response, 'Division 1 Name')
+        self.assertNotContains(response, 'Division 1 Name: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.')
+
+    def testDivisionQSValidOverallDivisionMaximumReached(self):
+        self.newEventAvailableDivision.division_maxTeamsForDivision = 1
+        self.newEventAvailableDivision.save()
+
+        response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
+        self.assertContains(response, 'Division 1 Name')
+        self.assertNotContains(response, 'Division 1 Name: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.')
 
     def testClosedEditReturnsError_post(self):
         payload = {
@@ -1212,6 +1242,14 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
+    def testGet_schoolDivisionMax(self):
+        self.availableDivision.division_maxTeamsPerSchool = 1
+        self.availableDivision.save()
+
+        response = self.client.get(reverse('teams:create', kwargs={'eventID':self.event.id}), follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division 1: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
+
     def testInValidCreate_overallDivisionMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
         self.availableDivision.division_maxTeamsForDivision = 2
@@ -1237,6 +1275,14 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertContains(response, "Division 1: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
         self.assertEqual(Team.objects.filter(school=self.schoolAssertValue).count(), 1)
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
+
+    def testGet_overallDivisionMax(self):
+        self.availableDivision.division_maxTeamsForDivision = 2
+        self.availableDivision.save()
+
+        response = self.client.get(reverse('teams:create', kwargs={'eventID':self.event.id}), follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division 1: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
 
     def testInValidCreate_division(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
@@ -1304,7 +1350,7 @@ class TestTeamForm(TestCase):
 
     def setUp(self):
         newCommonSetUp(self)
-        self.event.divisions.add(self.division1)
+        self.availableDivision = AvailableDivision.objects.create(division=self.division1, event=self.event)
         self.hardwarePlatform = HardwarePlatform.objects.create(name='H1')
         self.softwarePlatform = SoftwarePlatform.objects.create(name='H1')
 
@@ -1333,6 +1379,20 @@ class TestTeamForm(TestCase):
     def testInvalidForm_division(self):
         form = self.createForm({
             'division': self.division2.id,
+            'name': 'A team name',
+            'hardwarePlatform': self.hardwarePlatform.id,
+            'softwarePlatform': self.softwarePlatform.id,
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["division"], ["Select a valid choice. That choice is not one of the available choices."])
+
+    def testInvalidForm_divisionMaxReached(self):
+        self.availableDivision.division_maxTeamsForDivision = 0
+        self.availableDivision.save()
+
+        form = self.createForm({
+            'division': self.division1.id,
             'name': 'A team name',
             'hardwarePlatform': self.hardwarePlatform.id,
             'softwarePlatform': self.softwarePlatform.id,
