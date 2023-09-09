@@ -12,6 +12,7 @@ from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
 from teams.models import Team, Student
+from workshops.models import WorkshopAttendee
 
 import datetime
 
@@ -1103,6 +1104,163 @@ class TestInvoiceCalculations_Independent(TestCase):
         )
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
+
+class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        cls.event = Event.objects.create(
+            year=cls.year,
+            state=cls.state1,
+            name='Workshop Event',
+            eventType='workshop',
+            status='published',
+            maxMembersPerTeam=5,
+            entryFeeIncludesGST=True,
+            event_billingType='team',
+            event_defaultEntryFee = 35,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+            directEnquiriesTo = cls.user1,
+        )
+        cls.attendee1 = WorkshopAttendee.object.create(
+            event=cls.event,
+            school=cls.school1,
+            mentorUser=cls.user1,
+            division=cls.division1,
+            firstName='Name 1',
+            lastName='Last 1',
+            yearLevel='5',
+            gender='other',
+            email='test@test.com'
+        )
+        cls.attendee2 = WorkshopAttendee.object.create(
+            event=cls.event,
+            school=cls.school1,
+            mentorUser=cls.user1,
+            division=cls.division1,
+            firstName='Name 2',
+            lastName='Last 2',
+            yearLevel='5',
+            gender='other',
+            email='test@test.com'
+        )
+        cls.invoice = Invoice.objects.get(event=cls.event, school=cls.school1)
+    
+    def testDefaultRateAttendeeInclGST(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round((2 * 35)/1.1, 2))
+        self.assertEqual(self.invoice.amountGST(), round(self.invoice.invoiceAmountInclGST() - self.invoice.invoiceAmountExclGST(), 2))
+
+        self.assertEqual(self.invoice.amountPaid(), 0)
+        self.assertEqual(self.invoice.amountDueInclGST(), round(2 * 35, 2))
+
+    def testAddAttendee(self):
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+
+        WorkshopAttendee.object.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            division=self.division1,
+            firstName='Name 2',
+            lastName='Last 2',
+            yearLevel='5',
+            gender='other',
+            email='test@test.com'
+        )
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(3 * 50, 2))
+
+    def testDeleteAttendee(self):
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+        self.attendee1.delete()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(1 * 35, 2))
+
+    def testDefaultRateTeamExclGST(self):
+        self.event.entryFeeIncludesGST = False
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round(2 * 35, 2))
+        self.assertEqual(self.invoice.amountGST(), round((2 * 35) * 0.1, 2))
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round((2 * 35) * 1.1, 2))
+
+        self.assertEqual(self.invoice.amountPaid(), 0)
+        self.assertEqual(self.invoice.amountDueInclGST(), round((2 * 35) * 1.1, 2))
+
+    def testAmountPaid(self):
+        InvoicePayment.objects.create(
+            invoice=self.invoice,
+            amountPaid=50,
+            datePaid=datetime.datetime.today(),
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round((2 * 35)/1.1, 2))
+        self.assertEqual(self.invoice.amountGST(), round(self.invoice.invoiceAmountInclGST() - self.invoice.invoiceAmountExclGST(), 2))
+
+        self.assertEqual(self.invoice.amountPaid(), 50)
+        self.assertEqual(self.invoice.amountDueInclGST(), round(2 * 35 - 50))
+
+    def testSpecialRateInclGST(self):
+        self.event.event_specialRateNumber = 1
+        self.event.event_specialRateFee = 10
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(45, 2))
+
+    def testSpecialRateExclGST(self):
+        self.event.entryFeeIncludesGST = False
+
+        self.event.event_specialRateNumber = 1
+        self.event.event_specialRateFee = 10
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round(45, 2))
+        self.assertEqual(self.invoice.amountGST(), round(45*0.1, 2))
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(45*1.1, 2))
+
+    def testAvailableDivisionRate(self):
+        AvailableDivision.objects.create(
+            division=self.division1,
+            event=self.event,
+            division_billingType='team',
+            division_entryFee=80,
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(160, 2))
+
+    def testDeleteAvailableDivision(self):
+        self.availableDivision = AvailableDivision.objects.create(
+            division=self.division1,
+            event=self.event,
+            division_billingType='team',
+            division_entryFee=80,
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(160, 2))
+
+        self.availableDivision.delete()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
 
 class TestInvoiceMethods(TestCase):
     email1 = 'user1@user.com'
