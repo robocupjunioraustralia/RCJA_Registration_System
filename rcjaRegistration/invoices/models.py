@@ -376,13 +376,6 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Amount due
 
-    def amountDueExclGST_unrounded(self):
-        return self.invoiceAmountExclGST_unrounded() - self.amountPaid_unrounded()
-
-    def amountDueExclGST(self):
-        return round(self.amountDueExclGST_unrounded(), 2)
-    amountDueExclGST.short_description = 'Amount due (ex GST)'
-
     def amountDueInclGST_unrounded(self):
         return self.invoiceAmountInclGST_unrounded() - self.amountPaid_unrounded()
 
