@@ -110,6 +110,13 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('school', 'invoiceToUser')
+
+        return qs
+
     def markPaidToday(self, request, queryset):
         def addErrorMessage(errorMessage, message):
             # Helper function to update error message while avoiding duplicate errors
