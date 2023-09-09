@@ -110,6 +110,14 @@ class Invoice(SaveDeleteMixin, models.Model):
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
 
+    def postSave(self):
+        self.calculateAndSaveAllTotals()
+
+    def postDelete(self):
+        # In case campus invoicing enabled and an invoice is deleted, recalculate totals on remaining
+        for invoice in Invoice.objects.filter(school=self.school, event=self.event):
+            invoice.calculateAndSaveAllTotals()
+
     # *****Methods*****
 
     # *****Get Methods*****

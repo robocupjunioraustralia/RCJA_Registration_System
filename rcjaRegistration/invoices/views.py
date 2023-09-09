@@ -47,6 +47,9 @@ def details(request, invoiceID):
         invoice.invoicedDate = datetime.datetime.today().date()
         invoice.save(update_fields=['invoicedDate'])
 
+    # Recalculate totals to ensure always correct when shown to mentor
+    invoice.calculateAndSaveAllTotals()
+
     context = {
         'invoice': invoice,
         'invoiceSettings': invoiceSettings,
@@ -73,6 +76,9 @@ def paypal(request, invoiceID):
     if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today()
         invoice.save(update_fields=['invoicedDate'])
+
+    # Recalculate totals to ensure always correct when shown to mentor
+    invoice.calculateAndSaveAllTotals()
 
     if invoice.campus:
         schoolCampusString = f'{invoice.school}, {invoice.campus}'
@@ -127,6 +133,8 @@ def setCampusInvoice(request, invoiceID):
                 school=invoice.school,
                 campus=campus,
             )
+        # Recalculate totals on the original invoice
+        invoice.calculateAndSaveAllTotals()
 
         return JsonResponse({'id':invoiceID, 'success':True})
     else:

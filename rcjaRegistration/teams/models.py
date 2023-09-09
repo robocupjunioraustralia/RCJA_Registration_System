@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from common.models import SaveDeleteMixin
 
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
 
@@ -150,7 +151,7 @@ class Team(BaseEventAttendance):
 
     # *****Email methods*****
 
-class Student(models.Model):
+class Student(SaveDeleteMixin, models.Model):
     # Foreign keys
     team = models.ForeignKey(Team, verbose_name='Team', on_delete=models.CASCADE)
     # Creation and update time
@@ -178,6 +179,12 @@ class Student(models.Model):
         return self.team.event.state
 
     # *****Save & Delete Methods*****
+
+    def postSave(self):
+        self.team.createUpdateInvoices()
+
+    def postDelete(self):
+        self.team.createUpdateInvoices()
 
     # *****Methods*****
 

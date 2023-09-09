@@ -372,6 +372,28 @@ class Event(SaveDeleteMixin, models.Model):
                 self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
                 self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
 
+        self.billingDetailsChanged = self.checkBillingDetailsChanged()
+
+    def checkBillingDetailsChanged(self):
+        try:
+            previousEvent = Event.objects.get(pk=self.pk)
+        except Event.DoesNotExist:
+            # Return false on new event because no invoices can exist yet
+            return False
+
+        return (
+            self.entryFeeIncludesGST != previousEvent.entryFeeIncludesGST or
+            self.event_defaultEntryFee != previousEvent.event_defaultEntryFee or
+            self.event_billingType != previousEvent.event_billingType or
+            self.event_specialRateNumber != previousEvent.event_specialRateNumber or
+            self.event_specialRateFee != previousEvent.event_specialRateFee
+        )
+
+    def postSave(self):
+        if self.billingDetailsChanged: # Set in presave so can see the previous value before database operation
+            for invoice in self.invoice_set.all():
+                invoice.calculateAndSaveAllTotals()
+
     # *****Methods*****
 
     # *****Get Methods*****
@@ -462,7 +484,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # *****Email methods*****
 
-class AvailableDivision(models.Model):
+class AvailableDivision(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
@@ -523,6 +545,14 @@ class AvailableDivision(models.Model):
         return self.event.state
 
     # *****Save & Delete Methods*****
+
+    def postSave(self):
+        for invoice in self.event.invoice_set.all():
+            invoice.calculateAndSaveAllTotals()
+
+    def postDelete(self):
+        for invoice in self.event.invoice_set.all():
+            invoice.calculateAndSaveAllTotals()
 
     # *****Methods*****
 
@@ -606,11 +636,11 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
-    def createInvoices(self):
+    def createUpdateInvoices(self):
         if self.event.paidEvent():
             if self.campusInvoicingEnabled():
                 # Get or create invoice with matching campus
-                Invoice.objects.get_or_create(
+                invoice, created = Invoice.objects.get_or_create(
                     school=self.school,
                     campus=self.campus,
                     event=self.event,
@@ -619,7 +649,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
             elif self.school:
                 # Ignore campus and only look for matching school
-                Invoice.objects.get_or_create(
+                invoice, created = Invoice.objects.get_or_create(
                     school=self.school,
                     event=self.event,
                     defaults={'invoiceToUser': self.mentorUser}
@@ -627,14 +657,20 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
             else:
                 # Get invoice for this user for independent entry
-                Invoice.objects.get_or_create(
+                invoice, created = Invoice.objects.get_or_create(
                     invoiceToUser=self.mentorUser,
                     event=self.event,
                     school=None
                 )
 
+            if not created:
+                invoice.calculateAndSaveAllTotals()
+
     def postSave(self):
-        self.createInvoices()
+        self.createUpdateInvoices()
+
+    def postDelete(self):
+        self.createUpdateInvoices()
 
     # *****Methods*****
 
