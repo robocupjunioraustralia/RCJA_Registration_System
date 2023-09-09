@@ -51,6 +51,13 @@ class CoordinatorAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, Expo
         'position',
     ]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('state')
+
+        return qs
+
     # State based filtering
 
     fkFilterFields = {

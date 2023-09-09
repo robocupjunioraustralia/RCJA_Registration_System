@@ -34,7 +34,7 @@
         {% if event.paymentDueDate %}<p>Payment due is due on {{ event.paymentDueDate }}.</p>{% endif %}
         <h3>Available divisions</h3>
         <ul>
-            {% for availableDivision in event.availabledivision_set.all %}
+            {% for availableDivision in availableDivisions %}
             <li><strong>{{ availableDivision.division.name }}</strong>
                 {% if availableDivision.division.description %}<br>{{ availableDivision.division.description }}{% endif %}
                 {% if availableDivision.division_billingType != 'event' %}<br>This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.{% endif %}
