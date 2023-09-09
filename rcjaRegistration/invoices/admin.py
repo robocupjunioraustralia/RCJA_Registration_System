@@ -25,6 +25,20 @@ class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
         
         return super().has_add_permission(request)
 
+class AmountPaidFilter(admin.SimpleListFilter):
+    title = "Amount Paid"
+    parameter_name = "amountPaidStatus"
+
+    def lookups(self, request, model_admin):
+        return [("True","At least partially paid"), ("False",'Not Paid')]
+
+    def queryset(self, request, queryset):
+        if self.value() == "True":
+            return queryset.filter(invoicepayment__isnull=False)
+        elif self.value() == "False":
+            return queryset.filter(invoicepayment__isnull=True)
+        return queryset
+
 class InvoicePaymentInline(InlineAdminPermissions, admin.TabularInline):
     model = InvoicePayment
     extra = 0
@@ -57,6 +71,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
     list_filter = [
+        AmountPaidFilter,
         ('event__state', admin.RelatedOnlyFieldListFilter),
         ('event', FilteredRelatedOnlyFieldListFilter),
     ]
