@@ -918,11 +918,12 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        createTeams(self, self.school1)
-        createStudents(self)
-        self.invoice = Invoice.objects.get(event=self.event, school=self.school1)
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        createTeams(cls, cls.school1)
+        createStudents(cls)
+        cls.invoice = Invoice.objects.get(event=cls.event, school=cls.school1)
     
     def testDefaultRateTeamInclGST(self):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
@@ -1008,13 +1009,14 @@ class TestInvoiceCalculations_Campuses(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        createCammpuses(self)
-        createTeams(self, self.school1, campuses = self.campuses)
-        createStudents(self)
-        self.campus1 = self.campuses[0]
-        self.invoice = Invoice.objects.create(event=self.event, school=self.school1, campus=self.campus1, invoiceToUser=self.user1)
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        createCammpuses(cls)
+        createTeams(cls, cls.school1, campuses = cls.campuses)
+        createStudents(cls)
+        cls.campus1 = cls.campuses[0]
+        cls.invoice = Invoice.objects.create(event=cls.event, school=cls.school1, campus=cls.campus1, invoiceToUser=cls.user1)
     
     def testDefaultRateTeam(self):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50, 2))
@@ -1059,11 +1061,12 @@ class TestInvoiceCalculations_Independent(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        createTeams(self, None)
-        createStudents(self)
-        self.invoice = Invoice.objects.get(event=self.event, invoiceToUser=self.user1)
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        createTeams(cls, None)
+        createStudents(cls)
+        cls.invoice = Invoice.objects.get(event=cls.event, invoiceToUser=cls.user1)
     
     def testDefaultRateTeam(self):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
