@@ -342,7 +342,10 @@ class Invoice(SaveDeleteMixin, models.Model):
     # Totals
 
     def amountPaid_unrounded(self):
-        return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
+        try:
+            return self._sumPayments if self._sumPayments is not None else 0
+        except AttributeError:
+            return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
 
     def amountPaid(self):
         return round(self.amountPaid_unrounded(), 2)

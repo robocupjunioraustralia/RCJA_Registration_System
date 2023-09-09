@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.db.models import Sum
 
 import datetime
 
@@ -113,7 +114,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
-        qs = qs.prefetch_related('school', 'invoiceToUser')
+        qs = qs.prefetch_related('school', 'invoiceToUser').annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
 
         return qs
 
