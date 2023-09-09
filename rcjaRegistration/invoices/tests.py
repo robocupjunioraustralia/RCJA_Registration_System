@@ -1209,3 +1209,33 @@ class TestInvoiceSummaryView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'invoices/summary.html')
+
+class TestAmountPaidFilter(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2, school=self.school2)
+
+    def testNotFiltered(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist'))
+        self.assertContains(response, f'2 Invoices')
+
+    def testPaid(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=True")
+        self.assertContains(response, f'0 Invoices')
+
+    def testNotPaid(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=False")
+        self.assertContains(response, f'2 Invoices')
+
+    def testNotPaid_invoicePaid(self):
+        InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=5, datePaid=datetime.datetime.now().date())
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=False")
+        self.assertContains(response, f'1 Invoice')
