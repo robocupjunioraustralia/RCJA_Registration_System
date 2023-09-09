@@ -1267,6 +1267,19 @@ class TestInvoiceMethods(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(self.invoice.invoiceToUserEmail(), self.email1)
 
+    def testSaveUpdatesTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.invoice.cache_invoiceAmountInclGST_unrounded = 50
+        self.invoice.save(skipPrePostSave=True)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 50)
+
+        self.invoice.save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
+
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
