@@ -934,6 +934,26 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.amountPaid(), 0)
         self.assertEqual(self.invoice.amountDueInclGST(), round(12 * 50, 2))
 
+    def testAddTeam(self):
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+
+        Team.objects.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            name='New Team',
+            division=self.division1,
+        )
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(13 * 50, 2))
+
+    def testDeleteTeam(self):
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.teams[1].delete()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
+
     def testDefaultRateTeamExclGST(self):
         self.event.entryFeeIncludesGST = False
         self.event.save()
@@ -968,6 +988,36 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
+    def testAddStudent(self):
+        self.event.event_billingType = 'student'
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
+
+        self.newStudent = Student.objects.create(
+            team=self.teams[0],
+            firstName='First name',
+            lastName='Last name',
+            yearLevel=5,
+            gender='other',
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(37 * 50, 2))
+
+    def testDeleteStudent(self):
+        self.event.event_billingType = 'student'
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
+
+        self.students[0].delete()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(35 * 50, 2))
+
     def testSpecialRateInclGST(self):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
@@ -998,6 +1048,22 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
+
+    def testDeleteAvailableDivision(self):
+        self.availableDivision = AvailableDivision.objects.create(
+            division=self.division1,
+            event=self.event,
+            division_billingType='team',
+            division_entryFee=80,
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
+
+        self.availableDivision.delete()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
 
     def testAvailableDivisionRateStudent(self):
         AvailableDivision.objects.create(
