@@ -1280,6 +1280,24 @@ class TestInvoiceMethods(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
+    def testDeleteUpdatesOtherInvoices(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+
+        self.team1 = Team.objects.create(event=self.event, school=self.school1, campus=self.campuses[0], mentorUser=self.user3, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, school=self.school1, campus=self.campuses[1], mentorUser=self.user3, name='Team 2', division=self.division1)
+
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[0])
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[1])
+
+        self.invoice.calculateAndSaveAllTotals()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), 0)
+
+        self.invoice1.delete()
+        self.invoice2.delete()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), 100)
+
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
