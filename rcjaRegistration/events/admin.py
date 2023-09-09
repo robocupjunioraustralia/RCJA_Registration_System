@@ -456,6 +456,13 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
 
     form = BaseWorkshopAttendanceForm
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('event', 'division', 'mentorUser__homeState', 'school__state', 'campus')
+
+        return qs
+
     # Set school and campus to that of mentor if only one option
     def save_model(self, request, obj, form, change):
         if not obj.pk and obj.school is None and obj.mentorUser.schooladministrator_set.count() == 1:
