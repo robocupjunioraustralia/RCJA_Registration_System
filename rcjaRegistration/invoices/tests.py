@@ -926,6 +926,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         cls.invoice = Invoice.objects.get(event=cls.event, school=cls.school1)
     
     def testDefaultRateTeamInclGST(self):
+        self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round((12 * 50)/1.1, 2))
         self.assertEqual(self.invoice.amountGST(), round(self.invoice.invoiceAmountInclGST() - self.invoice.invoiceAmountExclGST(), 2))
@@ -936,6 +937,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     def testDefaultRateTeamExclGST(self):
         self.event.entryFeeIncludesGST = False
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.amountGST(), round((12 * 50) * 0.1, 2))
@@ -950,6 +952,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
             amountPaid=200,
             datePaid=datetime.datetime.today(),
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round((12 * 50)/1.1, 2))
@@ -961,6 +964,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
@@ -968,6 +972,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 - 80, 2))
 
@@ -977,6 +982,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50 - 80, 2))
         self.assertEqual(self.invoice.amountGST(), round((12 * 50 - 80)*0.1, 2))
@@ -989,6 +995,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
             division_billingType='team',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
 
@@ -999,6 +1006,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
             division_billingType='student',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
 
@@ -1019,11 +1027,13 @@ class TestInvoiceCalculations_Campuses(TestCase):
         cls.invoice = Invoice.objects.create(event=cls.event, school=cls.school1, campus=cls.campus1, invoiceToUser=cls.user1)
     
     def testDefaultRateTeam(self):
+        self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50, 2))
 
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(18 * 50, 2))
 
@@ -1031,6 +1041,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50 - 40, 2))
 
@@ -1041,6 +1052,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
             division_billingType='team',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50 + 60, 2))
 
@@ -1051,6 +1063,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
             division_billingType='student',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 680)
 
@@ -1069,11 +1082,13 @@ class TestInvoiceCalculations_Independent(TestCase):
         cls.invoice = Invoice.objects.get(event=cls.event, invoiceToUser=cls.user1)
     
     def testDefaultRateTeam(self):
+        self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
 
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
@@ -1081,6 +1096,7 @@ class TestInvoiceCalculations_Independent(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 - 80, 2))
 
@@ -1091,6 +1107,7 @@ class TestInvoiceCalculations_Independent(TestCase):
             division_billingType='team',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
 
@@ -1101,6 +1118,7 @@ class TestInvoiceCalculations_Independent(TestCase):
             division_billingType='student',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
 
