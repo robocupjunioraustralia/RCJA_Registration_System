@@ -8,6 +8,7 @@ from coordination.permissions import checkCoordinatorPermission
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
+from django.db.models import Sum
 
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
@@ -15,7 +16,7 @@ from schools.models import Campus
 
 @login_required
 def summary(request):
-    invoices = Invoice.invoicesForUser(request.user)
+    invoices = Invoice.invoicesForUser(request.user).prefetch_related('invoicepayment_set', 'school', 'campus', 'invoiceToUser', 'event__year', 'event__state').annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
 
     context = {
         'invoices': invoices,
