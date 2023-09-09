@@ -199,6 +199,21 @@ class TestInvoiceDetailView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
 
+    def testUpdatesTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.invoice.cache_invoiceAmountInclGST_unrounded = 50
+        self.invoice.save(skipPrePostSave=True)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 50)
+
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
+
     def testDontOverwriteDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -402,6 +417,21 @@ class TestPaypalView(TestCase):
 
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
+
+    def testUpdatesTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.invoice.cache_invoiceAmountInclGST_unrounded = 50
+        self.invoice.save(skipPrePostSave=True)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 50)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
     def testDontOverwriteDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
@@ -702,6 +732,17 @@ class TestSetCampusInvoiceeView(TestCase):
         self.assertEqual(self.invoice.campusInvoicingAvailable(), False)
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1).count(), 3)
         self.assertEqual(Invoice.objects.filter(event=self.event, school=self.school1).count(), 3)
+
+    def testCampusInvoicingEnabled_updatesOriginalInvoiceTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        setupCampusesAndTeams(self)
+        url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.post(url)
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), 0)
+
 
     def testCampusInvoicingEnabled_schoolAdmin(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
