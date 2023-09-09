@@ -39,7 +39,7 @@ def dashboard(request):
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
         baseeventattendance__in=usersEventAttendances,
-    ).order_by('startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('startDate').distinct()
 
     eventsAvailable = openForRegistrationEvents.exists()
 
@@ -56,13 +56,13 @@ def dashboard(request):
         endDate__gte=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).distinct().order_by('startDate').distinct()
+    ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).order_by('-startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
@@ -103,7 +103,7 @@ def eventDetailsPermissions(request, event, filterDict):
 def getDivisionsMaxReachedWarnings(event, user):
     # Get list of divisions that reached max number of teams
     divisionsMaxReachedWarnings = []
-    for availableDivision in event.availabledivision_set.all():
+    for availableDivision in event.availabledivision_set.prefetch_related('division').all():
         if availableDivision.maxDivisionTeamsForSchoolReached(user):
             divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
 
@@ -128,7 +128,7 @@ def details(request, eventID):
         workshopAttendees = WorkshopAttendee.objects.filter(**filterDict)
     else:
         teams = Team.objects.filter(**filterDict)
-        teams = teams.prefetch_related('student_set')
+        teams = teams.prefetch_related('student_set', 'division', 'campus', 'event')
         workshopAttendees = WorkshopAttendee.objects.none()
 
     # Get billing type label
@@ -139,6 +139,7 @@ def details(request, eventID):
 
     context = {
         'event': event,
+        'availableDivisions': event.availabledivision_set.prefetch_related('division'),
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
         'workshopAttendees': workshopAttendees,
