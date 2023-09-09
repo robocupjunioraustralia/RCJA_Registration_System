@@ -39,7 +39,7 @@ def dashboard(request):
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
         baseeventattendance__in=usersEventAttendances,
-    ).order_by('startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('startDate').distinct()
 
     eventsAvailable = openForRegistrationEvents.exists()
 
@@ -56,13 +56,13 @@ def dashboard(request):
         endDate__gte=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).distinct().order_by('startDate').distinct()
+    ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).order_by('-startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
