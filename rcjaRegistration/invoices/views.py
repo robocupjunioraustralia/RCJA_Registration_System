@@ -46,7 +46,7 @@ def details(request, invoiceID):
     # Set invoiced date
     if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today().date()
-        invoice.save(update_fields=['invoicedDate'])
+        invoice.save(update_fields=['invoicedDate'], skipPrePostSave=True)
 
     # Recalculate totals to ensure always correct when shown to mentor
     invoice.calculateAndSaveAllTotals()
@@ -76,7 +76,7 @@ def paypal(request, invoiceID):
     # Set invoiced date
     if mentor and invoice.invoicedDate is None:
         invoice.invoicedDate = datetime.datetime.today()
-        invoice.save(update_fields=['invoicedDate'])
+        invoice.save(update_fields=['invoicedDate'], skipPrePostSave=True)
 
     # Recalculate totals to ensure always correct when shown to mentor
     invoice.calculateAndSaveAllTotals()
