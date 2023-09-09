@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 from common.filters import FilteredRelatedOnlyFieldListFilter
-from django.db.models import Sum
+from django.db.models import Sum, F, Q
 
 import datetime
 
@@ -31,13 +31,13 @@ class AmountPaidFilter(admin.SimpleListFilter):
     parameter_name = "amountPaidStatus"
 
     def lookups(self, request, model_admin):
-        return [("True","At least partially paid"), ("False",'Not Paid')]
+        return [("True","Paid"), ("False",'Not Paid')]
 
     def queryset(self, request, queryset):
         if self.value() == "True":
-            return queryset.filter(invoicepayment__isnull=False)
+            return queryset.filter(_amoundDueFilter__lt=0.05)
         elif self.value() == "False":
-            return queryset.filter(invoicepayment__isnull=True)
+            return queryset.filter(Q(_amoundDueFilter__gte=0.05) | Q(_amoundDueFilter__isnull=True))
         return queryset
 
 class InvoicePaymentInline(InlineAdminPermissions, admin.TabularInline):
@@ -55,6 +55,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'campus',
         'purchaseOrderNumber',
         'invoiceAmountInclGST',
+        'amountDueInclGST',
         'amountPaid',
     ]
     readonly_fields = [
@@ -114,7 +115,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
-        qs = qs.prefetch_related('school', 'invoiceToUser').annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
+        qs = qs.prefetch_related('school', 'invoiceToUser').annotate(_sumPayments=Sum('invoicepayment__amountPaid')).annotate(_amoundDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
 
         return qs
 
