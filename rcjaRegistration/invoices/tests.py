@@ -1350,6 +1350,13 @@ class TestAmountPaidFilter(TestCase):
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
         self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2, school=self.school2)
+        Team.objects.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            name='New Team',
+            division=self.division1,
+        )
 
     def testNotFiltered(self):
         response = self.client.get(reverse(f'admin:invoices_invoice_changelist'))
@@ -1363,7 +1370,12 @@ class TestAmountPaidFilter(TestCase):
         response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=False")
         self.assertContains(response, f'2 Invoices')
 
-    def testNotPaid_invoicePaid(self):
-        InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=5, datePaid=datetime.datetime.now().date())
-        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=False")
+    def testNotPaid_invoiceFullyPaid(self):
+        InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=50, datePaid=datetime.datetime.now().date())
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=True")
         self.assertContains(response, f'1 Invoice')
+
+    def testNotPaid_invoicePartiallyPaid(self):
+        InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=5, datePaid=datetime.datetime.now().date())
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountPaidStatus=True")
+        self.assertContains(response, f'0 Invoices')
