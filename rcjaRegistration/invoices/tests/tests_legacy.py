@@ -5,7 +5,7 @@ from django.test import Client
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
 
-from .models import InvoiceGlobalSettings, Invoice, InvoicePayment
+from invoices.models import InvoiceGlobalSettings, Invoice, InvoicePayment
 from users.models import User
 from regions.models import State, Region
 from schools.models import School, SchoolAdministrator, Campus
@@ -186,7 +186,7 @@ class TestInvoiceDetailView(TestCase):
     def setUp(self):
         commonSetUp(self)
 
-    def testMentorSetsInvoicedDate(self):
+    def testMentorSetsInvoicedDate_noDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
@@ -200,7 +200,36 @@ class TestInvoiceDetailView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
 
-    def testDontOverwriteDate(self):
+    def testMentorSetsInvoicedDate_futureDate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=10))
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=10)).date())
+
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
+
+    def testUpdatesTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.invoice.cache_invoiceAmountInclGST_unrounded = 50
+        self.invoice.save(skipPrePostSave=True)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 50)
+
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
+
+    def testDontOverwritePastDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
@@ -389,7 +418,7 @@ class TestPaypalView(TestCase):
         self.state1.paypalEmail = 'test@test.com'
         self.state1.save()
 
-    def testMentorSetsInvoicedDate(self):
+    def testMentorSetsInvoicedDate_noDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -404,7 +433,37 @@ class TestPaypalView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
 
-    def testDontOverwriteDate(self):
+    def testMentorSetsInvoicedDate_futureDate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=10))
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=10)).date())
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
+
+    def testUpdatesTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.invoice.cache_invoiceAmountInclGST_unrounded = 50
+        self.invoice.save(skipPrePostSave=True)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 50)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
+
+    def testDontOverwritePastDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -704,6 +763,17 @@ class TestSetCampusInvoiceeView(TestCase):
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1).count(), 3)
         self.assertEqual(Invoice.objects.filter(event=self.event, school=self.school1).count(), 3)
 
+    def testCampusInvoicingEnabled_updatesOriginalInvoiceTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        setupCampusesAndTeams(self)
+        url = reverse('invoices:setCampusInvoice', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.post(url)
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), 0)
+
+
     def testCampusInvoicingEnabled_schoolAdmin(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user2)
@@ -919,31 +989,52 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        createTeams(self, self.school1)
-        createStudents(self)
-        self.invoice = Invoice.objects.get(event=self.event, school=self.school1)
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        createTeams(cls, cls.school1)
+        createStudents(cls)
+        cls.invoice = Invoice.objects.get(event=cls.event, school=cls.school1)
     
     def testDefaultRateTeamInclGST(self):
+        self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round((12 * 50)/1.1, 2))
         self.assertEqual(self.invoice.amountGST(), round(self.invoice.invoiceAmountInclGST() - self.invoice.invoiceAmountExclGST(), 2))
 
         self.assertEqual(self.invoice.amountPaid(), 0)
         self.assertEqual(self.invoice.amountDueInclGST(), round(12 * 50, 2))
-        self.assertEqual(self.invoice.amountDueExclGST(), round((12 * 50)/1.1, 2))
+
+    def testAddTeam(self):
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+
+        Team.objects.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            name='New Team',
+            division=self.division1,
+        )
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(13 * 50, 2))
+
+    def testDeleteTeam(self):
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.teams[1].delete()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
 
     def testDefaultRateTeamExclGST(self):
         self.event.entryFeeIncludesGST = False
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.amountGST(), round((12 * 50) * 0.1, 2))
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round((12 * 50) * 1.1, 2))
 
         self.assertEqual(self.invoice.amountPaid(), 0)
-        self.assertEqual(self.invoice.amountDueExclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.amountDueInclGST(), round((12 * 50) * 1.1, 2))
 
     def testAmountPaid(self):
@@ -952,6 +1043,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
             amountPaid=200,
             datePaid=datetime.datetime.today(),
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round((12 * 50)/1.1, 2))
@@ -959,18 +1051,64 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
 
         self.assertEqual(self.invoice.amountPaid(), 200)
         self.assertEqual(self.invoice.amountDueInclGST(), round(12 * 50 - 200))
-        self.assertEqual(self.invoice.amountDueExclGST(), round((12 * 50)/1.1 - 200, 2))
+
+    def testAmountDueNotNegative(self):
+        InvoicePayment.objects.create(
+            invoice=self.invoice,
+            amountPaid=20000,
+            datePaid=datetime.datetime.today(),
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round((12 * 50)/1.1, 2))
+        self.assertEqual(self.invoice.amountGST(), round(self.invoice.invoiceAmountInclGST() - self.invoice.invoiceAmountExclGST(), 2))
+
+        self.assertEqual(self.invoice.amountPaid(), 20000)
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
+
+    def testAddStudent(self):
+        self.event.event_billingType = 'student'
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
+
+        self.newStudent = Student.objects.create(
+            team=self.teams[0],
+            firstName='First name',
+            lastName='Last name',
+            yearLevel=5,
+            gender='other',
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(37 * 50, 2))
+
+    def testDeleteStudent(self):
+        self.event.event_billingType = 'student'
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
+
+        self.students[0].delete()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(35 * 50, 2))
 
     def testSpecialRateInclGST(self):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 - 80, 2))
 
@@ -980,6 +1118,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountExclGST(), round(12 * 50 - 80, 2))
         self.assertEqual(self.invoice.amountGST(), round((12 * 50 - 80)*0.1, 2))
@@ -992,8 +1131,25 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
             division_billingType='team',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
+
+    def testDeleteAvailableDivision(self):
+        self.availableDivision = AvailableDivision.objects.create(
+            division=self.division1,
+            event=self.event,
+            division_billingType='team',
+            division_entryFee=80,
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
+
+        self.availableDivision.delete()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
 
     def testAvailableDivisionRateStudent(self):
         AvailableDivision.objects.create(
@@ -1002,6 +1158,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
             division_billingType='student',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
 
@@ -1012,20 +1169,23 @@ class TestInvoiceCalculations_Campuses(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        createCammpuses(self)
-        createTeams(self, self.school1, campuses = self.campuses)
-        createStudents(self)
-        self.campus1 = self.campuses[0]
-        self.invoice = Invoice.objects.create(event=self.event, school=self.school1, campus=self.campus1, invoiceToUser=self.user1)
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        createCammpuses(cls)
+        createTeams(cls, cls.school1, campuses = cls.campuses)
+        createStudents(cls)
+        cls.campus1 = cls.campuses[0]
+        cls.invoice = Invoice.objects.create(event=cls.event, school=cls.school1, campus=cls.campus1, invoiceToUser=cls.user1)
     
     def testDefaultRateTeam(self):
+        self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50, 2))
 
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(18 * 50, 2))
 
@@ -1033,6 +1193,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50 - 40, 2))
 
@@ -1043,6 +1204,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
             division_billingType='team',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50 + 60, 2))
 
@@ -1053,6 +1215,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
             division_billingType='student',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 680)
 
@@ -1063,18 +1226,21 @@ class TestInvoiceCalculations_Independent(TestCase):
     email_superUser = 'user4@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
-    def setUp(self):
-        commonSetUp(self)
-        createTeams(self, None)
-        createStudents(self)
-        self.invoice = Invoice.objects.get(event=self.event, invoiceToUser=self.user1)
+    @classmethod
+    def setUpTestData(cls):
+        commonSetUp(cls)
+        createTeams(cls, None)
+        createStudents(cls)
+        cls.invoice = Invoice.objects.get(event=cls.event, invoiceToUser=cls.user1)
     
     def testDefaultRateTeam(self):
+        self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
 
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
@@ -1082,6 +1248,7 @@ class TestInvoiceCalculations_Independent(TestCase):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
         self.event.save()
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 - 80, 2))
 
@@ -1092,6 +1259,7 @@ class TestInvoiceCalculations_Independent(TestCase):
             division_billingType='team',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 120, 2))
 
@@ -1102,6 +1270,7 @@ class TestInvoiceCalculations_Independent(TestCase):
             division_billingType='student',
             division_entryFee=80,
         )
+        self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
 
@@ -1269,6 +1438,88 @@ class TestInvoiceMethods(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.assertEqual(self.invoice.invoiceToUserEmail(), self.email1)
 
+    def testSaveUpdatesTotals(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.invoice.cache_invoiceAmountInclGST_unrounded = 50
+        self.invoice.save(skipPrePostSave=True)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 50)
+
+        self.invoice.save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
+
+    def testDeleteUpdatesOtherInvoices(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+
+        self.team1 = Team.objects.create(event=self.event, school=self.school1, campus=self.campuses[0], mentorUser=self.user3, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, school=self.school1, campus=self.campuses[1], mentorUser=self.user3, name='Team 2', division=self.division1)
+
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[0])
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[1])
+
+        self.invoice.calculateAndSaveAllTotals()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), 0)
+
+        self.invoice1.delete()
+        self.invoice2.delete()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), 100)
+
+    def baseTestTotalsNone(self, field, value):
+        self.team1 = Team.objects.create(event=self.event, school=self.school1, mentorUser=self.user3, name='Team 1', division=self.division1)
+        self.invoice = Invoice.objects.get(event=self.event, school=self.school1)
+        self.invoice.cache_amountGST_unrounded = None
+        self.invoice.cache_totalQuantity = None
+        self.invoice.cache_invoiceAmountExclGST_unrounded = None
+        self.invoice.cache_invoiceAmountInclGST_unrounded = None
+        self.invoice.save(skipPrePostSave=True)
+        self.invoice.refresh_from_db()
+
+        # Check cache fields are none
+        self.assertEqual(self.invoice.cache_amountGST_unrounded, None)
+        self.assertEqual(self.invoice.cache_totalQuantity, None)
+        self.assertEqual(self.invoice.cache_invoiceAmountExclGST_unrounded, None)
+        self.assertEqual(self.invoice.cache_invoiceAmountInclGST_unrounded, None)
+
+        # Check correct value returned
+        self.assertEqual(getattr(self.invoice, field)(), value)
+
+        # Check cache fields are not none
+        self.assertNotEqual(self.invoice.cache_amountGST_unrounded, None)
+        self.assertNotEqual(self.invoice.cache_totalQuantity, None)
+        self.assertNotEqual(self.invoice.cache_invoiceAmountExclGST_unrounded, None)
+        self.assertNotEqual(self.invoice.cache_invoiceAmountInclGST_unrounded, None)
+
+    def testNone_amountGST(self):
+        self.baseTestTotalsNone('amountGST', round(50/11,2))
+
+    def testNone_totalQuantity(self):
+        self.baseTestTotalsNone('totalQuantity', 1)
+
+    def testNone_invoiceAmountExclGST(self):
+        self.baseTestTotalsNone('invoiceAmountExclGST', round(50/1.1, 2))
+
+    def testNone_invoiceAmountInclGST(self):
+        self.baseTestTotalsNone('invoiceAmountInclGST', 50)
+
+    def test_preSave_setsInvoicedDate_noDate(self):
+        self.event.paymentDueDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date()
+        self.event.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.invoicedDate, self.event.paymentDueDate)
+
+    def test_preSave_setsInvoicedDate_existingDate(self):
+        self.event.paymentDueDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date()
+        self.event.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=(datetime.datetime.now() + datetime.timedelta(days=1)).date())
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=1)).date())
+
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -1339,3 +1590,85 @@ class TestInvoiceSummaryView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'invoices/summary.html')
+
+class TestAmountDueFilter(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2, school=self.school2)
+        Team.objects.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            name='New Team',
+            division=self.division1,
+        )
+        Team.objects.create(
+            event=self.event,
+            school=self.school2,
+            mentorUser=self.user2,
+            name='New Team 2',
+            division=self.division1,
+        )
+
+    def testNotFiltered(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist'))
+        self.assertContains(response, f'2 Invoices')
+
+    def testPaid(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountDueStatus=True")
+        self.assertContains(response, f'0 Invoices')
+
+    def testNotPaid(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountDueStatus=False")
+        self.assertContains(response, f'2 Invoices')
+
+    def testNotPaid_invoiceFullyPaid(self):
+        InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=50, datePaid=datetime.datetime.now().date())
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountDueStatus=True")
+        self.assertContains(response, f'1 Invoice')
+
+    def testNotPaid_invoicePartiallyPaid(self):
+        InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=5, datePaid=datetime.datetime.now().date())
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountDueStatus=True")
+        self.assertContains(response, f'0 Invoices')
+
+class TestInvoiceAmountFilter(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2, school=self.school2)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user3, school=self.school3)
+        Team.objects.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            name='New Team',
+            division=self.division1,
+        )
+
+    def testDefault(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist'))
+        self.assertContains(response, f'1 Invoice')
+
+    def testAll(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?invoiceAmountStatus=all")
+        self.assertContains(response, f'3 Invoices')
+
+    def testZero(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?invoiceAmountStatus=zero")
+        self.assertContains(response, f'2 Invoice')

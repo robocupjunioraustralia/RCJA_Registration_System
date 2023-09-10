@@ -790,6 +790,55 @@ class TestEventMethods(TestCase):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertFalse(self.event.registrationNotOpenYet())
 
+    def test_checkBillingDetailsChanged_notChanged(self):
+        self.assertFalse(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_newEvent(self):
+        self.unsavedEvent = Event(
+            year=self.year,
+            state=self.newState,
+            name='Unsaved Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+
+        self.assertFalse(self.unsavedEvent.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_entryFeeIncludesGST(self):
+        self.event.entryFeeIncludesGST = False
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_defaultEntryFee(self):
+        self.event.event_defaultEntryFee = 6
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_billingType(self):
+        self.event.event_billingType = 'student'
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_specialRateNumber(self):
+        self.event.event_specialRateNumber = 10
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_specialRateFee(self):
+        self.event.event_specialRateFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_workshopTeacherEntryFee(self):
+        self.event.workshopTeacherEntryFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_workshopStudentEntryFee(self):
+        self.event.workshopStudentEntryFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')
     self.event = Event(

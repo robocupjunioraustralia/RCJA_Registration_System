@@ -216,3 +216,15 @@ def createTeams(self):
         hardwarePlatform=self.hardwarePlatform,
         softwarePlatform=self.softwarePlatform,
     )
+
+def createInvoices(self):
+    self.state1_event1_invoice1 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state1_openCompetition
+    )
+    self.state2_event1_invoice2 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state2_openCompetition
+    )
