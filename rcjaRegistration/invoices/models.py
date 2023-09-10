@@ -378,6 +378,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     def amountPaid(self):
         return round(self.amountPaid_unrounded(), 2)
     amountPaid.short_description = 'Amount paid'
+    amountPaid.admin_order_field = '_sumPayments'
 
     def calculate_amountGST_unrounded(self):
         return sum([item['gst'] for item in self.invoiceItems()])
@@ -424,6 +425,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     def invoiceAmountInclGST(self):
         return round(self.invoiceAmountInclGST_unrounded(), 2)
     invoiceAmountInclGST.short_description = 'Invoice amount (incl GST)'
+    invoiceAmountInclGST.admin_order_field = 'cache_invoiceAmountInclGST_unrounded'
 
     # Amount due
 
@@ -433,6 +435,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     def amountDueInclGST(self):
         return round(self.amountDueInclGST_unrounded(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
+    amountDueInclGST.admin_order_field = '_amoundDueUnrounded'
 
     def amountDuePaypal(self):
         if self.amountDueInclGST_unrounded() < 0.05: # 0.05 to avoid tiny sum edge caes

@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 from common.filters import FilteredRelatedOnlyFieldListFilter
-from django.db.models import Sum, F, Q
+from django.db.models import Sum, F, Q, Case, When
 
 import datetime
 
@@ -145,6 +145,10 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         qs = qs.prefetch_related('school', 'invoiceToUser')
         qs = qs.annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
         qs = qs.annotate(_amoundDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
+        qs = qs.annotate(_amoundDueUnrounded=Case(
+            When(_sumPayments__isnull=False, then=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments')),
+            default=F('cache_invoiceAmountInclGST_unrounded')
+        ))
 
         return qs
 
