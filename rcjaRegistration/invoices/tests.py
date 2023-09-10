@@ -1425,6 +1425,43 @@ class TestInvoiceMethods(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 100)
 
+    def baseTestTotalsNone(self, field, value):
+        self.team1 = Team.objects.create(event=self.event, school=self.school1, mentorUser=self.user3, name='Team 1', division=self.division1)
+        self.invoice = Invoice.objects.get(event=self.event, school=self.school1)
+        self.invoice.cache_amountGST_unrounded = None
+        self.invoice.cache_totalQuantity = None
+        self.invoice.cache_invoiceAmountExclGST_unrounded = None
+        self.invoice.cache_invoiceAmountInclGST_unrounded = None
+        self.invoice.save(skipPrePostSave=True)
+        self.invoice.refresh_from_db()
+
+        # Check cache fields are none
+        self.assertEqual(self.invoice.cache_amountGST_unrounded, None)
+        self.assertEqual(self.invoice.cache_totalQuantity, None)
+        self.assertEqual(self.invoice.cache_invoiceAmountExclGST_unrounded, None)
+        self.assertEqual(self.invoice.cache_invoiceAmountInclGST_unrounded, None)
+
+        # Check correct value returned
+        self.assertEqual(getattr(self.invoice, field)(), value)
+
+        # Check cache fields are not none
+        self.assertNotEqual(self.invoice.cache_amountGST_unrounded, None)
+        self.assertNotEqual(self.invoice.cache_totalQuantity, None)
+        self.assertNotEqual(self.invoice.cache_invoiceAmountExclGST_unrounded, None)
+        self.assertNotEqual(self.invoice.cache_invoiceAmountInclGST_unrounded, None)
+
+    def testNone_amountGST(self):
+        self.baseTestTotalsNone('amountGST', round(50/11,2))
+
+    def testNone_totalQuantity(self):
+        self.baseTestTotalsNone('totalQuantity', 1)
+
+    def testNone_invoiceAmountExclGST(self):
+        self.baseTestTotalsNone('invoiceAmountExclGST', round(50/1.1, 2))
+
+    def testNone_invoiceAmountInclGST(self):
+        self.baseTestTotalsNone('invoiceAmountInclGST', 50)
+
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
