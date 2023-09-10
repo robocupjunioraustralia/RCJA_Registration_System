@@ -26,12 +26,12 @@ class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
         
         return super().has_add_permission(request)
 
-class AmountPaidFilter(admin.SimpleListFilter):
-    title = "Amount Paid"
-    parameter_name = "amountPaidStatus"
+class AmountDueFilter(admin.SimpleListFilter):
+    title = "Amount Due"
+    parameter_name = "amountDueStatus"
 
     def lookups(self, request, model_admin):
-        return [("True","Paid"), ("False",'Not Paid')]
+        return [("True","Fully Paid"), ("False",'Unpaid')]
 
     def queryset(self, request, queryset):
         if self.value() == "True":
@@ -73,7 +73,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
     list_filter = [
-        AmountPaidFilter,
+        AmountDueFilter,
         ('event__state', admin.RelatedOnlyFieldListFilter),
         ('event', FilteredRelatedOnlyFieldListFilter),
     ]
@@ -115,7 +115,9 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
-        qs = qs.prefetch_related('school', 'invoiceToUser').annotate(_sumPayments=Sum('invoicepayment__amountPaid')).annotate(_amoundDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
+        qs = qs.prefetch_related('school', 'invoiceToUser')
+        qs = qs.annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
+        qs = qs.annotate(_amoundDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
 
         return qs
 
