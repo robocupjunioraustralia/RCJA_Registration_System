@@ -110,6 +110,10 @@ class Invoice(SaveDeleteMixin, models.Model):
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
 
+        # Set invoiced date to payment due date if None, when mentor views invoice date will get brought forward to current date if before paymend due date
+        if self.invoicedDate is None:
+            self.invoicedDate = self.event.paymentDueDate
+
     def postSave(self):
         self.calculateAndSaveAllTotals()
 

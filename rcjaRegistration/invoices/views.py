@@ -31,6 +31,11 @@ def mentorInvoicePermissions(request, invoice):
 def coordinatorInvoiceDetailsPermissions(request, invoice):
     return checkCoordinatorPermission(request, Invoice, invoice, 'view')
 
+def updateInvoicedDate(invoice, mentor):
+    if mentor and (invoice.invoicedDate is None or invoice.invoicedDate > datetime.datetime.today().date()):
+        invoice.invoicedDate = datetime.datetime.today().date()
+        invoice.save(update_fields=['invoicedDate'], skipPrePostSave=True)
+
 @login_required
 def details(request, invoiceID):
     # Get invoice
@@ -44,9 +49,7 @@ def details(request, invoiceID):
         raise PermissionDenied("You do not have permission to view this invoice")
 
     # Set invoiced date
-    if mentor and invoice.invoicedDate is None:
-        invoice.invoicedDate = datetime.datetime.today().date()
-        invoice.save(update_fields=['invoicedDate'], skipPrePostSave=True)
+    updateInvoicedDate(invoice, mentor)
 
     # Recalculate totals to ensure always correct when shown to mentor
     invoice.calculateAndSaveAllTotals()
@@ -74,9 +77,7 @@ def paypal(request, invoiceID):
         return HttpResponseForbidden('PayPal not enabled for this invoice')
 
     # Set invoiced date
-    if mentor and invoice.invoicedDate is None:
-        invoice.invoicedDate = datetime.datetime.today()
-        invoice.save(update_fields=['invoicedDate'], skipPrePostSave=True)
+    updateInvoicedDate(invoice, mentor)
 
     # Recalculate totals to ensure always correct when shown to mentor
     invoice.calculateAndSaveAllTotals()

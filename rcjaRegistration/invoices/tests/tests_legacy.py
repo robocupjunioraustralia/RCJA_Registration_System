@@ -186,12 +186,26 @@ class TestInvoiceDetailView(TestCase):
     def setUp(self):
         commonSetUp(self)
 
-    def testMentorSetsInvoicedDate(self):
+    def testMentorSetsInvoicedDate_noDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, None)
+
+        url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
+
+    def testMentorSetsInvoicedDate_futureDate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=10))
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=10)).date())
 
         url = reverse('invoices:details', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
@@ -215,7 +229,7 @@ class TestInvoiceDetailView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
-    def testDontOverwriteDate(self):
+    def testDontOverwritePastDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
@@ -404,13 +418,28 @@ class TestPaypalView(TestCase):
         self.state1.paypalEmail = 'test@test.com'
         self.state1.save()
 
-    def testMentorSetsInvoicedDate(self):
+    def testMentorSetsInvoicedDate_noDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoicedDate, None)
+
+        url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, datetime.datetime.today().date())
+
+    def testMentorSetsInvoicedDate_futureDate(self):
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=10))
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=10)).date())
 
         url = reverse('invoices:paypal', kwargs= {'invoiceID':self.invoice.id})
         response = self.client.get(url)
@@ -434,7 +463,7 @@ class TestPaypalView(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
-    def testDontOverwriteDate(self):
+    def testDontOverwritePastDate(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=datetime.datetime.now() + datetime.timedelta(days=-10))
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1476,6 +1505,20 @@ class TestInvoiceMethods(TestCase):
 
     def testNone_invoiceAmountInclGST(self):
         self.baseTestTotalsNone('invoiceAmountInclGST', 50)
+
+    def test_preSave_setsInvoicedDate_noDate(self):
+        self.event.paymentDueDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date()
+        self.event.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.invoicedDate, self.event.paymentDueDate)
+
+    def test_preSave_setsInvoicedDate_existingDate(self):
+        self.event.paymentDueDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date()
+        self.event.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=(datetime.datetime.now() + datetime.timedelta(days=1)).date())
+        self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=1)).date())
 
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
