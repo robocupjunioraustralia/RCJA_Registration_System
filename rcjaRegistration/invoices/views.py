@@ -16,7 +16,7 @@ from schools.models import Campus
 
 @login_required
 def summary(request):
-    invoices = Invoice.invoicesForUser(request.user).prefetch_related('invoicepayment_set', 'school', 'campus', 'invoiceToUser', 'event__year', 'event__state').annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
+    invoices = Invoice.invoicesForUser(request.user).prefetch_related('invoicepayment_set', 'school', 'campus', 'invoiceToUser', 'event__year', 'event__state')
 
     context = {
         'invoices': invoices,
