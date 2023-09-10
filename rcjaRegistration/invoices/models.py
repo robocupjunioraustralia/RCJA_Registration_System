@@ -442,7 +442,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     def amountDueInclGST(self):
         return round(self.amountDueInclGST_unrounded(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
-    amountDueInclGST.admin_order_field = '_amoundDueUnrounded'
+    amountDueInclGST.admin_order_field = '_amountDueUnrounded'
 
     def amountDuePaypal(self):
         if self.amountDueInclGST_unrounded() < 0.05: # 0.05 to avoid tiny sum edge caes

@@ -35,9 +35,9 @@ class AmountDueFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "True":
-            return queryset.filter(_amoundDueFilter__lt=0.05)
+            return queryset.filter(_amountDueFilter__lt=0.05)
         elif self.value() == "False":
-            return queryset.filter(Q(_amoundDueFilter__gte=0.05) | Q(_amoundDueFilter__isnull=True))
+            return queryset.filter(Q(_amountDueFilter__gte=0.05) | Q(_amountDueFilter__isnull=True))
         return queryset
 
 class InvoiceAmountFilter(admin.SimpleListFilter):
@@ -144,8 +144,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
         qs = qs.prefetch_related('school', 'invoiceToUser')
         qs = qs.annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
-        qs = qs.annotate(_amoundDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
-        qs = qs.annotate(_amoundDueUnrounded=Case(
+        qs = qs.annotate(_amountDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
+        qs = qs.annotate(_amountDueUnrounded=Case(
             When(_sumPayments__isnull=False, then=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments')),
             default=F('cache_invoiceAmountInclGST_unrounded')
         ))
