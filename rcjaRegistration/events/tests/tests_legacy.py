@@ -831,6 +831,14 @@ class TestEventMethods(TestCase):
         self.event.event_specialRateFee = 50
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
+    def test_checkBillingDetailsChanged_workshopTeacherEntryFee(self):
+        self.event.workshopTeacherEntryFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_workshopStudentEntryFee(self):
+        self.event.workshopStudentEntryFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')
     self.event = Event(

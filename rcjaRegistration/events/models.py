@@ -386,7 +386,9 @@ class Event(SaveDeleteMixin, models.Model):
             self.event_defaultEntryFee != previousEvent.event_defaultEntryFee or
             self.event_billingType != previousEvent.event_billingType or
             self.event_specialRateNumber != previousEvent.event_specialRateNumber or
-            self.event_specialRateFee != previousEvent.event_specialRateFee
+            self.event_specialRateFee != previousEvent.event_specialRateFee or
+            self.workshopTeacherEntryFee != previousEvent.workshopTeacherEntryFee or
+            self.workshopStudentEntryFee != previousEvent.workshopStudentEntryFee
         )
 
     def postSave(self):
