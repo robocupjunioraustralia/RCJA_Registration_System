@@ -81,8 +81,8 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'campus',
         'purchaseOrderNumber',
         'invoiceAmountInclGST',
-        'amountDueInclGST',
         'amountPaid',
+        'amountDueInclGST',
     ]
     readonly_fields = [
         'event',
