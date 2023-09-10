@@ -240,15 +240,17 @@ class Invoice(SaveDeleteMixin, models.Model):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItem(self, name, description, quantity, unitCost, unit=None):
+    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None):
         # Calculate totals
         if self.event.entryFeeIncludesGST:
-            totalInclGST = quantity * unitCost
+            unitCost = rawUnitCost / 1.1
+            totalInclGST = quantity * rawUnitCost
             totalExclGST = totalInclGST / 1.1
             gst = totalInclGST - totalExclGST
 
         else:
-            totalExclGST = quantity * unitCost
+            unitCost = rawUnitCost
+            totalExclGST = quantity * rawUnitCost
             gst = 0.1 * totalExclGST
             totalInclGST = totalExclGST * 1.1
 
