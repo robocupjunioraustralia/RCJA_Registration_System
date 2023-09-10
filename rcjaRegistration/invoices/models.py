@@ -258,7 +258,6 @@ class Invoice(SaveDeleteMixin, models.Model):
             'name': name,
             'description': description,
             'quantity': quantity,
-            'quantityString': quantity,
             'unitCost': unitCost,
             'unit': unit,
             'totalExclGST': totalExclGST,
@@ -310,7 +309,6 @@ class Invoice(SaveDeleteMixin, models.Model):
 
             # Get values
             quantity = numberSpecialRateTeams
-            quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
             unitCost = self.event.event_specialRateFee
 
             maxNumberSpecialRateTeams = self.event.event_specialRateNumber
