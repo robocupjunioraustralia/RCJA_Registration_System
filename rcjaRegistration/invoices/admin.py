@@ -48,11 +48,11 @@ class InvoiceAmountFilter(admin.SimpleListFilter):
         return [
             ('all', 'All'),
             (None, "Non Zero"),
-            ("empty", "Zero"),
+            ("zero", "Zero"),
         ]
 
     def queryset(self, request, queryset):
-        if self.value() == "empty":
+        if self.value() == "zero":
             return queryset.filter(cache_invoiceAmountInclGST_unrounded__lt=0.05)
         elif self.value() == "all":
             return queryset

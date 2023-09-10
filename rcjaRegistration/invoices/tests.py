@@ -1581,3 +1581,36 @@ class TestAmountDueFilter(TestCase):
         InvoicePayment.objects.create(invoice=self.invoice1, amountPaid=5, datePaid=datetime.datetime.now().date())
         response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?amountDueStatus=True")
         self.assertContains(response, f'0 Invoices')
+
+class TestInvoiceAmountFilter(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        self.invoice1 = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2, school=self.school2)
+        self.invoice2 = Invoice.objects.create(event=self.event, invoiceToUser=self.user3, school=self.school3)
+        Team.objects.create(
+            event=self.event,
+            school=self.school1,
+            mentorUser=self.user1,
+            name='New Team',
+            division=self.division1,
+        )
+
+    def testDefault(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist'))
+        self.assertContains(response, f'1 Invoice')
+
+    def testAll(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?invoiceAmountStatus=all")
+        self.assertContains(response, f'3 Invoices')
+
+    def testZero(self):
+        response = self.client.get(reverse(f'admin:invoices_invoice_changelist')+"?invoiceAmountStatus=zero")
+        self.assertContains(response, f'2 Invoice')
