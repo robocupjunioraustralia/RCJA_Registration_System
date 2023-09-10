@@ -1552,6 +1552,13 @@ class TestAmountDueFilter(TestCase):
             name='New Team',
             division=self.division1,
         )
+        Team.objects.create(
+            event=self.event,
+            school=self.school2,
+            mentorUser=self.user2,
+            name='New Team 2',
+            division=self.division1,
+        )
 
     def testNotFiltered(self):
         response = self.client.get(reverse(f'admin:invoices_invoice_changelist'))

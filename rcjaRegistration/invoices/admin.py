@@ -40,6 +40,32 @@ class AmountDueFilter(admin.SimpleListFilter):
             return queryset.filter(Q(_amoundDueFilter__gte=0.05) | Q(_amoundDueFilter__isnull=True))
         return queryset
 
+class InvoiceAmountFilter(admin.SimpleListFilter):
+    title = "Invoice Amount"
+    parameter_name = "invoiceAmountStatus"
+
+    def lookups(self, request, model_admin):
+        return [
+            ('all', 'All'),
+            (None, "Non Zero"),
+            ("empty", "Zero"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "empty":
+            return queryset.filter(cache_invoiceAmountInclGST_unrounded__lt=0.05)
+        elif self.value() == "all":
+            return queryset
+        return queryset.filter(cache_invoiceAmountInclGST_unrounded__gte=0.05)
+
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': changelist.get_query_string({self.parameter_name: lookup,}, []),
+                'display': title,
+            }
+
 class InvoicePaymentInline(InlineAdminPermissions, admin.TabularInline):
     model = InvoicePayment
     extra = 0
@@ -74,6 +100,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     ]
     list_filter = [
         AmountDueFilter,
+        InvoiceAmountFilter,
         ('event__state', admin.RelatedOnlyFieldListFilter),
         ('event', FilteredRelatedOnlyFieldListFilter),
     ]
