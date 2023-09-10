@@ -240,15 +240,17 @@ class Invoice(SaveDeleteMixin, models.Model):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItem(self, name, description, quantity, unitCost, unit=None):
+    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None):
         # Calculate totals
         if self.event.entryFeeIncludesGST:
-            totalInclGST = quantity * unitCost
+            unitCost = rawUnitCost / 1.1
+            totalInclGST = quantity * rawUnitCost
             totalExclGST = totalInclGST / 1.1
             gst = totalInclGST - totalExclGST
 
         else:
-            totalExclGST = quantity * unitCost
+            unitCost = rawUnitCost
+            totalExclGST = quantity * rawUnitCost
             gst = 0.1 * totalExclGST
             totalInclGST = totalExclGST * 1.1
 
@@ -256,7 +258,6 @@ class Invoice(SaveDeleteMixin, models.Model):
             'name': name,
             'description': description,
             'quantity': quantity,
-            'quantityString': quantity,
             'unitCost': unitCost,
             'unit': unit,
             'totalExclGST': totalExclGST,
@@ -308,7 +309,6 @@ class Invoice(SaveDeleteMixin, models.Model):
 
             # Get values
             quantity = numberSpecialRateTeams
-            quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
             unitCost = self.event.event_specialRateFee
 
             maxNumberSpecialRateTeams = self.event.event_specialRateNumber
