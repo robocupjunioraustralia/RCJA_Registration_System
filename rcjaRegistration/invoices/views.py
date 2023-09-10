@@ -8,7 +8,6 @@ from coordination.permissions import checkCoordinatorPermission
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
-from django.db.models import Sum
 
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
