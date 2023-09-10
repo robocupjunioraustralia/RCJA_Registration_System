@@ -1023,6 +1023,21 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.amountPaid(), 200)
         self.assertEqual(self.invoice.amountDueInclGST(), round(12 * 50 - 200))
 
+    def testAmountDueNotNegative(self):
+        InvoicePayment.objects.create(
+            invoice=self.invoice,
+            amountPaid=20000,
+            datePaid=datetime.datetime.today(),
+        )
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.assertEqual(self.invoice.invoiceAmountExclGST(), round((12 * 50)/1.1, 2))
+        self.assertEqual(self.invoice.amountGST(), round(self.invoice.invoiceAmountInclGST() - self.invoice.invoiceAmountExclGST(), 2))
+
+        self.assertEqual(self.invoice.amountPaid(), 20000)
+        self.assertEqual(self.invoice.amountDueInclGST(), 0)
+
     def testDefaultRateStudent(self):
         self.event.event_billingType = 'student'
         self.event.save()
