@@ -5,7 +5,7 @@ from django.test import Client
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
 
-from .models import InvoiceGlobalSettings, Invoice, InvoicePayment
+from invoices.models import InvoiceGlobalSettings, Invoice, InvoicePayment
 from users.models import User
 from regions.models import State, Region
 from schools.models import School, SchoolAdministrator, Campus
