@@ -73,6 +73,7 @@
                     <a href = "{% url 'password_change' %}" class="item">Change password</a>
                     <a href = "{% url 'logout' %}" class="item">Log out</a>
                     <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
+                    {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
                 </div>
         </div>      
     </div>
@@ -164,6 +165,7 @@
                         <a href = "{% url 'password_change' %}" class="item">Change password</a>
                         <a href = "{% url 'logout' %}" class="item">Log out</a>
                         <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
+                        {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
                     </div>
             </div>
         </div>             
