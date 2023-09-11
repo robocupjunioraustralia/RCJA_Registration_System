@@ -113,7 +113,11 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceToUser__first_name',
         'invoiceToUser__last_name',
         'invoiceToUser__email',
-        'pk',
+        'invoiceNumber',
+        'purchaseOrderNumber',
+        'cache_invoiceAmountInclGST_unrounded',
+        '_amountDueUnrounded',
+        '_sumPayments',
     ]
     inlines = [
         InvoicePaymentInline,
