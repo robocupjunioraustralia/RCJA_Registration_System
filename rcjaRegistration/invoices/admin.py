@@ -79,7 +79,6 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'event',
         'school',
         'campus',
-        'purchaseOrderNumber',
         'invoiceAmountInclGST',
         'amountPaid',
         'amountDueInclGST',
@@ -114,6 +113,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceToUser__first_name',
         'invoiceToUser__last_name',
         'invoiceToUser__email',
+        'pk',
     ]
     inlines = [
         InvoicePaymentInline,
