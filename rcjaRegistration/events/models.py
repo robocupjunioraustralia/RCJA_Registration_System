@@ -3,6 +3,7 @@ from django.db.models import F, Q
 from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 
 import bleach
 import datetime
@@ -455,6 +456,11 @@ class Event(SaveDeleteMixin, models.Model):
 
     def bleachedEventDetails(self):
         return mark_safe(bleach.clean(self.eventDetails))
+
+    def registrationsAdminURL(self):
+        if self.boolWorkshop():
+            return f"{reverse('admin:workshops_workshopattendee_changelist')}?event__id__exact={self.id}"
+        return f"{reverse('admin:teams_team_changelist')}?event__id__exact={self.id}"
 
     # Image methods
 
