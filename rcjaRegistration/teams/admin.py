@@ -43,6 +43,7 @@ class StudentInline(InlineAdminPermissions, admin.TabularInline):
 @admin.register(Team)
 class TeamAdmin(BaseWorkshopAttendanceAdmin):
     list_display = [
+        'creationDateTime',
         'name',
         'event',
         'division',
@@ -100,6 +101,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'export_as_csv'
     ]
     exportFields = [
+        'creationDateTime',
         'pk',
         'name',
         'event',
