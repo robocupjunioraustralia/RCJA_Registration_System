@@ -46,6 +46,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'name',
         'event',
         'division',
+        'creationDateTime',
         'mentorUserName',
         'school',
         'campus',
@@ -62,7 +63,12 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform',)
+            'fields': (
+                'hardwarePlatform',
+                'softwarePlatform',
+                'creationDateTime',
+                'updatedDateTime',
+            )
         }),
     )
     add_fieldsets = (
@@ -80,6 +86,11 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
     )
+
+    readonly_fields = [
+        'creationDateTime',
+        'updatedDateTime',
+    ]
 
     inlines = [
         StudentInline
@@ -100,6 +111,8 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'export_as_csv'
     ]
     exportFields = [
+        'creationDateTime',
+        'updatedDateTime',
         'pk',
         'name',
         'event',
