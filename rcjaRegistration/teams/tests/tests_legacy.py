@@ -985,6 +985,30 @@ class TestCopyTeamsList(TestCase):
         response = self.client.get(url)
         self.assertIn(self.team1, response.context['copiedTeams'])
 
+class TestCopyTeam(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
+        self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+        createAdditionalEvents(self)
+
+    def testLoginRequired(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+
+        response = self.client.post(url, follow=True)
+        self.assertContains(response, "Login")
+    
+        response = self.client.get(url)
+        self.assertEqual(response.url, f"/accounts/login/?next=/teams/copyExisting/{self.newEvent.id}/create/{self.team1.id}")
+        self.assertEqual(response.status_code, 302)
+
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
