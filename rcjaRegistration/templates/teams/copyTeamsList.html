@@ -1,0 +1,64 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Copy existing team </title>
+
+<style>
+    .left-aligned-text {
+        text-align: left;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile eight wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    <h1>Copy existing team</h1>
+                    <h1>{{event}}</h1>
+                    <h3>Select team to copy</h3>
+
+                    <table id="teamTable" class="ui celled table">
+                        <thead>
+                            <th>Team name</th>
+                            <th>Event</th>
+                            <th>Division</th>
+                            {% if showCampusColumn %}<th>Campus</th>{% endif %}
+                            <th>Students</th>
+                            <th>Actions</th>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr id="teamRow{{team.id}}">
+                                <td>{{team.name}}</td>
+                                <td>{{team.event}}</td>
+                                <td>{{team.division}}</td>
+                                {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
+                                <td>
+                                    {% for student in team.student_set.all %}
+                                    {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
+                                    {% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+
+                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    {% endblock %}

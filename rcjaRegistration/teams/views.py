@@ -114,3 +114,41 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
+def copyTeamsList(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    if event.eventType != 'competition':
+        raise PermissionDenied("Can only copy teams for competitions")
+
+    # Get team filter dict
+    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
+
+    # Get teams already copied
+    copiedTeams = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
+
+    # Replace event filtering with year filtering
+    del filterDict['event']
+    filterDict['event__year'] = event.year
+
+    # Get teams available to copy
+    teams = Team.objects.filter(**filterDict)
+    teams = teams.exclude(event=event) # Exclude teams of the current event
+    teams = teams.exclude(pk__in=copiedTeams) # Exclude already copied teams
+    teams = teams.prefetch_related('student_set', 'division', 'campus', 'event')
+
+    context = {
+        'event': event,
+        'teams': teams,
+        'showCampusColumn': teams.exclude(campus=None).exists(),
+    }
+
+    return render(request, 'teams/copyTeamsList.html', context)
+
