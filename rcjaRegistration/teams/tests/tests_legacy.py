@@ -1110,7 +1110,7 @@ class TestCopyTeam(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Division not allowed for this event.', status_code=403)
 
-    def testDenied_eventSchoolMaxReached(self):
+    def testDenied_divisionSchoolMaxReached(self):
         self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1, division_maxTeamsPerSchool=1)
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1119,7 +1119,7 @@ class TestCopyTeam(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
 
-    def testDenied_eventOverallMaxReached(self):
+    def testDenied_divisionOverallMaxReached(self):
         self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1, division_maxTeamsForDivision=1)
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
