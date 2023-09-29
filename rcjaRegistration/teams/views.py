@@ -176,7 +176,7 @@ def copyTeam(request, eventID, teamID):
 
     # Check event for team is published
     if not team.event.published():
-        raise PermissionDenied("Event is not published")
+        raise PermissionDenied("Event for team is not published")
 
     # Check team permissions
     if not mentorEventAttendanceAccessPermissions(request, team):
