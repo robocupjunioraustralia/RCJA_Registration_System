@@ -1009,6 +1009,87 @@ class TestCopyTeam(TestCase):
         self.assertEqual(response.url, f"/accounts/login/?next=/teams/copyExisting/{self.newEvent.id}/create/{self.team1.id}")
         self.assertEqual(response.status_code, 302)
 
+    def testDenied_notPublished(self):
+        self.newEvent.status = 'draft'
+        self.newEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
+    def testDenied_registrationsClosed(self):
+        self.newEvent.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.newEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
+
+    def testDenied_workshop(self):
+        self.newEvent.eventType = 'workshop'
+        self.newEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
+
+    def testDenied_teamEventNotPublished(self):
+        self.event.status = 'draft'
+        self.event.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event for team is not published', status_code=403)
+
+    def testDenied_noTeamPermission(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team/ attendee', status_code=403)
+
+    def testDenied_alreadyCopied(self):
+        self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Team already copied.', status_code=403)
+
+    def testDenied_teamInEvent(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.newEventTeam.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Team already in this event.', status_code=403)
+
+    def testDenied_teamNotFromCurrentYear(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.previousYearTeam.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Team not from current event year.', status_code=403)
+
+    def testDenied_divisionNotAllowed(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Division not allowed for this event.', status_code=403)
+
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
