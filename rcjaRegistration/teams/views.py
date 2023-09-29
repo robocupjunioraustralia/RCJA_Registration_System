@@ -114,10 +114,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
-@login_required
-def copyTeamsList(request, eventID):
-    event = get_object_or_404(Event, pk=eventID)
-
+def teamCreatePermissionForEvent(event):
     # Check event is published
     if not event.published():
         raise PermissionDenied("Event is not published")
@@ -128,6 +125,12 @@ def copyTeamsList(request, eventID):
 
     if event.eventType != 'competition':
         raise PermissionDenied("Can only copy teams for competitions")
+
+@login_required
+def copyTeamsList(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    teamCreatePermissionForEvent(event)
 
     # Get team filter dict
     filterDict = event.getBaseEventAttendanceFilterDict(request.user)
@@ -163,16 +166,7 @@ def copyTeam(request, eventID, teamID):
     event = get_object_or_404(Event, pk=eventID)
     team = get_object_or_404(Team, pk=teamID)
 
-    # Check event is published
-    if not event.published():
-        raise PermissionDenied("Event is not published")
-
-    # Check registrations open
-    if not event.registrationsOpen():
-        raise PermissionDenied("Registration has closed for this event")
-
-    if event.eventType != 'competition':
-        raise PermissionDenied("Can only copy teams for competitions")
+    teamCreatePermissionForEvent(event)
 
     # Check event for team is published
     if not team.event.published():
