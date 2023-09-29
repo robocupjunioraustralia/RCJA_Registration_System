@@ -137,16 +137,21 @@ def copyTeamsList(request, eventID):
     # Replace event filtering with year filtering
     del filterDict['event']
     filterDict['event__year'] = event.year
+    filterDict['event__status'] = 'published'
 
     # Get teams available to copy
     teams = Team.objects.filter(**filterDict)
     teams = teams.exclude(event=event) # Exclude teams of the current event
-    teams = teams.exclude(pk__in=copiedTeams) # Exclude already copied teams
-    teams = teams.prefetch_related('student_set', 'division', 'campus', 'event')
+    availableToCopyTeams = teams.exclude(pk__in=copiedTeams) # Exclude already copied teams
+    availableToCopyTeams = availableToCopyTeams.prefetch_related('student_set', 'division', 'campus', 'event')
+
+    copiedTeams = teams.filter(pk__in=copiedTeams)
+    copiedTeams = copiedTeams.prefetch_related('student_set', 'division', 'campus', 'event')
 
     context = {
         'event': event,
-        'teams': teams,
+        'availableToCopyTeams': availableToCopyTeams,
+        'copiedTeams': copiedTeams,
         'showCampusColumn': teams.exclude(campus=None).exists(),
     }
 
