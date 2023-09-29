@@ -89,13 +89,16 @@ def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):
         return True
 
-    if event.published() and event.registrationsOpen():
+    if not event.published():
+        return False
+
+    if event.registrationsOpen():
         return True
 
     if event.registrationNotOpenYet():
         return True
 
-    if event.published() and BaseEventAttendance.objects.filter(**filterDict).exists():
+    if BaseEventAttendance.objects.filter(**filterDict).exists():
         return True
 
     return False
