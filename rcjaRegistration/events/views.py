@@ -134,7 +134,6 @@ def getAvailableToCopyTeams(request, event):
     teams = teams.exclude(event=event) # Exclude teams of the current event
     availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
     availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
-    availableToCopyTeams = availableToCopyTeams.prefetch_related('student_set', 'division', 'campus', 'event')
 
     return teams, copiedTeamsList, availableToCopyTeams
 

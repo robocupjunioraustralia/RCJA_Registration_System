@@ -145,6 +145,7 @@ def copyTeamsList(request, eventID):
         return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
     teams, copiedTeamsList, availableToCopyTeams = getAvailableToCopyTeams(request, event)
+    availableToCopyTeams = availableToCopyTeams.prefetch_related('student_set', 'division', 'campus', 'event')
 
     copiedTeams = teams.filter(pk__in=copiedTeamsList)
     copiedTeams = copiedTeams.prefetch_related('student_set', 'division', 'campus', 'event')
