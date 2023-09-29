@@ -12,7 +12,7 @@ import datetime
 from .models import Student, Team
 from events.models import Event, AvailableDivision
 
-from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams
 
 # Create your views here.
 
@@ -132,24 +132,9 @@ def copyTeamsList(request, eventID):
 
     teamCreatePermissionForEvent(event)
 
-    # Get team filter dict
-    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
+    teams, copiedTeamsList, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
-    # Get teams already copied
-    copiedTeams = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
-
-    # Replace event filtering with year filtering
-    del filterDict['event']
-    filterDict['event__year'] = event.year
-    filterDict['event__status'] = 'published'
-
-    # Get teams available to copy
-    teams = Team.objects.filter(**filterDict)
-    teams = teams.exclude(event=event) # Exclude teams of the current event
-    availableToCopyTeams = teams.exclude(pk__in=copiedTeams) # Exclude already copied teams
-    availableToCopyTeams = availableToCopyTeams.prefetch_related('student_set', 'division', 'campus', 'event')
-
-    copiedTeams = teams.filter(pk__in=copiedTeams)
+    copiedTeams = teams.filter(pk__in=copiedTeamsList)
     copiedTeams = copiedTeams.prefetch_related('student_set', 'division', 'campus', 'event')
 
     context = {
