@@ -846,7 +846,7 @@ def createAdditionalEvents(self):
         name='Test event 2',
         eventType='competition',
         status='published',
-        maxMembersPerTeam=5,
+        maxMembersPerTeam=3,
         entryFeeIncludesGST=True,
         event_billingType='team',
         event_defaultEntryFee = 50,
@@ -1082,6 +1082,26 @@ class TestCopyTeam(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Team not from current event year.', status_code=403)
 
+    def testDenied_eventSchoolMaxReached(self):
+        self.newEvent.event_maxTeamsPerSchool = 1
+        self.newEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.', status_code=403)
+
+    def testDenied_eventOverallMaxReached(self):
+        self.newEvent.event_maxTeamsForEvent = 1
+        self.newEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Max teams for this event reached. Contact the organiser if you want to register more teams for this event.', status_code=403)
+
     def testDenied_divisionNotAllowed(self):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1089,6 +1109,44 @@ class TestCopyTeam(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Division not allowed for this event.', status_code=403)
+
+    def testDenied_eventSchoolMaxReached(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1, division_maxTeamsPerSchool=1)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
+
+    def testDenied_eventOverallMaxReached(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1, division_maxTeamsForDivision=1)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
+
+    def testDenied_existingName(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team2.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Team with this name in this event already exists', status_code=403)
+
+    def testDenied_numStudentsExceedsMax(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        for i in range(4):
+            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Number students in team exceeds limit for new event', status_code=403)
 
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
