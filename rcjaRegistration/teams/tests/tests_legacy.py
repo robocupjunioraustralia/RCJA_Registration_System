@@ -820,6 +820,44 @@ class TestTeamEditPermissions(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'You are not an administrator of this team', status_code=403)
 
+def createAdditionalEvents(self):
+    self.previousYear = Year.objects.create(year=2019)
+    self.previousYearEvent = Event.objects.create(
+        year=self.previousYear,
+        state=self.state1,
+        name='Test event 1 2019',
+        eventType='competition',
+        status='published',
+        maxMembersPerTeam=5,
+        entryFeeIncludesGST=True,
+        event_billingType='team',
+        event_defaultEntryFee = 50,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-6)).date(),
+        directEnquiriesTo = self.user1,
+    )
+    self.previousYearTeam = Team.objects.create(event=self.previousYearEvent, mentorUser=self.user1, name='Team 1', division=self.division1)
+
+    self.newEvent = Event.objects.create(
+        year=self.year,
+        state=self.state1,
+        name='Test event 2',
+        eventType='competition',
+        status='published',
+        maxMembersPerTeam=5,
+        entryFeeIncludesGST=True,
+        event_billingType='team',
+        event_defaultEntryFee = 50,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=6)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        directEnquiriesTo = self.user1,
+    )
+    self.newEventTeam = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 2', division=self.division1)
+
 class TestCopyTeamsList(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -832,6 +870,7 @@ class TestCopyTeamsList(TestCase):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+        createAdditionalEvents(self)
 
     def testLoginRequired(self):
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
@@ -842,6 +881,109 @@ class TestCopyTeamsList(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.url, f"/accounts/login/?next=/teams/copyExisting/{self.event.id}")
         self.assertEqual(response.status_code, 302)
+
+    def testLoadsSuccess(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_notPublished(self):
+        self.event.status = 'draft'
+        self.event.save()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
+    def testDenied_registrationsClosed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.event.save()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registration has closed for this event', status_code=403)
+
+    def testDenied_workshop(self):
+        self.event.eventType = 'workshop'
+        self.event.save()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
+
+    def testContext_availableToCopyTeams_containsCorrectPreviousTeams_noSchoolSelected(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertIn(self.team1, response.context['availableToCopyTeams'])
+        self.assertIn(self.team2, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.team3, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_containsCorrectPreviousTeams_schoolSelected(self):
+        self.user1.currentlySelectedSchool = self.school1
+        self.user1.save()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.team1, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.team2, response.context['availableToCopyTeams'])
+        self.assertIn(self.team3, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_containsCorrectPreviousTeams_wrongSchool(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.team1, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.team2, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.team3, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_currentEventTeamNotIn(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.newEventTeam, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_previousYearEventTeamNotIn(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_copiedTeamNotIn(self):
+        self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.team1, response.context['availableToCopyTeams'])
+
+    def testContext_copiedTeams_uncopiedTeamNotIn(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.team1, response.context['copiedTeams'])
+
+    def testContext_copiedTeams_copiedTeamIn(self):
+        self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertIn(self.team1, response.context['copiedTeams'])
 
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
