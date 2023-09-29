@@ -870,7 +870,9 @@ class TestCopyTeamsList(TestCase):
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
+        self.availableDivision1 = AvailableDivision.objects.create(event=self.event, division=self.division1)
         createAdditionalEvents(self)
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
 
     def testLoginRequired(self):
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
@@ -981,6 +983,16 @@ class TestCopyTeamsList(TestCase):
 
         response = self.client.get(url)
         self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_divisionMismatchNotIn(self):
+        self.newEventAvailableDivision1.delete()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertNotIn(self.team1, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.team2, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.team3, response.context['availableToCopyTeams'])
 
     def testContext_availableToCopyTeams_copiedTeamNotIn(self):
         self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
