@@ -10,7 +10,7 @@ from .forms import TeamForm, StudentForm
 import datetime
 
 from .models import Student, Team
-from events.models import Event
+from events.models import Event, AvailableDivision
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings
 
@@ -114,3 +114,139 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
+def copyTeamsList(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    if event.eventType != 'competition':
+        raise PermissionDenied("Can only copy teams for competitions")
+
+    # Get team filter dict
+    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
+
+    # Get teams already copied
+    copiedTeams = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
+
+    # Replace event filtering with year filtering
+    del filterDict['event']
+    filterDict['event__year'] = event.year
+    filterDict['event__status'] = 'published'
+
+    # Get teams available to copy
+    teams = Team.objects.filter(**filterDict)
+    teams = teams.exclude(event=event) # Exclude teams of the current event
+    availableToCopyTeams = teams.exclude(pk__in=copiedTeams) # Exclude already copied teams
+    availableToCopyTeams = availableToCopyTeams.prefetch_related('student_set', 'division', 'campus', 'event')
+
+    copiedTeams = teams.filter(pk__in=copiedTeams)
+    copiedTeams = copiedTeams.prefetch_related('student_set', 'division', 'campus', 'event')
+
+    context = {
+        'event': event,
+        'availableToCopyTeams': availableToCopyTeams,
+        'copiedTeams': copiedTeams,
+        'showCampusColumn': teams.exclude(campus=None).exists(),
+    }
+
+    return render(request, 'teams/copyTeamsList.html', context)
+
+def copyTeam(request, eventID, teamID):
+    event = get_object_or_404(Event, pk=eventID)
+    team = get_object_or_404(Team, pk=teamID)
+
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    if event.eventType != 'competition':
+        raise PermissionDenied("Can only copy teams for competitions")
+
+    # Check event for team is published
+    if not team.event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check team permissions
+    if not mentorEventAttendanceAccessPermissions(request, team):
+        raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+    # Check not already copied
+    if Team.objects.filter(event=event, copiedFrom=team):
+        raise PermissionDenied("Team already copied.")
+
+    # Check not from the current event
+    if team.event == event:
+        raise PermissionDenied("Team already in this event.")
+
+    # Check team from current year
+    if team.event.year != event.year:
+        raise PermissionDenied("Team not from current event year.")
+
+    # Check event limits
+    if event.maxEventTeamsForSchoolReached(request.user):
+        raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+    if event.maxEventTeamsTotalReached():
+        raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+    # Check division allowed on new event and get available division
+    try:
+        availableDivision = AvailableDivision.objects.get(event=event, division=team.division)
+    except AvailableDivision.DoesNotExist:
+        raise PermissionDenied("Division not allowed for this event.")
+
+    # Check division limits
+    if availableDivision.maxDivisionTeamsForSchoolReached(request.user):
+        raise PermissionDenied("Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
+
+    if availableDivision.maxDivisionTeamsTotalReached():
+        raise PermissionDenied("Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
+
+    # Check team name unique
+    if Team.objects.filter(event=event, name=team.name).exists():
+        raise PermissionDenied("Team with this name in this event already exists")
+
+    # Check number students doesn't exceed maximum allowed on new event
+    if team.student_set.count() > event.maxMembersPerTeam:
+        raise PermissionDenied("Number students in team exceeds limit for new event")
+
+    # Copy students
+    oldStudents = team.student_set.all()
+
+    # Duplicate team
+    newTeam = Team(
+        event=event,
+        division=team.division,
+        mentorUser = team.mentorUser,
+        school = team.school,
+        campus = team.campus,
+        name = team.name,
+        hardwarePlatform = team.hardwarePlatform,
+        softwarePlatform = team.softwarePlatform,
+    )
+    newTeam.copiedFrom = Team.objects.get(pk=team.pk)
+
+    # Clean and save
+    try:
+        newTeam.full_clean()
+    except ValidationError:
+        raise PermissionDenied("Validation error")
+    newTeam.save()
+
+    # Add members to new group
+    for oldStudent in oldStudents:
+        oldStudent.pk = None
+        oldStudent.team = newTeam
+        oldStudent.save()
+
+    return redirect(reverse('teams:copyTeamsList', kwargs = {'eventID':event.id}))
