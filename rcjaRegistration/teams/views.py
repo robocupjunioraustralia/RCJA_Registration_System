@@ -208,10 +208,6 @@ def copyTeam(request, eventID, teamID):
     if availableDivision.maxDivisionTeamsTotalReached():
         raise PermissionDenied("Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
 
-    # Check team name unique
-    if Team.objects.filter(event=event, name=team.name).exists():
-        raise PermissionDenied("Team with this name in this event already exists")
-
     # Check number students doesn't exceed maximum allowed on new event
     if team.student_set.count() > event.maxMembersPerTeam:
         raise PermissionDenied("Number students in team exceeds limit for new event")
@@ -235,8 +231,8 @@ def copyTeam(request, eventID, teamID):
     # Clean and save
     try:
         newTeam.full_clean()
-    except ValidationError:
-        raise PermissionDenied("Validation error")
+    except ValidationError as e:
+        raise PermissionDenied(', '.join(e.messages))
     newTeam.save()
 
     # Add members to new group
