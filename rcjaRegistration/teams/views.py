@@ -114,6 +114,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
+@login_required
 def copyTeamsList(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
