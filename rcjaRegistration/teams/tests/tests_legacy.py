@@ -1148,6 +1148,69 @@ class TestCopyTeam(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Number students in team exceeds limit for new event', status_code=403)
 
+    def testSuccess_correctRedirect(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        for i in range(3):
+            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/copyExisting/{self.newEvent.id}")
+
+    def testSuccess_oldTeamUnchanged(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        for i in range(3):
+            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        updatedTime = self.team1.updatedDateTime
+        numStudents = self.team1.student_set.count()
+
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.team1.refresh_from_db()
+        self.assertEqual(self.team1.updatedDateTime, updatedTime)
+        self.assertEqual(self.team1.event, self.event)
+        self.assertEqual(self.team1.student_set.count(), numStudents)
+
+    def testSuccess_newTeamCreated(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        for i in range(3):
+            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        self.assertEqual(Team.objects.filter(event=self.newEvent, name=self.team1.name).count(), 0)
+
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(Team.objects.filter(event=self.newEvent, name=self.team1.name).count(), 1)
+
+    def testSuccess_studentsCopied(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        for i in range(3):
+            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        self.assertEqual(Student.objects.filter(team__event=self.newEvent, team__name=self.team1.name).count(), 0)
+
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(Student.objects.filter(team__event=self.newEvent, team__name=self.team1.name).count(), 3)
+
+    def testSuccess_copiedFromSet(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
+        for i in range(3):
+            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        self.assertEqual(Team.objects.filter(copiedFrom=self.team1).count(), 0)
+
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(Team.objects.filter(copiedFrom=self.team1).count(), 1)
+
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
