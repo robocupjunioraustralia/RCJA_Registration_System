@@ -594,6 +594,7 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Fields
+    copiedFrom = models.ForeignKey('BaseEventAttendance', on_delete=models.SET_NULL, related_name='copiedTo', verbose_name='Copied from', blank=True, null=True, editable=False)
     notes = models.TextField('Notes', blank=True)
 
     # *****Meta and clean*****
