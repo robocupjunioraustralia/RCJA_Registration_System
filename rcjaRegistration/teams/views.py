@@ -126,11 +126,23 @@ def teamCreatePermissionForEvent(event):
     if event.eventType != 'competition':
         raise PermissionDenied("Can only copy teams for competitions")
 
+def checkEventLimitsReached(request, event):
+    if event.maxEventTeamsForSchoolReached(request.user):
+        raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+    if event.maxEventTeamsTotalReached():
+        raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
+
 @login_required
 def copyTeamsList(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
     teamCreatePermissionForEvent(event)
+
+    try:
+        checkEventLimitsReached(request, event)
+    except PermissionDenied:
+        return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
     teams, copiedTeamsList, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
@@ -174,11 +186,7 @@ def copyTeam(request, eventID, teamID):
         raise PermissionDenied("Team not from current event year.")
 
     # Check event limits
-    if event.maxEventTeamsForSchoolReached(request.user):
-        raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
-
-    if event.maxEventTeamsTotalReached():
-        raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
+    checkEventLimitsReached(request, event)
 
     # Check division allowed on new event and get available division
     try:

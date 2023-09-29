@@ -919,6 +919,26 @@ class TestCopyTeamsList(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
 
+    def testRedirect_eventSchoolMaxReached(self):
+        self.newEvent.event_maxTeamsPerSchool = 1
+        self.newEvent.save()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.newEvent.id}")
+
+    def testRedirect_eventOverallMaxReached(self):
+        self.newEvent.event_maxTeamsForEvent = 1
+        self.newEvent.save()
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.newEvent.id}")
+
     def testContext_availableToCopyTeams_containsCorrectPreviousTeams_noSchoolSelected(self):
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
