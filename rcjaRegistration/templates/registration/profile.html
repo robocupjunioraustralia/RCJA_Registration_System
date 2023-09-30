@@ -29,7 +29,7 @@
           {% endif %}
         <div class = "form form-group left-aligned-text">
         <h1> My details </h1>
-            {% if form.errors %}
+            {% if form.errors or form.non_field_errors %}
             
             <!-- Error messaging -->
             <div class="ui message left-aligned-text">
@@ -83,7 +83,7 @@
               </div>
 
               <!-- Questions -->
-              {% if questionFormset.errors %}
+              {% if questionFormset.non_form_errors %}
                 <div class="ui message left-aligned-text">
                     <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                     {{ questionFormset.non_form_errors }}
@@ -119,7 +119,9 @@
 
               <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
               <input class="primary ui button" type="submit" value="Save and exit" />
+              {% if not request.user.forceDetailsUpdate %}
               <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% endif %}
             </form>
 
             <!-- School details -->
@@ -137,7 +139,7 @@
             <p>If you are the first mentor in you school, create a school by clicking the button below.</p>
             <p>If you are an independent skip this step, you can register teams as an individual.</p>
             <p>If someone else has already registered your school ask them to add you as an administrator.</p>
-            <p>If you don't know who your school administrator is please contact us, please do not create a duplicate school.</p>
+            <p>If you don't know who your school administrator is please contact us at <a href="mailto:entersupport@robocupjunior.org.au?Subject=Update%20School%20Administrator">entersupport@robocupjunior.org.au</a>, please do not create a duplicate school.</p>
             {% endif %}
 
             <a href ="{% url 'schools:create' %}"><button class = "ui button primary">Create school</button></a>

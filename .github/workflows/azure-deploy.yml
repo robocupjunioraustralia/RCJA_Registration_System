@@ -1,0 +1,59 @@
+name: Deploy to Azure App Service
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m venv env
+        source env/bin/activate
+        pip install -r requirements.txt
+    - name: 'Docker login'
+      uses: azure/docker-login@v1
+      with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: azure-prod
+    steps:
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Start slot
+      run: |
+        az webapp start -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: rcjaregistration
+        images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+        slot-name: staging
+    - name: Swap slots and stop staging
+      run: |
+        az webapp deployment slot swap -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+        az webapp stop -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+
+

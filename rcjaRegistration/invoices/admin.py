@@ -5,6 +5,8 @@ from django.utils.html import format_html, escape
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
+from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.db.models import Sum, F, Q, Case, When
 
 import datetime
 
@@ -24,6 +26,46 @@ class InvoiceGlobalSettingsAdmin(admin.ModelAdmin):
         
         return super().has_add_permission(request)
 
+class AmountDueFilter(admin.SimpleListFilter):
+    title = "Amount Due"
+    parameter_name = "amountDueStatus"
+
+    def lookups(self, request, model_admin):
+        return [("True","Fully Paid"), ("False",'Unpaid')]
+
+    def queryset(self, request, queryset):
+        if self.value() == "True":
+            return queryset.filter(_amountDueFilter__lt=0.05)
+        elif self.value() == "False":
+            return queryset.filter(Q(_amountDueFilter__gte=0.05) | Q(_amountDueFilter__isnull=True))
+        return queryset
+
+class InvoiceAmountFilter(admin.SimpleListFilter):
+    title = "Invoice Amount"
+    parameter_name = "invoiceAmountStatus"
+
+    def lookups(self, request, model_admin):
+        return [
+            ('all', 'All'),
+            (None, "Non Zero"),
+            ("zero", "Zero"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "zero":
+            return queryset.filter(cache_invoiceAmountInclGST_unrounded__lt=0.05)
+        elif self.value() == "all":
+            return queryset
+        return queryset.filter(cache_invoiceAmountInclGST_unrounded__gte=0.05)
+
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': changelist.get_query_string({self.parameter_name: lookup,}, []),
+                'display': title,
+            }
+
 class InvoicePaymentInline(InlineAdminPermissions, admin.TabularInline):
     model = InvoicePayment
     extra = 0
@@ -37,9 +79,9 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'event',
         'school',
         'campus',
-        'purchaseOrderNumber',
         'invoiceAmountInclGST',
         'amountPaid',
+        'amountDueInclGST',
     ]
     readonly_fields = [
         'event',
@@ -56,8 +98,10 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountPaid',
     ]
     list_filter = [
+        AmountDueFilter,
+        InvoiceAmountFilter,
         ('event__state', admin.RelatedOnlyFieldListFilter),
-        ('event', admin.RelatedOnlyFieldListFilter),
+        ('event', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'event__state__name',
@@ -69,6 +113,11 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'invoiceToUser__first_name',
         'invoiceToUser__last_name',
         'invoiceToUser__email',
+        'invoiceNumber',
+        'purchaseOrderNumber',
+        'cache_invoiceAmountInclGST_unrounded',
+        '_amountDueUnrounded',
+        '_sumPayments',
     ]
     inlines = [
         InvoicePaymentInline,
@@ -93,6 +142,19 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'amountDuePaypal',
         'amountPaid',
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('school', 'invoiceToUser')
+        qs = qs.annotate(_sumPayments=Sum('invoicepayment__amountPaid'))
+        qs = qs.annotate(_amountDueFilter=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments'))
+        qs = qs.annotate(_amountDueUnrounded=Case(
+            When(_sumPayments__isnull=False, then=F('cache_invoiceAmountInclGST_unrounded') - F('_sumPayments')),
+            default=F('cache_invoiceAmountInclGST_unrounded')
+        ))
+
+        return qs
 
     def markPaidToday(self, request, queryset):
         def addErrorMessage(errorMessage, message):
@@ -144,11 +206,11 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     markPaidToday.short_description = "Mark paid today"
     markPaidToday.allowed_permissions = ('change',)
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
 
     def detailURL(self, instance):
-        return format_html('<a href="{}" target="_blank">View invoice</a>', instance.get_absolute_url())
-    detailURL.short_description = 'View invoice'
+        return format_html('<a href="{}" target="_blank">>></a>', instance.get_absolute_url())
+    detailURL.short_description = 'View'
 
     # Prevent deleting invoice, because will interfere with auto creation of invoices on team creation
     # Prevent add because always created by signal
@@ -162,3 +224,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'event__state'
+    yearSelectedFilterLookup = 'event__year'

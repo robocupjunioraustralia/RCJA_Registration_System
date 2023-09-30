@@ -13,10 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import environ
 import sys
+from opencensus.trace import config_integration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+config_integration.trace_integrations(['postgresql'])
 env = environ.Env(
     DEBUG=(bool, False),
     SENDGRID_API_KEY=(str, 'API_KEY'),
@@ -29,6 +30,8 @@ env = environ.Env(
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
     DEV_SETTINGS=(bool, False),
+    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
+    APPLICATIONINSIGHTS_CONNECTION_STRING=(str, '')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -49,17 +52,22 @@ CORS_ALLOWED_ORIGINS = [
     "https://robocupjunior.org.au", # For public api
 ]
 
+CSRF_TRUSTED_ORIGINS = []
+
 # Add the allowed hosts to cors
 # https unless is the default local_hosts for dev
 if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
     for allowed_host in env('ALLOWED_HOSTS'):
         CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
+        CSRF_TRUSTED_ORIGINS.append(f'http://{allowed_host}:8000')
 else:
     if isinstance(env('ALLOWED_HOSTS'), list):
         for allowed_host in env('ALLOWED_HOSTS'):
             CORS_ALLOWED_ORIGINS.append(f'https://{allowed_host}')
+            CSRF_TRUSTED_ORIGINS.append(f'https://{allowed_host}')
     else:
         CORS_ALLOWED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
+        CSRF_TRUSTED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
 
 DEV_SETTINGS = env('DEV_SETTINGS')
 
@@ -87,13 +95,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'keyvaluestore',
     'axes',
     'storages',
     'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -107,7 +116,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.redirectsMiddleware.RedirectMiddleware',
     'axes.middleware.AxesMiddleware',
+    'opencensus.ext.django.middleware.OpencensusMiddleware',
 ]
+
+if not DEV_SETTINGS:
+    OPENCENSUS = {
+        'TRACE': {
+            'SAMPLER': 'opencensus.trace.samplers.ProbabilitySampler(rate=1)',
+            'EXPORTER': 'opencensus.ext.azure.trace_exporter.AzureExporter(connection_string="' + env('APPLICATIONINSIGHTS_CONNECTION_STRING') + '")'
+        }
+    }
 
 ROOT_URLCONF = 'rcjaRegistration.urls'
 
@@ -122,6 +140,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rcjaRegistration.defaultContexts.yearsContext',
             ],
         },
     },
@@ -142,7 +161,7 @@ AUTHENTICATION_BACKENDS = [
 AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
-AXES_META_PRECEDENCE_ORDER = [
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
    'HTTP_X_FORWARDED_FOR',
 ]
 # 20 failed attempts results in hour long lockout
@@ -218,7 +237,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 SERVER_EMAIL = 'system@enter.robocupjunior.org.au'
-DEFAULT_FROM_EMAIL = 'system@enter.robocupjunior.org.au'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 # REST
 

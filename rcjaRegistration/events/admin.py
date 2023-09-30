@@ -8,6 +8,8 @@ from django import forms
 from django.forms import TextInput, Textarea
 from django.core.exceptions import ValidationError
 from django.db import models
+from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.utils.html import format_html
 
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
@@ -71,8 +73,8 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
-    globalFilterLookup = 'state'
+    statePermissionsFilterLookup = 'state__coordinator'
+    globalPermissionsFilterLookup = 'state'
 
 @admin.register(Venue)
 class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -122,7 +124,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
 
 @admin.register(Year)
 class YearAdmin(AdminPermissions, admin.ModelAdmin):
@@ -167,11 +169,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'registrationsCloseDate',
         'directEnquiriesToName',
         'venue',
+        'registrationsLink',
     ]
     competition_fieldsets = (
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -193,7 +196,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     workshop_fieldsets = (
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -236,6 +239,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'eventBannerImageOriginalFilename',
         'bannerImageFilesize',
         'effectiveBannerImageTag',
+        'registrationsLink',
     ]
     add_readonly_fields = [
     ]
@@ -252,6 +256,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
         return readonly_fields
 
+    def registrationsLink(self, obj):
+        return format_html('<a href="{}">-></a>', obj.registrationsAdminURL())
+    registrationsLink.short_description = 'View registrations'
+
     autocomplete_fields = [
         'state',
         'directEnquiriesTo',
@@ -265,7 +273,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     list_filter = [
         'status',
         'eventType',
-        'year',
         ('state', admin.RelatedOnlyFieldListFilter),
         'globalEvent',
     ]
@@ -370,8 +377,11 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
     fieldFilteringModel = Event
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'state'
+    yearSelectedFilterLookup = 'year'
 
     @classmethod
     def fkObjectFilterFields(cls, request, obj):
@@ -419,8 +429,8 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school',
     ]
     list_filter = [
-        ('event', admin.RelatedOnlyFieldListFilter),
-        ('division', admin.RelatedOnlyFieldListFilter),
+        ('event', FilteredRelatedOnlyFieldListFilter),
+        ('division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'school__state__name',
@@ -453,6 +463,13 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
 
     form = BaseWorkshopAttendanceForm
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('event', 'division', 'mentorUser__homeState', 'school__state', 'campus')
+
+        return qs
+
     # Set school and campus to that of mentor if only one option
     def save_model(self, request, obj, form, change):
         if not obj.pk and obj.school is None and obj.mentorUser.schooladministrator_set.count() == 1:
@@ -480,4 +497,7 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
             },
         }
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'event__state'
+    yearSelectedFilterLookup = 'event__year'

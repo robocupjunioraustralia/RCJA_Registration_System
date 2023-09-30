@@ -7,22 +7,17 @@ from django.urls import reverse
 
 admin.site.disable_action('delete_selected') # Disable bulk delete
 
-# **********Key Value Store**********
-
-import keyvaluestore.admin
-
-# Disable key-value store admin
-admin.site.unregister(keyvaluestore.admin.KeyValueStore)
-
 # **********Axes**********
 
 import axes.admin
 from axes.admin import AccessLogAdmin as AxesAccessLogAdmin
-from axes.admin import AccessAttemptAdmin as AxesAccessAttempAdmin
-from axes.models import AccessLog, AccessAttempt
+from axes.admin import AccessAttemptAdmin as AxesAccessAttemptAdmin
+from axes.admin import AccessFailureLogAdmin as AxesAccessFailureLogAdmin
+from axes.models import AccessLog, AccessAttempt, AccessFailureLog
 
 admin.site.unregister(axes.admin.AccessLog)
 admin.site.unregister(axes.admin.AccessAttempt)
+admin.site.unregister(axes.admin.AccessFailureLog)
 
 @admin.register(AccessLog)
 class AccessLogAdmin(AxesAccessLogAdmin):
@@ -34,10 +29,19 @@ class AccessLogAdmin(AxesAccessLogAdmin):
         return False
 
 @admin.register(AccessAttempt)
-class AccessAttempAdmin(AxesAccessAttempAdmin):
+class AccessAttemptAdmin(AxesAccessAttemptAdmin):
     def has_change_permission(self, request, obj=None):
         return False
     def has_add_permission(self, request, obj=None):
+        return False
+
+@admin.register(AccessFailureLog)
+class AccessFailureLogAdmin(AxesAccessFailureLogAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
         return False
 
 # **********Rest Token**********
@@ -46,7 +50,7 @@ from rest_framework.authtoken.admin import TokenAdmin as RestTokenAdmin
 from rest_framework.authtoken.models import Token
 import rest_framework
 
-admin.site.unregister(rest_framework.authtoken.admin.Token)
+admin.site.unregister(rest_framework.authtoken.admin.TokenProxy)
 
 @admin.register(Token)
 class TokenAdmin(RestTokenAdmin):

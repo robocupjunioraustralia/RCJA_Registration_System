@@ -61,13 +61,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'keyvaluestore',
     'axes',
     'storages',
     'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -95,6 +96,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rcjaRegistration.defaultContexts.yearsContext',
             ],
         },
     },
@@ -115,7 +117,7 @@ AUTHENTICATION_BACKENDS = [
 AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
-AXES_META_PRECEDENCE_ORDER = [
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
    'HTTP_X_FORWARDED_FOR',
 ]
 # 20 failed attempts results in hour long lockout
@@ -187,8 +189,8 @@ REST_FRAMEWORK = {
         ),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
-    # 'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
-    # 'PAGE_SIZE': 50
+    'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
+    'PAGE_SIZE': 50
 }
 
 

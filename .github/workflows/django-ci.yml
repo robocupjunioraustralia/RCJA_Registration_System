@@ -30,7 +30,7 @@ jobs:
       run: |
         docker-compose exec -T web coverage report
         docker-compose exec -T web coverage xml
-    - uses: codecov/codecov-action@v1.0.3
+    - uses: codecov/codecov-action@v3
       with:
         token: ${{secrets.CODECOV_TOKEN}} #required
         file: ./rcjaRegistration/coverage.xml #optional

@@ -90,7 +90,7 @@
                 </td>
                 <td class="text-right">
                   <span class="mono">
-                    ${{ invoiceItem.unitCost }}
+                    ${{ invoiceItem.unitCost|floatformat:2 }}
                     {% if invoiceItem.unit %} per {{ invoiceItem.unit }} {% endif %}
                   </span>
                 </td>

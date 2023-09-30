@@ -10,6 +10,9 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import modelformset_factory, inlineformset_factory
 from django.urls import reverse
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.encoding import iri_to_uri
+from urllib.parse import urlparse
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
@@ -17,6 +20,7 @@ from userquestions.forms import QuestionResponseForm
 from schools.models import School
 
 from regions.utils import getRegionsLookup
+from coordination.permissions import checkCoordinatorPermission
 
 @login_required
 def details(request):
@@ -51,34 +55,25 @@ def details(request):
     if request.method == 'POST':
         # Create Post versions of forms
         form = UserForm(request.POST, instance=request.user)
-        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials)
+        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
 
         # Don't redirect to home if use was forced here and no schools, so user can create a school
         displayAgain = request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool
 
-        try:
-            if all([x.is_valid() for x in (form, questionFormset)]):
-                # Save user
-                user = form.save(commit=False)
-                user.forceDetailsUpdate = False
-                user.save()
+        if all([x.is_valid() for x in (form, questionFormset)]):
+            # Save user
+            user = form.save(commit=False)
+            user.forceDetailsUpdate = False
+            user.save()
 
-                # Save question response questionFormset
-                questionFormset.save() 
+            # Save question response questionFormset
+            questionFormset.save() 
 
-                # Stay on page if continue_editing in response or if must display again, else redirect to home
-                if displayAgain or 'continue_editing' in request.POST:
-                    return redirect(reverse('users:details'))
+            # Stay on page if continue_editing in response or if must display again, else redirect to home
+            if displayAgain or 'continue_editing' in request.POST:
+                return redirect(reverse('users:details'))
 
-                return redirect(reverse('events:dashboard'))
-
-        # To catch missing management data
-        except ValidationError as e:
-            # Reset the formsets so that are valid and won't cause an error when passed to render
-            questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
-
-            # Add error to the form
-            form.add_error(None, e.message)
+            return redirect(reverse('events:dashboard'))
 
     return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'regionsLookup': getRegionsLookup()})
 
@@ -108,3 +103,67 @@ def termsAndConditions(request):
         return render(request,'termsAndConditions/termsAndConditionsLoggedIn.html')
     else:
         return render(request,'termsAndConditions/termsAndConditionsNoAuth.html') 
+
+def redirectCurrentPage(request):
+    referrer = request.META.get('HTTP_REFERER', '')
+    parsed = urlparse(referrer)
+    uri = iri_to_uri(parsed.path)
+    if url_has_allowed_host_and_scheme(uri, None):
+        return redirect(uri)
+    else:
+        return redirect('/')
+
+@login_required
+def setCurrentAdminYear(request, year):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    from events.models import Year
+    year = get_object_or_404(Year, pk=year)
+
+    # Set current year on user
+    request.user.currentlySelectedAdminYear = year
+    request.user.save(update_fields=['currentlySelectedAdminYear'])
+    
+    return redirectCurrentPage(request)
+
+@login_required
+def setCurrentAdminState(request, stateID):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    if stateID == 0:
+        request.user.currentlySelectedAdminState = None
+
+    else:
+
+        from regions.models import State
+        state = get_object_or_404(State, pk=stateID)
+
+        # Check permissions
+        if not checkCoordinatorPermission(request, State, state, 'view'):
+            raise PermissionDenied("You do not have permission to view this state")
+
+        # Set current state on user
+        request.user.currentlySelectedAdminState = state
+
+    # Save field
+    request.user.save(update_fields=['currentlySelectedAdminState'])
+    
+    return redirectCurrentPage(request)
+
+@login_required
+def adminChangelog(request):
+    # Restrict to staff
+    if not request.user.is_staff:
+        raise PermissionDenied("Must be staff")
+
+    return render(request, 'users/adminChangelog.html')

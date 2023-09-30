@@ -1,4 +1,4 @@
-FROM tiangolo/meinheld-gunicorn:python3.7
+FROM tiangolo/meinheld-gunicorn:python3.8
 ENV PATH="${PATH}:/app"
 ENV APP_MODULE="rcjaRegistration.wsgi:application"
 ENV PORT=8000
@@ -8,5 +8,8 @@ RUN pip install -r /tmp/requirements.txt
 COPY app.json /app
 COPY rcjaRegistration /app
 
+RUN chmod +x /app/migrate-and-start.sh
+
 CMD ["/start.sh"]
-ENTRYPOINT ["/entrypoint.sh"]
+
+ENTRYPOINT ["/app/migrate-and-start.sh"]

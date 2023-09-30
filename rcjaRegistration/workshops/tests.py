@@ -16,15 +16,15 @@ import datetime
 # Create your tests here.
 
 def newCommonSetUp(self):
-        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+        self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
-        self.user3 = User.objects.create_user(email=self.email3, password=self.password)
-        self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password, homeState=self.state1)
+        self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password)
+        self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
         self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
@@ -93,7 +93,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last2',
             yearLevel='10',
             gender='male',
-            birthday=datetime.datetime.today()
         )
 
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
@@ -199,20 +198,6 @@ class TestWorkshopAttendeeClean(TestCase):
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 
-    def testStudentMissingBirthday(self):
-        self.attendee3 = WorkshopAttendee(
-            event=self.event,
-            mentorUser=self.user1,
-            school=self.school1,
-            division=self.division1,
-            attendeeType='student',
-            firstName='First1',
-            lastName='Last1',
-            yearLevel='10',
-            gender='male',
-        )
-        self.assertRaises(ValidationError, self.attendee3.clean)
-
     def testTeacherValidYearLevel(self):
         self.attendee3 = WorkshopAttendee(
             event=self.event,
@@ -254,7 +239,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last1',
             yearLevel='9',
             gender='male',
-            birthday=datetime.datetime.today()
         )
         self.assertEqual(self.attendee3.clean(), None)
 
@@ -269,7 +253,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last1',
             yearLevel='3-5',
             gender='male',
-            birthday=datetime.datetime.today()
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 

@@ -1,11 +1,15 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 import django.apps as djangoApps
 from common.models import SaveDeleteMixin
+from django.core.exceptions import PermissionDenied
+from django.core.validators import RegexValidator
 
 from django.contrib.auth.models import Permission
+
+import re
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field"""
@@ -57,12 +61,16 @@ class User(SaveDeleteMixin, AbstractUser):
     objects = UserManager()
 
     # Additional fields
-    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True)
-    homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeRegistration': True})
+    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_\(\)\+]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space.")])
+    homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeUserRegistration': True})
     homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True, blank=True)
 
     # Preferences and settings
     currentlySelectedSchool = models.ForeignKey('schools.School', verbose_name='Currently selected school', on_delete=models.SET_NULL, null=True, blank=True, editable=False)
+    currentlySelectedAdminYear = models.ForeignKey('events.Year', verbose_name='Currently selected admin year', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
+    currentlySelectedAdminState = models.ForeignKey('regions.State', verbose_name='Currently selected admin state', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
+    adminChangelogVersionShown = models.PositiveIntegerField('Changelog version shown', editable=False, default=0)
+    ADMIN_CHANGELOG_CURRENT_VERSION = 5
 
     # Flags
     forcePasswordChange = models.BooleanField('Force password change', default=False)
@@ -75,13 +83,24 @@ class User(SaveDeleteMixin, AbstractUser):
 
     def clean(self):
         super().clean()
+        errors = {}
+
         # Force case insentive email
         if User.objects.filter(email__iexact=self.email).exclude(pk=self.pk).exists():
-            raise ValidationError({'email': _('User with this email address already exists.')})
+            errors['email'] = _('User with this email address already exists.')
 
         # Validate region state
         if self.homeRegion and self.homeRegion.state is not None and self.homeRegion.state != self.homeState:
-            raise ValidationError("Region not valid for selected state")
+            errors['homeRegion'] = "Region not valid for selected state"
+
+        if not re.match("^[0-9a-zA-Z \-\_]*$", self.first_name):
+            errors['first_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
+
+        if not re.match("^[0-9a-zA-Z \-\_]*$", self.last_name):
+            errors['last_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
+
+        if errors:
+            raise ValidationError(errors)
 
     # *****Permissions*****
     @classmethod
@@ -162,6 +181,21 @@ class User(SaveDeleteMixin, AbstractUser):
 
     def isGobalCoordinator(self, permissionLevels):
         return self.coordinator_set.filter(state=None, permissionLevel__in=permissionLevels).exists()
+
+    def adminViewableStates(self):
+        from regions.models import State
+        from regions.admin import StateAdmin
+        from coordination.permissions import coordinatorFilterQueryset, getFilteringPermissionLevels
+
+        statePermissionsFilterLookup = getattr(StateAdmin, 'statePermissionsFilterLookup', False)
+        globalPermissionsFilterLookup = getattr(StateAdmin, 'globalPermissionsFilterLookup', False)
+
+        statePermissionLevels, globalPermissionLevels = getFilteringPermissionLevels(State, ['view', 'change'])
+
+        try:
+            return coordinatorFilterQueryset(State.objects.all(), self, statePermissionLevels, globalPermissionLevels, statePermissionsFilterLookup, globalPermissionsFilterLookup)
+        except PermissionDenied:
+            return State.objects.none()
 
     def strSchoolNames(self):
         return ", ".join(map(lambda x: str(x.school), self.schooladministrator_set.all()))

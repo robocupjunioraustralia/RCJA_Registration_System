@@ -54,6 +54,12 @@ class Invoice(SaveDeleteMixin, models.Model):
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True)
     notes = models.TextField('Notes', blank=True)
 
+    # Cache fields
+    cache_amountGST_unrounded = models.FloatField('amountGST_unrounded', blank=True, null=True, editable=False)
+    cache_totalQuantity = models.IntegerField('cache_totalQuantity', blank=True, null=True, editable=False)
+    cache_invoiceAmountExclGST_unrounded = models.FloatField('cache_invoiceAmountExclGST_unrounded', blank=True, null=True, editable=False)
+    cache_invoiceAmountInclGST_unrounded = models.FloatField('cache_invoiceAmountInclGST_unrounded', blank=True, null=True, editable=False)
+
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Invoice'
@@ -104,6 +110,18 @@ class Invoice(SaveDeleteMixin, models.Model):
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
 
+        # Set invoiced date to payment due date if None, when mentor views invoice date will get brought forward to current date if before paymend due date
+        if self.invoicedDate is None:
+            self.invoicedDate = self.event.paymentDueDate
+
+    def postSave(self):
+        self.calculateAndSaveAllTotals()
+
+    def postDelete(self):
+        # In case campus invoicing enabled and an invoice is deleted, recalculate totals on remaining
+        for invoice in Invoice.objects.filter(school=self.school, event=self.event):
+            invoice.calculateAndSaveAllTotals()
+
     # *****Methods*****
 
     # *****Get Methods*****
@@ -123,7 +141,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
 
     def hiddenInvoice(self):
-        return self.totalQuantity() == 0 and not self.invoicepayment_set.exists()
+        return self.invoiceAmountInclGST_unrounded() < 0.05 and not self.invoicepayment_set.exists()
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -222,15 +240,17 @@ class Invoice(SaveDeleteMixin, models.Model):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItem(self, name, description, quantity, unitCost, unit=None):
+    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None):
         # Calculate totals
         if self.event.entryFeeIncludesGST:
-            totalInclGST = quantity * unitCost
+            unitCost = rawUnitCost / 1.1
+            totalInclGST = quantity * rawUnitCost
             totalExclGST = totalInclGST / 1.1
             gst = totalInclGST - totalExclGST
 
         else:
-            totalExclGST = quantity * unitCost
+            unitCost = rawUnitCost
+            totalExclGST = quantity * rawUnitCost
             gst = 0.1 * totalExclGST
             totalInclGST = totalExclGST * 1.1
 
@@ -238,7 +258,6 @@ class Invoice(SaveDeleteMixin, models.Model):
             'name': name,
             'description': description,
             'quantity': quantity,
-            'quantityString': quantity,
             'unitCost': unitCost,
             'unit': unit,
             'totalExclGST': totalExclGST,
@@ -290,7 +309,6 @@ class Invoice(SaveDeleteMixin, models.Model):
 
             # Get values
             quantity = numberSpecialRateTeams
-            quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
             unitCost = self.event.event_specialRateFee
 
             maxNumberSpecialRateTeams = self.event.event_specialRateNumber
@@ -339,56 +357,92 @@ class Invoice(SaveDeleteMixin, models.Model):
         
         return invoiceItems
 
+    # Calculate and save cached totals
+    def calculateAndSaveAllTotals(self):
+        self.cache_amountGST_unrounded = self.calculate_amountGST_unrounded()
+        self.cache_totalQuantity = self.calculate_totalQuantity()
+        self.cache_invoiceAmountExclGST_unrounded = self.calculate_invoiceAmountExclGST_unrounded()
+        self.cache_invoiceAmountInclGST_unrounded = self.calculate_invoiceAmountInclGST_unrounded()
+
+        self.save(skipPrePostSave=True, update_fields=[
+            'cache_amountGST_unrounded',
+            'cache_totalQuantity',
+            'cache_invoiceAmountExclGST_unrounded',
+            'cache_invoiceAmountInclGST_unrounded',
+        ])
+
     # Totals
 
     def amountPaid_unrounded(self):
-        return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
+        try:
+            return self._sumPayments if self._sumPayments is not None else 0
+        except AttributeError:
+            return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
 
     def amountPaid(self):
         return round(self.amountPaid_unrounded(), 2)
     amountPaid.short_description = 'Amount paid'
+    amountPaid.admin_order_field = '_sumPayments'
+
+    def calculate_amountGST_unrounded(self):
+        return sum([item['gst'] for item in self.invoiceItems()])
 
     def amountGST_unrounded(self):
-        return sum([item['gst'] for item in self.invoiceItems()])
+        if self.cache_amountGST_unrounded is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_amountGST_unrounded
 
     def amountGST(self):
         return round(self.amountGST_unrounded(), 2)
     amountGST.short_description = 'GST'
 
-    def totalQuantity(self):
+    def calculate_totalQuantity(self):
         return sum([item['quantity'] for item in self.invoiceItems()])
+
+    def totalQuantity(self):
+        if self.cache_totalQuantity is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_totalQuantity
 
     # Invoice amount
 
-    def invoiceAmountExclGST_unrounded(self):
+    def calculate_invoiceAmountExclGST_unrounded(self):
         return sum([item['totalExclGST'] for item in self.invoiceItems()])
+
+    def invoiceAmountExclGST_unrounded(self):
+        if self.cache_invoiceAmountExclGST_unrounded is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_invoiceAmountExclGST_unrounded
 
     def invoiceAmountExclGST(self):
         return round(self.invoiceAmountExclGST_unrounded(), 2)
     invoiceAmountExclGST.short_description = 'Invoice amount (ex GST)'
 
-    def invoiceAmountInclGST_unrounded(self):
+    def calculate_invoiceAmountInclGST_unrounded(self):
         return sum([item['totalInclGST'] for item in self.invoiceItems()])
+
+    def invoiceAmountInclGST_unrounded(self):
+        if self.cache_invoiceAmountInclGST_unrounded is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_invoiceAmountInclGST_unrounded
 
     def invoiceAmountInclGST(self):
         return round(self.invoiceAmountInclGST_unrounded(), 2)
     invoiceAmountInclGST.short_description = 'Invoice amount (incl GST)'
+    invoiceAmountInclGST.admin_order_field = 'cache_invoiceAmountInclGST_unrounded'
 
     # Amount due
 
-    def amountDueExclGST_unrounded(self):
-        return self.invoiceAmountExclGST_unrounded() - self.amountPaid_unrounded()
-
-    def amountDueExclGST(self):
-        return round(self.amountDueExclGST_unrounded(), 2)
-    amountDueExclGST.short_description = 'Amount due (ex GST)'
-
     def amountDueInclGST_unrounded(self):
-        return self.invoiceAmountInclGST_unrounded() - self.amountPaid_unrounded()
+        amountDue = self.invoiceAmountInclGST_unrounded() - self.amountPaid_unrounded()
+        if amountDue < 0:
+            return 0
+        return amountDue
 
     def amountDueInclGST(self):
         return round(self.amountDueInclGST_unrounded(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
+    amountDueInclGST.admin_order_field = '_amountDueUnrounded'
 
     def amountDuePaypal(self):
         if self.amountDueInclGST_unrounded() < 0.05: # 0.05 to avoid tiny sum edge caes
@@ -418,7 +472,7 @@ class InvoicePayment(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    amountPaid = models.PositiveIntegerField('Amount paid')
+    amountPaid = models.FloatField('Amount paid')
     datePaid = models.DateField('Date paid')
 
     # *****Meta and clean*****

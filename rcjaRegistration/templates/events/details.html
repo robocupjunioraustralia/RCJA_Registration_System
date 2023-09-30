@@ -12,10 +12,25 @@
         <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}}</h1>
     </div>
 
+    {% if hasAdminPermissions %}
+    <h2>Administration Shortcuts</h2>
+    <p>Only event administrators can see this section.</p>
+    <p>{{ event.baseeventattendance_set.count }} registrations so far.</p>
+    <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui primary button">Edit Event</button></a>
+    <a href="{{ event.registrationsAdminURL }}"><button class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</button></a>
+    <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}"><button class="ui primary button">View Invoices</button></a>
+    <br>
+    <h2>Mentor View</h2>
+    {% endif %}
+    
     <div class="row">
         <h3>Dates</h3>
+        {% if event.startDate == event.endDate %}
+        <p>Event date: {{event.startDate}}</p>
+        {% else %}
         <p>Start date: {{event.startDate}}</p>
         <p>End date: {{event.endDate}}</p>
+        {% endif %}
         <p>Registrations close: {{event.registrationsCloseDate}}</p>
         {% if not event.boolWorkshop %}<h3>Max members per team: {{ event.maxMembersPerTeam }}</h3>{% endif %}
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
@@ -24,21 +39,28 @@
             This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
             {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.{% endif %}
             {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
-            {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team limit per school for this event.{% endif %}
+            {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team per school limit for this event.{% endif %}
             {% if event.event_maxTeamsForEvent %}<br>There is a {{ event.event_maxTeamsForEvent }} team overall limit for this event.{% endif %}
         </p>
         {% if event.paymentDueDate %}<p>Payment due is due on {{ event.paymentDueDate }}.</p>{% endif %}
         <h3>Available divisions</h3>
         <ul>
-            {% for availableDivision in event.availabledivision_set.all %}
+            {% for availableDivision in availableDivisions %}
             <li><strong>{{ availableDivision.division.name }}</strong>
                 {% if availableDivision.division.description %}<br>{{ availableDivision.division.description }}{% endif %}
                 {% if availableDivision.division_billingType != 'event' %}<br>This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.{% endif %}
-                {% if availableDivision.division_maxTeamsPerSchool %}<br>There is a {{ availableDivision.division_maxTeamsPerSchool }} team limit per school for this division.{% endif %}
+                {% if availableDivision.division_maxTeamsPerSchool %}<br>There is a {{ availableDivision.division_maxTeamsPerSchool }} team per school limit for this division.{% endif %}
                 {% if availableDivision.division_maxTeamsForDivision %}<br>There is a {{ availableDivision.division_maxTeamsForDivision }} team overall limit for this division.{% endif %}
             </li>
             {% endfor %}
         </ul>
+        {% if divisionsMaxReachedWarnings %}
+        <ul>
+            {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+            <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         {% if event.eventDetails %}
         <h3>Event details</h3>
         <p> {{ event.bleachedEventDetails|linebreaks }} </p>
@@ -50,15 +72,19 @@
     </div><br>
 
     <div class="row">
-        {% if hasAdminPermissions %}
-        <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui primary button">View in admin</button></a>
-        {% endif %}
         {% if event.registrationsOpen and event.published %}
             {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
-            {% else %}
+            {% elif not maxEventTeamsForSchoolReached and not maxEventTeamsTotalReached %}
             <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
+            {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
+            {% elif maxEventTeamsForSchoolReached %}
+            <h1> You have registered the maximium number of allowed teams for your school for this event. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            {% else %}
+            <h1> Maximium number of teams for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
             {% endif %}
+        {% elif event.published and event.registrationNotOpenYet %}
+        <h1> Registration for this event hasn't opened yet. Please wait until registrations open on {{ event.registrationsOpenDate }} to register. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% elif event.published %}
         <h1> Registration for this event has closed. If you need to make modifications, please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% else %}

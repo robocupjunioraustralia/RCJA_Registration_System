@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.conf.urls import url
+from django.urls import re_path
 
 from rest_framework import routers
 
@@ -23,5 +23,5 @@ Router.register(r'states', views.StateViewSet)
 
 app_name = 'apiv1'
 urlpatterns = [
-    url(r'', include(Router.urls)),
+    re_path(r'', include(Router.urls)),
 ]
