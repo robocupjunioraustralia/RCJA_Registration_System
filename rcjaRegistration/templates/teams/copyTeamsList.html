@@ -73,7 +73,10 @@
                                     {% endfor %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'teams:copyTeam' event.id team.id %}"><button class="ui primary button">Copy</button></a>
+                                    <form method="post" action="{% url 'teams:copyTeam' event.id team.id %}">
+                                        {% csrf_token %}
+                                        <input class="ui primary button" type="submit" value="Copy"/>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}

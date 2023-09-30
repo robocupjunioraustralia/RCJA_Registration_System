@@ -877,7 +877,7 @@ class TestCopyTeamsList(TestCase):
     def testLoginRequired(self):
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.event.id})
 
-        response = self.client.post(url, follow=True)
+        response = self.client.get(url, follow=True)
         self.assertContains(response, "Login")
     
         response = self.client.get(url)
@@ -1037,9 +1037,17 @@ class TestCopyTeam(TestCase):
         response = self.client.post(url, follow=True)
         self.assertContains(response, "Login")
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.url, f"/accounts/login/?next=/teams/copyExisting/{self.newEvent.id}/create/{self.team1.id}")
         self.assertEqual(response.status_code, 302)
+
+    def testDenied_get(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Forbidden method', status_code=403)
 
     def testDenied_notPublished(self):
         self.newEvent.status = 'draft'
@@ -1047,7 +1055,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Event is not published', status_code=403)
 
@@ -1057,7 +1065,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
@@ -1067,7 +1075,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
 
@@ -1077,7 +1085,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Event for team is not published', status_code=403)
 
@@ -1085,7 +1093,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'You are not an administrator of this team/ attendee', status_code=403)
 
@@ -1094,7 +1102,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Team already copied.', status_code=403)
 
@@ -1102,7 +1110,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.newEventTeam.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Team already in this event.', status_code=403)
 
@@ -1110,7 +1118,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.previousYearTeam.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Team not from current event year.', status_code=403)
 
@@ -1120,7 +1128,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.', status_code=403)
 
@@ -1130,7 +1138,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Max teams for this event reached. Contact the organiser if you want to register more teams for this event.', status_code=403)
 
@@ -1138,7 +1146,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Division not allowed for this event.', status_code=403)
 
@@ -1147,7 +1155,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
 
@@ -1156,7 +1164,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
 
@@ -1165,7 +1173,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team2.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Team with this name in this event already exists', status_code=403)
 
@@ -1176,7 +1184,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Number students in team exceeds limit for new event', status_code=403)
 
@@ -1187,7 +1195,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/copyExisting/{self.newEvent.id}")
 
@@ -1201,7 +1209,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.team1.refresh_from_db()
         self.assertEqual(self.team1.updatedDateTime, updatedTime)
         self.assertEqual(self.team1.event, self.event)
@@ -1216,7 +1224,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(Team.objects.filter(event=self.newEvent, name=self.team1.name).count(), 1)
 
     def testSuccess_studentsCopied(self):
@@ -1228,7 +1236,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(Student.objects.filter(team__event=self.newEvent, team__name=self.team1.name).count(), 3)
 
     def testSuccess_copiedFromSet(self):
@@ -1240,7 +1248,7 @@ class TestCopyTeam(TestCase):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(Team.objects.filter(copiedFrom=self.team1).count(), 1)
 
 class TestTeamDelete(TestCase):

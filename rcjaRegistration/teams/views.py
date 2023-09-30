@@ -161,6 +161,9 @@ def copyTeamsList(request, eventID):
 
 @login_required
 def copyTeam(request, eventID, teamID):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
     event = get_object_or_404(Event, pk=eventID)
     team = get_object_or_404(Team, pk=teamID)
 
