@@ -115,6 +115,9 @@ def redirectCurrentPage(request):
 
 @login_required
 def setCurrentAdminYear(request, year):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
     # Restrict to staff
     if not request.user.is_staff:
         raise PermissionDenied("Must be staff")
@@ -130,6 +133,9 @@ def setCurrentAdminYear(request, year):
 
 @login_required
 def setCurrentAdminState(request, stateID):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
     # Restrict to staff
     if not request.user.is_staff:
         raise PermissionDenied("Must be staff")
