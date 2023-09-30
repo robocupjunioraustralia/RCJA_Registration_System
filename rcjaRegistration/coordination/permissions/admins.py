@@ -54,7 +54,7 @@ class BaseAdminPermissions:
 
             # Get admin and model classes
             objAdmin = filterParams['fieldAdmin']
-            objModel = filterParams.get('fieldModel', objAdmin.fieldFilteringModel) # Use fieldModel attribute in filterParams, if not specified use model specified on the target admin
+            objModel = filterParams.get('fieldModel', getattr(objAdmin, 'fieldFilteringModel', None)) # Use fieldModel attribute in filterParams, if not specified use model specified on the target admin
 
             # Get the base queryset
             # Use the queryset from object filtering if it exists, otherwise start with all objects
