@@ -9,6 +9,12 @@
     .left-aligned-text {
         text-align: left;
     }
+
+    .button-form {
+        margin: 0px;
+        padding: 0px;
+        display: inline;
+    }
 </style>
 {% endblock %}
 
@@ -84,7 +90,7 @@
                                     {% endfor %}
                                 </td>
                                 <td>
-                                    <form method="post" action="{% url 'teams:copyTeam' event.id team.id %}">
+                                    <form method="post" action="{% url 'teams:copyTeam' event.id team.id %}" class="button-form">
                                         {% csrf_token %}
                                         <input class="ui primary button" type="submit" value="Copy"/>
                                     </form>
