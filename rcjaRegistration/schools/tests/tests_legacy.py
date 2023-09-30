@@ -660,7 +660,7 @@ class Test_SchoolViews_LoginRequired(Base_Test_SchoolViews, TestCase):
     def testSetCurrentSchool(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
-        response = self.client.get(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
+        response = self.client.post(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
         self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school2.id}")
         self.assertEqual(response.status_code, 302)
 
@@ -710,17 +710,29 @@ class Test_SetCurrentSchool_Permissions(Base_Test_SchoolViews_Permissions, TestC
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         # Change to school 2
-        response = self.client.get(self.url(self.school2))
+        response = self.client.post(self.url(self.school2))
         self.assertEqual(response.status_code, 302)
 
         # Check school changed
         self.user1.refresh_from_db()
         self.assertEqual(self.user1.currentlySelectedSchool, self.school2)
 
+    def testDeniedGet(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        # Change to school 2
+        response = self.client.get(self.url(self.school2))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Forbidden method', status_code=403)
+
+        # Check still school 1
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
     def testDeniedNotAdmin(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
-        response = self.client.get(self.url(self.school3))
+        response = self.client.post(self.url(self.school3))
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this school", status_code=403)
 

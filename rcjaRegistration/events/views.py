@@ -115,6 +115,28 @@ def getDivisionsMaxReachedWarnings(event, user):
     
     return divisionsMaxReachedWarnings
 
+def getAvailableToCopyTeams(request, event):
+    # Get team filter dict
+    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
+
+    # Get teams already copied
+    copiedTeamsList = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
+
+    # Replace event filtering with year filtering
+    del filterDict['event']
+    filterDict['event__year'] = event.year
+    filterDict['event__status'] = 'published'
+
+    availableDivisions = event.availabledivision_set.values_list('division', flat=True)
+
+    # Get teams available to copy
+    teams = Team.objects.filter(**filterDict)
+    teams = teams.exclude(event=event) # Exclude teams of the current event
+    availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
+    availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
+
+    return teams, copiedTeamsList, availableToCopyTeams
+
 @login_required
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
@@ -140,6 +162,8 @@ def details(request, eventID):
     else:
         billingTypeLabel = event.event_billingType
 
+    _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
+
     context = {
         'event': event,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
@@ -152,6 +176,7 @@ def details(request, eventID):
         'maxEventTeamsForSchoolReached': event.maxEventTeamsForSchoolReached(request.user),
         'maxEventTeamsTotalReached': event.maxEventTeamsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
+        'duplicateTeamsAvailable': availableToCopyTeams.exists(),
     }
     return render(request, 'events/details.html', context)   
 

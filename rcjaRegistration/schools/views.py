@@ -37,6 +37,9 @@ def create(request):
 
 @login_required
 def setCurrentSchool(request, schoolID):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
     school = get_object_or_404(School, pk=schoolID)
 
     # Check permissions
