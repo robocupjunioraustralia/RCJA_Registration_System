@@ -3,6 +3,8 @@ from common.models import SaveDeleteMixin, checkRequiredFieldsNotNone
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+import datetime
+
 # **********MODELS**********
 
 class AssociationMember(SaveDeleteMixin, models.Model):
@@ -56,12 +58,30 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     # Used in state coordinator permission checking
     def getState(self):
         return self.user.homeState
+    getState.short_description = 'State'
 
     # *****Save & Delete Methods*****
 
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def activeMembership(self):
+        return bool(
+            self.membershipStartDate and
+            self.membershipStartDate <= datetime.date.today() and
+            (not self.membershipEndDate or self.membershipEndDate > datetime.date.today())
+        )
+    activeMembership.short_description = 'Active'
+    activeMembership.boolean = True
+
+    def membershipType(self):
+        age = (datetime.date.today() - self.birthday) // datetime.timedelta(days=365.2425) # Because averaging leap years could be off by a day or two
+        if age >= 18:
+            return 'Ordinary'
+        else:
+            return 'Associate'
+    membershipType.short_description = 'Membership type'
 
     def __str__(self):
         return str(self.user)

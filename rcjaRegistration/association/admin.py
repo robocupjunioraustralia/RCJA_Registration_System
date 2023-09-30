@@ -12,6 +12,16 @@ from users.models import User
 class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
+        'getState',
+        'activeMembership',
+        'membershipType',
+        'membershipStartDate',
+        'membershipEndDate',
+    ]
+    readonly_fields = [
+        'getState',
+        'activeMembership',
+        'membershipType', 
     ]
     list_filter = [
         ('user__homeState', admin.RelatedOnlyFieldListFilter),
