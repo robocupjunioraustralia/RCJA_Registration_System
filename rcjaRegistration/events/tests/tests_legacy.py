@@ -850,29 +850,68 @@ class TestEventMethods(TestCase):
         self.invoiceSettings.surchargeAmount = 5
         self.invoiceSettings.save()
 
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user)
-        self.assertEqual(self.invoice.eventSurchargeAmount, 5)
+        self.invoiceEvent = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Invoice Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 5)
 
     def test_preSave_surchageAmount_set(self):
         self.invoiceSettings.surchargeAmount = 5
         self.invoiceSettings.save()
 
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user)
-        self.assertEqual(self.invoice.eventSurchargeAmount, 5)
+        self.invoiceEvent = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Invoice Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 5)
 
         # Assert doesn't change after creation
         self.invoiceSettings.surchargeAmount = 10
         self.invoiceSettings.save()
 
-        self.invoice.save()
-        self.invoice.refresh_from_db()
-        self.assertEqual(self.invoice.eventSurchargeAmount, 5)
+        self.invoiceEvent.save()
+        self.invoiceEvent.refresh_from_db()
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 5)
 
     def test_preSave_surchageAmount_noSettings(self):
         self.invoiceSettings.delete()
 
-        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user)
-        self.assertEqual(self.invoice.eventSurchargeAmount, 0)
+        self.invoiceEvent = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Invoice Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 0)
 
 
 def newSetupEvent(self):
