@@ -18,7 +18,8 @@ class InvoiceGlobalSettings(models.Model):
     # Surcharge
     surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount excludes GST, GST will be added automatically.")
     surchargeName = models.CharField('Surcharge name', max_length=30, default='Surcharge', help_text="Name of the surcharge on the invoice.")
-    surchargeDescription = models.CharField('Surcharge description', max_length=70, blank=True, help_text="Surcharge description appears in small text below the surcharge name.")
+    surchargeInvoiceDescription = models.CharField('Surcharge invoice description', max_length=70, blank=True, help_text="Appears in small text below the surcharge name on the invoice.")
+    surchargeEventDescription = models.CharField('Surcharge event page description', max_length=200, blank=True, help_text="Appears on the event page below the surcharge amount.")
 
     # *****Meta and clean*****
     class Meta:
@@ -275,10 +276,10 @@ class Invoice(SaveDeleteMixin, models.Model):
         # Get surcharge name and description
         try:
             surchargeName = InvoiceGlobalSettings.objects.get().surchargeName
-            surchargeDescription = InvoiceGlobalSettings.objects.get().surchargeDescription
+            surchargeInvoiceDescription = InvoiceGlobalSettings.objects.get().surchargeInvoiceDescription
         except InvoiceGlobalSettings.DoesNotExist:
             surchargeName = 'Surcharge'
-            surchargeDescription = ''
+            surchargeInvoiceDescription = ''
 
         # Get values
         unitCost = self.event.eventSurchargeAmount
@@ -288,7 +289,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
         return {
             'name': surchargeName,
-            'description': surchargeDescription,
+            'description': surchargeInvoiceDescription,
             'quantity': quantity,
             'unitCost': unitCost,
             'unit': None,
