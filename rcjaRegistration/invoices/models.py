@@ -16,7 +16,7 @@ class InvoiceGlobalSettings(models.Model):
     invoiceFooterMessage = models.TextField('Invoice footer message')
     firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
     # Surcharge
-    surchargeAmount = models.FloatField('Surcharge amount', default=0)
+    surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount excludes GST, GST will be added automatically.")
     surchargeDescription = models.CharField('Surcharge description', max_length=50, default='Surcharge', help_text="This text appears on the invoice.")
 
     # *****Meta and clean*****
