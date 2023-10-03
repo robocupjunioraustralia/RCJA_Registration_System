@@ -253,7 +253,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None):
+    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None, excludeFromSurcharge=False):
         # Calculate totals
         if self.event.entryFeeIncludesGST:
             unitCost = rawUnitCost / 1.1
@@ -271,8 +271,35 @@ class Invoice(SaveDeleteMixin, models.Model):
             'name': name,
             'description': description,
             'quantity': quantity,
+            'surchargeQuantity': quantity if unitCost > 0 and not excludeFromSurcharge else 0,
             'unitCost': unitCost,
             'unit': unit,
+            'totalExclGST': totalExclGST,
+            'gst': gst,
+            'totalInclGST': totalInclGST,
+        }
+
+    def surchargeInvoiceItem(self, quantity):
+        # Get surcharge name and description
+        try:
+            surchargeName = InvoiceGlobalSettings.objects.get().surchargeName
+            surchargeDescription = InvoiceGlobalSettings.objects.get().surchargeDescription
+        except InvoiceGlobalSettings.DoesNotExist:
+            surchargeName = 'Surcharge'
+            surchargeDescription = ''
+
+        # Get values
+        unitCost = self.surchargeAmount
+        totalExclGST = quantity * unitCost
+        gst = 0.1 * totalExclGST
+        totalInclGST = totalExclGST * 1.1
+
+        return {
+            'name': surchargeName,
+            'description': surchargeDescription,
+            'quantity': quantity,
+            'unitCost': unitCost,
+            'unit': None,
             'totalExclGST': totalExclGST,
             'gst': gst,
             'totalInclGST': totalInclGST,
@@ -367,7 +394,12 @@ class Invoice(SaveDeleteMixin, models.Model):
 
         elif self.event.eventType == 'competition':
             invoiceItems += self.competitionInvoiceItems()
-        
+
+        # Add surcharge if not 0
+        if self.surchargeAmount > 0:
+            surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
+            invoiceItems.append(self.surchargeInvoiceItem(surchargeQuantity))
+
         return invoiceItems
 
     # Calculate and save cached totals
