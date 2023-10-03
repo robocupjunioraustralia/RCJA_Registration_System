@@ -10,6 +10,7 @@ from events.models import Event, Division, Year, AvailableDivision, Venue
 from users.models import User
 from coordination.models import Coordinator
 from eventfiles.models import EventAvailableFileType, MentorEventFileType
+from invoices.models import Invoice, InvoiceGlobalSettings
 
 import datetime
 # Create your tests here.
@@ -119,6 +120,12 @@ def commonSetUp(obj):
 
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male')
+
+    obj.invoiceSettings = InvoiceGlobalSettings.objects.create(
+        invoiceFromName='From Name',
+        invoiceFromDetails='Test Details Text',
+        invoiceFooterMessage='Test Footer Text',
+    )
 
 class TestEventPermissions(TestCase):
     def setUp(self):
@@ -838,6 +845,35 @@ class TestEventMethods(TestCase):
     def test_checkBillingDetailsChanged_workshopStudentEntryFee(self):
         self.event.workshopStudentEntryFee = 50
         self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_preSave_surchageAmount_notSet(self):
+        self.invoiceSettings.surchargeAmount = 5
+        self.invoiceSettings.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user)
+        self.assertEqual(self.invoice.eventSurchargeAmount, 5)
+
+    def test_preSave_surchageAmount_set(self):
+        self.invoiceSettings.surchargeAmount = 5
+        self.invoiceSettings.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user)
+        self.assertEqual(self.invoice.eventSurchargeAmount, 5)
+
+        # Assert doesn't change after creation
+        self.invoiceSettings.surchargeAmount = 10
+        self.invoiceSettings.save()
+
+        self.invoice.save()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.eventSurchargeAmount, 5)
+
+    def test_preSave_surchageAmount_noSettings(self):
+        self.invoiceSettings.delete()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user)
+        self.assertEqual(self.invoice.eventSurchargeAmount, 0)
+
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')

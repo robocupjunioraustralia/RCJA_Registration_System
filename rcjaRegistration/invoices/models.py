@@ -54,7 +54,6 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Fields
     invoiceNumber = models.PositiveIntegerField('Invoice number', unique=True, editable=False)
-    surchargeAmount = models.FloatField('Surcharge amount', default=0, editable=False) # Store the surcharge amount at the time of invoice creation so later changes don't affect the invoice
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True)
     notes = models.TextField('Notes', blank=True)
@@ -116,13 +115,6 @@ class Invoice(SaveDeleteMixin, models.Model):
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
         
-        # Set surcharge amount to global settings value
-        if self.pk is None:
-            try:
-                self.surchargeAmount = InvoiceGlobalSettings.objects.get().surchargeAmount
-            except InvoiceGlobalSettings.DoesNotExist:
-                pass # Already set to 0 by default
-
         # Set invoiced date to payment due date if None, when mentor views invoice date will get brought forward to current date if before paymend due date
         if self.invoicedDate is None:
             self.invoicedDate = self.event.paymentDueDate
@@ -289,7 +281,7 @@ class Invoice(SaveDeleteMixin, models.Model):
             surchargeDescription = ''
 
         # Get values
-        unitCost = self.surchargeAmount
+        unitCost = self.event.eventSurchargeAmount
         totalExclGST = quantity * unitCost
         gst = 0.1 * totalExclGST
         totalInclGST = totalExclGST * 1.1
@@ -396,7 +388,7 @@ class Invoice(SaveDeleteMixin, models.Model):
             invoiceItems += self.competitionInvoiceItems()
 
         # Add surcharge if not 0
-        if self.surchargeAmount > 0:
+        if self.event.eventSurchargeAmount > 0:
             surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
             invoiceItems.append(self.surchargeInvoiceItem(surchargeQuantity))
 
