@@ -1520,6 +1520,33 @@ class TestInvoiceMethods(TestCase):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, invoicedDate=(datetime.datetime.now() + datetime.timedelta(days=1)).date())
         self.assertEqual(self.invoice.invoicedDate, (datetime.datetime.now() + datetime.timedelta(days=1)).date())
 
+    def test_preSave_surchageAmount_notSet(self):
+        self.invoiceSettings.surchargeAmount = 5
+        self.invoiceSettings.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.surchargeAmount, 5)
+
+    def test_preSave_surchageAmount_set(self):
+        self.invoiceSettings.surchargeAmount = 5
+        self.invoiceSettings.save()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.surchargeAmount, 5)
+
+        # Assert doesn't change after creation
+        self.invoiceSettings.surchargeAmount = 10
+        self.invoiceSettings.save()
+
+        self.invoice.save()
+        self.assertEqual(self.invoice.surchargeAmount, 5)
+
+    def test_preSave_surchageAmount_noSettings(self):
+        self.invoiceSettings.delete()
+
+        self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
+        self.assertEqual(self.invoice.surchargeAmount, 0)
+
 class TestInvoiceSummaryView(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'

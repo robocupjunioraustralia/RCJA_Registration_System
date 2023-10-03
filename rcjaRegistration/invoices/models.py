@@ -105,6 +105,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def preSave(self):
+        # Set invoice number
         if self.invoiceNumber is None:
             try:
                 self.invoiceNumber = Invoice.objects.latest('invoiceNumber').invoiceNumber + 1
@@ -113,6 +114,13 @@ class Invoice(SaveDeleteMixin, models.Model):
                     self.invoiceNumber = InvoiceGlobalSettings.objects.get().firstInvoiceNumber
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
+        
+        # Set surcharge amount to global settings value
+        if self.pk is None:
+            try:
+                self.surchargeAmount = InvoiceGlobalSettings.objects.get().surchargeAmount
+            except InvoiceGlobalSettings.DoesNotExist:
+                pass # Already set to 0 by default
 
         # Set invoiced date to payment due date if None, when mentor views invoice date will get brought forward to current date if before paymend due date
         if self.invoicedDate is None:
