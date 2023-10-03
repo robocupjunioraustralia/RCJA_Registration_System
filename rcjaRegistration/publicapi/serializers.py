@@ -87,6 +87,10 @@ class EventSerializer(serializers.ModelSerializer):
             # Workshop billing
             'workshopTeacherEntryFee',
             'workshopStudentEntryFee',
+            # Surcharge
+            'eventSurchargeAmount',
+            'surchargeName',
+            'surchargeEventDescription',
             # Details
             'directEnquiriesTo',
             'venue',

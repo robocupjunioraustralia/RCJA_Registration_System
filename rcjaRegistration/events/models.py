@@ -411,6 +411,18 @@ class Event(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
+    def surchargeName(self):
+        try:
+            return InvoiceGlobalSettings.objects.get().surchargeName
+        except InvoiceGlobalSettings.DoesNotExist:
+            return ''
+
+    def surchargeEventDescription(self):
+        try:
+            return InvoiceGlobalSettings.objects.get().surchargeEventDescription
+        except InvoiceGlobalSettings.DoesNotExist:
+            return ''
+
     def registrationsOpen(self):
         return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
 
