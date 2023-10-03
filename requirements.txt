@@ -27,7 +27,7 @@ s3transfer==0.6.2
 six==1.15.0
 sqlparse==0.4.4
 uritemplate==3.0.1
-urllib3==1.26.5
+urllib3==1.26.17
 webencodings==0.5.1
 whitenoise==5.2.0
 opencensus-ext-azure==1.1.8
