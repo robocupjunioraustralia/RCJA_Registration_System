@@ -17,7 +17,8 @@ class InvoiceGlobalSettings(models.Model):
     firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
     # Surcharge
     surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount excludes GST, GST will be added automatically.")
-    surchargeDescription = models.CharField('Surcharge description', max_length=50, default='Surcharge', help_text="This text appears on the invoice.")
+    surchargeName = models.CharField('Surcharge name', max_length=30, default='Surcharge', help_text="Name of the surcharge on the invoice.")
+    surchargeDescription = models.CharField('Surcharge description', max_length=70, blank=True, help_text="Surcharge description appears in small text below the surcharge name.")
 
     # *****Meta and clean*****
     class Meta:
