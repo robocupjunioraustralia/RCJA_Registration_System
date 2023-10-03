@@ -388,9 +388,9 @@ class Invoice(SaveDeleteMixin, models.Model):
         elif self.event.eventType == 'competition':
             invoiceItems += self.competitionInvoiceItems()
 
-        # Add surcharge if not 0
-        if self.event.eventSurchargeAmount > 0:
-            surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
+        # Add surcharge if not $0
+        surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
+        if self.event.eventSurchargeAmount > 0 and surchargeQuantity > 0:
             invoiceItems.append(self.surchargeInvoiceItem(surchargeQuantity))
 
         return invoiceItems
