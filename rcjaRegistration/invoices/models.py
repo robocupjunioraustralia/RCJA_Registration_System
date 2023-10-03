@@ -15,6 +15,9 @@ class InvoiceGlobalSettings(models.Model):
     invoiceFromDetails = models.TextField('Invoice from details')
     invoiceFooterMessage = models.TextField('Invoice footer message')
     firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
+    # Surcharge
+    surchargeAmount = models.FloatField('Surcharge amount', default=0)
+    surchargeDescription = models.CharField('Surcharge description', max_length=50, default='Surcharge', help_text="This text appears on the invoice.")
 
     # *****Meta and clean*****
     class Meta:
@@ -50,6 +53,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Fields
     invoiceNumber = models.PositiveIntegerField('Invoice number', unique=True, editable=False)
+    surchargeAmount = models.FloatField('Surcharge amount', default=0, editable=False) # Store the surcharge amount at the time of invoice creation so later changes don't affect the invoice
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True)
     notes = models.TextField('Notes', blank=True)
