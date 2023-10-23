@@ -120,6 +120,10 @@
                     </span>
                     <i class="dropdown icon"></i>
                     <div class="menu">
+                        <form method="post" action="{% url 'users:setCurrentAdminYear' 0 %}" class="button-form">
+                            {% csrf_token %}
+                            <input class="header-button item" type="submit" value="All"/>
+                        </form>
                         {% for year in years %}
                             <form method="post" action="{% url 'users:setCurrentAdminYear' year.year %}" class="button-form">
                                 {% csrf_token %}
