@@ -199,3 +199,12 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
     filterQuerysetOnSelected = True
     stateSelectedFilterLookup = 'team__event__state'
     yearSelectedFilterLookup = 'team__event__year'
+
+    # Disable adding and changing to ensure team FK can't be changed to stop invoices getting out of sync
+    # The team FK dropdown is messy, easier to just disable
+    # Only display this admin for exports
+    def has_add_permission(self, request, obj=None):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False
