@@ -136,9 +136,7 @@
             {% if user.is_staff %}
                 <div class="ui dropdown simple item" >
                     <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
-                    {% if user.currentlySelectedAdminState is None %}
-                    All
-                    {% elif user.currentlySelectedAdminState in user.adminViewableStates %}
+                    {% if user.currentlySelectedAdminState in user.adminViewableStates %}
                     {{ user.currentlySelectedAdminState.abbreviation }}
                     {% else %}
                     State
