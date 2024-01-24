@@ -14,6 +14,7 @@ import os
 import environ
 import sys
 from opencensus.trace import config_integration
+import sentry_sdk
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -321,3 +322,21 @@ PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+
+if not DEV_SETTINGS:
+    sentry_sdk.init(
+        dsn='SENTRY_DSN',
+        enable_tracing=False,
+        sample_rate=1.0,
+        send_default_pii=False,
+        enrionment='production',
+        integrations=[
+            DjangoIntegration(
+                transaction_style='url',
+                middleware_spans=True,
+                signals_spans=False,
+                cache_spans=False,
+            ),
+        ]
+    )
+
