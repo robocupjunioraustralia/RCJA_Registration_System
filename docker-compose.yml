@@ -4,6 +4,7 @@ services:
   web:
     environment:
       - DATABASE_URL=postgres://rcjaRegistration:abc123@db/rcjaRegistration
+      - DEV_SETTINGS=true
     depends_on:
       - db
   db:

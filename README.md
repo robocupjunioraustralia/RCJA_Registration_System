@@ -7,18 +7,26 @@
 
 1. Install Docker and Docker Compose
 
-2. Start the app
+2. Clone the repository
+    - **Note for Windows:** Ensure `core.autocrlf` is set to `false` in git config before cloning to avoid line ending issues
+        ```
+        git config --global core.autocrlf false
+        ``` 
+    ```
+    git clone https://github.com/robocupjunioraustralia/RCJA_Registration_System.git
+    ```
 
-```
-docker-compose up -d
-```
+3. Start the app
+    ```
+    docker-compose up -d
+    ```
 
-3. Initialise Django
-
-```
-docker-compose exec web manage.py migrate
-docker-compose exec web manage.py createsuperuser
-```
+4. Initialise Django
+    ```
+    docker-compose exec web manage.py migrate
+    docker-compose exec web manage.py collectstatic
+    docker-compose exec web manage.py createsuperuser
+    ```
 
 ## Deploying
 
