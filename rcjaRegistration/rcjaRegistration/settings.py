@@ -31,6 +31,8 @@ env = environ.Env(
     STATIC_BUCKET=(str, 'STATIC_BUCKET'),
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
+    SENTRY_DSN = (str, 'SENTRY_DSN'),
+    SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
     DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
     APPLICATIONINSIGHTS_CONNECTION_STRING=(str, '')
@@ -324,17 +326,19 @@ AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
 
-if not DEV_SETTINGS:
+
+SENTRY_DSN = env('SENTRY_DSN')
+if SENTRY_DSN != 'SENTRY_DSN':
     sentry_sdk.init(
-        dsn='SENTRY_DSN',
+        dsn=SENTRY_DSN,
+        environment=env('SENTRY_ENV'),
         enable_tracing=False,
         sample_rate=1.0,
-        send_default_pii=False,
-        enrionment='production',
+        send_default_pii=True,
         integrations=[
             DjangoIntegration(
                 transaction_style='url',
-                middleware_spans=True,
+                middleware_spans=False,
                 signals_spans=False,
                 cache_spans=False,
             ),
