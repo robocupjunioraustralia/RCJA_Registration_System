@@ -14,6 +14,8 @@ import os
 import environ
 import sys
 from opencensus.trace import config_integration
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +31,8 @@ env = environ.Env(
     STATIC_BUCKET=(str, 'STATIC_BUCKET'),
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
+    SENTRY_DSN = (str, 'SENTRY_DSN'),
+    SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
     DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
     APPLICATIONINSIGHTS_CONNECTION_STRING=(str, '')
@@ -321,3 +325,23 @@ PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+
+
+SENTRY_DSN = env('SENTRY_DSN')
+if SENTRY_DSN != 'SENTRY_DSN':
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=env('SENTRY_ENV'),
+        enable_tracing=False,
+        sample_rate=1.0,
+        send_default_pii=True,
+        integrations=[
+            DjangoIntegration(
+                transaction_style='url',
+                middleware_spans=False,
+                signals_spans=False,
+                cache_spans=False,
+            ),
+        ]
+    )
+
