@@ -37,6 +37,10 @@
         <h3>Payment</h3>
         <p>
             This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
+            {% if event.eventSurchargeAmount %}
+            <br><br>{{ event.surchargeName }}: ${{ event.eventSurchargeAmount}}
+            {% if event.surchargeEventDescription %}<br>{{ event.surchargeEventDescription }}<br>{% endif %}
+            {% endif %}
             {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.{% endif %}
             {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
             {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team per school limit for this event.{% endif %}
