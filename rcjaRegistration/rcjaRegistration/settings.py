@@ -13,13 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import environ
 import sys
-from opencensus.trace import config_integration
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-config_integration.trace_integrations(['postgresql'])
 env = environ.Env(
     DEBUG=(bool, False),
     SENDGRID_API_KEY=(str, 'API_KEY'),
@@ -34,8 +32,7 @@ env = environ.Env(
     SENTRY_DSN = (str, 'SENTRY_DSN'),
     SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
-    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
-    APPLICATIONINSIGHTS_CONNECTION_STRING=(str, '')
+    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
