@@ -119,16 +119,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.redirectsMiddleware.RedirectMiddleware',
     'axes.middleware.AxesMiddleware',
-    'opencensus.ext.django.middleware.OpencensusMiddleware',
 ]
-
-if not DEV_SETTINGS:
-    OPENCENSUS = {
-        'TRACE': {
-            'SAMPLER': 'opencensus.trace.samplers.ProbabilitySampler(rate=1)',
-            'EXPORTER': 'opencensus.ext.azure.trace_exporter.AzureExporter(connection_string="' + env('APPLICATIONINSIGHTS_CONNECTION_STRING') + '")'
-        }
-    }
 
 ROOT_URLCONF = 'rcjaRegistration.urls'
 

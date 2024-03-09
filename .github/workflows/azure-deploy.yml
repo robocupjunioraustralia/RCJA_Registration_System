@@ -1,4 +1,4 @@
-name: Deploy to Azure App Service
+name: Build and Deploy to Azure VM
 
 on:
   workflow_dispatch:
@@ -36,24 +36,28 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: azure-prod
+    environment: rcja-app-prod
     steps:
-    - name: 'Login via Azure CLI'
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - name: Start slot
+    - name: Execute local deployment
       run: |
-        az webapp start -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: rcjaregistration
-        images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
-        slot-name: staging
-    - name: Swap slots and stop staging
-      run: |
-        az webapp deployment slot swap -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
-        az webapp stop -s 'staging' -n rcjaregistration -g enter.robocupjunior.org.au
+        echo "Deploying image ${{ github.sha }}..."
+        TEMP_FILE=$(mktemp)
+        trap 'rm -f "$TEMP_FILE"' EXIT
+        
+        curl "${{ secrets.DEPLOY_URL }}" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
+          -d '{"image": "${{ github.sha }}"}' \
+          --show-error \
+          --fail-with-body | tee "$TEMP_FILE"
 
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+          exit 1
+        fi
 
+        if ! tail -n 1 "$TEMP_FILE" | grep -q 'Deployment complete.'; then
+          exit 3
+        fi
+
+        exit 0
+      shell: bash
