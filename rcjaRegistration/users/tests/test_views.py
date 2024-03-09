@@ -122,13 +122,15 @@ class Test_response_setCurrentAdminYear(TestCase):
         self.user_state1_fullcoordinator.refresh_from_db()
         self.assertEqual(self.user_state1_fullcoordinator.currentlySelectedAdminYear, None)
 
-    def testNone404(self):
-        self.assertEqual(self.user_state1_fullcoordinator.currentlySelectedAdminYear, None)
+    def testNoneSuccess(self):
+        self.user_state1_fullcoordinator.currentlySelectedAdminYear = self.year
+        self.user_state1_fullcoordinator.save()
+        self.assertEqual(self.user_state1_fullcoordinator.currentlySelectedAdminYear, self.year)
 
         response = self.client.post(reverse('users:setCurrentAdminYear', kwargs= {'year':0}))
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 302)
 
-        # Check no update to value
+        # Check updated
         self.user_state1_fullcoordinator.refresh_from_db()
         self.assertEqual(self.user_state1_fullcoordinator.currentlySelectedAdminYear, None)
 
