@@ -133,7 +133,7 @@
                     </div>
                 </div>
             {% endif %}
-            {% if user.is_staff %}
+            {% if user.is_staff and user.adminViewableStates|length > 1 %}
                 <div class="ui dropdown simple item" >
                     <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
                     {% if user.currentlySelectedAdminState in user.adminViewableStates %}
