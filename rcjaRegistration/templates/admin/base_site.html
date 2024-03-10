@@ -7,8 +7,55 @@
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">
-     <img src="{% static 'favicon-32x32.png' %}">
-    {{ site_header|default:_('Django administration') }}
-    </a></h1>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center">
+        <h1 id="site-name" style="margin: 0; display: flex; align-items: center; flex-wrap: wrap; text-wrap: nowrap">
+            <a href="{% url 'admin:index' %}">
+                <img src="{% static 'favicon-32x32.png' %}">
+                {{ site_header|default:_('Django administration') }}
+            </a>
+        </h1>
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; justify-content: flex-end">
+            <form method="post">
+                {% csrf_token %}
+                <select name="year_filter" onchange="this.form.action = this.value; this.form.submit()" style="margin: 0; width: 120px">
+                    {% if not user.currentlySelectedAdminYear %}
+                        <option value disabled selected>Filter by Year</option>
+                    {% else %}
+                        <option value disabled>Filter by Year</option>
+                        <option value selected style="display: none">Year: {{ user.currentlySelectedAdminYear }}</option>
+                    {% endif %}
+                    <option value="{% url 'users:setCurrentAdminYear' 0 %}">All</option>
+        
+                    {% for year in years %}
+                        <option value="{% url 'users:setCurrentAdminYear' year %}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        
+            {% if user.adminViewableStates|length > 1 %}
+                <form method="post">
+                    {% csrf_token %}
+                    <select name="state_filter" onchange="this.form.action = this.value; this.form.submit()" style="margin: 0; width: 120px">
+                        {% if not user.currentlySelectedAdminState %}
+                            <option value disabled selected>Filter by State</option>
+                        {% else %}
+                            <option value disabled>Filter by State</option>
+                            <option value selected style="display: none">State: {{ user.currentlySelectedAdminState.abbreviation }}</option>
+                        {% endif %}
+                        <option value="{% url 'users:setCurrentAdminState' 0 %}">All</option>
+        
+                        {% for state in user.adminViewableStates %}
+                            <option value="{% url 'users:setCurrentAdminState' state.id %}">{{ state.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block welcome-msg %}
+    Welcome, 
+    <strong>{% firstof user.get_full_name user.get_username %}</strong>.
 {% endblock %}
