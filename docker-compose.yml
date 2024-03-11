@@ -2,19 +2,16 @@ version: '3'
 
 services:
   web:
-    environment:
-      - DATABASE_URL=postgres://rcjaRegistration:abc123@db/rcjaRegistration
-      - DEV_SETTINGS=true
+    env_file:
+      - .env
     depends_on:
       - db
   db:
-    image: postgres:alpine
+    image: postgres:14.11
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=rcjaRegistration
-      - POSTGRES_USER=rcjaRegistration
-      - POSTGRES_PASSWORD=abc123
+    env_file:
+      - .env
 
 volumes:
   postgres_data:
