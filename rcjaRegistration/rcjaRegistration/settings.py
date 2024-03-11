@@ -32,7 +32,8 @@ env = environ.Env(
     SENTRY_DSN = (str, 'SENTRY_DSN'),
     SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
-    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au')
+    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
+    USE_PROXY=(bool, False)
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -55,22 +56,21 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = []
 
+DEV_SETTINGS = env('DEV_SETTINGS')
+
 # Add the allowed hosts to cors
 # https unless is the default local_hosts for dev
-if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
-    for allowed_host in env('ALLOWED_HOSTS'):
-        CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
-        CSRF_TRUSTED_ORIGINS.append(f'http://{allowed_host}:8000')
-else:
-    if isinstance(env('ALLOWED_HOSTS'), list):
-        for allowed_host in env('ALLOWED_HOSTS'):
-            CORS_ALLOWED_ORIGINS.append(f'https://{allowed_host}')
-            CSRF_TRUSTED_ORIGINS.append(f'https://{allowed_host}')
-    else:
-        CORS_ALLOWED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
-        CSRF_TRUSTED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
+_allowed_hosts_list = env('ALLOWED_HOSTS') if isinstance(env('ALLOWED_HOSTS'), list) else [env('ALLOWED_HOSTS')]
+_allowed_hosts_list = [f"https://{host}" for host in _allowed_hosts_list]
+if DEV_SETTINGS:
+    _allowed_hosts_list.append("http://127.0.0.1:8000")
+    _allowed_hosts_list.append("http://localhost:8000")
 
-DEV_SETTINGS = env('DEV_SETTINGS')
+CORS_ALLOWED_ORIGINS += _allowed_hosts_list
+CSRF_TRUSTED_ORIGINS += _allowed_hosts_list
+
+if env('USE_PROXY'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
