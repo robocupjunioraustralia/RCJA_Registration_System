@@ -9,6 +9,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Get environment variables
+      run: |
+        cp .env.ci .env
     - name: Set up Docker Compose stack
       run: |
         docker-compose up -d

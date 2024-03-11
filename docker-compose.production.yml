@@ -7,8 +7,6 @@ services:
     build: .
     ports:
       - 8000:8000
-    environment:
-      - DEBUG=false
-      - SECRET_KEY
+
   db:
     restart: unless-stopped
