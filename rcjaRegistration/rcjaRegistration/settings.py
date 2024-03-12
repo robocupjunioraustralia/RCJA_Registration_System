@@ -70,6 +70,7 @@ CORS_ALLOWED_ORIGINS += _allowed_hosts_list
 CSRF_TRUSTED_ORIGINS += _allowed_hosts_list
 
 if env('USE_PROXY'):
+    USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
