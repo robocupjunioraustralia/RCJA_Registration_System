@@ -8,3 +8,4 @@ rcjaRegistration/static
 *.csv
 *.xlsx
 .env
+.env.dev.sample
