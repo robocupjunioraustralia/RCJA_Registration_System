@@ -15,7 +15,7 @@
     ```
     git clone https://github.com/robocupjunioraustralia/RCJA_Registration_System.git
     ```
-3. Setup the {{.env}} file by renaming {{.env.dev.sample}} to {{.env}}
+3. Setup the ```.env``` file by renaming ```.env.dev.sample``` to ```.env```
 
 4. Start the app
     ```
