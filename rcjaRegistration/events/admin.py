@@ -224,10 +224,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
-        ('Billing settings', {
-            'description': "More options will be available after you click save",
-            'fields': ('entryFeeIncludesGST', 'event_defaultEntryFee')
-        }),
         ('Details', {
             'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
@@ -311,6 +307,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'event_defaultEntryFee',
         'event_specialRateNumber',
         'event_specialRateFee',
+        'workshopTeacherEntryFee',
+        'workshopStudentEntryFee',
         'paymentDueDate',
         'eventDetails',
         'additionalInvoiceMessage',
