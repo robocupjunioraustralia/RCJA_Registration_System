@@ -15,13 +15,14 @@
     ```
     git clone https://github.com/robocupjunioraustralia/RCJA_Registration_System.git
     ```
+3. Setup the {{.env}} file by renaming {{.env.dev.sample}} to {{.env}}
 
-3. Start the app
+4. Start the app
     ```
     docker-compose up -d
     ```
 
-4. Initialise Django
+5. Initialise Django
     ```
     docker-compose exec web manage.py migrate
     docker-compose exec web manage.py collectstatic
