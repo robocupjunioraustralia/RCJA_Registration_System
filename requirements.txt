@@ -14,7 +14,7 @@ django-storages==1.13.2
 django-widget-tweaks==1.4.8
 djangorestframework==3.14.0
 docutils==0.15.2
-idna==2.10
+idna==3.7
 jmespath==0.10.0
 packaging==20.8
 Pillow==10.3.0
