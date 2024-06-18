@@ -28,6 +28,6 @@ sentry-sdk==1.39.2
 six==1.15.0
 sqlparse==0.5.0
 uritemplate==3.0.1
-urllib3==1.26.18
+urllib3==1.26.19
 webencodings==0.5.1
 whitenoise==5.2.0
