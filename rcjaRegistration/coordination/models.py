@@ -19,6 +19,7 @@ class Coordinator(SaveDeleteMixin, models.Model):
         ('eventmanager', 'Event manager'),
         ('schoolmanager', 'School manager'),
         ('billingmanager', 'Billing manager'),
+        ('associationmanager', 'Association manager'),
         ('webeditor', 'Web editor'),
         ('full','Full'))
     permissionLevel = models.CharField('Permission level', max_length=20, choices=permissionLevelOptions)
