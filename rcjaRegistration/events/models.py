@@ -15,7 +15,7 @@ from common.fields import UUIDImageField
 from rcjaRegistration.storageBackends import PublicMediaStorage
 from django.templatetags.static import static
 
-from invoices.models import Invoice
+from invoices.models import Invoice, InvoiceGlobalSettings
 from schools.models import SchoolAdministrator
 
 # **********MODELS**********
@@ -280,6 +280,9 @@ class Event(SaveDeleteMixin, models.Model):
     workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
     workshopStudentEntryFee = models.PositiveIntegerField('Student entry fee', null=True)
 
+    # Surcharge
+    eventSurchargeAmount = models.FloatField('Surcharge amount for event', default=0, editable=False) # Store the surcharge amount at the time of event creation so later changes don't affect past events
+
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
     venue = models.ForeignKey(Venue, verbose_name='Venue', on_delete=models.PROTECT, null=True, blank=True)
@@ -373,6 +376,13 @@ class Event(SaveDeleteMixin, models.Model):
                 self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
                 self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
 
+        # Set surcharge amount to global settings value
+        if self.pk is None:
+            try:
+                self.eventSurchargeAmount = InvoiceGlobalSettings.objects.get().surchargeAmount
+            except InvoiceGlobalSettings.DoesNotExist:
+                pass # Already set to 0 by default
+
         self.billingDetailsChanged = self.checkBillingDetailsChanged()
 
     def checkBillingDetailsChanged(self):
@@ -400,6 +410,20 @@ class Event(SaveDeleteMixin, models.Model):
     # *****Methods*****
 
     # *****Get Methods*****
+
+    def surchargeName(self):
+        # For serializer
+        try:
+            return InvoiceGlobalSettings.objects.get().surchargeName
+        except InvoiceGlobalSettings.DoesNotExist:
+            return ''
+
+    def surchargeEventDescription(self):
+        # For serializer
+        try:
+            return InvoiceGlobalSettings.objects.get().surchargeEventDescription
+        except InvoiceGlobalSettings.DoesNotExist:
+            return ''
 
     def registrationsOpen(self):
         return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
