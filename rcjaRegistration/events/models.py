@@ -385,6 +385,8 @@ class Event(SaveDeleteMixin, models.Model):
 
         self.billingDetailsChanged = self.checkBillingDetailsChanged()
 
+        self.eventConvertedToPaid = self.checkEventConvertedToPaid()
+
     def checkBillingDetailsChanged(self):
         try:
             previousEvent = Event.objects.get(pk=self.pk)
@@ -402,10 +404,23 @@ class Event(SaveDeleteMixin, models.Model):
             self.workshopStudentEntryFee != previousEvent.workshopStudentEntryFee
         )
 
+    def checkEventConvertedToPaid(self):
+        try:
+            previousEvent = Event.objects.get(pk=self.pk)
+        except Event.DoesNotExist:
+            # Return false on new event because no invoices can exist yet
+            return False
+
+        return not previousEvent.paidEvent() and self.paidEvent()
+
     def postSave(self):
         if self.billingDetailsChanged: # Set in presave so can see the previous value before database operation
             for invoice in self.invoice_set.all():
                 invoice.calculateAndSaveAllTotals()
+
+        if self.eventConvertedToPaid:
+            for baseEvemtAttendance in self.baseeventattendance_set.all():
+                baseEvemtAttendance.createUpdateInvoices()
 
     # *****Methods*****
 
@@ -705,13 +720,38 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
             if not created:
                 invoice.calculateAndSaveAllTotals()
 
+    def preSave(self):
+        self.setPreviousSchoolValues()
+
     def postSave(self):
         self.createUpdateInvoices()
+        if self.schoolValuesChanged:
+            self.previousObject.createUpdateInvoices()
 
     def postDelete(self):
         self.createUpdateInvoices()
 
     # *****Methods*****
+
+    # Check if school, mentorUser or campus changed
+    def checkSchoolValuesChanged(self):
+        return (
+            self.school != self.previousObject.school or
+            self.mentorUser != self.previousObject.mentorUser or
+            self.campus != self.previousObject.campus
+        )
+
+    # Get previous school, mentorUser and campus if changed and set fields on object with old values
+    def setPreviousSchoolValues(self):
+        self.schoolValuesChanged = False
+        try:
+            self.previousObject = BaseEventAttendance.objects.get(pk=self.pk)
+
+            if self.checkSchoolValuesChanged():
+                self.schoolValuesChanged = True
+
+        except BaseEventAttendance.DoesNotExist:
+            pass
 
     # *****Get Methods*****
 

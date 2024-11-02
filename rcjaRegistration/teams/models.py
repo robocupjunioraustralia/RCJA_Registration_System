@@ -180,13 +180,30 @@ class Student(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        self.setPreviousTeamValue()
+
     def postSave(self):
         self.team.createUpdateInvoices()
+        if self.teamValueChanged:
+            self.previousTeam.createUpdateInvoices()
 
     def postDelete(self):
         self.team.createUpdateInvoices()
 
     # *****Methods*****
+
+    # Check if team changed and record previous team on object
+    def setPreviousTeamValue(self):
+        self.teamValueChanged = False
+        try:
+            self.previousTeam = Student.objects.get(pk=self.pk).team
+
+            if self.previousTeam != self.team:
+                self.teamValueChanged = True
+
+        except Student.DoesNotExist:
+            pass
 
     # *****Get Methods*****
 

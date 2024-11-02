@@ -858,6 +858,38 @@ class TestEventMethods(TestCase):
         self.event.workshopStudentEntryFee = 50
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
+    def test_checkEventConvertedToPaid_notChanged(self):
+        self.assertFalse(self.event.checkEventConvertedToPaid())
+    
+    def test_checkEventConvertedToPaid_newEvent(self):
+        self.unsavedEvent = Event(
+            year=self.year,
+            state=self.newState,
+            name='Unsaved Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+
+        self.assertFalse(self.unsavedEvent.checkEventConvertedToPaid())
+    
+    def test_checkEventConvertedToPaid_toFree(self):
+        self.event.event_defaultEntryFee = 0
+        self.assertFalse(self.event.checkEventConvertedToPaid())
+
+    def test_checkEventConvertedToPaid_toPaid(self):
+        self.event.event_defaultEntryFee = 0
+        self.event.save()
+
+        self.event.event_defaultEntryFee = 5
+        self.assertTrue(self.event.checkEventConvertedToPaid())
+
     def test_preSave_surchageAmount_notSet(self):
         self.invoiceSettings.surchargeAmount = 5
         self.invoiceSettings.save()

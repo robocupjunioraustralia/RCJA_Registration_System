@@ -33,7 +33,7 @@ def create(request):
     else:
         form = SchoolForm()
 
-    return render(request, 'schools/createSchool.html', {'form': form})
+    return render(request, 'schools/createSchool.html', {'form': form, 'regionsLookup': getRegionsLookup()})
 
 @login_required
 def setCurrentSchool(request, schoolID):

@@ -16,7 +16,7 @@ class InvoiceGlobalSettings(models.Model):
     invoiceFooterMessage = models.TextField('Invoice footer message')
     firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
     # Surcharge
-    surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount excludes GST, GST will be added automatically.")
+    surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount includes GST.")
     surchargeName = models.CharField('Surcharge name', max_length=30, default='Surcharge', help_text="Name of the surcharge on the invoice.")
     surchargeInvoiceDescription = models.CharField('Surcharge invoice description', max_length=70, blank=True, help_text="Appears in small text below the surcharge name on the invoice.")
     surchargeEventDescription = models.CharField('Surcharge event page description', max_length=200, blank=True, help_text="Appears on the event page below the surcharge amount.")
@@ -282,10 +282,10 @@ class Invoice(SaveDeleteMixin, models.Model):
             surchargeInvoiceDescription = ''
 
         # Get values
-        unitCost = self.event.eventSurchargeAmount
+        unitCost = self.event.eventSurchargeAmount / 1.1
         totalExclGST = quantity * unitCost
         gst = 0.1 * totalExclGST
-        totalInclGST = totalExclGST * 1.1
+        totalInclGST = quantity * self.event.eventSurchargeAmount
 
         return {
             'name': surchargeName,
