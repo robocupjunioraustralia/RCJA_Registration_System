@@ -68,6 +68,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
                 'softwarePlatform',
                 'creationDateTime',
                 'updatedDateTime',
+                'withdrawn',
             )
         }),
     )

@@ -116,6 +116,7 @@ class Team(BaseEventAttendance):
 
     # Fields
     name = models.CharField('Name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    withdrawn = models.BooleanField('Withdrawn', default=False, help_text='Selecting this box will remove the team from the scoring system but leave it on the invoice.')
 
     # *****Meta and clean*****
     class Meta:
