@@ -91,7 +91,7 @@ class EventAvailableFileType(models.Model):
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['event'])
+        checkRequiredFieldsNotNone(self, ['event', 'uploadDeadline'])
 
         # Validate upload deadline
         if self.uploadDeadline < self.event.registrationsCloseDate:
