@@ -187,7 +187,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
@@ -206,7 +206,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
@@ -224,10 +224,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
-        ('Billing settings', {
-            'description': "More options will be available after you click save",
-            'fields': ('entryFeeIncludesGST', 'event_defaultEntryFee')
-        }),
         ('Details', {
             'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
@@ -240,6 +236,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'bannerImageFilesize',
         'effectiveBannerImageTag',
         'registrationsLink',
+        'eventSurchargeAmount',
     ]
     add_readonly_fields = [
     ]
@@ -311,6 +308,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'event_defaultEntryFee',
         'event_specialRateNumber',
         'event_specialRateFee',
+        'workshopTeacherEntryFee',
+        'workshopStudentEntryFee',
         'paymentDueDate',
         'eventDetails',
         'additionalInvoiceMessage',

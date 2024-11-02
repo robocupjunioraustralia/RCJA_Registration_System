@@ -13,11 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import environ
 import sys
-from opencensus.trace import config_integration
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-config_integration.trace_integrations(['postgresql'])
 env = environ.Env(
     DEBUG=(bool, False),
     SENDGRID_API_KEY=(str, 'API_KEY'),
@@ -29,9 +29,11 @@ env = environ.Env(
     STATIC_BUCKET=(str, 'STATIC_BUCKET'),
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
+    SENTRY_DSN = (str, 'SENTRY_DSN'),
+    SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
     DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
-    APPLICATIONINSIGHTS_CONNECTION_STRING=(str, '')
+    USE_PROXY=(bool, False)
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -54,22 +56,22 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = []
 
+DEV_SETTINGS = env('DEV_SETTINGS')
+
 # Add the allowed hosts to cors
 # https unless is the default local_hosts for dev
-if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
-    for allowed_host in env('ALLOWED_HOSTS'):
-        CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
-        CSRF_TRUSTED_ORIGINS.append(f'http://{allowed_host}:8000')
-else:
-    if isinstance(env('ALLOWED_HOSTS'), list):
-        for allowed_host in env('ALLOWED_HOSTS'):
-            CORS_ALLOWED_ORIGINS.append(f'https://{allowed_host}')
-            CSRF_TRUSTED_ORIGINS.append(f'https://{allowed_host}')
-    else:
-        CORS_ALLOWED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
-        CSRF_TRUSTED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
+_allowed_hosts_list = env('ALLOWED_HOSTS') if isinstance(env('ALLOWED_HOSTS'), list) else [env('ALLOWED_HOSTS')]
+_allowed_hosts_list = [f"https://{host}" for host in _allowed_hosts_list]
+if DEV_SETTINGS:
+    _allowed_hosts_list.append("http://127.0.0.1:8000")
+    _allowed_hosts_list.append("http://localhost:8000")
 
-DEV_SETTINGS = env('DEV_SETTINGS')
+CORS_ALLOWED_ORIGINS += _allowed_hosts_list
+CSRF_TRUSTED_ORIGINS += _allowed_hosts_list
+
+if env('USE_PROXY'):
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -115,16 +117,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.redirectsMiddleware.RedirectMiddleware',
     'axes.middleware.AxesMiddleware',
-    'opencensus.ext.django.middleware.OpencensusMiddleware',
 ]
-
-if not DEV_SETTINGS:
-    OPENCENSUS = {
-        'TRACE': {
-            'SAMPLER': 'opencensus.trace.samplers.ProbabilitySampler(rate=1)',
-            'EXPORTER': 'opencensus.ext.azure.trace_exporter.AzureExporter(connection_string="' + env('APPLICATIONINSIGHTS_CONNECTION_STRING') + '")'
-        }
-    }
 
 ROOT_URLCONF = 'rcjaRegistration.urls'
 
@@ -321,3 +314,23 @@ PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+
+
+SENTRY_DSN = env('SENTRY_DSN')
+if SENTRY_DSN != 'SENTRY_DSN':
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=env('SENTRY_ENV'),
+        enable_tracing=False,
+        sample_rate=1.0,
+        send_default_pii=True,
+        integrations=[
+            DjangoIntegration(
+                transaction_style='url',
+                middleware_spans=False,
+                signals_spans=False,
+                cache_spans=False,
+            ),
+        ]
+    )
+

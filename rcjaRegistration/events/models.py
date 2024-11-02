@@ -15,7 +15,7 @@ from common.fields import UUIDImageField
 from rcjaRegistration.storageBackends import PublicMediaStorage
 from django.templatetags.static import static
 
-from invoices.models import Invoice
+from invoices.models import Invoice, InvoiceGlobalSettings
 from schools.models import SchoolAdministrator
 
 # **********MODELS**********
@@ -267,7 +267,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', default=0)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Competition billing settings
@@ -279,6 +279,9 @@ class Event(SaveDeleteMixin, models.Model):
     # Workshop billing settings
     workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
     workshopStudentEntryFee = models.PositiveIntegerField('Student entry fee', null=True)
+
+    # Surcharge
+    eventSurchargeAmount = models.FloatField('Surcharge amount for event', default=0, editable=False) # Store the surcharge amount at the time of event creation so later changes don't affect past events
 
     # Event details
     directEnquiriesTo = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Direct enquiries to', on_delete=models.PROTECT, help_text="This person's name and email will appear on the event page")
@@ -373,6 +376,13 @@ class Event(SaveDeleteMixin, models.Model):
                 self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
                 self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
 
+        # Set surcharge amount to global settings value
+        if self.pk is None:
+            try:
+                self.eventSurchargeAmount = InvoiceGlobalSettings.objects.get().surchargeAmount
+            except InvoiceGlobalSettings.DoesNotExist:
+                pass # Already set to 0 by default
+
         self.billingDetailsChanged = self.checkBillingDetailsChanged()
 
     def checkBillingDetailsChanged(self):
@@ -401,6 +411,20 @@ class Event(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
+    def surchargeName(self):
+        # For serializer
+        try:
+            return InvoiceGlobalSettings.objects.get().surchargeName
+        except InvoiceGlobalSettings.DoesNotExist:
+            return ''
+
+    def surchargeEventDescription(self):
+        # For serializer
+        try:
+            return InvoiceGlobalSettings.objects.get().surchargeEventDescription
+        except InvoiceGlobalSettings.DoesNotExist:
+            return ''
+
     def registrationsOpen(self):
         return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
 
@@ -413,6 +437,12 @@ class Event(SaveDeleteMixin, models.Model):
     def paidEvent(self):
         if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
             return True
+        # Workshops don't rely on the default entry fee
+        if self.eventType == 'workshop':
+            if self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0:
+                return True
+            if self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0:
+                return True
 
         return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
 
