@@ -34,6 +34,12 @@ class AssociationMember(SaveDeleteMixin, models.Model):
             elif self.membershipStartDate >= self.membershipEndDate:
                 errors['membershipStartDate'] = 'Membership start date must be before membership end date'
 
+        if self.under18() and self.address:
+            errors['address'] = 'Address must be blank for members under 18'
+        
+        if not self.under18() and not self.address:
+            errors['address'] = 'Address must not be blank for members 18 and over'
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
@@ -75,9 +81,12 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     activeMembership.short_description = 'Active'
     activeMembership.boolean = True
 
+    def under18(self):
+        age = (datetime.date.today() - self.birthday) // datetime.timedelta(days=365.2425) # Because averaging leap years this could be off by a day or two
+        return age < 18
+
     def membershipType(self):
-        age = (datetime.date.today() - self.birthday) // datetime.timedelta(days=365.2425) # Because averaging leap years could be off by a day or two
-        if age >= 18:
+        if not self.under18():
             return 'Ordinary'
         else:
             return 'Associate'
