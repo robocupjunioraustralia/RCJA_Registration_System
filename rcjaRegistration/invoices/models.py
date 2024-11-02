@@ -234,7 +234,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Standard rate teams for this invoice - teams that don't receive the special rate
     def standardRateTeams(self):
-        # Filter teams for this invoice to those that receive special rate
+        # Filter teams for this invoice to exclude those that receive special rate
         return self.allTeams().exclude(pk__in=self.specialRateTeamsForSchool().values_list('pk', flat=True))
 
     # Need methods to calculate teams or students that get special rate and teams that don't

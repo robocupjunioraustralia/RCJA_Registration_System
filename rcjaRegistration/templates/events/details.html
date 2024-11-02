@@ -140,14 +140,16 @@
         <tbody>
             {% for team in teams %}
             <tr id="baseWorkshopAttendanceRow{{team.id}}">
-                <td>{{team.name}}</td>
-                <td>{{team.division}}</td>
-                {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
+                <td>{% if team.withdrawn %}<s>{{team.name}}</s>{% else %}{{team.name}}{% endif %}</td>
+                <td>{% if team.withdrawn %}<s>{{team.division}}</s>{% else %}{{team.division}}{% endif %}</td>
+                {% if showCampusColumn %}<td>{% if team.withdrawn %}<s>{{team.campus}}</s>{% else %}{{team.campus}}{% endif %}</td>{% endif %}
                 <td>
+                    {% if team.withdrawn %}<s>{% endif %}
                     {% for student in team.student_set.all %}
                     {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
                     {% if not forloop.last %}, {% endif %}
                     {% endfor %}
+                    {% if team.withdrawn %}</s>{% endif %}
                 </td>
                 <td>
                     <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
