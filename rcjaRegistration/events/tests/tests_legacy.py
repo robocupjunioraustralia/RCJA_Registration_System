@@ -925,6 +925,27 @@ class TestEventMethods(TestCase):
         )
         self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 0)
 
+    def test_surchargeName_exists(self):
+        self.invoiceSettings.surchargeName = 'Test Surcharge Name'
+        self.invoiceSettings.save()
+
+        self.assertEqual(self.event.surchargeName(), 'Test Surcharge Name')
+
+    def test_surchargeEventDescription_exists(self):
+        self.invoiceSettings.surchargeEventDescription = 'Test Surcharge Event Description'
+        self.invoiceSettings.save()
+
+        self.assertEqual(self.event.surchargeEventDescription(), 'Test Surcharge Event Description')
+
+    def test_surchargeEventName_notExists(self):
+        self.invoiceSettings.delete()
+
+        self.assertEqual(self.event.surchargeName(), '')
+
+    def test_surchargeEventDescription_notExists(self):
+        self.invoiceSettings.delete()
+
+        self.assertEqual(self.event.surchargeEventDescription(), '')
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')

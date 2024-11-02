@@ -412,12 +412,14 @@ class Event(SaveDeleteMixin, models.Model):
     # *****Get Methods*****
 
     def surchargeName(self):
+        # For serializer
         try:
             return InvoiceGlobalSettings.objects.get().surchargeName
         except InvoiceGlobalSettings.DoesNotExist:
             return ''
 
     def surchargeEventDescription(self):
+        # For serializer
         try:
             return InvoiceGlobalSettings.objects.get().surchargeEventDescription
         except InvoiceGlobalSettings.DoesNotExist:
