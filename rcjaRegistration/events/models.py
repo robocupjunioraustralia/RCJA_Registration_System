@@ -705,13 +705,38 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
             if not created:
                 invoice.calculateAndSaveAllTotals()
 
+    def preSave(self):
+        self.setPreviousSchoolValues()
+
     def postSave(self):
         self.createUpdateInvoices()
+        if self.schoolValuesChanged:
+            self.previousObject.createUpdateInvoices()
 
     def postDelete(self):
         self.createUpdateInvoices()
 
     # *****Methods*****
+
+    # Check if school, mentorUser or campus changed
+    def checkSchoolValuesChanged(self):
+        return (
+            self.school != self.previousObject.school or
+            self.mentorUser != self.previousObject.mentorUser or
+            self.campus != self.previousObject.campus
+        )
+
+    # Get previous school, mentorUser and campus if changed and set fields on object with old values
+    def setPreviousSchoolValues(self):
+        self.schoolValuesChanged = False
+        try:
+            self.previousObject = BaseEventAttendance.objects.get(pk=self.pk)
+
+            if self.checkSchoolValuesChanged():
+                self.schoolValuesChanged = True
+
+        except BaseEventAttendance.DoesNotExist:
+            pass
 
     # *****Get Methods*****
 
