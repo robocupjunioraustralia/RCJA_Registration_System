@@ -36,18 +36,20 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
 
     permission_classes = (ReadOnly,)
 
-    def eventsBaseQueryset(self, abbreviation):
+    def eventsBaseQueryset(self, abbreviation, includeGlobal=False):
         state = get_object_or_404(State, abbreviation__iexact=abbreviation, typeWebsite=True)
         if state.typeGlobal:
             return Event.objects.filter(Q(globalEvent=True) | Q(globalEvent=False, state=state), status='published', year__displayEventsOnWebsite=True)
-        else:
+        elif includeGlobal:
             return Event.objects.filter(Q(globalEvent=True) | Q(state=state) | Q(state__typeGlobal=True), status='published', year__displayEventsOnWebsite=True)
+        else:
+            return Event.objects.filter(globalEvent=False, state=state, status='published', year__displayEventsOnWebsite=True)
 
-    def upcomingEventsQueryset(self, abbreviation):
-        return self.eventsBaseQueryset(abbreviation).filter(startDate__gte=datetime.datetime.today()).order_by('startDate')
+    def upcomingEventsQueryset(self, abbreviation, includeGlobal):
+        return self.eventsBaseQueryset(abbreviation, includeGlobal).filter(startDate__gte=datetime.datetime.today()).order_by('startDate')
     
-    def pastEventsQueryset(self, abbreviation):
-        return self.eventsBaseQueryset(abbreviation).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
+    def pastEventsQueryset(self, abbreviation, includeGlobal):
+        return self.eventsBaseQueryset(abbreviation, includeGlobal).filter(startDate__lt=datetime.datetime.today()).order_by('-startDate')
 
     # Summary event endpoint
     # Returns all events (past and upcoming) from years with displayEventsOnWebsite=True
@@ -55,47 +57,55 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet, NestedSerializerActionMinxin):
     # Fewer fields returned, uses summary serializer
     @action(detail=True)
     def allEvents(self, request, abbreviation=None):
-        queryset = self.eventsBaseQueryset(abbreviation).order_by('startDate')
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.eventsBaseQueryset(abbreviation, includeGlobal).order_by('startDate')
         return self.nestedSerializer(queryset, SummaryEventSerializer)
 
     # Detailed event endpoint
     @action(detail=True)
     def allEventsDetailed(self, request, abbreviation=None):
-        queryset = self.eventsBaseQueryset(abbreviation).order_by('startDate')
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.eventsBaseQueryset(abbreviation, includeGlobal).order_by('startDate')
         return self.nestedSerializer(queryset, EventSerializer)
 
     # Upcoming events
 
     @action(detail=True)
     def upcomingEvents(self, request, abbreviation=None):
-        queryset = self.upcomingEventsQueryset(abbreviation)
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.upcomingEventsQueryset(abbreviation, includeGlobal)
         return self.nestedSerializer(queryset, EventSerializer)
 
     @action(detail=True)
     def upcomingCompetitions(self, request, abbreviation=None):
-        queryset = self.upcomingEventsQueryset(abbreviation).filter(eventType = 'competition')
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.upcomingEventsQueryset(abbreviation, includeGlobal).filter(eventType = 'competition')
         return self.nestedSerializer(queryset, EventSerializer)
 
     @action(detail=True)
     def upcomingWorkshops(self, request, abbreviation=None):
-        queryset = self.upcomingEventsQueryset(abbreviation).filter(eventType = 'workshop')
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.upcomingEventsQueryset(abbreviation, includeGlobal).filter(eventType = 'workshop')
         return self.nestedSerializer(queryset, EventSerializer)
 
     # Past events
 
     @action(detail=True)
     def pastEvents(self, request, abbreviation=None):
-        queryset = self.pastEventsQueryset(abbreviation)
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.pastEventsQueryset(abbreviation, includeGlobal)
         return self.nestedSerializer(queryset, EventSerializer)
 
     @action(detail=True)
     def pastCompetitions(self, request, abbreviation=None):
-        queryset = self.pastEventsQueryset(abbreviation).filter(eventType = 'competition')
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.pastEventsQueryset(abbreviation, includeGlobal).filter(eventType = 'competition')
         return self.nestedSerializer(queryset, EventSerializer)
 
     @action(detail=True)
     def pastWorkshops(self, request, abbreviation=None):
-        queryset = self.pastEventsQueryset(abbreviation).filter(eventType = 'workshop')
+        includeGlobal = request.GET.get('includeGlobal', False)
+        queryset = self.pastEventsQueryset(abbreviation, includeGlobal).filter(eventType = 'workshop')
         return self.nestedSerializer(queryset, EventSerializer)
 
     # @action(detail=True)
