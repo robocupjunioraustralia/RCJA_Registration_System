@@ -47,6 +47,15 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     # *****Permissions*****
     @classmethod
     def stateCoordinatorPermissions(cls, level):
+        if level in ['full', 'associationmanager', 'viewall']:
+            return [
+                'view',
+            ]
+
+        return []
+
+    @classmethod
+    def globalCoordinatorPermissions(cls, level):
         if level in ['full', 'associationmanager']:
             return [
                 'add',
@@ -54,6 +63,7 @@ class AssociationMember(SaveDeleteMixin, models.Model):
                 'change',
                 'delete'
             ]
+
         elif level in ['viewall']:
             return [
                 'view',
