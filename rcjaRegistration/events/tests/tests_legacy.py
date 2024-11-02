@@ -937,7 +937,7 @@ class TestEventMethods(TestCase):
 
         self.assertEqual(self.event.surchargeEventDescription(), 'Test Surcharge Event Description')
 
-    def test_surchargeEventName_notExists(self):
+    def test_surchargeName_notExists(self):
         self.invoiceSettings.delete()
 
         self.assertEqual(self.event.surchargeName(), '')
