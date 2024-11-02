@@ -36,7 +36,12 @@
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
         <h3>Payment</h3>
         <p>
-            This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
+            {% if event.eventType == 'competition' %} This Event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.{% endif %}
+            {% if event.eventType == 'workshop' %}This Workshop costs ${{ event.workshopTeacherEntryFee }} per teacher attendee and ${{ event.workshopStudentEntryFee }} per student attendee {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %}.{% endif %}
+            {% if event.eventSurchargeAmount %}
+            <br><br>{{ event.surchargeName }}: ${{ event.eventSurchargeAmount}}
+            {% if event.surchargeEventDescription %}<br>{{ event.surchargeEventDescription }}<br>{% endif %}
+            {% endif %}
             {% if event.event_specialRateNumber %}<br>A special price of ${{ event.event_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.event_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.{% endif %}
             {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
             {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team per school limit for this event.{% endif %}
@@ -97,30 +102,30 @@
     {% if workshopAttendees %}
 
     <table id="attendeeTable" class="ui celled table">
-            <thead>
-                <th>Attendee name</th>
-                <th>Type</th>
-                <th> Division</th>
-                {% if showCampusColumn %}<th>Campus</th>{% endif %}
-                {% if event.registrationsOpen %}<th>Actions</th>{% endif %}
-            </thead>
-            <tbody>
-                {% for workshopAttendee in workshopAttendees %}
-                <tr id="attendeeRow{{workshopAttendee.id}}">
-                    <td>{{workshopAttendee.attendeeFullName}}</td>
-                    <td>{{workshopAttendee.attendeeType}}</td>
-                    <td>{{workshopAttendee.division}}</td>
-                    {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
-                    {% if event.registrationsOpen %}
-                    <td>
-                        <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
-                        <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <thead>
+            <th>Attendee name</th>
+            <th>Type</th>
+            <th> Division</th>
+            {% if showCampusColumn %}<th>Campus</th>{% endif %}
+            {% if event.registrationsOpen %}<th>Actions</th>{% endif %}
+        </thead>
+        <tbody>
+            {% for workshopAttendee in workshopAttendees %}
+            <tr id="baseWorkshopAttendanceRow{{workshopAttendee.id}}">
+                <td>{{workshopAttendee.attendeeFullName}}</td>
+                <td>{{workshopAttendee.attendeeType}}</td>
+                <td>{{workshopAttendee.division}}</td>
+                {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
+                {% if event.registrationsOpen %}
+                <td>
+                    <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
+                    <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     {% elif teams %}
 
@@ -134,15 +139,17 @@
         </thead>
         <tbody>
             {% for team in teams %}
-            <tr id="teamRow{{team.id}}">
-                <td>{{team.name}}</td>
-                <td>{{team.division}}</td>
-                {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
+            <tr id="baseWorkshopAttendanceRow{{team.id}}">
+                <td>{% if team.withdrawn %}<s>{{team.name}}</s>{% else %}{{team.name}}{% endif %}</td>
+                <td>{% if team.withdrawn %}<s>{{team.division}}</s>{% else %}{{team.division}}{% endif %}</td>
+                {% if showCampusColumn %}<td>{% if team.withdrawn %}<s>{{team.campus}}</s>{% else %}{{team.campus}}{% endif %}</td>{% endif %}
                 <td>
+                    {% if team.withdrawn %}<s>{% endif %}
                     {% for student in team.student_set.all %}
                     {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
                     {% if not forloop.last %}, {% endif %}
                     {% endfor %}
+                    {% if team.withdrawn %}</s>{% endif %}
                 </td>
                 <td>
                     <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
@@ -212,7 +219,7 @@
                 xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
             },
         })
-            .done((data) => $('#teamRow' + id).remove())
+            .done((data) => $('#baseWorkshopAttendanceRow' + id).remove())
             .fail((data) => alert('Unexpected Error!' + data))
     }
 

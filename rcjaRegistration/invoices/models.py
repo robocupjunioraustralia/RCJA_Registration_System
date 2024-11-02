@@ -15,6 +15,11 @@ class InvoiceGlobalSettings(models.Model):
     invoiceFromDetails = models.TextField('Invoice from details')
     invoiceFooterMessage = models.TextField('Invoice footer message')
     firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
+    # Surcharge
+    surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount includes GST.")
+    surchargeName = models.CharField('Surcharge name', max_length=30, default='Surcharge', help_text="Name of the surcharge on the invoice.")
+    surchargeInvoiceDescription = models.CharField('Surcharge invoice description', max_length=70, blank=True, help_text="Appears in small text below the surcharge name on the invoice.")
+    surchargeEventDescription = models.CharField('Surcharge event page description', max_length=200, blank=True, help_text="Appears on the event page below the surcharge amount.")
 
     # *****Meta and clean*****
     class Meta:
@@ -101,6 +106,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def preSave(self):
+        # Set invoice number
         if self.invoiceNumber is None:
             try:
                 self.invoiceNumber = Invoice.objects.latest('invoiceNumber').invoiceNumber + 1
@@ -109,7 +115,7 @@ class Invoice(SaveDeleteMixin, models.Model):
                     self.invoiceNumber = InvoiceGlobalSettings.objects.get().firstInvoiceNumber
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
-
+        
         # Set invoiced date to payment due date if None, when mentor views invoice date will get brought forward to current date if before paymend due date
         if self.invoicedDate is None:
             self.invoicedDate = self.event.paymentDueDate
@@ -228,7 +234,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Standard rate teams for this invoice - teams that don't receive the special rate
     def standardRateTeams(self):
-        # Filter teams for this invoice to those that receive special rate
+        # Filter teams for this invoice to exclude those that receive special rate
         return self.allTeams().exclude(pk__in=self.specialRateTeamsForSchool().values_list('pk', flat=True))
 
     # Need methods to calculate teams or students that get special rate and teams that don't
@@ -240,7 +246,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None):
+    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None, excludeFromSurcharge=False):
         # Calculate totals
         if self.event.entryFeeIncludesGST:
             unitCost = rawUnitCost / 1.1
@@ -258,8 +264,35 @@ class Invoice(SaveDeleteMixin, models.Model):
             'name': name,
             'description': description,
             'quantity': quantity,
+            'surchargeQuantity': quantity if unitCost > 0 and not excludeFromSurcharge else 0,
             'unitCost': unitCost,
             'unit': unit,
+            'totalExclGST': totalExclGST,
+            'gst': gst,
+            'totalInclGST': totalInclGST,
+        }
+
+    def surchargeInvoiceItem(self, quantity):
+        # Get surcharge name and description
+        try:
+            surchargeName = InvoiceGlobalSettings.objects.get().surchargeName
+            surchargeInvoiceDescription = InvoiceGlobalSettings.objects.get().surchargeInvoiceDescription
+        except InvoiceGlobalSettings.DoesNotExist:
+            surchargeName = 'Surcharge'
+            surchargeInvoiceDescription = ''
+
+        # Get values
+        unitCost = self.event.eventSurchargeAmount / 1.1
+        totalExclGST = quantity * unitCost
+        gst = 0.1 * totalExclGST
+        totalInclGST = quantity * self.event.eventSurchargeAmount
+
+        return {
+            'name': surchargeName,
+            'description': surchargeInvoiceDescription,
+            'quantity': quantity,
+            'unitCost': unitCost,
+            'unit': None,
             'totalExclGST': totalExclGST,
             'gst': gst,
             'totalInclGST': totalInclGST,
@@ -354,7 +387,12 @@ class Invoice(SaveDeleteMixin, models.Model):
 
         elif self.event.eventType == 'competition':
             invoiceItems += self.competitionInvoiceItems()
-        
+
+        # Add surcharge if not $0
+        surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
+        if self.event.eventSurchargeAmount > 0 and surchargeQuantity > 0:
+            invoiceItems.append(self.surchargeInvoiceItem(surchargeQuantity))
+
         return invoiceItems
 
     # Calculate and save cached totals

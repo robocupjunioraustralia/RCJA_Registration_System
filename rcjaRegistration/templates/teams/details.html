@@ -40,7 +40,8 @@
       <div class = "twelve wide mobile eight wide computer column ui">
         <div class = "form form-group left-aligned-text">
           <div>
-            <h1>{{team.event}}: Viewing team {{team}} </h1>
+            <h1>{{team.event}}: Viewing team {{team.name}}</h1>
+            {% if team.withdrawn %}<h1 style="color:red">This team has been withdrawn from the competition.</h1>{% endif %}
 
             <h2>Details</h2>
             <p>Division: <b>{{team.division}}</b> {{team.division.description}}</p>
