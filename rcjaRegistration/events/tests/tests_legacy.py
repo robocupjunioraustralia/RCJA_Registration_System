@@ -764,6 +764,18 @@ class TestEventMethods(TestCase):
 
         self.assertTrue(self.event.paidEvent())
 
+    def testPaidEvent_workshop_studentEntryFee(self):
+        self.event.eventType = 'workshop'
+        self.event.event_defaultEntryFee = 0
+        self.event.workshopStudentEntryFee = 5
+        self.assertTrue(self.event.paidEvent())
+
+    def testPaidEvent_workshop_teacherEntryFee(self):
+        self.event.eventType = 'workshop'
+        self.event.event_defaultEntryFee = 0
+        self.event.workshopTeacherEntryFee = 5
+        self.assertTrue(self.event.paidEvent())
+
     def test_published_draft(self):
         self.event.status = 'draft'
         self.assertFalse(self.event.published())

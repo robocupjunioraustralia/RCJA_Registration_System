@@ -267,7 +267,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee')
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', default=0)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Competition billing settings
@@ -435,6 +435,12 @@ class Event(SaveDeleteMixin, models.Model):
     def paidEvent(self):
         if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
             return True
+        # Workshops don't rely on the default entry fee
+        if self.eventType == 'workshop':
+            if self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0:
+                return True
+            if self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0:
+                return True
 
         return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
 

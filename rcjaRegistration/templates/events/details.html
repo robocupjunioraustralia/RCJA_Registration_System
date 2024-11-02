@@ -36,7 +36,8 @@
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
         <h3>Payment</h3>
         <p>
-            This event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
+            {% if event.eventType == 'competition' %} This Event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.{% endif %}
+            {% if event.eventType == 'workshop' %}This Workshop costs ${{ event.workshopTeacherEntryFee }} per teacher attendee and ${{ event.workshopStudentEntryFee }} per student attendee {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %}.{% endif %}
             {% if event.eventSurchargeAmount %}
             <br><br>{{ event.surchargeName }}: ${{ event.eventSurchargeAmount}}
             {% if event.surchargeEventDescription %}<br>{{ event.surchargeEventDescription }}<br>{% endif %}
