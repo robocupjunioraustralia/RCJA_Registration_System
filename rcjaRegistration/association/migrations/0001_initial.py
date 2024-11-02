@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('creationDateTime', models.DateTimeField(auto_now_add=True, verbose_name='Creation date')),
                 ('updatedDateTime', models.DateTimeField(auto_now=True, verbose_name='Last modified date')),
                 ('birthday', models.DateField(verbose_name='Birthday')),
-                ('address', models.TextField(blank=True, verbose_name='Address')),
+                ('address', models.TextField(blank=True, verbose_name='Residential address')),
                 ('membershipStartDate', models.DateField(blank=True, null=True, verbose_name='Membership start date')),
                 ('membershipEndDate', models.DateField(blank=True, null=True, verbose_name='Membership end date')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL, verbose_name='User')),

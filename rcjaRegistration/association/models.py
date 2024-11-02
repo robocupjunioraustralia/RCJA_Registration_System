@@ -15,7 +15,7 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
     birthday = models.DateField('Birthday')
-    address = models.TextField('Address', blank=True)
+    address = models.TextField('Residential address', blank=True)
     membershipStartDate = models.DateField('Membership start date', null=True, blank=True)
     membershipEndDate = models.DateField('Membership end date', null=True, blank=True)
 
