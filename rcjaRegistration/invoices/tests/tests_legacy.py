@@ -1006,7 +1006,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.amountDueInclGST(), round(12 * 50, 2))
 
     def testSurchage(self):
-        self.event.eventSurchargeAmount = 10
+        self.event.eventSurchargeAmount = 11
         self.event.save()
         self.invoice.save()
         self.invoice.refresh_from_db()
@@ -1205,7 +1205,7 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50, 2))
 
     def testSurchage(self):
-        self.event.eventSurchargeAmount = 10
+        self.event.eventSurchargeAmount = 11
         self.event.save()
         self.invoice.save()
         self.invoice.refresh_from_db()
@@ -1290,7 +1290,7 @@ class TestInvoiceCalculations_Independent(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
 
     def testSurchage(self):
-        self.event.eventSurchargeAmount = 10
+        self.event.eventSurchargeAmount = 11
         self.event.save()
         self.invoice.save()
         self.invoice.refresh_from_db()
@@ -1405,7 +1405,7 @@ class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
         self.assertEqual(self.invoice.amountDueInclGST(), round(2 * 35, 2))
 
     def testSurchage(self):
-        self.event.eventSurchargeAmount = 10
+        self.event.eventSurchargeAmount = 11
         self.event.save()
         self.invoice.save()
         self.invoice.refresh_from_db()
