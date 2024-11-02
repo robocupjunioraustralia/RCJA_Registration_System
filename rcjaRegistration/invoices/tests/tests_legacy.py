@@ -1175,6 +1175,15 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
 
+    def testChangeTeamSchool(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+
+        self.teams[0].school = self.school2
+        self.teams[0].save()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
+
 class TestInvoiceCalculations_Campuses(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -1210,6 +1219,19 @@ class TestInvoiceCalculations_Campuses(TestCase):
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(18 * 50, 2))
 
+    def testChangeStudentTeam(self):
+        self.event.event_billingType = 'student'
+        self.event.save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(18 * 50, 2))
+
+        self.students[0].team = self.teams[1]
+        self.students[0].save()
+        self.invoice.refresh_from_db()
+
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(17 * 50, 2))
+
     def testSpecialRate(self):
         self.event.event_specialRateNumber = 4
         self.event.event_specialRateFee = 30
@@ -1239,6 +1261,15 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 680)
+
+    def testChangeTeamCampus(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50, 2))
+
+        self.teams[0].campus = self.campuses[1]
+        self.teams[0].save()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(5 * 50, 2))
 
 class TestInvoiceCalculations_Independent(TestCase):
     email1 = 'user1@user.com'
@@ -1302,6 +1333,15 @@ class TestInvoiceCalculations_Independent(TestCase):
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), 1360)
+
+    def testChangeTeamMentor(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+
+        self.teams[0].mentorUser = self.user2
+        self.teams[0].save()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
 
 class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
     email1 = 'user1@user.com'
@@ -1436,6 +1476,15 @@ class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
 
         self.assertEqual(self.invoice.amountPaid(), 50)
         self.assertEqual(self.invoice.amountDueInclGST(), round(2 * 35 - 50))
+
+    def testChangeWorkshopSchool(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+
+        self.attendee1.school = self.school2
+        self.attendee1.save()
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(1 * 35, 2))
 
 class TestInvoiceMethods(TestCase):
     email1 = 'user1@user.com'
