@@ -29,16 +29,16 @@ class AssociationMember(SaveDeleteMixin, models.Model):
 
         if self.membershipEndDate:
             if not self.membershipStartDate:
-                errors['membershipStartDate'] = 'Membership start date must not be blank if membership end date set'
+                errors['membershipStartDate'] = 'Membership start date must not be blank if membership end date set.'
             
             elif self.membershipStartDate >= self.membershipEndDate:
-                errors['membershipStartDate'] = 'Membership start date must be before membership end date'
+                errors['membershipStartDate'] = 'Membership start date must be before membership end date.'
 
         if self.under18() and self.address:
-            errors['address'] = 'Address must be blank for members under 18'
+            errors['address'] = 'Address must be blank for members under 18.'
         
         if not self.under18() and not self.address:
-            errors['address'] = 'Address must not be blank for members 18 and over'
+            errors['address'] = 'Address must not be blank for members 18 and over.'
 
         # Raise any errors
         if errors:

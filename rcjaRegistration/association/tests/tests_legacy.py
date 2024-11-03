@@ -19,6 +19,104 @@ def commonSetUp(self):
 
     self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
+class TestAssociationMemberPage(TestCase):
+    email1 = 'user1@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        commonSetUp(self)
+
+    def test_pageLoads_inactiveExistingMembership(self):
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Membership status: Not a member')
+        self.assertContains(response, 'To become a member of the Association please fill out the details below and click Join.')
+
+    def test_pageLoads_activeExistingMembership(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.associationMember1.save()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Membership status: Active')
+        self.assertContains(response, 'You are currently a member.')
+        self.assertContains(response, 'Update')
+
+    def test_pageLoads_noExistingMembership(self):
+        self.associationMember1.delete()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Membership status: Not a member')
+        self.assertContains(response, 'To become a member of the Association please fill out the details below and click Join.')
+
+    def test_pageLoads_expiredMembership(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date()
+        self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.associationMember1.save()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Membership status: Expired')
+        self.assertContains(response, 'Your membership is expired.')
+        self.assertNotContains(response, 'Update')
+
+    def test_postSuccess_noExistingMembership(self):
+        self.associationMember1.delete()
+        response = self.client.post(reverse('association:membership'), {
+            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
+            'address': 'Test address',
+        })
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(AssociationMember.objects.count(), 1)
+        self.assertEqual(AssociationMember.objects.first().user, self.user1)
+        self.assertEqual(AssociationMember.objects.first().birthday, (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date())
+        self.assertEqual(AssociationMember.objects.first().address, 'Test address')
+        self.assertEqual(AssociationMember.objects.first().membershipStartDate, datetime.datetime.now().date())
+
+    def test_postSuccess_inactiveExistingMembership(self):
+        self.assertIsNone(self.associationMember1.membershipStartDate)
+        response = self.client.post(reverse('association:membership'), {
+            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
+            'address': 'Test address',
+        })
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(AssociationMember.objects.count(), 1)
+        self.associationMember1.refresh_from_db()
+        self.assertEqual(self.associationMember1.membershipStartDate, datetime.datetime.now().date())
+
+    def test_postSuccess_activeExistingMembership(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
+        self.associationMember1.save()
+        response = self.client.post(reverse('association:membership'), {
+            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
+            'address': 'Test address',
+        })
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(AssociationMember.objects.count(), 1)
+        self.associationMember1.refresh_from_db()
+        self.assertEqual(self.associationMember1.membershipStartDate, (datetime.datetime.now() + datetime.timedelta(days=-5)).date())
+        self.assertEqual(self.associationMember1.birthday, (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date())
+
+    def test_postFail_noBirthday(self):
+        response = self.client.post(reverse('association:membership'), {
+            'address': 'Test address',
+        })
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'This field is required.')
+
+    def test_postFail_noAddress(self):
+        response = self.client.post(reverse('association:membership'), {
+            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
+        })
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Address must not be blank for members 18 and over.')
+
+    def test_postFail_under18Address(self):
+        response = self.client.post(reverse('association:membership'), {
+            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date(),
+            'address': 'Test address',
+        })
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Address must be blank for members under 18.')
+
 class TestAssociationMemberClean(TestCase):
     email1 = 'user1@user.com'
     password = 'chdj48958DJFHJGKDFNM'
