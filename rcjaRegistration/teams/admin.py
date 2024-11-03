@@ -130,6 +130,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'softwarePlatform',
     ]
     exportFieldsManyRelations = [
+        'mentor_questionresponse_set',
         'student_set',
     ]
     autocompleteFilters = {

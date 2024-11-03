@@ -38,7 +38,12 @@ class ExportCSVMixin:
         if hasattr(self, 'exportFieldsManyRelations'):
             for field in self.exportFieldsManyRelations:
                 for obj in queryset:
-                    for manyObj in getattr(obj, field).all():
+                    objManager = getattr(obj, field)
+                    try:
+                        objManager = objManager()
+                    except TypeError:
+                        pass
+                    for manyObj in objManager.all():
                         for headerDict in manyObj.csvHeaders():
                             if headerDict not in manyFieldHeaderDicts:
                                 manyFieldHeaderDicts.append(headerDict)
@@ -68,7 +73,12 @@ class ExportCSVMixin:
                 # Get dictionary of many values
                 csvValues = {}
                 for field in self.exportFieldsManyRelations:
-                    for manyObj in getattr(obj, field).all():
+                    objManager = getattr(obj, field)
+                    try:
+                        objManager = objManager()
+                    except TypeError:
+                        pass
+                    for manyObj in objManager.all():
                         csvValues = {**csvValues, **manyObj.csvValues()}
 
                 # Add values to row

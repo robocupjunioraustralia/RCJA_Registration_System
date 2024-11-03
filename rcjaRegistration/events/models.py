@@ -808,6 +808,11 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         # Check if at least one invoice has campus field set
         return Invoice.objects.filter(school=self.school, event=self.event, campus__isnull=False).exists()
 
+    # Question responses
+    # Makes the question responses queryset for the mentor available here for CSV export
+    def mentor_questionresponse_set(self):
+        return self.mentorUser.questionresponse_set
+
     # File upload
 
     def availableFileUploadTypes(self):
