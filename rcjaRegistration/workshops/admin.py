@@ -78,5 +78,8 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'homeRegion',
         'schoolPostcode',
     ]
+    exportFieldsManyRelations = [
+        'mentor_questionresponse_set',
+    ]
 
     eventTypeMapping = 'workshop'
