@@ -211,6 +211,10 @@ class TestTeamMethods(TestCase):
         self.associationMember1.birthday = None
         self.assertEqual(self.associationMember1.membershipType(), 'Not a member')
 
+    def test_membershipType_lifeMember(self):
+        self.associationMember1.lifeMemberAwardedDate = datetime.datetime.now().date()
+        self.assertEqual(self.associationMember1.membershipType(), 'Life member')
+
     def test_membershipType_17(self):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
         self.assertEqual(self.associationMember1.membershipType(), 'Associate')

@@ -18,6 +18,7 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     address = models.TextField('Residential address', blank=True)
     membershipStartDate = models.DateField('Membership start date', null=True, blank=True)
     membershipEndDate = models.DateField('Membership end date', null=True, blank=True)
+    lifeMemberAwardedDate = models.DateField('Life membership awarded date', null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -106,10 +107,11 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     def membershipType(self):
         if self.under18() is None:
             return 'Not a member'
+        if self.lifeMemberAwardedDate:
+            return 'Life member'
         if not self.under18():
             return 'Ordinary'
-        else:
-            return 'Associate'
+        return 'Associate'
     membershipType.short_description = 'Membership type'
 
     def membershipStatus(self):
