@@ -238,7 +238,7 @@ def createQuestionsAndResponses(self):
     )
     self.questionResponse1 = QuestionResponse.objects.create(
         question=self.question1,
-        user=self.user_state1_super1,
+        user=self.user_state1_school1_mentor1,
         response=True,
     )
 
@@ -249,6 +249,6 @@ def createQuestionsAndResponses(self):
     )
     self.questionResponse1 = QuestionResponse.objects.create(
         question=self.question2,
-        user=self.user_state1_super1,
+        user=self.user_state1_school1_mentor1,
         response=False,
     )
