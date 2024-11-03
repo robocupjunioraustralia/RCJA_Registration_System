@@ -54,15 +54,11 @@ class AssociationMember_Coordinators_Base(AssociationMember_Base):
     ]
 
 class Test_AssociationMember_FullCoordinator(AssociationMember_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
-    def testChangeEditable(self):
-        pass
-
     def testChangeReadOnly(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.assertNotContains(response, 'Save')
         self.assertNotContains(response, 'Save and continue editing')
         self.assertContains(response, 'Close')
-
 
 class Test_AssociationMember_GlobalFullCoordinator(Test_AssociationMember_FullCoordinator):
     addLoadsCode = GET_SUCCESS
@@ -85,10 +81,6 @@ class Test_AssociationMember_GlobalFullCoordinator(Test_AssociationMember_FullCo
         super().additionalSetup()
         cls.coord_state1_fullcoordinator.state = None
         cls.coord_state1_fullcoordinator.save()
-
-    def testChangeEditable(self):
-        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
-        self.assertContains(response, 'Save and continue editing')
 
     def testChangeReadOnly(self):
         pass
