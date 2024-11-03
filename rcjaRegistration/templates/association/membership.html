@@ -1,4 +1,5 @@
 {% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
 
 {% block head %}
 
@@ -8,9 +9,86 @@
 
 {% block content %}
 <div class="ui aligned container">
-    <div class="row">
-        <h1>Association Membership</h1>
-    </div>
+    <div class="bg">
+        <div class="">
+            <div class="row">
+                <h1>Association Membership</h1>
+                <p><b>RoboCup Junior (Australia) Inc.</b></p>
+                <p>Registration Number: A0040826L<br>Australian Business Number: 72 592 462 493</p>
+            </div>
 
-  
+            <h3>Your details</h3>
+            <p>Name: {{ request.user.get_full_name }}</p>
+            <p>Email: {{ request.user.email }}</p>
+            <p>Phone: {{ request.user.mobileNumber }}</p>
+            <p>State: {{ request.user.homeState }}</p>
+
+            <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.</p>
+
+            <h3>Membership status: {% if associationMember %}{{ associationMember.membershipStatus }}{% else %}Not a member{% endif %}</h3>
+            {% if associationMember and associationMember.membershipExpired %}
+                <h3>Your membership is expired. Please speak to the relevant Committee member to resume your membership.</h3>
+            {% else %}
+                {% if associationMember and associationMember.membershipActive %}
+                    <h3>Membership details</h3>
+                    <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary.</p>
+                    <p>Membership start date: {{ associationMember.membershipStartDate }}</p>
+                    <p><b>Membership type: {{associationMember.membershipType }}</b></p>
+                {% else %}
+                    <p>To become a member of the Association please fill out the details below and click Join.</p>
+                {% endif %}
+
+                <div class="ui left aligned grid ">
+                    <div class="twelve wide mobile eight wide computer column ui">
+                        <div class="form form-group left-aligned-text">
+                            {% if form.non_field_errors %}
+
+                            <!-- Error messaging -->
+                            <div class="ui message left-aligned-text">
+                                <div class="">
+                                    <p class="header">There were some errors in the information you entered. Please correct
+                                        the following:</p>
+                                    {{ form.non_field_errors }}
+                                </div>
+                            </div>
+                            <!-- /Error messaging -->
+                            {% endif %}
+
+                            <form method="post" class="ui form">
+                                {% csrf_token %}
+                                <div class="field">
+                                    <label>Birthday:</label>
+                                    {{form.birthday|attr:"type:date"|attr:"placeholder:YYYY-mm-dd"}}
+                                </div>
+                                {% if form.birthday.errors %}
+                                {% for error in form.birthday.errors %}
+                                <p style="color: red">{{ error }}</p>
+                                {% endfor %}
+                                {% endif %}
+
+                                <div class="field">
+                                    <label>Residential address:</label>
+                                    {{form.address}}
+                                </div>
+                                {% if form.address.errors %}
+                                {% for error in form.address.errors %}
+                                <p style="color: red">{{ error }}</p>
+                                {% endfor %}
+                                {% endif %}
+
+                                {% if associationMember and associationMember.membershipActive %}
+                                <input class="primary ui button" type="submit" value="Update" />
+                                {% else %}
+                                <input class="primary ui button" type="submit" value="Join" />
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 {% endblock %}
