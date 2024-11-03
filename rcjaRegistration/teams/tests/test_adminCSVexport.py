@@ -1,4 +1,4 @@
-from common.baseTests import createStates, createUsers, createSchools, createEvents, createTeams
+from common.baseTests import createStates, createUsers, createSchools, createEvents, createTeams, createQuestionsAndResponses
 from django.http import HttpRequest
 from django.urls import reverse
 from django.test import TestCase
@@ -13,6 +13,7 @@ class TestAdminCSVExport_Team(TestCase):
         createSchools(cls)
         createEvents(cls)
         createTeams(cls)
+        createQuestionsAndResponses(cls)
         Student.objects.create(team=cls.state1_event1_team1, firstName="John", lastName="Smith", yearLevel=5, gender="other")
 
     def setUp(self):
@@ -35,6 +36,8 @@ class TestAdminCSVExport_Team(TestCase):
         self.assertContains(response, 'Member 1 Last Name')
         self.assertContains(response, 'Member 1 Year Level')
         self.assertContains(response, 'Member 1 Gender')
+        self.assertContains(response, 'Consent')
+        self.assertContains(response, 'Marketing')
 
     def test_export_as_csv_correctValues(self):
         response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [self.state1_event1_team1.pk]})
@@ -45,3 +48,5 @@ class TestAdminCSVExport_Team(TestCase):
         self.assertContains(response, 'Smith')
         self.assertContains(response, '5')
         self.assertContains(response, 'Other')
+        self.assertContains(response, 'True')
+        self.assertContains(response, 'False')
