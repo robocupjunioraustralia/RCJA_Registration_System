@@ -5,6 +5,7 @@ from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision, Venue
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
+from association.models import AssociationMember
 
 import datetime
 
@@ -227,4 +228,20 @@ def createInvoices(self):
         invoiceToUser=self.user_state1_school1_mentor1,
         school=self.school1_state1,
         event=self.state2_openCompetition
+    )
+
+def createAssociationMemberships(self):
+    self.state1_associationMember1 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor1,
+        birthday=datetime.date(2000, 1, 1),
+    )
+
+    self.state1_associationMember2 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor2,
+        birthday=datetime.date(2000, 1, 1),
+    )
+
+    self.state2_associationMember3 = AssociationMember.objects.create(
+        user=self.user_state2_school3_mentor4,
+        birthday=datetime.date(2000, 1, 1),
     )
