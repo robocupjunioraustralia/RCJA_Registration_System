@@ -14,17 +14,17 @@ class TestAdminCSVExport_User(TestCase):
         self.client.login(request=HttpRequest(), username=self.email_user_state1_super1, password=self.password)
 
     def test_export_as_csv_loads(self):
-        response = self.client.post(reverse('admin:users_user_changelist'), {'action': 'export_as_csv', '_selected_action': [1]})
+        response = self.client.post(reverse('admin:users_user_changelist'), {'action': 'export_as_csv', '_selected_action': [self.user_state1_super1.pk]})
         self.assertEqual(response.status_code, 200)
 
     def test_export_as_csv_correctHeaders(self):
-        response = self.client.post(reverse('admin:users_user_changelist'), {'action': 'export_as_csv', '_selected_action': [1]})
+        response = self.client.post(reverse('admin:users_user_changelist'), {'action': 'export_as_csv', '_selected_action': [self.user_state1_super1.pk]})
         self.assertContains(response, 'Home state')
         self.assertContains(response, 'Consent')
         self.assertContains(response, 'Marketing')
 
     def test_export_as_csv_correctValues(self):
-        response = self.client.post(reverse('admin:users_user_changelist'), {'action': 'export_as_csv', '_selected_action': [1]})
+        response = self.client.post(reverse('admin:users_user_changelist'), {'action': 'export_as_csv', '_selected_action': [self.user_state1_super1.pk]})
         self.assertContains(response, 'State 1')
         self.assertContains(response, 'True')
         self.assertContains(response, 'False')

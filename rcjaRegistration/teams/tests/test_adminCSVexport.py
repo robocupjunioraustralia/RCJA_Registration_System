@@ -19,11 +19,11 @@ class TestAdminCSVExport_Team(TestCase):
         self.client.login(request=HttpRequest(), username=self.email_user_state1_super1, password=self.password)
 
     def test_export_as_csv_loads(self):
-        response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [1]})
+        response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [self.state1_event1_team1.pk]})
         self.assertEqual(response.status_code, 200)
 
     def test_export_as_csv_correctHeaders(self):
-        response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [1]})
+        response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [self.state1_event1_team1.pk]})
         self.assertContains(response, 'Name')
         self.assertContains(response, 'Event')
         self.assertContains(response, 'Division')
@@ -37,7 +37,7 @@ class TestAdminCSVExport_Team(TestCase):
         self.assertContains(response, 'Member 1 Gender')
 
     def test_export_as_csv_correctValues(self):
-        response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [1]})
+        response = self.client.post(reverse('admin:teams_team_changelist'), {'action': 'export_as_csv', '_selected_action': [self.state1_event1_team1.pk]})
         self.assertContains(response, 'Team 1')
         self.assertContains(response, 'State 1 Open Competition')
         self.assertContains(response, 'Division 3')
