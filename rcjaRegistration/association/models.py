@@ -91,6 +91,7 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     def membershipActive(self):
         return bool(
             self.membershipStartDate and
+            self.membershipStartDate <= datetime.date.today() and
             not self.membershipExpired()
         )
     membershipActive.short_description = 'Active'
