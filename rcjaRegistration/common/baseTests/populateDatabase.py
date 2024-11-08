@@ -6,6 +6,7 @@ from events.models import Event, Year, Division, AvailableDivision, Venue
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 from userquestions.models import Question, QuestionResponse
+from association.models import AssociationMember
 
 import datetime
 
@@ -251,4 +252,20 @@ def createQuestionsAndResponses(self):
         question=self.question2,
         user=self.user_state1_school1_mentor1,
         response=False,
+    )
+
+def createAssociationMemberships(self):
+    self.state1_associationMember1 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor1,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+    )
+
+    self.state1_associationMember2 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor2,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+    )
+
+    self.state2_associationMember3 = AssociationMember.objects.create(
+        user=self.user_state2_school3_mentor4,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
     )

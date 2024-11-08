@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'invoices.apps.InvoicesConfig',
     'schools.apps.SchoolsConfig',
     'workshops.apps.WorkshopsConfig',
+    'association.apps.AssociationConfig',
     'common.apps.CommonConfig',
     'django.contrib.admin',
     'django.contrib.auth',
