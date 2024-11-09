@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - production
 
 jobs:
   build:
@@ -24,9 +25,9 @@ jobs:
     - name: 'Docker login'
       uses: azure/docker-login@v1
       with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
 
     - name: Build and push Docker image
       run: |
@@ -36,18 +37,18 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: rcja-app-prod
+    environment: ${{ github.ref == 'refs/heads/production' && 'rcja-app-prod' || 'rcja-app-staging' }}
     steps:
     - name: Execute local deployment
       run: |
         echo "Deploying image ${{ github.sha }}..."
         TEMP_FILE=$(mktemp)
         trap 'rm -f "$TEMP_FILE"' EXIT
-        
+
         curl "${{ secrets.DEPLOY_URL }}" \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
-          -d '{"image": "${{ github.sha }}"}' \
+          -d '{"image": "${{ github.sha }}", "environment": "${{ github.ref == 'refs/heads/production' && 'prod' || 'staging' }}"}' \
           --show-error \
           --fail-with-body | tee "$TEMP_FILE"
 
