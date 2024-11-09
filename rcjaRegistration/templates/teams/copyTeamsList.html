@@ -1,0 +1,113 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Copy existing team </title>
+
+<style>
+    .left-aligned-text {
+        text-align: left;
+    }
+
+    .button-form {
+        margin: 0px;
+        padding: 0px;
+        display: inline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile eight wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    <h1>Copy existing team</h1>
+                    <h1>{{event}}</h1>
+                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+
+                    {% if copiedTeams %}
+
+                    <h3>Copied teams</h3>
+                    <p>This list doesn't include teams that have been created in this event directly.</p>
+                    <p>This list also shows the team details that were copied and doesn't include any changes you've made - see the events page for the details of your current teams.</p>
+
+                    <table id="teamTable" class="ui celled table">
+                        <thead>
+                            <th>Team name</th>
+                            <th>Event copied from</th>
+                            <th>Division</th>
+                            {% if showCampusColumn %}<th>Campus</th>{% endif %}
+                            <th>Students</th>
+                        </thead>
+                        <tbody>
+                            {% for team in copiedTeams %}
+                            <tr id="teamRow{{team.id}}">
+                                <td>{{team.name}}</td>
+                                <td>{{team.event}}</td>
+                                <td>{{team.division}}</td>
+                                {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
+                                <td>
+                                    {% for student in team.student_set.all %}
+                                    {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
+                                    {% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+
+                    {% if availableToCopyTeams %}
+                    <h3>Select team to copy</h3>
+                    <p>You can edit a team after you have copied it from the event page.</p>
+                    <p>Incompatible teams (including those with an incompatible division) are not shown.</p>
+
+                    <table id="teamTable" class="ui celled table">
+                        <thead>
+                            <th>Team name</th>
+                            <th>Event</th>
+                            <th>Division</th>
+                            {% if showCampusColumn %}<th>Campus</th>{% endif %}
+                            <th>Students</th>
+                            <th>Actions</th>
+                        </thead>
+                        <tbody>
+                            {% for team in availableToCopyTeams %}
+                            <tr id="teamRow{{team.id}}">
+                                <td>{{team.name}}</td>
+                                <td>{{team.event}}</td>
+                                <td>{{team.division}}</td>
+                                {% if showCampusColumn %}<td>{{team.campus}}</td>{% endif %}
+                                <td>
+                                    {% for student in team.student_set.all %}
+                                    {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
+                                    {% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <form method="post" action="{% url 'teams:copyTeam' event.id team.id %}" class="button-form">
+                                        {% csrf_token %}
+                                        <input class="ui primary button" type="submit" value="Copy"/>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <h3>No teams available to copy. Create new teams from the events page.</h3>
+                    {% endif %}
+
+                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    {% endblock %}

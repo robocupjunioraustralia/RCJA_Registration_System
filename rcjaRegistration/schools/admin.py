@@ -58,6 +58,13 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'schools/schooladministrator/': SchoolAdministrator,
     }
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('region', 'state')
+
+        return qs
+
     # Set forceDetailsUpdate if a field is blank
     def save_model(self, request, obj, form, change):
         for field in ['postcode']:

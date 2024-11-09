@@ -23,59 +23,14 @@ class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
         for field in ['hardwarePlatform', 'softwarePlatform']:
             self.fields[field].required = True
 
-    # Validate that this team can be created, not exceeding a school or global team maximum
-    def clean(self):
-        cleaned_data = super().clean()
-        errors = []
+        # Filter divisions to maximium not exceeded
+        validDivisions = []
+        for availableDivision in AvailableDivision.objects.filter(event=event, division__in = self.fields['division'].queryset.values_list('pk', flat=True)):
+            if not (availableDivision.maxDivisionTeamsForSchoolReached(user) or availableDivision.maxDivisionTeamsTotalReached()):
+                validDivisions.append(availableDivision.division.id)
+        
+        # Add current division if existing team - in case override added by coordinator through admin
+        if self.instance.pk:
+            validDivisions.append(self.instance.division.id)
 
-        # Only run these validation on team create, allows for a team to be manually created through the admin
-        if not self.instance.pk:
-
-            # Get required attributes
-            try:
-                event = cleaned_data['event']
-                division = cleaned_data['division']
-                school = cleaned_data['school']
-                mentorUser = self.mentorUser
-            except KeyError:
-                raise ValidationError('Required field is missing')
-
-            # Create dict of attributes to filter teams by
-            if school is not None:
-                teamFilterDict = {
-                    'event': event,
-                    'school': school
-                }
-            else:
-                # Independent, filter by mentor
-                teamFilterDict = {
-                    'event': event,
-                    'school': None,
-                    'mentorUser': mentorUser
-                }
-
-            # Check event based limits 
-            if event.event_maxTeamsPerSchool is not None and Team.objects.filter(**teamFilterDict).count() + 1 > event.event_maxTeamsPerSchool:
-                errors.append(ValidationError('Max teams for school for this event exceeded. Contact the organiser.'))
-
-            if event.event_maxTeamsForEvent is not None and Team.objects.filter(event=event).count() + 1 > event.event_maxTeamsForEvent:
-                errors.append(ValidationError('Max teams for this event exceeded. Contact the organiser.'))
-
-            # Check available division based limits
-            try:
-                availableDivsion = AvailableDivision.objects.get(division=division, event=event)
-            except AvailableDivision.DoesNotExist:
-                # This is probably redundant due to the queryset filtering in the init
-                raise ValidationError('Team division not valid')
-
-            if availableDivsion.division_maxTeamsPerSchool is not None and Team.objects.filter(**teamFilterDict).filter(division=division).count() + 1 > availableDivsion.division_maxTeamsPerSchool:
-                errors.append(ValidationError('Max teams for school for this event division exceeded. Contact the organiser.'))
-
-            if availableDivsion.division_maxTeamsForDivision is not None and Team.objects.filter(event=event, division=division).count() + 1 > availableDivsion.division_maxTeamsForDivision:
-                errors.append(ValidationError('Max teams for this event division exceeded. Contact the organiser.'))
-
-        # Raise any errors
-        if errors:
-            raise ValidationError(errors)
-
-        return cleaned_data
+        self.fields['division'].queryset = self.fields['division'].queryset.filter(pk__in=validDivisions)

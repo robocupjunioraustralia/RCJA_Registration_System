@@ -251,8 +251,9 @@ class Base_Test_FullCoordinator(CoordinatorBase):
         self.client.login(request=HttpRequest(), username=self.email_user_state1_fullcoordinator, password=self.password)
 
     def testChangeEditable(self):
-        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
-        self.assertContains(response, 'Save and continue editing')
+        if self.changePostCode == POST_SUCCESS:
+            response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+            self.assertContains(response, 'Save and continue editing')
 
 class Base_Test_ViewCoordinator(CoordinatorBase):
     """Test admin access with a coordinator with view permisisons to state 1"""

@@ -1,0 +1,12 @@
+# Default: Peter is default owner of Python files
+*.py            @peter-drew
+
+
+# Peter is owner of database migrations
+migrations/     @peter-drew
+
+
+# Peter is owner of coordination, common and rcjaRegistration
+coordination/   @peter-drew 
+common/   @peter-drew 
+/rcjaRegistration/rcjaRegistration/   @peter-drew 

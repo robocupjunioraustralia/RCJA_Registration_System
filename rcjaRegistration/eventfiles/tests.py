@@ -70,7 +70,7 @@ def newCommonSetUp(self):
 
         self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
 
-        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=5)).date())
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
 
 @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
 def createFile(self, mock_save):
@@ -389,6 +389,14 @@ class Test_MentorEventFileUpload_Clean(TestCase):
 
         uploadedFile.clean()
 
+    def testValidExtensionRestrictions_differentCase(self):
+        self.fileType1.allowedFileTypes = "DOC,PDF"
+        self.fileType1.save()
+
+        uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
+
+        uploadedFile.clean()
+
     def testInvalidExtension(self):
         self.fileType1.allowedFileTypes = "png,jpeg"
         self.fileType1.save()
@@ -428,6 +436,9 @@ class Test_MentorEventFileUpload_Methods(TestCase):
     def testEvent(self):
         self.assertEqual(self.uploadedFile.event(), self.event)
 
+    def testDivision(self):
+        self.assertEqual(self.uploadedFile.division(), self.division1)
+
     def testFilesize(self):
         self.assertEqual(self.uploadedFile.filesize(), "12\xa0bytes")
 
@@ -453,6 +464,27 @@ class Test_EventAvailableFileType_Methods(TestCase):
 
     def testStr(self):
         self.assertEqual(str(self.availableFileType1), "Test event 1 2020 (VIC): File Type 1")
+
+class Test_EventAvailableFileType_Clean(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+    
+    def testSuccessClean(self):
+        self.assertEqual(self.availableFileType1.clean(), None)
+
+    def testUploadDeadlineBeforeRegistrationClose(self):
+        self.availableFileType1.uploadDeadline = self.event.registrationsCloseDate + datetime.timedelta(days=-1)
+        self.assertRaises(ValidationError, self.availableFileType1.clean)
+
+    def testUploadDeadlineAfterStartDate(self):
+        self.availableFileType1.uploadDeadline = self.event.startDate + datetime.timedelta(days=1)
+        self.assertRaises(ValidationError, self.availableFileType1.clean)
 
 class Test_MentorEventFileType_Methods(TestCase):
     email1 = 'user1@user.com'

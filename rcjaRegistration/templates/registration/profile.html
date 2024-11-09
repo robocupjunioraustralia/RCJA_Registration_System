@@ -119,7 +119,9 @@
 
               <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
               <input class="primary ui button" type="submit" value="Save and exit" />
+              {% if not request.user.forceDetailsUpdate %}
               <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              {% endif %}
             </form>
 
             <!-- School details -->

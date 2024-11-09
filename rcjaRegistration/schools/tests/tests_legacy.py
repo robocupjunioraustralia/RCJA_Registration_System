@@ -42,7 +42,7 @@ class TestSchoolClean(TestCase):
             region=self.region1
         )
 
-        self.assertEqual(school2.clean(), None)
+        self.assertEqual(school2.full_clean(), None)
 
     def testValidPostcode(self):
         school2 = School(
@@ -53,7 +53,7 @@ class TestSchoolClean(TestCase):
             postcode='1234',
         )
 
-        self.assertEqual(school2.clean(), None)
+        self.assertEqual(school2.full_clean(), None)
 
     def testNameCaseInsensitive(self):
         school2 = School(
@@ -62,7 +62,7 @@ class TestSchoolClean(TestCase):
             state=self.state1,
             region=self.region1
         )
-        self.assertRaises(ValidationError, school2.clean)
+        self.assertRaises(ValidationError, school2.full_clean)
 
     def testAbbreviationCaseInsensitive(self):
         school2 = School(
@@ -71,7 +71,7 @@ class TestSchoolClean(TestCase):
             state=self.state1,
             region=self.region1
         )
-        self.assertRaises(ValidationError, school2.clean)
+        self.assertRaises(ValidationError, school2.full_clean)
 
     def testAbbreviationMinLength(self):
         school2 = School(
@@ -80,7 +80,7 @@ class TestSchoolClean(TestCase):
             state=self.state1,
             region=self.region1
         )
-        self.assertRaises(ValidationError, school2.clean)
+        self.assertRaises(ValidationError, school2.full_clean)
 
     def testAbbreviationNotIND(self):
         school2 = School(
@@ -108,7 +108,7 @@ class TestSchoolClean(TestCase):
             region=self.region1,
             postcode='ab12',
         )
-        self.assertRaises(ValidationError, school2.clean)  
+        self.assertRaises(ValidationError, school2.full_clean)  
 
     def testTooShortPostcode(self):
         school2 = School(
@@ -118,7 +118,7 @@ class TestSchoolClean(TestCase):
             region=self.region1,
             postcode='12',
         )
-        self.assertRaises(ValidationError, school2.clean)  
+        self.assertRaises(ValidationError, school2.full_clean)  
 
 class TestSchoolModelMethods(TestCase):
     email1 = 'user@user.com'
@@ -164,7 +164,7 @@ class TestCampusClean(TestCase):
             school=self.school1,
         )
 
-        self.assertEqual(campus2.clean(), None)
+        self.assertEqual(campus2.full_clean(), None)
 
     def testValidPostcode(self):
         campus2 = Campus(
@@ -173,7 +173,7 @@ class TestCampusClean(TestCase):
             postcode='1234',
         )
 
-        self.assertEqual(campus2.clean(), None)
+        self.assertEqual(campus2.full_clean(), None)
 
     def testInvalidPostcode(self):
         campus2 = Campus(
@@ -181,7 +181,7 @@ class TestCampusClean(TestCase):
             school=self.school1,
             postcode='12ah',
         )
-        self.assertRaises(ValidationError, campus2.clean)  
+        self.assertRaises(ValidationError, campus2.full_clean)  
 
     def testTooShortPostcode(self):
         campus2 = Campus(
@@ -189,7 +189,7 @@ class TestCampusClean(TestCase):
             school=self.school1,
             postcode='12',
         )
-        self.assertRaises(ValidationError, campus2.clean)  
+        self.assertRaises(ValidationError, campus2.full_clean)  
 
 class TestCampusModelMethods(TestCase):
     email1 = 'user@user.com'
@@ -290,8 +290,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors["name"], ["School with this Name already exists."])
-        self.assertEqual(form.non_field_errors(), ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
+        self.assertEqual(form.errors['name'], ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testTeamNameDifferentCase(self):
         form = self.createForm({
@@ -303,7 +302,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
+        self.assertEqual(form.errors['name'], ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testAbbreviationSameCase(self):
         form = self.createForm({
@@ -315,8 +314,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors["abbreviation"], ["School with this Abbreviation already exists."])
-        self.assertEqual(form.non_field_errors(), ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
+        self.assertEqual(form.errors['abbreviation'], ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testAbbreviationDifferentCase(self):
         form = self.createForm({
@@ -328,7 +326,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
+        self.assertEqual(form.errors['abbreviation'], ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testIndependentClean(self):
         form = self.createForm({
@@ -340,8 +338,10 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), [
+        self.assertEqual(form.errors['abbreviation'], [
             'IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.',
+        ])
+        self.assertEqual(form.errors['name'], [
             "Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.",
         ])
 
@@ -355,7 +355,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), [
+        self.assertEqual(form.errors['postcode'], [
             'Postcode must be numeric',
             'Postcode too short',
         ])
@@ -421,7 +421,7 @@ class TestCampusForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), [
+        self.assertEqual(form.errors['postcode'], [
             'Postcode must be numeric',
             'Postcode too short',
         ])
@@ -660,7 +660,7 @@ class Test_SchoolViews_LoginRequired(Base_Test_SchoolViews, TestCase):
     def testSetCurrentSchool(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
-        response = self.client.get(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
+        response = self.client.post(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
         self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school2.id}")
         self.assertEqual(response.status_code, 302)
 
@@ -710,17 +710,29 @@ class Test_SetCurrentSchool_Permissions(Base_Test_SchoolViews_Permissions, TestC
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         # Change to school 2
-        response = self.client.get(self.url(self.school2))
+        response = self.client.post(self.url(self.school2))
         self.assertEqual(response.status_code, 302)
 
         # Check school changed
         self.user1.refresh_from_db()
         self.assertEqual(self.user1.currentlySelectedSchool, self.school2)
 
+    def testDeniedGet(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        # Change to school 2
+        response = self.client.get(self.url(self.school2))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Forbidden method', status_code=403)
+
+        # Check still school 1
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
     def testDeniedNotAdmin(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
-        response = self.client.get(self.url(self.school3))
+        response = self.client.post(self.url(self.school3))
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this school", status_code=403)
 
@@ -776,8 +788,8 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         response = self.client.post(reverse(self.reverseString),data=payload)
 
         self.assertEqual(response.status_code,self.inValidCreateCode)
-        self.assertContains(response, 'School with this Abbreviation already exists.')
-        self.assertContains(response, 'School with this Name already exists.')
+        self.assertContains(response, 'School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au')
+        self.assertContains(response, 'School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au')
 
 class TestEditSchoolDetails(TestCase):
     email = 'user@user.com'

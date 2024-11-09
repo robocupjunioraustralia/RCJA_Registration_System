@@ -9,6 +9,8 @@ from teams.models import Team, Student
 from events.models import Event, Division, Year, AvailableDivision, Venue
 from users.models import User
 from coordination.models import Coordinator
+from eventfiles.models import EventAvailableFileType, MentorEventFileType
+from invoices.models import Invoice, InvoiceGlobalSettings
 
 import datetime
 # Create your tests here.
@@ -66,6 +68,22 @@ def commonSetUp(obj):
     )
     obj.oldEvent.divisions.add(obj.division)
 
+    obj.registrationNotOpenYetEvent = Event.objects.create(
+        year=obj.year,
+        state=obj.newState,
+        name='future event',
+        eventType='competition',
+        status='published',
+        maxMembersPerTeam=5,
+        event_defaultEntryFee = 4,
+        startDate=(datetime.datetime.now() + datetime.timedelta(days=10)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=10)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+        directEnquiriesTo = obj.user     
+    )
+    obj.registrationNotOpenYetEvent.divisions.add(obj.division)
+
     obj.newEvent = Event.objects.create(
         year=obj.year,
         state=obj.newState,
@@ -102,6 +120,12 @@ def commonSetUp(obj):
 
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
     obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male')
+
+    obj.invoiceSettings = InvoiceGlobalSettings.objects.create(
+        invoiceFromName='From Name',
+        invoiceFromDetails='Test Details Text',
+        invoiceFooterMessage='Test Footer Text',
+    )
 
 class TestEventPermissions(TestCase):
     def setUp(self):
@@ -282,6 +306,10 @@ class TestEventDetailsPage_school(TestCase):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
         self.assertEqual(response.status_code, 200)
 
+    def testCorrectMessage_ClosedRegoWithTeams(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertContains(response, 'Registration for this event has closed.')
+
     def testDeniedUnpublishedClosedRegoWithTeams(self):
         self.oldEventWithTeams.status = 'draft'
         self.oldEventWithTeams.save()
@@ -324,6 +352,14 @@ class TestEventDetailsPage_school(TestCase):
         for team in response.context['teams']:
             assert team.school == self.user.currentlySelectedSchool, 'No permission to view this team'
 
+    def testPageLoad_registrationNotOpenYetEvent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.registrationNotOpenYetEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testCorrectMessage_registrationNotOpenYetEvent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.registrationNotOpenYetEvent.id}))
+        self.assertContains(response, "Registration for this event hasn't opened yet.")
+
 class TestEventDetailsPage_independent(TestEventDetailsPage_school):
     def setUp(self):
         commonSetUp(self)
@@ -348,6 +384,11 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
 
         super().testLoadsClosedRegoWithTeams()
+
+    def testCorrectMessage_ClosedRegoWithTeams(self):
+        self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
+
+        super().testCorrectMessage_ClosedRegoWithTeams()
 
     def testDeniedUnpublishedClosedRegoWithTeams(self):
         self.oldTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, mentorUser=self.user, name='test old team ind')
@@ -593,6 +634,29 @@ class TestEventClean(TestCase):
         self.event.state = self.state2
         self.assertRaises(ValidationError, self.event.clean)
 
+    # Test file upload deadline checking
+
+    def testSuccessCleanWithAvailableEventFile(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
+        self.availableFileType1.save()
+        self.assertEqual(self.event.clean(), None)
+
+    def testUploadDeadlineBeforeRegistrationClose(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.registrationsCloseDate + datetime.timedelta(days=-1))
+        self.availableFileType1.save()
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testUploadDeadlineAfterStartDate(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.startDate + datetime.timedelta(days=1))
+        self.availableFileType1.save()
+        self.assertRaises(ValidationError, self.event.clean)
+
 class TestEventMethods(TestCase):
     def setUp(self):
         commonSetUp(self)
@@ -699,6 +763,221 @@ class TestEventMethods(TestCase):
         self.availableDivision.save()
 
         self.assertTrue(self.event.paidEvent())
+
+    def testPaidEvent_workshop_studentEntryFee(self):
+        self.event.eventType = 'workshop'
+        self.event.event_defaultEntryFee = 0
+        self.event.workshopStudentEntryFee = 5
+        self.assertTrue(self.event.paidEvent())
+
+    def testPaidEvent_workshop_teacherEntryFee(self):
+        self.event.eventType = 'workshop'
+        self.event.event_defaultEntryFee = 0
+        self.event.workshopTeacherEntryFee = 5
+        self.assertTrue(self.event.paidEvent())
+
+    def test_published_draft(self):
+        self.event.status = 'draft'
+        self.assertFalse(self.event.published())
+
+    def test_published_published(self):
+        self.assertTrue(self.event.published())
+
+    def test_registrationsOpen_open(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now()).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now()).date()
+        self.assertTrue(self.event.registrationsOpen())
+
+    def test_registrationsOpen_notOpenYet(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
+        self.assertFalse(self.event.registrationsOpen())
+
+    def test_registrationsOpen_closed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.assertFalse(self.event.registrationsOpen())
+
+    def test_registrationNotOpenYet_open(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now()).date()
+        self.event.registrationsCloseDate = (datetime.datetime.now()).date()
+        self.assertFalse(self.event.registrationNotOpenYet())
+
+    def test_registrationNotOpenYet_notOpenYet(self):
+        self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
+        self.assertTrue(self.event.registrationNotOpenYet())
+
+    def test_registrationNotOpenYet_closed(self):
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.assertFalse(self.event.registrationNotOpenYet())
+
+    def test_checkBillingDetailsChanged_notChanged(self):
+        self.assertFalse(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_newEvent(self):
+        self.unsavedEvent = Event(
+            year=self.year,
+            state=self.newState,
+            name='Unsaved Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+
+        self.assertFalse(self.unsavedEvent.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_entryFeeIncludesGST(self):
+        self.event.entryFeeIncludesGST = False
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_defaultEntryFee(self):
+        self.event.event_defaultEntryFee = 6
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_billingType(self):
+        self.event.event_billingType = 'student'
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_specialRateNumber(self):
+        self.event.event_specialRateNumber = 10
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_event_specialRateFee(self):
+        self.event.event_specialRateFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_workshopTeacherEntryFee(self):
+        self.event.workshopTeacherEntryFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkBillingDetailsChanged_workshopStudentEntryFee(self):
+        self.event.workshopStudentEntryFee = 50
+        self.assertTrue(self.event.checkBillingDetailsChanged())
+
+    def test_checkEventConvertedToPaid_notChanged(self):
+        self.assertFalse(self.event.checkEventConvertedToPaid())
+    
+    def test_checkEventConvertedToPaid_newEvent(self):
+        self.unsavedEvent = Event(
+            year=self.year,
+            state=self.newState,
+            name='Unsaved Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+
+        self.assertFalse(self.unsavedEvent.checkEventConvertedToPaid())
+    
+    def test_checkEventConvertedToPaid_toFree(self):
+        self.event.event_defaultEntryFee = 0
+        self.assertFalse(self.event.checkEventConvertedToPaid())
+
+    def test_checkEventConvertedToPaid_toPaid(self):
+        self.event.event_defaultEntryFee = 0
+        self.event.save()
+
+        self.event.event_defaultEntryFee = 5
+        self.assertTrue(self.event.checkEventConvertedToPaid())
+
+    def test_preSave_surchageAmount_notSet(self):
+        self.invoiceSettings.surchargeAmount = 5
+        self.invoiceSettings.save()
+
+        self.invoiceEvent = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Invoice Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 5)
+
+    def test_preSave_surchageAmount_set(self):
+        self.invoiceSettings.surchargeAmount = 5
+        self.invoiceSettings.save()
+
+        self.invoiceEvent = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Invoice Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 5)
+
+        # Assert doesn't change after creation
+        self.invoiceSettings.surchargeAmount = 10
+        self.invoiceSettings.save()
+
+        self.invoiceEvent.save()
+        self.invoiceEvent.refresh_from_db()
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 5)
+
+    def test_preSave_surchageAmount_noSettings(self):
+        self.invoiceSettings.delete()
+
+        self.invoiceEvent = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Invoice Event',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+2)).date(),
+            directEnquiriesTo = self.user     
+        )
+        self.assertEqual(self.invoiceEvent.eventSurchargeAmount, 0)
+
+    def test_surchargeName_exists(self):
+        self.invoiceSettings.surchargeName = 'Test Surcharge Name'
+        self.invoiceSettings.save()
+
+        self.assertEqual(self.event.surchargeName(), 'Test Surcharge Name')
+
+    def test_surchargeEventDescription_exists(self):
+        self.invoiceSettings.surchargeEventDescription = 'Test Surcharge Event Description'
+        self.invoiceSettings.save()
+
+        self.assertEqual(self.event.surchargeEventDescription(), 'Test Surcharge Event Description')
+
+    def test_surchargeName_notExists(self):
+        self.invoiceSettings.delete()
+
+        self.assertEqual(self.event.surchargeName(), '')
+
+    def test_surchargeEventDescription_notExists(self):
+        self.invoiceSettings.delete()
+
+        self.assertEqual(self.event.surchargeEventDescription(), '')
 
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')

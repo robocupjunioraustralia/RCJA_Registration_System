@@ -5,6 +5,8 @@ from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision, Venue
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
+from userquestions.models import Question, QuestionResponse
+from association.models import AssociationMember
 
 import datetime
 
@@ -215,4 +217,55 @@ def createTeams(self):
         name='Team 3',
         hardwarePlatform=self.hardwarePlatform,
         softwarePlatform=self.softwarePlatform,
+    )
+
+def createInvoices(self):
+    self.state1_event1_invoice1 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state1_openCompetition
+    )
+    self.state2_event1_invoice2 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state2_openCompetition
+    )
+
+def createQuestionsAndResponses(self):
+    self.question1 = Question.objects.create(
+        shortTitle='Consent',
+        questionText='Do you consent to the terms and conditions?',
+        required=False,
+    )
+    self.questionResponse1 = QuestionResponse.objects.create(
+        question=self.question1,
+        user=self.user_state1_school1_mentor1,
+        response=True,
+    )
+
+    self.question2 = Question.objects.create(
+        shortTitle='Marketing',
+        questionText='Do you consent to receive marketing communications?',
+        required=False,
+    )
+    self.questionResponse1 = QuestionResponse.objects.create(
+        question=self.question2,
+        user=self.user_state1_school1_mentor1,
+        response=False,
+    )
+
+def createAssociationMemberships(self):
+    self.state1_associationMember1 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor1,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+    )
+
+    self.state1_associationMember2 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor2,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+    )
+
+    self.state2_associationMember3 = AssociationMember.objects.create(
+        user=self.user_state2_school3_mentor4,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
     )

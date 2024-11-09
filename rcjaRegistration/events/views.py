@@ -39,7 +39,7 @@ def dashboard(request):
         registrationsCloseDate__gte=datetime.datetime.today(),
     ).exclude(
         baseeventattendance__in=usersEventAttendances,
-    ).order_by('startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('startDate').distinct()
 
     eventsAvailable = openForRegistrationEvents.exists()
 
@@ -56,13 +56,13 @@ def dashboard(request):
         endDate__gte=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).distinct().order_by('startDate').distinct()
+    ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct()
 
     pastEvents = Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).order_by('-startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
@@ -89,30 +89,60 @@ def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):
         return True
 
-    if event.published() and event.registrationsOpen():
+    if not event.published():
+        return False
+
+    if event.registrationsOpen():
         return True
 
-    if event.published() and BaseEventAttendance.objects.filter(**filterDict).exists():
+    if event.registrationNotOpenYet():
+        return True
+
+    if BaseEventAttendance.objects.filter(**filterDict).exists():
         return True
 
     return False
+
+def getDivisionsMaxReachedWarnings(event, user):
+    # Get list of divisions that reached max number of teams
+    divisionsMaxReachedWarnings = []
+    for availableDivision in event.availabledivision_set.prefetch_related('division').all():
+        if availableDivision.maxDivisionTeamsForSchoolReached(user):
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
+
+        if availableDivision.maxDivisionTeamsTotalReached():
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
+    
+    return divisionsMaxReachedWarnings
+
+def getAvailableToCopyTeams(request, event):
+    # Get team filter dict
+    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
+
+    # Get teams already copied
+    copiedTeamsList = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
+
+    # Replace event filtering with year filtering
+    del filterDict['event']
+    filterDict['event__year'] = event.year
+    filterDict['event__status'] = 'published'
+
+    availableDivisions = event.availabledivision_set.values_list('division', flat=True)
+
+    # Get teams available to copy
+    teams = Team.objects.filter(**filterDict)
+    teams = teams.exclude(event=event) # Exclude teams of the current event
+    availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
+    availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
+
+    return teams, copiedTeamsList, availableToCopyTeams
 
 @login_required
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
     # Get team and workshop attendee filter dict
-    if request.user.currentlySelectedSchool:
-        filterDict = {
-            'school': request.user.currentlySelectedSchool,
-            'event': event,
-        }
-    else:
-        filterDict = {
-            'mentorUser': request.user,
-            'school': None,
-            'event': event,
-        }
+    filterDict = event.getBaseEventAttendanceFilterDict(request.user)
 
     if not eventDetailsPermissions(request, event, filterDict):
         raise PermissionDenied("This event is unavailable")
@@ -123,7 +153,7 @@ def details(request, eventID):
         workshopAttendees = WorkshopAttendee.objects.filter(**filterDict)
     else:
         teams = Team.objects.filter(**filterDict)
-        teams = teams.prefetch_related('student_set')
+        teams = teams.prefetch_related('student_set', 'division', 'campus', 'event')
         workshopAttendees = WorkshopAttendee.objects.none()
 
     # Get billing type label
@@ -132,14 +162,21 @@ def details(request, eventID):
     else:
         billingTypeLabel = event.event_billingType
 
+    _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
+
     context = {
         'event': event,
+        'availableDivisions': event.availabledivision_set.prefetch_related('division'),
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
         'workshopAttendees': workshopAttendees,
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'maxEventTeamsForSchoolReached': event.maxEventTeamsForSchoolReached(request.user),
+        'maxEventTeamsTotalReached': event.maxEventTeamsTotalReached(),
+        'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
+        'duplicateTeamsAvailable': availableToCopyTeams.exists(),
     }
     return render(request, 'events/details.html', context)   
 

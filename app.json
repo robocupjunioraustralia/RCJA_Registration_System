@@ -1,8 +1,8 @@
 {
   "name": "RCJA Registration App",
   "description": "A custom registration system for Robocup Junior Australia built in Django",
-  "repository": "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System",
-  "logo": "https://www.robocupjunior.org.au/sites/all/themes/rcja/images/logo.png",
+  "repository": "https://github.com/robocupjunioraustralia/RCJA_Registration_System",
+  "logo": "https://www.robocupjunior.org.au/wp-content/uploads/2021/01/favicon.png",
   "success_url": "/admin/",
   "stack": "container",
   "addons": ["heroku-postgresql:hobby-dev"],

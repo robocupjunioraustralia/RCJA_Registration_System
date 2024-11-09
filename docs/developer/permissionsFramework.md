@@ -18,6 +18,8 @@ The minimum required to implement state based permissions on a model is to:
 
 To filter foreign key fields that link to the model, you must include the foreign key field in `fkFilterFields` on the ModelAdmin for the model with the field.
 
+To filter the autocomplete results for fields that link to the model, you must include the model with the foreign key in `autocompleteFilters`.
+
 ## Global objects
 
 To provide state coordinators permissions on a model it is necessary to define `stateCoordinatorPermissions` on the model, even if the model is global. If the admin inherits from `AdminPermissions` you must also define `stateCoordinatorViewGlobal = True` on the model. Inheriting from `AdminPermissions` is optional where the model is only global, but it is recommended to inherit from `AdminPermissions` so that future changes are enforced.
@@ -40,7 +42,12 @@ There are three possible scenarios for global objects:
 | `statePermissionsFilterLookup` | Admin | String | If object is filtered through relationship with state. | Relationship of this model to state coordinator using double underscore notation. |
 | `globalPermissionsFilterLookup` | Admin | String | If object is filtered through relationship with state and state coordinators should have access to globals. | Relationship of this model to state using double underscore notation. |
 | `fkFilterFields` | Admin | Dictionary | If model has foreign key fields that need to be filtered based on coordinator permissions. |  |
-| `fkObjectFilterFields` | Admin  | Function returns dictionary | If model has foreign key fields that require custom filtering logic. |  |
+| `fkObjectFilterFields` | Admin | Function returns dictionary | If model has foreign key fields that require custom filtering logic. |  |
+| `autocompleteFilters` | Admin of target field | Dictionary | If autocomplete field references this model and needs to be filtered. | Dictionary of admin url and model defined on the admin of the model that populates the autocomplete dialog. Used to filter the autocomplete results. |
+| `fieldFilteringModel` | Admin of target field | Model | If `fieldModel` not defined in `fkFilterFields`. | |
+| `filterQuerysetOnSelected` | Admin | Boolean | If want to filter queryset based on selected state and year. | |
+| `stateSelectedFilterLookup` | Admin | String | If want to filter queryset or filters based on selected state. | |
+| `yearSelectedFilterLookup` | Admin | String | If want to filter queryset or filters based on selected year. | |
 
 ### `AdminPermissions`
 The class that provides advanced coordinator permissions for the model admin. Must inherit from this class or only builtin Django permissions will apply.

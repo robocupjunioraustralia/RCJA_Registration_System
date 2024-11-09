@@ -9,6 +9,7 @@ from django.forms import TextInput, Textarea
 from django.core.exceptions import ValidationError
 from django.db import models
 from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.utils.html import format_html
 
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
@@ -168,11 +169,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'registrationsCloseDate',
         'directEnquiriesToName',
         'venue',
+        'registrationsLink',
     ]
     competition_fieldsets = (
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -185,7 +187,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
@@ -194,7 +196,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     workshop_fieldsets = (
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -204,7 +206,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
@@ -222,10 +224,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
-        ('Billing settings', {
-            'description': "More options will be available after you click save",
-            'fields': ('entryFeeIncludesGST', 'event_defaultEntryFee')
-        }),
         ('Details', {
             'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
@@ -237,6 +235,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'eventBannerImageOriginalFilename',
         'bannerImageFilesize',
         'effectiveBannerImageTag',
+        'registrationsLink',
+        'eventSurchargeAmount',
     ]
     add_readonly_fields = [
     ]
@@ -252,6 +252,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             readonly_fields = readonly_fields + ['status']
 
         return readonly_fields
+
+    def registrationsLink(self, obj):
+        return format_html('<a href="{}">-></a>', obj.registrationsAdminURL())
+    registrationsLink.short_description = 'View registrations'
 
     autocomplete_fields = [
         'state',
@@ -304,6 +308,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'event_defaultEntryFee',
         'event_specialRateNumber',
         'event_specialRateFee',
+        'workshopTeacherEntryFee',
+        'workshopStudentEntryFee',
         'paymentDueDate',
         'eventDetails',
         'additionalInvoiceMessage',
@@ -455,6 +461,13 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
     ]
 
     form = BaseWorkshopAttendanceForm
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('event', 'division', 'mentorUser__homeState', 'school__state', 'campus')
+
+        return qs
 
     # Set school and campus to that of mentor if only one option
     def save_model(self, request, obj, form, change):

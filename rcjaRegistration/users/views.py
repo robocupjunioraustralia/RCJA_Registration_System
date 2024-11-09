@@ -115,21 +115,33 @@ def redirectCurrentPage(request):
 
 @login_required
 def setCurrentAdminYear(request, year):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
     # Restrict to staff
     if not request.user.is_staff:
         raise PermissionDenied("Must be staff")
 
-    from events.models import Year
-    year = get_object_or_404(Year, pk=year)
+    if year == 0:
+        request.user.currentlySelectedAdminYear = None
 
-    # Set current year on user
-    request.user.currentlySelectedAdminYear = year
+    else:
+        from events.models import Year
+        year = get_object_or_404(Year, pk=year)
+
+        # Set current year on user
+        request.user.currentlySelectedAdminYear = year
+
+    # Save field
     request.user.save(update_fields=['currentlySelectedAdminYear'])
     
     return redirectCurrentPage(request)
 
 @login_required
 def setCurrentAdminState(request, stateID):
+    if request.method != "POST":
+        raise PermissionDenied("Forbidden method")
+
     # Restrict to staff
     if not request.user.is_staff:
         raise PermissionDenied("Must be staff")
@@ -138,7 +150,6 @@ def setCurrentAdminState(request, stateID):
         request.user.currentlySelectedAdminState = None
 
     else:
-
         from regions.models import State
         state = get_object_or_404(State, pk=stateID)
 

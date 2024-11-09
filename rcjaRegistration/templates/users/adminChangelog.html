@@ -19,12 +19,27 @@
     <div class="ui center aligned grid ">
       <div class = "twelve wide mobile six wide computer column ui">
         <h1>Recent Administration Changes</h1>
+        <a href="/"><button class="ui large blue button"> Home </button></a>
+        <h2>11 September 2023</h2>
+        <p>Can now search by invoice number, PO number, invoice amount, amount due, and amount paid on invoice page.</p>
+        <p>Added links to teams and invoices to event details page.</p>
+        <h2>10 September 2023 - Invoice Improvements</h2>
+        <p>Invoice page is much, much faster to load.</p>
+        <p>Can now filter invoices based on amount due and invoice amount - $0 invoices are now hidden by default. Can also sort by invoice amount, amount paid and amount due - click the column header.</p>
+        <p>Invoice date now defaults to payment due date. If the mentor views the invoice before the payment due date the date updates to the current date the first time the mentor views the invoice. Invoice date can still be changed manually.</p>
+        <p>Negative amounts due now display as $0.</p>
+        <h2>9 September 2023</h2>
+        <p>Team names, student names, school names, mentor names and some other fields are now restricted to common ASCII characters.</p>
+        <p>Platform Category has been added and can be used to group different Hardware Platforms and Software Platforms. New option to filter by Hardware and Software Platform on teams list page.</p>
+        <p>Max number of teams per division now checked when a mentor attempts to move a team between divisions. Coordinators can still override this in the admin portal.</p>
+        <p>Upload file type extension now case insensitive.</p>
+        <p>Upload submission date must now be on or after registration close date and on or before competition start date.</p>
+        <p>Mentors can now view published events before registration opens, such as if they click on a link from the website. These events will not be listed on the dashboard until registration opens.</p>
         <h2>6 September 2023</h2>
 
         <p>Admin pages can now be filtered by year and state to improve page load times. To enable this filtering select from the dropdowns in the top right corner of the page:</p>
         <img src="{% static 'adminChangelog/yearStateFilter.png' %}"><br><br>
 
-        <a href="/"><button class="ui large blue button"> Home </button></a>
       </div>
     </div>
   </div>

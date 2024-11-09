@@ -15,7 +15,7 @@ from schools.models import Campus
 
 @login_required
 def summary(request):
-    invoices = Invoice.invoicesForUser(request.user)
+    invoices = Invoice.invoicesForUser(request.user).prefetch_related('invoicepayment_set', 'school', 'campus', 'invoiceToUser', 'event__year', 'event__state')
 
     context = {
         'invoices': invoices,
@@ -30,6 +30,11 @@ def mentorInvoicePermissions(request, invoice):
 def coordinatorInvoiceDetailsPermissions(request, invoice):
     return checkCoordinatorPermission(request, Invoice, invoice, 'view')
 
+def updateInvoicedDate(invoice, mentor):
+    if mentor and (invoice.invoicedDate is None or invoice.invoicedDate > datetime.datetime.today().date()):
+        invoice.invoicedDate = datetime.datetime.today().date()
+        invoice.save(update_fields=['invoicedDate'], skipPrePostSave=True)
+
 @login_required
 def details(request, invoiceID):
     # Get invoice
@@ -43,9 +48,10 @@ def details(request, invoiceID):
         raise PermissionDenied("You do not have permission to view this invoice")
 
     # Set invoiced date
-    if mentor and invoice.invoicedDate is None:
-        invoice.invoicedDate = datetime.datetime.today().date()
-        invoice.save(update_fields=['invoicedDate'])
+    updateInvoicedDate(invoice, mentor)
+
+    # Recalculate totals to ensure always correct when shown to mentor
+    invoice.calculateAndSaveAllTotals()
 
     context = {
         'invoice': invoice,
@@ -70,9 +76,10 @@ def paypal(request, invoiceID):
         return HttpResponseForbidden('PayPal not enabled for this invoice')
 
     # Set invoiced date
-    if mentor and invoice.invoicedDate is None:
-        invoice.invoicedDate = datetime.datetime.today()
-        invoice.save(update_fields=['invoicedDate'])
+    updateInvoicedDate(invoice, mentor)
+
+    # Recalculate totals to ensure always correct when shown to mentor
+    invoice.calculateAndSaveAllTotals()
 
     if invoice.campus:
         schoolCampusString = f'{invoice.school}, {invoice.campus}'
@@ -127,6 +134,8 @@ def setCampusInvoice(request, invoiceID):
                 school=invoice.school,
                 campus=campus,
             )
+        # Recalculate totals on the original invoice
+        invoice.calculateAndSaveAllTotals()
 
         return JsonResponse({'id':invoiceID, 'success':True})
     else:
