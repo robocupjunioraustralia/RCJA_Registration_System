@@ -11,7 +11,7 @@ from coordination.permissions import checkCoordinatorPermission
 import datetime
 
 from .models import Event, BaseEventAttendance
-from teams.models import Team
+from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
 
@@ -141,6 +141,17 @@ def getAvailableToCopyTeams(request, event):
 def details(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
+    # Get available divisions with number of registrations
+    adminAvailableDivisions = []
+    for availableDivision in event.availabledivision_set.all():
+        if not event.boolWorkshop():
+            studentCount = Student.objects.filter(team__event=event, team__division=availableDivision.division).count()
+        adminAvailableDivisions.append({
+            'division': availableDivision.division,
+            'count': event.baseeventattendance_set.filter(division=availableDivision.division).count(),
+            'studentCount': studentCount if not event.boolWorkshop() else None,
+        })
+
     # Get team and workshop attendee filter dict
     filterDict = event.getBaseEventAttendanceFilterDict(request.user)
 
@@ -166,6 +177,7 @@ def details(request, eventID):
 
     context = {
         'event': event,
+        'adminAvailableDivisions': adminAvailableDivisions,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
