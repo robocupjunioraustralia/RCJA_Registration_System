@@ -1,0 +1,53 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> RCJA Home </title>
+
+<style>
+    .cardcontent {
+        margin-top: 10px;
+    }
+
+    .cardimage {
+        max-height: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Summary Report:</h1>
+    </div>
+    <div class="row">
+        <p>State: {{state}}<p>
+    </div>
+    <div>
+        <table class="ui celled table">
+            <thead>
+              <tr><th>Event</th>
+              <th>Date</th>
+              <th>Number of Participants</th>
+              <th>Location</th>
+            </tr></thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td data-label="Event">{{event.name}}</td>
+                    <td data-label="Date">{{event.date}}</td>
+                    <td data-label="Number of Participants">
+                        {{event.participants_one}} <br>
+                        {{event.participants_two}} <br>
+                        {{event.participants_three}}
+                    </td>
+                    <td data-label="Location">{{event.location}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <br>
+</div>
+{% endblock %}
