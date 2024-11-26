@@ -12,6 +12,45 @@
     .cardimage {
         max-height: 150px;
     }
+
+    .upComingImageContainer{
+        height: 18rem;
+        width: 100%;
+        background-color:gray;
+    }
+    .upComingEventImage{
+        height: 18rem;
+        width: 100%;
+        background-color: gray;
+    }
+    .mapContainer{
+        height: 10rem;
+        background-color:gray;
+        border: 1px solid lightgray;
+    }
+    .mapImage{
+        height: 10rem;
+        width: 100%;
+    }
+    .floatRight{
+        float:right;
+        text-align: right;
+        margin-left: auto;
+        margin-right: 0;
+    }
+    .lightGrayBackground{
+        background-color:lightgray !important;
+    }
+    .whiteBackGround {
+        background-color:white !important;
+    }
+
+    .smallBottomPad {
+        padding-bottom: 3rem !important;
+    }
+    .noPadding {
+        padding: none !important;
+    }
 </style>
 {% endblock %}
 
@@ -21,7 +60,6 @@
         <h3>You are currently interacting as {{ request.user.currentlySelectedSchool.name|default:"independent" }}.</h3><br>
     </div>
     <div class="row">
-        <h1>Invoices:</h1> 
         {% if outstandingInvoices %}
             <div class="ui icon message">
             <i class="ui dollar icon"></i>
@@ -57,64 +95,95 @@
     </div>
     <br>
    
-    <div class="row">  
-        {% if currentEvents or openForRegistrationWorkshops or openForRegistrationCompetitions or pastEvents %}
-            {% if currentEvents %}
-            {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
-            <br>
-            {% endif %}
+    <div class="row"> 
+        <div class = "ui segment smallBottomPad lightGrayBackground">
+            <h3> Your upcoming Events </h3>
+        <div class = "ui divider"> </div>
+        <div class = "ui stackable grid">
+            <div class = "ui row">
+                <div class = "ui five wide column noPadding">
+                    <div class = "upComingImageContainer"> 
+                        <img class = "upComingEventImage" src = "https://upload.wikimedia.org/wikipedia/commons/f/f7/Melbourne_and_the_Yarra.jpg">
+                    </div>
+                </div>
+                <div class = "ui eleven wide column stackable grid whiteBackGround">
+                    <div class = "ui six wide column">
+                        <div class = "row">
+                            <div class = "row">
+                                <h4> Robocup States 2019 </h4> 
+                            </div>
+                            <div class = "row">
+                                <i class = "calendar icon"> </i> Begins in 6 months
+                            </div>
+                            <div class = "row">
+                                <i class = "location arrow icon"> </i> 22 Forest Hill South Yarra VIC 3010
+                            </div>
+                            <div class = "row">
+                                <i class = "user icon"> </i> 9898 attending
+                            </div>
+                        </div>
+                    </div>
+                    <div class = "ui five wide column"> 
+                        <div class = "ui icon message">
+                        <i class ="dollar sign icon"></i>
+                        <div class = "content">
+                            Payment Complete
+                            <a href = "#"> View Invoice </a>
+                        </div>
+                        </div>
+                    </div>
 
-            {% if openForRegistrationWorkshops %}
-            {% include "events/eventRow.html" with comps=openForRegistrationWorkshops rowHeading="Open for registration workshops:" %}
-            <br>
-            {% endif %}
-
-            {% if openForRegistrationCompetitions %}
-            {% include "events/eventRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration competitions:" %}
-            <br>
-            {% endif %}
-
-            {% if not 'viewAll' in request.GET %}
-            <p>Currently viewing events from {{currentState}}.</p>
-            <div>
-                <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
+                    <div class = "ui four wide column">
+                        <div class = "mapContainer">
+                            <img class = "mapImage" src = "https://www.google.com/maps/about/images/mymaps/mymaps-desktop-16x9.png">
+                        </div>
+                    </div>
+                    <div class = "ui row divider smallBottomPad">
+                        <span> <i class = "user icon"></i> 10 Registered, 2 Teams </span>
+                        <div class = "floatRight"> <a href = "#" class = "ui button primary">View Event </a> </div>
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <p>Currently viewing events from all states.</p>
-            <div>
-                <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
-            </div>
-            {% endif %}
-            <br>
+            
+        </div>
+    
+    </div>
+    <div class = "row"> 
+        <div class = "ui segment lightGrayBackground">
+            <h3> Upcoming Registerable Events
+            <div class = "ui divider"> </div>
+                <div class = "ui four column grid stackable cards">
+                    <div class = "column">
+                        <div class = "ui card fluid">
+                            <div class = "image">
+                                <img src = "https://upload.wikimedia.org/wikipedia/commons/f/f7/Melbourne_and_the_Yarra.jpg">
+                            </div>
+                            <div class = "content">
+                                <div class = "header"> Melbourne IV </div>
+                                <div class = "meta"> Info </div>
+                                <div class = "description"> Lorem Ipsum is a card  Ipsum is a card</div>
+                                <div class = "extra content"> N attending <button class = "ui button primary right floated"> View Event</button> </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class = "column">
+                        <div class = "ui card fluid">
+                            <div class = "image">
+                                <img src = "https://upload.wikimedia.org/wikipedia/commons/f/f7/Melbourne_and_the_Yarra.jpg">
+                            </div>
+                            <div class = "content">
+                                <div class = "header"> Melbourne IV </div>
+                                <div class = "meta"> Info </div>
+                                <div class = "description"> Lorem Ipsum is a card  Ipsum is a card</div>
+                                <div class = "extra content"> N attending <button class = "ui button primary right floated"> View Event</button> </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            {% if pastEvents %}
-                {% include "events/eventRow.html" with comps=pastEvents rowHeading="Past events:" %}
-            {% endif %}
-        {% else %}
-        <div class="ui icon warning message">
-            <i class="frown icon"></i>
-            <div class="content">
-              <div class="header">
-                No Events
-              </div>
-              <p>Sorry, no events found. Please check again for events soon.{% if not 'viewAll' in request.GET and eventsAvailable %} Alternatively, you can check for events from other states.{% endif %}</p>
-            </div>
+
         </div>
 
-        <!-- This button should be refactored to reduce duplicated code (see above). -->
-        {% if not 'viewAll' in request.GET and eventsAvailable %}
-        <p>Currently viewing events from {{currentState}}.</p>
-        <div>
-            <a href="?viewAll="><button class="ui primary button">View events from all states</button></a>
-        </div>
-        {% elif eventsAvailable %}
-        <p>Currently viewing events from all states.</p>
-        <div>
-            <a href="?"><button class="ui primary button">View events from {{currentState}}</button></a>
-        </div>
-        {% endif %}
-
-    {% endif %}
     </div>
 
 </div>
