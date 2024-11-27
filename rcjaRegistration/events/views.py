@@ -14,6 +14,7 @@ from .models import Event, BaseEventAttendance
 from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
+from .forms import getSummaryForm
 
 # Need to check if schooladministrator is None
 
@@ -235,11 +236,9 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         eventAttendance.delete()
         return HttpResponse(status=204)
 
-@login_required
-def summaryReport(request):
-    # Find Events
-    user_state = request.user.homeState
-    eventList = Event.objects.filter(state = user_state)
+def getEventsForSummary(state, year):
+    """ Create list of event dictionaries of all events in state and year """
+    eventList = Event.objects.filter(state = state, year = year)
 
     # Find information for events
     events = []
@@ -315,21 +314,22 @@ def summaryReport(request):
         
         events.append(eventDict)
 
-    # Get available divisions with number of registrations
-    """
-    adminAvailableDivisions = []
-    for availableDivision in event.availabledivision_set.all():
-        if not event.boolWorkshop():
-            studentCount = Student.objects.filter(team__event=event, team__division=availableDivision.division).count()
-        adminAvailableDivisions.append({
-            'division': availableDivision.division,
-            'count': event.baseeventattendance_set.filter(division=availableDivision.division).count(),
-            'studentCount': studentCount if not event.boolWorkshop() else None,
-        })
-    """
+    return events
+
+@login_required
+def summaryReport(request):
+    if request.method == 'GET':
+        form = getSummaryForm(request)
+        if form.is_valid():
+            # Save user
+            user_state = form.cleaned_data["state"]
+            year = form.cleaned_data["year"]
+            events = getEventsForSummary(user_state, year)
+        else:
+            events = []
 
     context = {
         "events": events,
-        "state": user_state
+        "form": form
     }
     return render(request, 'events/summaryReport.html', context)
