@@ -11,9 +11,10 @@ from coordination.permissions import checkCoordinatorPermission
 import datetime
 
 from .models import Event, BaseEventAttendance
-from teams.models import Team
+from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
+from .forms import getSummaryForm
 
 # Need to check if schooladministrator is None
 
@@ -234,3 +235,101 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         # Delete team
         eventAttendance.delete()
         return HttpResponse(status=204)
+
+def getEventsForSummary(state, year):
+    """ Create list of event dictionaries of all events in state and year """
+    eventList = Event.objects.filter(state = state, year = year)
+
+    # Find information for events
+    events = []
+    for event in eventList:
+        eventDict = {}
+        eventDict["name"] = event.name
+
+        if event.startDate==event.endDate:
+            eventDict["date"] = event.startDate
+        else:
+            eventDict["date"] = f" {event.startDate} - {event.endDate}"
+
+
+        attendances = BaseEventAttendance.objects.filter(event=event)
+        teamNumber = 0
+        studentNumber = 0
+        teacherNumber = 0
+        maleNumber = 0
+        femaleNumber = 0
+        otherNumber = 0
+        
+        for attendance in attendances:
+            # Find type
+            if attendance.eventAttendanceType() == "team": # Team
+                teamNumber += 1
+                students = Student.objects.filter(team=attendance.childObject())
+                for student in students:
+                    studentNumber += 1
+                    if student.gender == "male":
+                        maleNumber += 1
+                    elif student.gender == "female":
+                        femaleNumber += 1
+                    else:
+                        otherNumber += 1
+            elif attendance.eventAttendanceType() == "workshopattendee": # Workshop
+                if attendance.attendeeType == "student":
+                    studentNumber += 1
+                else:
+                    teacherNumber += 1
+                if attendance.gender == "male":
+                    maleNumber += 1
+                elif attendance.gender == "female":
+                    femaleNumber += 1
+                else:
+                    otherNumber += 1
+
+        # Create output
+        if event.eventType == "competition":
+            if studentNumber > 0:
+                mPercent = round(maleNumber/studentNumber*100)
+                fPercent = round(femaleNumber/studentNumber*100)
+                oPercent = round(otherNumber/studentNumber*100)
+            else:
+                mPercent, fPercent, oPercent = [0,0,0]
+            eventDict["participants_one"] = f"Teams: {teamNumber}"
+            eventDict["participants_two"] = f"Students: {studentNumber}"
+            eventDict["participants_three"] = f"{fPercent}%F, {mPercent}%M, {oPercent}% other"
+        else: # Workshop
+            if studentNumber + teacherNumber > 0:
+                mPercent = round(maleNumber/(studentNumber+teacherNumber)*100)
+                fPercent = round(femaleNumber/(studentNumber+teacherNumber)*100)
+                oPercent = round(otherNumber/(studentNumber+teacherNumber)*100)
+            else:
+                mPercent, fPercent, oPercent = [0,0,0]
+            eventDict["participants_one"] = f"Students: {studentNumber}"
+            eventDict["participants_two"] = f"Teachers: {teacherNumber}"
+            eventDict["participants_three"] = f"{fPercent}%F, {mPercent}%M, {oPercent}% other"
+
+        if event.venue != None:
+            eventDict["location"] = event.venue.name
+        else:
+            eventDict["location"] = "None"
+        
+        events.append(eventDict)
+
+    return events
+
+@login_required
+def summaryReport(request):
+    if request.method == 'GET':
+        form = getSummaryForm(request)
+        if form.is_valid():
+            # Save user
+            user_state = form.cleaned_data["state"]
+            year = form.cleaned_data["year"]
+            events = getEventsForSummary(user_state, year)
+        else:
+            events = []
+
+    context = {
+        "events": events,
+        "form": form
+    }
+    return render(request, 'events/summaryReport.html', context)
