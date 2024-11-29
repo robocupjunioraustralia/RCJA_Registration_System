@@ -87,6 +87,7 @@ class Division(models.Model):
     name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
     category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
+    active = models.BooleanField('Active',default=True)
 
     # *****Meta and clean*****
     class Meta:
