@@ -15,11 +15,11 @@ class TestDivisionActive(TestCase):
         self.client.login(request=HttpRequest(), username=self.email_user_state1_super1, password=self.password)
 
     def test_filter_default(self):
-        response = self.client.get(reverse('admin:events_division'))
+        response = self.client.get(reverse('admin:events_divisions'))
         self.assertContains(response.content, "4 Divisions")
 
     def test_filter_inactive(self):
-        response = self.client.get(reverse('admin:events_division?active=inactive'))
+        response = self.client.get(reverse('admin:events_divisions')+'?active=inactive')
         self.assertContains(response.content, "1 Division")
 
 
