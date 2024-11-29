@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from common.filters import FilteredRelatedOnlyFieldListFilter
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
@@ -26,6 +27,34 @@ from regions.admin import StateAdmin
 class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
     pass
 
+class ActiveFilter(admin.SimpleListFilter):
+    title = _('Active')
+
+    parameter_name = 'active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('active', _('Active')),
+            ('inactive', _('Inactive')),
+            ('all', _('All'))
+        )
+    
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': changelist.get_query_string({self.parameter_name: lookup,},[]),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'inactive':
+            return queryset.filter(active=False) 
+        elif self.value() == 'all':
+            return queryset.all()   
+        else:
+            return queryset.filter(active=True)
+
 @admin.register(Division)
 class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -33,6 +62,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'state',
         'category',
         'description',
+        'active'
     ]
     search_fields = [
         'name',
@@ -43,6 +73,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
     list_filter = [
         'category',
         ('state', admin.RelatedOnlyFieldListFilter),
+        ActiveFilter,
     ]
     actions = [
         'export_as_csv',
@@ -53,6 +84,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'state',
         'category',
         'description',
+        'active'
     ]
     autocomplete_fields = [
         'state',
@@ -62,6 +94,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'category',
         'state',
         'description',
+        'active'
     ]
 
     # State based filtering
@@ -152,7 +185,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
     def fkObjectFilterFields(cls, request, obj):
         return {
             'division': {
-                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
+                'queryset': Division.objects.filter((Q(state=obj.state) | Q(state=None))& Q(active=True)) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
             },
         }
 
