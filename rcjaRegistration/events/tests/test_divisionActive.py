@@ -16,10 +16,10 @@ class TestDivisionActive(TestCase):
 
     def test_filter_default(self):
         response = self.client.get(reverse('admin:events_division_changelist'))
-        self.assertContains(response.content, "4 Divisions")
+        self.assertContains(response.text, "4 Divisions")
 
     def test_filter_inactive(self):
         response = self.client.get(reverse('admin:events_division_changelist')+'?active=inactive')
-        self.assertContains(response.content, "1 Division")
+        self.assertContains(response.text, "1 Division")
 
 
