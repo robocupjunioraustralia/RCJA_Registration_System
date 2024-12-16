@@ -15,7 +15,6 @@ import environ
 import sys
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-from django.shortcuts import render as django_render
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -336,9 +335,3 @@ if SENTRY_DSN != 'SENTRY_DSN':
         ]
     )
 
-def render(request, template_name, context=None, *args, **kwargs):
-    if type(context) == dict:
-        context["development"] = DEV_SETTINGS
-    else:
-        context = {"development":DEV_SETTINGS}
-    return django_render(request, template_name, context, *args, **kwargs)

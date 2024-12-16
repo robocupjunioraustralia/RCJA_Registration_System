@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import WorkshopAttendeeForm
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from .models import WorkshopAttendee
 from events.models import Event
 

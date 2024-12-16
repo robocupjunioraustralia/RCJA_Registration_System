@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequ
 from django.urls import reverse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from rcjaRegistration.settings import render
+from common.userInterface import render
 
 # from .forms import 
 

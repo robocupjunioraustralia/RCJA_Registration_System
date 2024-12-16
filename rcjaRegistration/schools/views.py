@@ -12,7 +12,7 @@ from django.db.models import ProtectedError
 from django.urls import reverse
 from django.db import IntegrityError, transaction
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
 

@@ -9,7 +9,7 @@ from .forms import TeamForm, StudentForm
 
 import datetime
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from .models import Student, Team
 from events.models import Event, AvailableDivision
 

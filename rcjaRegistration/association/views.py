@@ -4,7 +4,7 @@ from django.urls import reverse
 
 import datetime
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from .forms import AssociationMemberForm
 from .models import AssociationMember
 

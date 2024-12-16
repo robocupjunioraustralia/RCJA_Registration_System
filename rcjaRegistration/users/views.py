@@ -14,7 +14,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.encoding import iri_to_uri
 from urllib.parse import urlparse
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from .models import User
 from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm

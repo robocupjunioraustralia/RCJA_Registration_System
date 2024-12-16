@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
 from schools.models import Campus

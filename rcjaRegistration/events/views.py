@@ -10,7 +10,7 @@ from coordination.permissions import checkCoordinatorPermission
 
 import datetime
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from .models import Event, BaseEventAttendance
 from teams.models import Team
 from schools.models import Campus

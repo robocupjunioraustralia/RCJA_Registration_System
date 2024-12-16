@@ -10,7 +10,7 @@ from common.apiPermissions import ReadOnly
 
 from .serializers import StateSerializer, EventSerializer, SummaryEventSerializer
 
-from rcjaRegistration.settings import render
+from common.userInterface import render
 from events.models import Event
 from regions.models import State
 # from publicwebsite.models import CommitteeMember
