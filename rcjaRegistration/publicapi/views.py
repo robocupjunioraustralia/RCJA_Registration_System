@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.db.models import F, Q
 from django.core.exceptions import ValidationError
 from rest_framework import status, viewsets
@@ -10,6 +10,7 @@ from common.apiPermissions import ReadOnly
 
 from .serializers import StateSerializer, EventSerializer, SummaryEventSerializer
 
+from rcjaRegistration.settings import render
 from events.models import Event
 from regions.models import State
 # from publicwebsite.models import CommitteeMember

@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404,redirect
+from django.shortcuts import get_object_or_404,redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
@@ -12,6 +12,7 @@ from django.db.models import ProtectedError
 from django.urls import reverse
 from django.db import IntegrityError, transaction
 
+from rcjaRegistration.settings import render
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
 
