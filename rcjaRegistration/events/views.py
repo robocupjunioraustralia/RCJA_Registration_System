@@ -17,6 +17,24 @@ from workshops.models import WorkshopAttendee
 
 # Need to check if schooladministrator is None
 
+def formatEvents(events):
+    """ Replace null values with TBC"""
+    for event in events:
+        if event.startDate is None:
+            event.startDate = 'TBC'
+        if event.endDate is None:
+            event.endDate = 'TBC'
+        if event.registrationsOpenDate is None:
+            event.registrationsOpenDate = 'TBC'
+        if event.registrationsCloseDate is None:
+            event.registrationsCloseDate = 'TBC'
+        if event.event_defaultEntryFee is None:
+            event.event_defaultEntryFee = 'TBC'
+        if event.startDate is None:
+            event.startDate = 'TBC'
+        
+    return events
+
 @login_required
 def dashboard(request):
     # Events
@@ -31,6 +49,15 @@ def dashboard(request):
         currentState = request.user.currentlySelectedSchool.state
     else:
         currentState = request.user.homeState
+
+    # Get not open events
+    futureEvents = formatEvents(Event.objects.filter(
+        status='published',
+    ).exclude(
+        registrationsOpenDate__lte=datetime.datetime.today(),
+    ).exclude(
+        startDate__lte=datetime.datetime.today(),
+    ).prefetch_related('state', 'year').order_by('startDate').distinct())
 
     # Get open events
     openForRegistrationEvents = Event.objects.filter(
@@ -48,21 +75,21 @@ def dashboard(request):
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
 
     # Split competitions and workshops
-    openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')
-    openForRegistrationWorkshops = openForRegistrationEvents.filter(eventType='workshop')
+    openForRegistrationCompetitions = formatEvents(openForRegistrationEvents.filter(eventType='competition'))
+    openForRegistrationWorkshops = formatEvents(openForRegistrationEvents.filter(eventType='workshop'))
 
     # Get current and past events
-    currentEvents = Event.objects.filter(
+    currentEvents = formatEvents(Event.objects.filter(
         endDate__gte=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct()
+    ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct())
 
-    pastEvents = Event.objects.filter(
+    pastEvents = formatEvents(Event.objects.filter(
         endDate__lt=datetime.datetime.today(),
         baseeventattendance__in=usersEventAttendances,
         status="published",
-    ).prefetch_related('state', 'year').order_by('-startDate').distinct()
+    ).prefetch_related('state', 'year').order_by('-startDate').distinct())
 
     # Invoices
     from invoices.models import Invoice
@@ -71,6 +98,7 @@ def dashboard(request):
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0.05]) # Rounded because consistent with what user sees and not used in subsequent calculations
 
     context = {
+        'futureEvents': futureEvents,
         'openForRegistrationCompetitions': openForRegistrationCompetitions,
         'openForRegistrationWorkshops': openForRegistrationWorkshops,
         'currentEvents': currentEvents,
@@ -146,6 +174,17 @@ def details(request, eventID):
 
     if not eventDetailsPermissions(request, event, filterDict):
         raise PermissionDenied("This event is unavailable")
+    
+    # Replace null values with TBC
+    if event.startDate is None:
+        event.startDate = 'TBC'
+    if event.endDate is None:
+        event.endDate = 'TBC'
+    if event.registrationsOpenDate is None:
+        event.registrationsOpenDate = 'TBC'
+    if event.registrationsCloseDate is None:
+        event.registrationsCloseDate = 'TBC'
+    
 
     # Filter team or workshop attendee
     if event.boolWorkshop():

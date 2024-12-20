@@ -158,6 +158,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
 
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+    empty_value_display = "TBC"
     list_display = [
         '__str__',
         'eventType',
@@ -337,7 +338,16 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             return self.competition_fieldsets
 
         return super().get_fieldsets(request, obj)
-
+    
+    """    
+    # Make dates able to be blank
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
+            form.base_fields[field].required = False
+            form.base_fields[field].blank = True
+        return form
+    """
     # Message user during save
     def save_model(self, request, obj, form, change):
         if obj.pk:

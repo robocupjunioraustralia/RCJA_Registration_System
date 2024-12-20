@@ -255,10 +255,10 @@ class Event(SaveDeleteMixin, models.Model):
     eventBannerImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # Dates
-    startDate = models.DateField('Event start date')
-    endDate = models.DateField('Event end date')
-    registrationsOpenDate = models.DateField('Registrations open date')
-    registrationsCloseDate = models.DateField('Registration close date')
+    startDate = models.DateField('Event start date', blank=True, null=True)
+    endDate = models.DateField('Event end date', blank=True, null=True)
+    registrationsOpenDate = models.DateField('Registrations open date', blank=True, null=True)
+    registrationsCloseDate = models.DateField('Registration close date', blank=True, null=True)
 
     # Team details
     maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=4)
@@ -267,7 +267,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', default=0)
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', default=None, blank=True, null=True)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Competition billing settings
@@ -298,24 +298,34 @@ class Event(SaveDeleteMixin, models.Model):
         unique_together = ('year', 'state', 'name')
         ordering = ['-startDate']
 
+    def containsAllDetails(self):
+        return self.registrationsCloseDate is not None \
+            and self.registrationsOpenDate is not None \
+            and self.startDate  is not None \
+            and self.endDate  is not None \
+            and self.venue  is not None \
+            and self.event_defaultEntryFee is not None
+
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+        checkRequiredFieldsNotNone(self, ['state'])
 
         # Validate status
         if self.pk and self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
             errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
         # Check close and end date after start dates
-        if self.startDate > self.endDate:
-            errors.append(ValidationError('Start date must not be after end date'))
+        if self.startDate and self.endDate:
+            if self.startDate > self.endDate:
+                errors.append(ValidationError('Start date must not be after end date'))
+        if self.registrationsOpenDate and self.registrationsCloseDate:
+            if self.registrationsOpenDate > self.registrationsCloseDate:
+                errors.append(ValidationError('Registration open date must not be after registration close date'))
 
-        if self.registrationsOpenDate > self.registrationsCloseDate:
-            errors.append(ValidationError('Registration open date must not be after registration close date'))
-
-        if self.registrationsCloseDate > self.startDate:
-            errors.append(ValidationError('Registration close date must be before or on event start date'))
+        if self.registrationsCloseDate and self.startDate:
+            if self.registrationsCloseDate > self.startDate:
+                errors.append(ValidationError('Registration close date must be before or on event start date'))
 
         # Validate billing settings
         if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
@@ -337,11 +347,13 @@ class Event(SaveDeleteMixin, models.Model):
             errors.append(ValidationError('Venue must be from same state as event'))
 
         # Validate file upload deadline if start date or registrations clsoe date changed
-        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
-            errors.append(ValidationError("Event start date must on or after file upload deadlines"))
+        if self.startDate:
+            if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
+                errors.append(ValidationError("Event start date must on or after file upload deadlines"))
 
-        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
-            errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
+        if self.registrationsCloseDate:
+            if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
+                errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
 
         # Raise any errors
         if errors:
@@ -441,15 +453,23 @@ class Event(SaveDeleteMixin, models.Model):
             return ''
 
     def registrationsOpen(self):
-        return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
+        if self.containsAllDetails():
+            return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
+        else:
+            return False # Registration is not open until all details are added
 
     def registrationNotOpenYet(self):
-        return self.registrationsOpenDate > datetime.datetime.today().date()
+        if self.containsAllDetails():
+            return self.registrationsOpenDate > datetime.datetime.today().date()
+        else:
+            return True
 
     def published(self):
         return self.status == 'published'
 
     def paidEvent(self):
+        if self.event_defaultEntryFee is None:
+            return False
         if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
             return True
         # Workshops don't rely on the default entry fee
