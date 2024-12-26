@@ -73,7 +73,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
     list_filter = [
         'category',
         ('state', admin.RelatedOnlyFieldListFilter),
-        ActiveFilter,
+        DivisionActiveFilter,
     ]
     actions = [
         'export_as_csv',
