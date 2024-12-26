@@ -134,9 +134,6 @@ class SummaryEventSerializer(serializers.ModelSerializer):
         for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate',]:
             if ret[field] is None:
                 ret[field] = 'TBC'
-
-        if not ret['availabledivisions']:
-            ret['availabledivisions'] = 'TBC'
         return ret
 
 # *****Committee Member*****

@@ -303,7 +303,6 @@ class Event(SaveDeleteMixin, models.Model):
             and self.registrationsOpenDate is not None \
             and self.startDate  is not None \
             and self.endDate  is not None \
-            and self.venue  is not None \
             and self.event_defaultEntryFee is not None
 
     def clean(self):

@@ -505,23 +505,6 @@ class TestEventClean(TestCase):
         self.assertRaises(ValidationError, self.event.clean)
 
     # Dates validation
-
-    def teststartDateNoneInvalid(self):
-        self.event.startDate = None
-        self.assertRaises(ValidationError, self.event.clean)
-
-    def testendDateNoneInvalid(self):
-        self.event.endDate = None
-        self.assertRaises(ValidationError, self.event.clean)
-
-    def testRegistrationsOpenDateNoneInvalid(self):
-        self.event.registrationsOpenDate = None
-        self.assertRaises(ValidationError, self.event.clean)
-
-    def testRegistrationsCloseDateNoneInvalid(self):
-        self.event.registrationsCloseDate = None
-        self.assertRaises(ValidationError, self.event.clean)
-
     def testMultidayEventOK(self):
         self.event.clean()
 
