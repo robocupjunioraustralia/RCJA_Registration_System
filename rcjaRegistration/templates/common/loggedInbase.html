@@ -117,10 +117,10 @@
             </a>                   
         </div>
         <div class = "right menu">
-            {% if development %}
+            {% if environment is not None %}
             <a class="item" style="color:red; max-width:48%" >
                 <i class="important"></i>
-                <b>DEVELOPMENT</b>
+                <b>{{environment}}</b>
             </a>
             {% endif %}
             {% if user.is_staff %}

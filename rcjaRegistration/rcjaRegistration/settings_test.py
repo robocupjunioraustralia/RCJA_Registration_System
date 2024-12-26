@@ -20,6 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     USE_SQLLITE_DB=(bool, False),
+    ENVIRONMENT=(str, "testing")
 )
 
 assert (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should only be used to run tests"

@@ -33,7 +33,8 @@ env = environ.Env(
     SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
     DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
-    USE_PROXY=(bool, False)
+    USE_PROXY=(bool, False),
+    ENVIRONMENT=(str, 'development')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -335,3 +336,5 @@ if SENTRY_DSN != 'SENTRY_DSN':
         ]
     )
 
+# Environment
+ENVIRONMENT = env('ENVIRONMENT')
