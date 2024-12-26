@@ -250,7 +250,7 @@ def getEventsForSummary(state, year):
         if event.startDate==event.endDate:
             eventDict["date"] = event.startDate
         else:
-            eventDict["date"] = f" {event.startDate} - {event.endDate}"
+            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"
 
 
         attendances = BaseEventAttendance.objects.filter(event=event)
