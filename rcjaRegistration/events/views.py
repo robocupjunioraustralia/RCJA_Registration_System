@@ -234,3 +234,30 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         # Delete team
         eventAttendance.delete()
         return HttpResponse(status=204)
+
+@login_required
+def eventAdminSummary(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    # Divisions
+    divisionList = event.divisions.values()
+    divisions = []
+    for division in divisionList:
+        divisionDict = {
+            'name':division["name"],
+            'teams':0,
+            'students':0,
+        }
+        divisions.append(divisionDict)
+    # Schools
+    
+    context = {
+        "event": event,
+        "divisions": divisions,
+        'division_teams': 0,
+        'division_students': 0,
+        "schools": [],
+        'school_teams': 0,
+        'school_students': 0,
+    }
+    return render(request, 'events/adminEventDetails.html', context)

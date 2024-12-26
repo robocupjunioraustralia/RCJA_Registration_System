@@ -1,0 +1,67 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> {{event}} Registrations</title>
+
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}} Registrations</h1>
+    </div>
+    <div class="row">
+
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead>
+            <tr><th>Division</th>
+            <th>Teams</th>
+            <th>Students</th>
+            </tr></thead>
+            <tbody>
+                {% for division in divisions %}
+                <tr>
+                    <td data-label="Division">{{division.name}}</td>
+                    <td data-label="Teams">{{division.teams}}</td>
+                    <td data-label="Students">{{division.students}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th>
+                <th>{{division_teams}}</th>
+                <th>{{division_students}}</th>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br> 
+    <div class="row">
+        <table class="ui celled table">
+            <thead>
+            <tr><th>School</th>
+            <th>Teams</th>
+            <th>Students</th>
+            </tr></thead>
+            <tbody>
+                {% for school in schools %}
+                <tr>
+                    <td data-label="School">{{school.name}}</td>
+                    <td data-label="Teams">{{school.teams}}</td>
+                    <td data-label="Students">{{school.students}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th>
+                <th>{{school_teams}}</th>
+                <th>{{school_students}}</th>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}
