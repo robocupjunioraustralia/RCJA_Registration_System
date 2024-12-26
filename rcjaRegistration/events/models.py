@@ -541,7 +541,7 @@ class Event(SaveDeleteMixin, models.Model):
 class AvailableDivision(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
+    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT, limit_choices_to={'active': True})
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
