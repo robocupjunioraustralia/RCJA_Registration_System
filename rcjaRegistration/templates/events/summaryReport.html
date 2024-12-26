@@ -1,63 +1,55 @@
-{% load static %}
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.20/js/dataTables.semanticui.min.js"></script>
+{% extends 'common/loggedInbase.html' %}
 
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href= "{% static 'favicon-16x16.png' %}">
-    <link rel="manifest" href="{% static 'site.webmanifest' %}">
-    <style type="text/css">
-        .errorlist {
-            color: red;
+{% block head %}
+
+<title> Events Summary </title>
+
+<style>
+    .cardcontent {
+        margin-top: 10px;
+    }
+
+    .cardimage {
+        max-height: 150px;
+    }
+
+    @media print {
+        #inputForm {
+            visibility: hidden !important;
         }
-        body {
-        background-color: #ffffff;
+        div {
+            visibility: hidden !important;
+            height: 0px;
         }
-        .menu-set {
-            margin-bottom: 0rem !important;
-            margin-top: 0rem !important;
+        div.pusher {
+            visibility: visible !important;
+            height: auto;
         }
-        .header-button {
-            background: none;
-            border: none;
-            display: block;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
+        div.row {
+            visibility: visible !important;
+            height: auto;
         }
-        .button-form {
-            margin: 0px;
-            padding: 0px;
-            display: inline;
+        a.item {
+            visibility: hidden !important;
         }
-        .header-button:hover {
-            background-color: rgba(0,0,0,.03) !important;
+        footer {
+            visibility: hidden !important;
         }
+    }
     </style>
-
-    {% block head %}
-    <title> Events Summary </title>
-    {% endblock %}
-</head>
-
-
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="ui aligned container">
-    <a class="item" href="{% url 'events:dashboard' %}">
-        <i class="home icon"></i>
-        Dashboard
-    </a>  
+<div class="ui aligned container" >
     <div class="row">
-        <h1>Summary Report:</h1>
+        {% if form.errors or form.non_field_errors %}
+        <h1>Summary Report</h1>
+        {% else %}
+        <h1>{{state}} Activity Summary Report {{year}}</h1>
+        {% endif %}
     </div>
-    <div class="row">
+    <div class="row" id="inputForm">
         {% if form.errors or form.non_field_errors %}
         <!-- Error messaging -->
         <div class="ui message left-aligned-text">
@@ -90,7 +82,7 @@
             <input type="submit" value="Get Events">
         </form>
     </div>
-    <div>
+    <div class="row">
         <table class="ui celled table">
             <thead>
               <tr><th>Event</th>

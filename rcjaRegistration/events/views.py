@@ -11,6 +11,7 @@ from coordination.permissions import checkCoordinatorPermission
 import datetime
 
 from .models import Event, BaseEventAttendance
+from regions.models import State
 from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
@@ -318,18 +319,20 @@ def getEventsForSummary(state, year):
 
 @login_required
 def summaryReport(request):
+    user_state = request.user.currentlySelectedAdminState
+    year = request.user.currentlySelectedAdminYear
     if request.method == 'GET':
         form = getSummaryForm(request)
         if form.is_valid():
             # Save user
             user_state = form.cleaned_data["state"]
             year = form.cleaned_data["year"]
-            events = getEventsForSummary(user_state, year)
-        else:
-            events = []
+        events = getEventsForSummary(user_state, year)
 
     context = {
         "events": events,
-        "form": form
+        "form": form,
+        'state': State.objects.filter(id = user_state)[0].name,
+        'year': year,
     }
     return render(request, 'events/summaryReport.html', context)
