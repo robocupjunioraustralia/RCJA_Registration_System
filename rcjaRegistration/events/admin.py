@@ -185,7 +185,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
     def fkObjectFilterFields(cls, request, obj):
         return {
             'division': {
-                'queryset': Division.objects.filter((Q(state=obj.state) | Q(state=None))) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
+                'queryset': Division.objects.filter(Q(state=obj.state) | Q(state=None)) if obj is not None else Division.objects.none(), # Inline not displayed on create so user will never see fallback to None
             },
         }
 
