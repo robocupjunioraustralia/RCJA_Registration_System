@@ -36,7 +36,7 @@
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
         <h3>Payment</h3>
         <p>
-            {% if event.eventType == 'competition' %} This Event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.{% endif %}
+            {% if event.eventType == 'competition' %}{% if event.event_defaultEntryFee %}This Event costs ${{event.event_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.{% else %}The event's cost is TBC. {% endif %}{% endif %}
             {% if event.eventType == 'workshop' %}This Workshop costs ${{ event.workshopTeacherEntryFee }} per teacher attendee and ${{ event.workshopStudentEntryFee }} per student attendee {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %}.{% endif %}
             {% if event.eventSurchargeAmount %}
             <br><br>{{ event.surchargeName }}: ${{ event.eventSurchargeAmount}}
@@ -49,6 +49,7 @@
         </p>
         {% if event.paymentDueDate %}<p>Payment due is due on {{ event.paymentDueDate }}.</p>{% endif %}
         <h3>Available divisions</h3>
+        {% if availableDivisions %}
         <ul>
             {% for availableDivision in availableDivisions %}
             <li><strong>{{ availableDivision.division.name }}</strong>
@@ -59,6 +60,9 @@
             </li>
             {% endfor %}
         </ul>
+        {% else %}
+        <p>TBC</p>
+        {% endif %}
         {% if divisionsMaxReachedWarnings %}
         <ul>
             {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
@@ -73,6 +77,8 @@
         {% if event.venue %}
         <h3>Location: {{ event.venue.name }}</h3>
         {% if event.venue.address %}<p>{{ event.venue.address|escape|linebreaks }}</p>{% endif %}
+        {% else %}
+        <h3>Location: TBC</h3>
         {% endif %}
     </div><br>
 
