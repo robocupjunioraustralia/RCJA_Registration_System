@@ -239,7 +239,7 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
 
 def getEventsForSummary(state, year):
     """ Create list of event dictionaries of all events in state and year """
-    eventList = Event.objects.filter(state = state, year = year)
+    eventList = Event.objects.filter(state = state, year = year).order_by('startDate', 'endDate')
 
     # Find information for events
     events = []
@@ -332,14 +332,15 @@ def getEventsForSummary(state, year):
 
 @login_required
 def summaryReport(request):
-    user_state = request.user.currentlySelectedAdminState
-    year = request.user.currentlySelectedAdminYear
     if request.method == 'GET':
         form = getSummaryForm(request)
         if form.is_valid():
             # Save user
             user_state = State.objects.filter(id = form.cleaned_data["state"])[0]
             year = Year.objects.filter(year = form.cleaned_data["year"])[0]
+        else:
+            user_state = request.user.currentlySelectedAdminState
+            year = request.user.currentlySelectedAdminYear
         if user_state is not None and year is not None:
             events = getEventsForSummary(user_state, year)
             state_name = user_state.name

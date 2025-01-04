@@ -116,17 +116,17 @@ def commonSetUp(obj):
     )
     obj.oldEventWithTeams.divisions.add(obj.division)
     obj.oldeventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
-    obj.oldTeamStudent = Student(team=obj.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male')
+    obj.oldTeamStudent = Student.objects.create(team=obj.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='male')
 
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
-    obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male')
+    obj.newTeamStudent = Student.objects.create(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='male')
 
     obj.invoiceSettings = InvoiceGlobalSettings.objects.create(
         invoiceFromName='From Name',
         invoiceFromDetails='Test Details Text',
         invoiceFooterMessage='Test Footer Text',
     )
-"""
+
 class TestEventPermissions(TestCase):
     def setUp(self):
         commonSetUp(self)
@@ -1145,13 +1145,30 @@ class TestVenueMethods(TestCase):
 
     def testGetState(self):
         self.assertEqual(self.venue1.getState(), self.newState)
-"""
+
 class TestSummaryPage(TestCase):
     def setUp(self):
         commonSetUp(self)
+        username = 'admin@admin.com'
+        password = 'password'
+        self.admin = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=username, password=password)
+        self.client.login(request=HttpRequest(), username=username, password=password)
+
+        # self.oldeventTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='test')
+        # self.oldTeamStudent.objects.create = Student(team=self.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='male')
+        self.oldeventTeam2 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='second')
+        self.s2 = Student.objects.create(team=self.oldeventTeam2,firstName='Second1',lastName='Second1',yearLevel=1,gender='female')
+        self.oldeventTeam3 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='third')
+        self.s3 = Student.objects.create(team=self.oldeventTeam3,firstName='Third1',lastName='Third1',yearLevel=1,gender='male')
+        self.s4 = Student.objects.create(team=self.oldeventTeam3,firstName='Third2',lastName='Third2',yearLevel=1,gender='other')
         
     def createGetQuery(self, state: str, year: int):
         return f"?state={State.objects.filter(name=state)[0].id}&year={year}"
+
+    def testTitle(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Victoria Activity Summary Report 2019")
 
     def testCorrectNumberOfEventsForMainState(self):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
@@ -1161,11 +1178,25 @@ class TestSummaryPage(TestCase):
         self.assertContains(response, "test new yes reg")
         self.assertContains(response, "test old yes reg")
         
-    
     def testCorrectNumberOfEventsForSecondState(self):
-        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        url = reverse('events:summaryReport') + self.createGetQuery('New South Wales', 2019)
         response = self.client.get(url, follow=True)
         self.assertNotContains(response, "test old not reg")
         self.assertNotContains(response, "future event")
         self.assertNotContains(response, "test new yes reg")
         self.assertNotContains(response, "test old yes reg")
+
+    def testCorrectTeamNumber(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Teams: 3")
+
+    def testCorrectStudentNumber(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Students: 4")
+
+    def testCorrectGender(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, r"25%F, 50%M, 25% other")
