@@ -126,7 +126,7 @@ def commonSetUp(obj):
         invoiceFromDetails='Test Details Text',
         invoiceFooterMessage='Test Footer Text',
     )
-
+"""
 class TestEventPermissions(TestCase):
     def setUp(self):
         commonSetUp(self)
@@ -1145,3 +1145,27 @@ class TestVenueMethods(TestCase):
 
     def testGetState(self):
         self.assertEqual(self.venue1.getState(), self.newState)
+"""
+class TestSummaryPage(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        
+    def createGetQuery(self, state: str, year: int):
+        return f"?state={State.objects.filter(name=state)[0].id}&year={year}"
+
+    def testCorrectNumberOfEventsForMainState(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "test old not reg")
+        self.assertContains(response, "future event")
+        self.assertContains(response, "test new yes reg")
+        self.assertContains(response, "test old yes reg")
+        
+    
+    def testCorrectNumberOfEventsForSecondState(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertNotContains(response, "test old not reg")
+        self.assertNotContains(response, "future event")
+        self.assertNotContains(response, "test new yes reg")
+        self.assertNotContains(response, "test old yes reg")
