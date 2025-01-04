@@ -10,10 +10,12 @@ from coordination.permissions import checkCoordinatorPermission
 
 import datetime
 
-from .models import Event, BaseEventAttendance
-from teams.models import Team
+from .models import Event, BaseEventAttendance, Year
+from regions.models import State
+from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
+from .forms import getSummaryForm
 
 # Need to check if schooladministrator is None
 
@@ -234,3 +236,123 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         # Delete team
         eventAttendance.delete()
         return HttpResponse(status=204)
+
+def getEventsForSummary(state, year):
+    """ Create list of event dictionaries of all events in state and year """
+    eventList = Event.objects.filter(state = state, year = year)
+
+    # Find information for events
+    events = []
+    for event in eventList:
+        eventDict = {}
+        eventDict["name"] = event.name
+
+        if event.startDate==event.endDate:
+            if event.startDate is not None:
+                eventDict["date"] = event.startDate.strftime('%d/%m/%Y')
+            else:
+                eventDict["date"] = None
+        else:
+            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"     
+
+        if event.eventType == "competition":
+            # Initialise counting variables
+            teamNumber = 0
+            studentNumber = 0
+            maleNumber = 0
+            femaleNumber = 0
+            otherNumber = 0
+
+            # Count all teams
+            attendances = BaseEventAttendance.objects.filter(event=event)
+            for attendance in attendances:
+                teamNumber += 1
+                students = Student.objects.filter(team=attendance.childObject())
+                for student in students:
+                    studentNumber += 1
+                    if student.gender == "male":
+                        maleNumber += 1
+                    elif student.gender == "female":
+                        femaleNumber += 1
+                    else:
+                        otherNumber += 1
+
+            # Create output
+            if studentNumber > 0:
+                mPercent = round(maleNumber/studentNumber*100)
+                fPercent = round(femaleNumber/studentNumber*100)
+                oPercent = round(otherNumber/studentNumber*100)
+            else:
+                mPercent, fPercent, oPercent = [0,0,0]
+            eventDict["participants_one"] = f"Teams: {teamNumber}"
+            eventDict["participants_two"] = f"Students: {studentNumber}"
+            eventDict["participants_three"] = f"{fPercent}%F, {mPercent}%M, {oPercent}% other"
+        else: # Workshop
+            # Initialise counting variables
+            studentNumber = 0
+            teacherNumber = 0
+            maleNumber = 0
+            femaleNumber = 0
+            otherNumber = 0
+
+            # Count all students
+            attendances = BaseEventAttendance.objects.filter(event=event)
+            for attendance in attendances:
+                attendance = attendance.childObject()
+                if attendance.attendeeType == "student":
+                    studentNumber += 1
+                else:
+                    teacherNumber += 1
+                if attendance.gender == "male":
+                    maleNumber += 1
+                elif attendance.gender == "female":
+                    femaleNumber += 1
+                else:
+                    otherNumber += 1
+
+            # Create output
+            if studentNumber + teacherNumber > 0:
+                mPercent = round(maleNumber/(studentNumber+teacherNumber)*100)
+                fPercent = round(femaleNumber/(studentNumber+teacherNumber)*100)
+                oPercent = round(otherNumber/(studentNumber+teacherNumber)*100)
+            else:
+                mPercent, fPercent, oPercent = [0,0,0]
+            eventDict["participants_one"] = f"Students: {studentNumber}"
+            eventDict["participants_two"] = f"Teachers: {teacherNumber}"
+            eventDict["participants_three"] = f"{fPercent}%F, {mPercent}%M, {oPercent}% other"
+
+        if event.venue != None:
+            eventDict["location"] = event.venue.name
+        else:
+            eventDict["location"] = "None"
+        
+        events.append(eventDict)
+
+    return events
+
+@login_required
+def summaryReport(request):
+    user_state = request.user.currentlySelectedAdminState
+    year = request.user.currentlySelectedAdminYear
+    if request.method == 'GET':
+        form = getSummaryForm(request)
+        if form.is_valid():
+            # Save user
+            user_state = State.objects.filter(id = form.cleaned_data["state"])[0]
+            year = Year.objects.filter(year = form.cleaned_data["year"])[0]
+        if user_state is not None and year is not None:
+            events = getEventsForSummary(user_state, year)
+            state_name = user_state.name
+            year_str = str(year.year)
+        else:
+            events = []
+            state_name = "Choose State"
+            year_str = "Choose Year"
+
+    context = {
+        "events": events,
+        "form": form,
+        'state': state_name,
+        'year': year_str,
+    }
+    return render(request, 'events/summaryReport.html', context)
