@@ -248,22 +248,24 @@ def getEventsForSummary(state, year):
         eventDict["name"] = event.name
 
         if event.startDate==event.endDate:
-            eventDict["date"] = event.startDate.strftime('%d/%m/%Y')
+            if event.startDate is not None:
+                eventDict["date"] = event.startDate.strftime('%d/%m/%Y')
+            else:
+                eventDict["date"] = None
         else:
-            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"
+            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"     
 
+        if event.eventType == "competition":
+            # Initialise counting variables
+            teamNumber = 0
+            studentNumber = 0
+            maleNumber = 0
+            femaleNumber = 0
+            otherNumber = 0
 
-        attendances = BaseEventAttendance.objects.filter(event=event)
-        teamNumber = 0
-        studentNumber = 0
-        teacherNumber = 0
-        maleNumber = 0
-        femaleNumber = 0
-        otherNumber = 0
-        
-        for attendance in attendances:
-            # Find type
-            if attendance.eventAttendanceType() == "team": # Team
+            # Count all teams
+            attendances = BaseEventAttendance.objects.filter(event=event)
+            for attendance in attendances:
                 teamNumber += 1
                 students = Student.objects.filter(team=attendance.childObject())
                 for student in students:
@@ -274,7 +276,29 @@ def getEventsForSummary(state, year):
                         femaleNumber += 1
                     else:
                         otherNumber += 1
-            elif attendance.eventAttendanceType() == "workshopattendee": # Workshop
+
+            # Create output
+            if studentNumber > 0:
+                mPercent = round(maleNumber/studentNumber*100)
+                fPercent = round(femaleNumber/studentNumber*100)
+                oPercent = round(otherNumber/studentNumber*100)
+            else:
+                mPercent, fPercent, oPercent = [0,0,0]
+            eventDict["participants_one"] = f"Teams: {teamNumber}"
+            eventDict["participants_two"] = f"Students: {studentNumber}"
+            eventDict["participants_three"] = f"{fPercent}%F, {mPercent}%M, {oPercent}% other"
+        else: # Workshop
+            # Initialise counting variables
+            studentNumber = 0
+            teacherNumber = 0
+            maleNumber = 0
+            femaleNumber = 0
+            otherNumber = 0
+
+            # Count all students
+            attendances = BaseEventAttendance.objects.filter(event=event)
+            for attendance in attendances:
+                attendance = attendance.childObject()
                 if attendance.attendeeType == "student":
                     studentNumber += 1
                 else:
@@ -286,18 +310,7 @@ def getEventsForSummary(state, year):
                 else:
                     otherNumber += 1
 
-        # Create output
-        if event.eventType == "competition":
-            if studentNumber > 0:
-                mPercent = round(maleNumber/studentNumber*100)
-                fPercent = round(femaleNumber/studentNumber*100)
-                oPercent = round(otherNumber/studentNumber*100)
-            else:
-                mPercent, fPercent, oPercent = [0,0,0]
-            eventDict["participants_one"] = f"Teams: {teamNumber}"
-            eventDict["participants_two"] = f"Students: {studentNumber}"
-            eventDict["participants_three"] = f"{fPercent}%F, {mPercent}%M, {oPercent}% other"
-        else: # Workshop
+            # Create output
             if studentNumber + teacherNumber > 0:
                 mPercent = round(maleNumber/(studentNumber+teacherNumber)*100)
                 fPercent = round(femaleNumber/(studentNumber+teacherNumber)*100)
