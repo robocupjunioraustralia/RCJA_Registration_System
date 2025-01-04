@@ -11,6 +11,7 @@ from users.models import User
 from coordination.models import Coordinator
 from eventfiles.models import EventAvailableFileType, MentorEventFileType
 from invoices.models import Invoice, InvoiceGlobalSettings
+from workshops.models import WorkshopAttendee
 
 import datetime
 # Create your tests here.
@@ -1157,11 +1158,29 @@ class TestSummaryPage(TestCase):
         # self.oldeventTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='test')
         # self.oldTeamStudent.objects.create = Student(team=self.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='male')
         self.oldeventTeam2 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='second')
-        self.s2 = Student.objects.create(team=self.oldeventTeam2,firstName='Second1',lastName='Second1',yearLevel=1,gender='female')
+        Student.objects.create(team=self.oldeventTeam2,firstName='Second1',lastName='Second1',yearLevel=1,gender='female')
         self.oldeventTeam3 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='third')
-        self.s3 = Student.objects.create(team=self.oldeventTeam3,firstName='Third1',lastName='Third1',yearLevel=1,gender='male')
-        self.s4 = Student.objects.create(team=self.oldeventTeam3,firstName='Third2',lastName='Third2',yearLevel=1,gender='other')
-        
+        Student.objects.create(team=self.oldeventTeam3,firstName='Third1',lastName='Third1',yearLevel=1,gender='male')
+        Student.objects.create(team=self.oldeventTeam3,firstName='Third2',lastName='Third2',yearLevel=1,gender='other')
+
+        self.workshop = Event.objects.create(year=self.year,
+            state=self.newState,
+            name='Workshop',
+            eventType='workshop',
+            status='published',
+            maxMembersPerTeam=5,
+            event_defaultEntryFee = 4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+            )
+
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
+
+
     def createGetQuery(self, state: str, year: int):
         return f"?state={State.objects.filter(name=state)[0].id}&year={year}"
 
@@ -1200,3 +1219,8 @@ class TestSummaryPage(TestCase):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
         response = self.client.get(url, follow=True)
         self.assertContains(response, r"25%F, 50%M, 25% other")
+    
+    def testWorkshop(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, r"50%F, 50%M, 0% other")
