@@ -1163,6 +1163,10 @@ class TestSummaryPage(TestCase):
         Student.objects.create(team=self.oldeventTeam3,firstName='Third1',lastName='Third1',yearLevel=1,gender='male')
         Student.objects.create(team=self.oldeventTeam3,firstName='Third2',lastName='Third2',yearLevel=1,gender='other')
 
+        self.venue = Venue.objects.create(name='Venue 1', state=self.newState)
+        self.oldEvent.venue = self.venue
+        self.oldEvent.save()
+
         self.workshop = Event.objects.create(year=self.year,
             state=self.newState,
             name='Workshop',
@@ -1179,8 +1183,7 @@ class TestSummaryPage(TestCase):
 
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
-
-
+    
     def createGetQuery(self, state: str, year: int):
         return f"?state={State.objects.filter(name=state)[0].id}&year={year}"
 
@@ -1224,3 +1227,26 @@ class TestSummaryPage(TestCase):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
         response = self.client.get(url, follow=True)
         self.assertContains(response, r"50%F, 50%M, 0% other")
+
+    def testVenues(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Venue 1", 1)
+        self.assertContains(response, "None", 4)
+
+    def testDefault(self):
+        url = reverse('events:summaryReport')
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "Choose State Activity Summary Report Choose Year")
+        
+    def testDefaultByAdminSettings(self):
+        self.admin.currentlySelectedAdminState = State.objects.filter(name='Victoria')[0]
+        self.admin.currentlySelectedAdminYear = Year.objects.filter(year=2019)[0]
+        self.admin.save()
+        url = reverse('events:summaryReport')
+        response = self.client.get(url, follow=True)
+
+        self.assertContains(response, "test old not reg")
+        self.assertContains(response, "future event")
+        self.assertContains(response, "test new yes reg")
+        self.assertContains(response, "test old yes reg")
