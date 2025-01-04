@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
@@ -8,7 +8,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import WorkshopAttendeeForm
 
-from common.userInterface import render
 from .models import WorkshopAttendee
 from events.models import Event
 

@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404,redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
@@ -14,7 +14,6 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.encoding import iri_to_uri
 from urllib.parse import urlparse
 
-from common.userInterface import render
 from .models import User
 from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm

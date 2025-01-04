@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseForbidden
 from django.template import loader
 from django.contrib.auth.decorators import login_required
@@ -10,7 +10,6 @@ from coordination.permissions import checkCoordinatorPermission
 
 import datetime
 
-from common.userInterface import render
 from .models import Event, BaseEventAttendance
 from teams.models import Team
 from schools.models import Campus

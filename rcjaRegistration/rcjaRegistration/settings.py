@@ -338,3 +338,6 @@ if SENTRY_DSN != 'SENTRY_DSN':
 
 # Environment
 ENVIRONMENT = env('ENVIRONMENT')
+
+if ENVIRONMENT != 'production':
+    TEMPLATES[0]['OPTIONS']['context_processors'].append('common.contextProcesses.environment_context')

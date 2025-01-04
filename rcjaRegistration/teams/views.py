@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory, inlineformset_factory
@@ -9,7 +9,6 @@ from .forms import TeamForm, StudentForm
 
 import datetime
 
-from common.userInterface import render
 from .models import Student, Team
 from events.models import Event, AvailableDivision
 

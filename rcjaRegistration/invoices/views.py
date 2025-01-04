@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.decorators import login_required
@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
 
-from common.userInterface import render
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
 from schools.models import Campus
