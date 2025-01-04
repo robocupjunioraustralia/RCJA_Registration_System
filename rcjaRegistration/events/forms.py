@@ -35,12 +35,12 @@ def getSummaryForm(request):
     # Use constructor function as user from request is required for permissions
     class SummaryRequestForm(forms.Form):
         states = []
-        for i, state in enumerate(State.objects.all()):
+        for state in State.objects.all():
             if checkCoordinatorPermission(request, State, state, 'view'):            
-                states.append((str(i),state.name))
+                states.append((state.pk,state.name))
 
         years = []
-        for i, year in enumerate(Year.objects.all()):
+        for year in Year.objects.all():
             years.append((year.year,year.year))
         
         state = forms.ChoiceField(choices=states)

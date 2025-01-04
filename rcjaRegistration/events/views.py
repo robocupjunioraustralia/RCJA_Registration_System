@@ -10,7 +10,7 @@ from coordination.permissions import checkCoordinatorPermission
 
 import datetime
 
-from .models import Event, BaseEventAttendance
+from .models import Event, BaseEventAttendance, Year
 from regions.models import State
 from teams.models import Team, Student
 from schools.models import Campus
@@ -248,7 +248,7 @@ def getEventsForSummary(state, year):
         eventDict["name"] = event.name
 
         if event.startDate==event.endDate:
-            eventDict["date"] = event.startDate
+            eventDict["date"] = event.startDate.strftime('%d/%m/%Y')
         else:
             eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"
 
@@ -325,14 +325,21 @@ def summaryReport(request):
         form = getSummaryForm(request)
         if form.is_valid():
             # Save user
-            user_state = form.cleaned_data["state"]
-            year = form.cleaned_data["year"]
-        events = getEventsForSummary(user_state, year)
+            user_state = State.objects.filter(id = form.cleaned_data["state"])[0]
+            year = Year.objects.filter(year = form.cleaned_data["year"])[0]
+        if user_state is not None and year is not None:
+            events = getEventsForSummary(user_state, year)
+            state_name = user_state.name
+            year_str = str(year.year)
+        else:
+            events = []
+            state_name = "Choose State"
+            year_str = "Choose Year"
 
     context = {
         "events": events,
         "form": form,
-        'state': State.objects.filter(id = user_state)[0].name,
-        'year': year,
+        'state': state_name,
+        'year': year_str,
     }
     return render(request, 'events/summaryReport.html', context)

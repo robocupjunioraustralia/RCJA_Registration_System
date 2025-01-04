@@ -43,11 +43,7 @@
 {% block content %}
 <div class="ui aligned container" >
     <div class="row">
-        {% if form.errors or form.non_field_errors %}
-        <h1>Summary Report</h1>
-        {% else %}
         <h1>{{state}} Activity Summary Report {{year}}</h1>
-        {% endif %}
     </div>
     <div class="row" id="inputForm">
         {% if form.errors or form.non_field_errors %}
