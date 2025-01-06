@@ -314,15 +314,20 @@ class Event(SaveDeleteMixin, models.Model):
         if self.pk and self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
             errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
-        # Check close and end date after start dates
-        if self.startDate and self.endDate:
+        # Check if all dates are not null
+        nullDates = 0
+        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
+            if getattr(self,field, None) is None:
+                nullDates += 1
+        if 0 < nullDates < 4:
+            errors.append(ValidationError("All dates must be blank or all must be filled in"))
+
+        if nullDates == 0:
+            # Check close and end date after start dates
             if self.startDate > self.endDate:
                 errors.append(ValidationError('Start date must not be after end date'))
-        if self.registrationsOpenDate and self.registrationsCloseDate:
             if self.registrationsOpenDate > self.registrationsCloseDate:
                 errors.append(ValidationError('Registration open date must not be after registration close date'))
-
-        if self.registrationsCloseDate and self.startDate:
             if self.registrationsCloseDate > self.startDate:
                 errors.append(ValidationError('Registration close date must be before or on event start date'))
 
