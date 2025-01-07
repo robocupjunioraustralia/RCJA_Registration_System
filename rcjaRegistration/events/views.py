@@ -176,15 +176,10 @@ def details(request, eventID):
         raise PermissionDenied("This event is unavailable")
     
     # Replace null values with TBC
-    if event.startDate is None:
-        event.startDate = 'TBC'
-    if event.endDate is None:
-        event.endDate = 'TBC'
-    if event.registrationsOpenDate is None:
-        event.registrationsOpenDate = 'TBC'
-    if event.registrationsCloseDate is None:
-        event.registrationsCloseDate = 'TBC'
-    
+    dates = {'startDate': 'TBC' if event.startDate is None else event.startDate,
+             'endDate': 'TBC' if event.endDate is None else event.endDate,
+             'registrationsOpenDate': 'TBC' if event.registrationsOpenDate is None else event.registrationsOpenDate,
+             'registrationsCloseDate': 'TBC' if event.registrationsCloseDate is None else event.registrationsCloseDate,}  
 
     # Filter team or workshop attendee
     if event.boolWorkshop():
@@ -205,6 +200,7 @@ def details(request, eventID):
 
     context = {
         'event': event,
+        'dates': dates,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
         'divisionPricing': event.availabledivision_set.exclude(division_billingType='event').exists(),
         'teams': teams,
