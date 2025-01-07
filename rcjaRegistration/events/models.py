@@ -298,13 +298,6 @@ class Event(SaveDeleteMixin, models.Model):
         unique_together = ('year', 'state', 'name')
         ordering = ['-startDate']
 
-    def containsAllDetails(self):
-        return self.registrationsCloseDate is not None \
-            and self.registrationsOpenDate is not None \
-            and self.startDate  is not None \
-            and self.endDate  is not None \
-            and self.event_defaultEntryFee is not None
-
     def clean(self):
         errors = []
         # Check required fields are not None
@@ -455,15 +448,21 @@ class Event(SaveDeleteMixin, models.Model):
             return InvoiceGlobalSettings.objects.get().surchargeEventDescription
         except InvoiceGlobalSettings.DoesNotExist:
             return ''
+        
+    def decidedOnDates(self):
+        return self.registrationsCloseDate is not None \
+            and self.registrationsOpenDate is not None \
+            and self.startDate  is not None \
+            and self.endDate  is not None 
 
     def registrationsOpen(self):
-        if self.containsAllDetails():
+        if self.decidedOnDates():
             return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
         else:
             return False # Registration is not open until all details are added
 
     def registrationNotOpenYet(self):
-        if self.containsAllDetails():
+        if self.decidedOnDates():
             return self.registrationsOpenDate > datetime.datetime.today().date()
         else:
             return True
