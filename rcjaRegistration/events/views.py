@@ -10,8 +10,8 @@ from coordination.permissions import checkCoordinatorPermission
 
 import datetime
 
-from .models import Event, BaseEventAttendance
-from teams.models import Team
+from .models import Event, BaseEventAttendance, DivisionCategory
+from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
 
@@ -239,25 +239,145 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
 def eventAdminSummary(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
+    if event.boolWorkshop():
+        return getAdminWorkSummary(request, event)
+    else:
+        return getAdminCompSummary(request, event)
+    
+
+def getAdminCompSummary(request, event):
     # Divisions
     divisionList = event.divisions.values()
-    divisions = []
-    for division in divisionList:
+    division_categories = {}
+    division_teams = 0
+    division_students = 0
+    for division in divisionList.all():
+        teams = Team.objects.filter(event = event).filter(division = division["id"])
+        students = 0
+        for team in teams:
+            students += Student.objects.filter(team=team).count()  
+        division_students += students
+        division_teams += teams.count()
         divisionDict = {
-            'name':division["name"],
-            'teams':0,
-            'students':0,
+            'name': division["name"],
+            'teams': teams.count(),
+            'students': students,
         }
-        divisions.append(divisionDict)
+
+        if division['category_id'] in division_categories:
+           division_categories[division['category_id']]['divisions'].append(divisionDict)
+           division_categories[division['category_id']]['rows'] += 1
+           division_categories[division['category_id']]['students'] += students
+           division_categories[division['category_id']]['teams'] += teams.count()
+        else:
+            division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 3,
+                                                          'students': students,
+                                                          'teams': teams.count()}
+
     # Schools
+    teams = Team.objects.filter(event = event)
+    schools = {}
+    school_teams = 0
+    school_students = 0
+    for team in teams:
+        school = team.school
+        students = Student.objects.filter(team=team).count()
+        school_teams += 1
+        school_students += students
+        if school in schools:
+            schools[school]['teams'] += 1
+            schools[school]['students'] += students
+        else:
+            name = school.name if school is not None else 'Independent'
+            schools[school] = {'name': name, 'teams': 1, 'students': students}
+    
+    independent = schools.pop(None, {'name': 'Independent', 'teams': 0, 'students': 0})
+    school_list = list(schools.values())
+    school_list.sort()
+    school_list.append(independent)
     
     context = {
         "event": event,
-        "divisions": divisions,
-        'division_teams': 0,
-        'division_students': 0,
-        "schools": [],
-        'school_teams': 0,
-        'school_students': 0,
+        "division_categories": division_categories,
+        'division_teams': division_teams,
+        'division_students': division_students,
+        "schools": school_list,
+        'school_teams': school_teams,
+        'school_students': school_students,
     }
-    return render(request, 'events/adminEventDetails.html', context)
+    return render(request, 'events/adminCompetitionDetails.html', context)
+
+
+def getAdminWorkSummary(request, event):
+    # Divisions
+    divisionList = event.divisions.values()
+    division_categories = {}
+    division_teachers = 0
+    division_students = 0
+    for division in divisionList.all():
+        students = WorkshopAttendee.objects.filter(event=event, division=division['id'], attendeeType='student').count()
+        teachers = WorkshopAttendee.objects.filter(event=event, division=division['id'], attendeeType='teacher').count()
+        division_students += students
+        division_teachers += teachers
+        divisionDict = {
+            'name': division["name"],
+            'students': students,
+            'teachers': teachers,
+        }
+
+        if division['category_id'] in division_categories:
+           division_categories[division['category_id']]['divisions'].append(divisionDict)
+           division_categories[division['category_id']]['rows'] += 1
+           division_categories[division['category_id']]['teachers'] += teachers
+           division_categories[division['category_id']]['students'] += students
+        else:
+            division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 3,
+                                                          'teachers': teachers,
+                                                          'students': students}
+
+    # Change rows to strings
+    for division_cat in division_categories.values():
+        division_cat["rows"] = str(division_cat["rows"])
+
+    # Schools
+    schools = {}
+    school_teachers = 0
+    school_students = 0
+    attendees = WorkshopAttendee.objects.filter(event=event)
+    for attendee in attendees:
+        school = attendee.school
+        students = 0
+        teachers = 0
+        if attendee.attendeeType=='student':
+            school_students+= 1
+            students += 1
+        else:
+            school_teachers += 1
+            teachers += 1
+
+        if school in schools:
+            schools[school]['students'] += students
+            schools[school]['teachers'] += teachers
+        else:
+            name = school.name if school is not None else 'Independent'
+            schools[school] = {'name': name, 'students': students, 'teachers': teachers}
+    
+    independent = schools.pop(None, {'name': 'Independent', 'students': 0, 'teachers': 0})
+    school_list = list(schools.values())
+    school_list.sort()
+    school_list.append(independent)
+    
+    context = {
+        "event": event,
+        "division_categories": division_categories,
+        'division_teachers': division_teachers,
+        'division_students': division_students,
+        "schools": school_list,
+        'school_teachers': school_teachers,
+        'school_students': school_students,
+    }
+    return render(request, 'events/adminWorkshopDetails.html', context)

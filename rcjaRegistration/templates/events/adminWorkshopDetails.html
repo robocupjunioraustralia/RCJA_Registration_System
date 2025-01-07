@@ -16,24 +16,38 @@
     </div>
     <div class="row">
         <table class="ui celled table">
-            <thead>
-            <tr><th>Division</th>
-            <th>Teams</th>
-            <th>Students</th>
+            <thead><tr>
+                <th>Category</th>
+                <th>Division</th>
+                <th>Students</th>
+                <th>Teachers</th>
             </tr></thead>
             <tbody>
-                {% for division in divisions %}
-                <tr>
-                    <td data-label="Division">{{division.name}}</td>
-                    <td data-label="Teams">{{division.teams}}</td>
-                    <td data-label="Students">{{division.students}}</td>
-                </tr>
+                {% for division_cat in division_categories.values %}
+                    <tr>
+                        <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    {% for division in division_cat.divisions %}
+                    <tr>
+                        <td>{{division.name}}</td>
+                        <td>{{division.students}}</td>
+                        <td>{{division.teachers}}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td>Subtotal</td>
+                        <td>{{division_cat.students}}</td>
+                        <td>{{division_cat.teachers}}</td>
+                    </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
-                <tr><th>Total</th>
-                <th>{{division_teams}}</th>
+                <tr><th colspan="2">Total</th>
                 <th>{{division_students}}</th>
+                <th>{{division_teachers}}</th>
             </tr>
             </tfoot>
         </table>
@@ -43,22 +57,22 @@
         <table class="ui celled table">
             <thead>
             <tr><th>School</th>
-            <th>Teams</th>
             <th>Students</th>
+            <th>Teachers</th>
             </tr></thead>
             <tbody>
                 {% for school in schools %}
                 <tr>
                     <td data-label="School">{{school.name}}</td>
-                    <td data-label="Teams">{{school.teams}}</td>
                     <td data-label="Students">{{school.students}}</td>
+                    <td data-label="Teachers">{{school.teachers}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr><th>Total</th>
-                <th>{{school_teams}}</th>
                 <th>{{school_students}}</th>
+                <th>{{school_teachers}}</th>
             </tr>
             </tfoot>
         </table>
