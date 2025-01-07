@@ -2,26 +2,27 @@
 
 {% block head %}
 
-<title> {{name}} Registrations</title>
+<title> {{event}} Registrations</title>
 
 {% endblock %}
 
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>{{name}} Registrations</h1>
+        <h1>{{event}} Registrations</h1>
     </div>
     <br> 
     <div class="row">
-        <h2>Divisions</h2>
+        <h2>Teams Per Division</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
             <thead><tr>
                 <th>Category</th>
                 <th>Division</th>
-                <th>Teams</th>
-                <th>Students</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
             </tr></thead>
             <tbody>
                 {% for division_cat in division_categories.values %}

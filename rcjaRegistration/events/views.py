@@ -236,16 +236,45 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         return HttpResponse(status=204)
 
 @login_required
-def eventAdminSummary(request, eventID):
-    event = get_object_or_404(Event, pk=eventID)
-
-    if event.boolWorkshop():
-        return getAdminWorkSummary(request, event)
+def eventAdminSummary(request, events):
+    events_list = events.split('/')
+    if len(events_list)==1:
+        event = get_object_or_404(Event, pk=events_list[0])
+        return singlePageAdminSummary(request, event)
     else:
-        return getAdminCompSummary(request, event)
+        events = [get_object_or_404(Event, pk=event_id) for event_id in events_list]
+        multiplePageAdminSummary(request, events)
     
+def singlePageAdminSummary(request, event):
+    if event.boolWorkshop():
+        context = getAdminWorkSummary(event)
+        return render(request, 'events/adminWorkshopDetails.html', context)
+    else:
+        context = getAdminCompSummary(event)
+        return render(request, 'events/adminCompetitionDetails.html', context)
 
-def getAdminCompSummary(request, event):
+def multiplePageAdminSummary(request, events):
+    competition = False
+    workshop = False
+    context = {'events'}
+    for event in events:
+        if event.boolWorkshop():
+            workshop = True
+            context['events'].append(getAdminWorkSummary(event))
+        else:
+            competition = True
+            context['events'].append(getAdminCompSummary(event))
+
+    if competition and workshop:
+        raise IndexError
+    elif competition:
+        return render(request, 'events/adminMultiCompDetails.html', context)
+    elif workshop:
+        return render(request, 'events/adminMultiWorkDetails.html', context)
+    else:
+        raise KeyError
+
+def getAdminCompSummary(event):
     # Divisions
     divisionList = event.divisions.values()
     division_categories = {}
@@ -299,7 +328,7 @@ def getAdminCompSummary(request, event):
     school_list.append(independent)
     
     context = {
-        "event": event,
+        "name": event.name,
         "division_categories": division_categories,
         'division_teams': division_teams,
         'division_students': division_students,
@@ -307,10 +336,9 @@ def getAdminCompSummary(request, event):
         'school_teams': school_teams,
         'school_students': school_students,
     }
-    return render(request, 'events/adminCompetitionDetails.html', context)
+    return context
 
-
-def getAdminWorkSummary(request, event):
+def getAdminWorkSummary(event):
     # Divisions
     divisionList = event.divisions.values()
     division_categories = {}
@@ -372,7 +400,7 @@ def getAdminWorkSummary(request, event):
     school_list.append(independent)
     
     context = {
-        "event": event,
+        "name": event.name,
         "division_categories": division_categories,
         'division_teachers': division_teachers,
         'division_students': division_students,
@@ -380,4 +408,4 @@ def getAdminWorkSummary(request, event):
         'school_teachers': school_teachers,
         'school_students': school_students,
     }
-    return render(request, 'events/adminWorkshopDetails.html', context)
+    return context

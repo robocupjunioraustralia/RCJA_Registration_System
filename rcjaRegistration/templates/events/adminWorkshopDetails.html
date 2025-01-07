@@ -2,17 +2,18 @@
 
 {% block head %}
 
-<title> {{event}} Registrations</title>
+<title> {{name}} Registrations</title>
 
 {% endblock %}
 
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}} Registrations</h1>
+        <h1>{{name}} Registrations</h1>
     </div>
+    <br> 
     <div class="row">
-
+        <h2>Divisions</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
@@ -53,6 +54,9 @@
         </table>
     </div>
     <br> 
+    <div class="row">
+        <h2>Schools</h2>
+    </div>
     <div class="row">
         <table class="ui celled table">
             <thead>
