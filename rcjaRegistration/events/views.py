@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.template import loader
 from django.contrib.auth.decorators import login_required
@@ -6,9 +6,11 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
+from django.conf import settings
 from coordination.permissions import checkCoordinatorPermission
 
 import datetime
+import jwt
 
 from .models import Event, BaseEventAttendance, Year
 from regions.models import State
@@ -114,7 +116,7 @@ def getDivisionsMaxReachedWarnings(event, user):
 
         if availableDivision.maxDivisionTeamsTotalReached():
             divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
-    
+
     return divisionsMaxReachedWarnings
 
 def getAvailableToCopyTeams(request, event):
@@ -180,7 +182,7 @@ def details(request, eventID):
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
     }
-    return render(request, 'events/details.html', context)   
+    return render(request, 'events/details.html', context)
 
 def cms(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
@@ -188,10 +190,17 @@ def cms(request, eventID):
     if event.cmsEventId:
         return redirect(settings.CMS_EVENT_URL_VIEW.replace("{EVENT_ID}", event.cmsEventId))
 
+    cmsPayload = {
+        "event": event.id,
+        "user": request.user.id,
+        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=settings.CMS_JWT_EXPIRY_MINUTES)
+    }
+    cmsToken = jwt.encode(cmsPayload, settings.CMS_JWT_SECRET, algorithm='HS256')
+    return redirect(settings.CMS_EVENT_URL_CREATE.replace("{TOKEN}", cmsToken))
 
 @login_required
 def loggedInUnderConstruction(request):
-    return render(request,'common/loggedInUnderConstruction.html') 
+    return render(request,'common/loggedInUnderConstruction.html')
 
 def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     if request.user.currentlySelectedSchool:
@@ -203,7 +212,7 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
         # If not a school administrator allow editing individually entered eventAttendances
         if eventAttendance.mentorUser != request.user or eventAttendance.school:
             return False
-    
+
     return True
 
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
@@ -260,7 +269,7 @@ def getEventsForSummary(state, year):
             else:
                 eventDict["date"] = None
         else:
-            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"     
+            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"
 
         if event.eventType == "competition":
             # Initialise counting variables
@@ -332,7 +341,7 @@ def getEventsForSummary(state, year):
             eventDict["location"] = event.venue.name
         else:
             eventDict["location"] = "None"
-        
+
         events.append(eventDict)
 
     return events
