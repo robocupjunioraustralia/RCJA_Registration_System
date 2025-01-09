@@ -26,6 +26,7 @@ env = environ.Env(
     USE_SQLLITE_DB=(bool, False),
     AWS_ACCESS_KEY_ID=(str, 'AWS_ACCESS_KEY_ID'),
     AWS_SECRET_ACCESS_KEY=(str, 'AWS_SECRET_ACCESS_KEY'),
+    CMS_EVENT_URL_VIEW=(str, 'CMS_EVENT_URL'), # {EVENT_ID} will be replaced
     STATIC_BUCKET=(str, 'STATIC_BUCKET'),
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
@@ -289,6 +290,10 @@ AWS_DEFAULT_ACL = None
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
+
+# CMS SETTINGS
+
+CMS_EVENT_URL_VIEW = env('CMS_EVENT_URL_VIEW')
 
 # Static
 STATIC_ROOT = env('STATIC_ROOT')

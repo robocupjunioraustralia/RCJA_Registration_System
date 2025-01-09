@@ -182,6 +182,13 @@ def details(request, eventID):
     }
     return render(request, 'events/details.html', context)   
 
+def cms(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    if event.cmsEventId:
+        return redirect(settings.CMS_EVENT_URL_VIEW.replace("{EVENT_ID}", event.cmsEventId))
+
+
 @login_required
 def loggedInUnderConstruction(request):
     return render(request,'common/loggedInUnderConstruction.html') 

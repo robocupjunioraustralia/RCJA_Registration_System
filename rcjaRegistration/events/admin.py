@@ -203,11 +203,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'directEnquiriesToName',
         'venue',
         'registrationsLink',
+        'cmsLink',
     ]
     competition_fieldsets = (
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink', 'cmsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -270,6 +271,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'effectiveBannerImageTag',
         'registrationsLink',
         'eventSurchargeAmount',
+        'cmsLink'
     ]
     add_readonly_fields = [
     ]
@@ -287,8 +289,18 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         return readonly_fields
 
     def registrationsLink(self, obj):
-        return format_html('<a href="{}">-></a>', obj.registrationsAdminURL())
+        return format_html('<a href="{}" class="viewlink">View</a>', obj.registrationsAdminURL())
     registrationsLink.short_description = 'View registrations'
+
+    def cmsLink(self, obj):
+        if obj.cmsEventId:
+            return format_html('<a href="{}" target="_blank" class="viewlink">View</a>', obj.get_cms_url())
+
+        if obj.eventType == 'competition':
+            return format_html('<a href="{}" target="_blank" class="addlink">Create</a>', obj.get_cms_url())
+
+        return
+    cmsLink.short_description = 'View CMS'
 
     autocomplete_fields = [
         'state',
