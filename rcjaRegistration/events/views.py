@@ -190,6 +190,11 @@ def cms(request, eventID):
     if event.cmsEventId:
         return redirect(settings.CMS_EVENT_URL_VIEW.replace("{EVENT_ID}", event.cmsEventId))
 
+    # Only challenge coordinators with permission to change the event can create the CMS event instance
+    userCanCreateEvent = checkCoordinatorPermission(request, Event, event, 'change')
+    if event.eventType != 'competition' or not userCanCreateEvent:
+        raise PermissionDenied("The CMS for this event is unavailable")
+
     cmsPayload = {
         "event": event.id,
         "user": request.user.id,

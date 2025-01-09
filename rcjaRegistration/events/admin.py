@@ -271,7 +271,6 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'effectiveBannerImageTag',
         'registrationsLink',
         'eventSurchargeAmount',
-        'cmsLink'
     ]
     add_readonly_fields = [
     ]
@@ -285,6 +284,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         # Make status read only if can't unpublish
         if obj.status == 'published' and (obj.baseeventattendance_set.exists() or obj.invoice_set.exists()):
             readonly_fields = readonly_fields + ['status']
+
+        # Add cmsLink if the event has an ID or if the user can create an event
+        if obj.cmsEventId or checkCoordinatorPermission(request, Event, self, 'change'):
+            readonly_fields = readonly_fields + ['cmsLink']
 
         return readonly_fields
 
