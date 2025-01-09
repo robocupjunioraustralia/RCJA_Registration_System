@@ -51,6 +51,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'withdrawn',
     ]
     fieldsets = (
         (None, {
@@ -116,6 +117,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'updatedDateTime',
         'pk',
         'name',
+        'withdrawn',
         'event',
         'division',
         'mentorUserName',
