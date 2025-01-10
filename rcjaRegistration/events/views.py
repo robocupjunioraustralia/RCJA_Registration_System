@@ -30,8 +30,6 @@ def formatEvents(events):
             event.registrationsCloseDate = 'TBC'
         if event.event_defaultEntryFee is None:
             event.event_defaultEntryFee = 'TBC'
-        if event.startDate is None:
-            event.startDate = 'TBC'
         
     return events
 

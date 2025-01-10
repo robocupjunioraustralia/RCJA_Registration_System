@@ -505,6 +505,34 @@ class TestEventClean(TestCase):
         self.assertRaises(ValidationError, self.event.clean)
 
     # Dates validation
+    def testAllNullDates(self):
+        self.event.startDate=None
+        self.event.endDate = None
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.event.clean()
+
+    def testOneNullDate(self):
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date()
+        self.event.endDate = None
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testTwoNullDates(self):
+        self.event.startDate=None
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+9)).date()
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testThreeNullDates(self):
+        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+4)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.assertRaises(ValidationError, self.event.clean)
+
     def testMultidayEventOK(self):
         self.event.clean()
 
@@ -759,6 +787,10 @@ class TestEventMethods(TestCase):
         self.event.workshopTeacherEntryFee = 5
         self.assertTrue(self.event.paidEvent())
 
+    def testPaidEvent_NullValue(self):
+        self.event.event_defaultEntryFee = None
+        self.assertFalse(self.event.paidEvent())
+
     def test_published_draft(self):
         self.event.status = 'draft'
         self.assertFalse(self.event.published())
@@ -779,6 +811,13 @@ class TestEventMethods(TestCase):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertFalse(self.event.registrationsOpen())
 
+    def test_registrationsOpen_NoDates(self):
+        self.event.startDate=None
+        self.event.endDate = None
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.assertFalse(self.event.registrationsOpen())
+
     def test_registrationNotOpenYet_open(self):
         self.event.registrationsOpenDate = (datetime.datetime.now()).date()
         self.event.registrationsCloseDate = (datetime.datetime.now()).date()
@@ -791,6 +830,13 @@ class TestEventMethods(TestCase):
     def test_registrationNotOpenYet_closed(self):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertFalse(self.event.registrationNotOpenYet())
+
+    def test_registrationsNotOpenYet_Undecided(self):
+        self.event.startDate=None
+        self.event.endDate = None
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.assertTrue(self.event.registrationNotOpenYet())
 
     def test_checkBillingDetailsChanged_notChanged(self):
         self.assertFalse(self.event.checkBillingDetailsChanged())
@@ -1128,3 +1174,39 @@ class TestVenueMethods(TestCase):
 
     def testGetState(self):
         self.assertEqual(self.venue1.getState(), self.newState)
+
+def newNoDatesEvent(obj):
+    obj.blankEvent = Event.objects.create(
+        year=obj.year,
+        state=obj.newState,
+        name='No dates',
+        eventType='competition',
+        status='published',
+        maxMembersPerTeam=5,
+        event_defaultEntryFee = 4,
+        startDate=None,
+        endDate = None,
+        registrationsOpenDate = None,
+        registrationsCloseDate = None,
+        directEnquiriesTo = obj.user     
+    )
+    obj.oldEvent.divisions.add(obj.division)
+
+class TestDashboard(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
+        createVenues(self)
+        newNoDatesEvent(self)
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+
+    def testReplaceNullValues(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response,'TBC', count=2)
+
+    def testTbcFormat(self):
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertContains(response,"""TBC<br>Registrations close: TBC""")
+
+    
