@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import F, Q
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermission
 from coordination.models import Coordinator
 from django.contrib import messages
 from django import forms
