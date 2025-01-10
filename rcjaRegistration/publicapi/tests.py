@@ -273,7 +273,14 @@ class TestEvents(TestCase):
         response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
         self.assertContains(response, 'State 1 No Dates Competition')
 
-    def testNoDatesAllDatesAreTBC(self):
+    def testNoDatesAllDatesAreTBCBasic(self):
+        createNoDateEvent(self)
+        response = self.client.get('/api/v1/public/states/ST1/allEvents/')
+        noDatesEvent = response.json()[5]
+        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
+            self.assertEqual(noDatesEvent[field],'TBC')
+
+    def testNoDatesAllDatesAreTBCDetailed(self):
         createNoDateEvent(self)
         response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
         noDatesEvent = response.json()[5]

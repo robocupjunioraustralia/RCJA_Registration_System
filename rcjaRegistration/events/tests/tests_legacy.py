@@ -11,6 +11,7 @@ from users.models import User
 from coordination.models import Coordinator
 from eventfiles.models import EventAvailableFileType, MentorEventFileType
 from invoices.models import Invoice, InvoiceGlobalSettings
+from events.views import formatEvents
 
 import datetime
 # Create your tests here.
@@ -1183,7 +1184,7 @@ def newNoDatesEvent(obj):
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        event_defaultEntryFee = None,
         startDate=None,
         endDate = None,
         registrationsOpenDate = None,
@@ -1208,5 +1209,24 @@ class TestDashboard(TestCase):
     def testTbcFormat(self):
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response,"""TBC<br>Registrations close: TBC""")
+
+class TestFormatEvents(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        newSetupEvent(self)
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
+        createVenues(self)
+        newNoDatesEvent(self)
+
+    def testDates(self):
+        events = formatEvents(Event.objects.filter(name ='No dates'))
+        self.assertEqual(events[0].startDate, 'TBC')
+        self.assertEqual(events[0].endDate, 'TBC')
+        self.assertEqual(events[0].registrationsOpenDate, 'TBC')
+        self.assertEqual(events[0].registrationsCloseDate, 'TBC')
+
+    def testFee(self):
+        events = formatEvents(Event.objects.filter(name ='No dates'))
+        self.assertEqual(events[0].event_defaultEntryFee, 'TBC')
 
     
