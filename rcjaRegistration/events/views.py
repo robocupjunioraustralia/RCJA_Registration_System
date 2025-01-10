@@ -338,10 +338,6 @@ def summaryReport(request):
             # Save user
             user_state = State.objects.filter(id = form.cleaned_data["state"])[0]
             year = Year.objects.filter(year = form.cleaned_data["year"])[0]
-        else:
-            user_state = request.user.currentlySelectedAdminState
-            year = request.user.currentlySelectedAdminYear
-        if user_state is not None and year is not None:
             events = getEventsForSummary(user_state, year)
             state_name = user_state.name
             year_str = str(year.year)

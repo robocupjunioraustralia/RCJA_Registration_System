@@ -116,26 +116,6 @@
 
     {% endif %}
     </div>
-    <br>
-    {% if user.is_staff %}
-    <div class="row">
-        <h1>Summary Report:</h1> 
-            <div class="ui icon message">
-            <i class="eye icon"></i>
-            <div class="content">
-              <div class="header">
-                Summary Report
-              </div>
-               <a href = "{% url 'events:summaryReport' %}"> <span>
-                   View Summary Report
-                </span></a>
-            </div>
-        </div>  
-
-
-
-    </div>
-    {% endif %}
 
 </div>
 {% endblock %}
