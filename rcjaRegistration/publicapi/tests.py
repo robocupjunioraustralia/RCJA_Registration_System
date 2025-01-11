@@ -5,23 +5,6 @@ from django.urls import reverse
 
 from .views import StateViewSet
 from regions.models import State
-from events.models import Event
-
-def createNoDateEvent(self):
-    self.state1_noDatesCompetition = Event.objects.create(
-        year = self.year,
-        state = self.state1,
-        name = 'State 1 No Dates Competition',
-        eventType = 'competition',
-        status = 'published',
-        event_defaultEntryFee = 50,
-        startDate = None,
-        endDate = None,
-        registrationsOpenDate = None,
-        registrationsCloseDate = None,
-        directEnquiriesTo = self.user_state1_super1,
-        venue=self.venue2_state1,
-    )
 
 # Unit tests
 
@@ -267,22 +250,3 @@ class TestEvents(TestCase):
         response = self.client.get('/api/v1/public/states/ST1/pastWorkshops/')
         self.assertEqual(response.status_code, 200)
 
-    # No Date Events
-    def testNoDatesLoads(self):
-        createNoDateEvent(self)
-        response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
-        self.assertContains(response, 'State 1 No Dates Competition')
-
-    def testNoDatesAllDatesAreTBCBasic(self):
-        createNoDateEvent(self)
-        response = self.client.get('/api/v1/public/states/ST1/allEvents/')
-        noDatesEvent = response.json()[5]
-        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
-            self.assertEqual(noDatesEvent[field],'TBC')
-
-    def testNoDatesAllDatesAreTBCDetailed(self):
-        createNoDateEvent(self)
-        response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
-        noDatesEvent = response.json()[5]
-        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
-            self.assertEqual(noDatesEvent[field],'TBC')

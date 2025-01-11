@@ -59,18 +59,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_registrationURL(self, obj):
         return self.context['request'].build_absolute_uri(obj.get_absolute_url())
-    
-    def to_representation(self, instance):
-        """Convert None references to TBC"""
-        ret = super().to_representation(instance)
-        for field in ['startDate', 'endDate', 'registrationsOpenDate', 
-                      'registrationsCloseDate', 'event_defaultEntryFee', 'venue',]:
-            if ret[field] is None:
-                ret[field] = 'TBC'
-
-        if not ret['availabledivisions']:
-            ret['availabledivisions'] = 'TBC'
-        return ret
 
     class Meta:
         model = Event
@@ -127,14 +115,6 @@ class SummaryEventSerializer(serializers.ModelSerializer):
             'registrationsOpenDate',
             'registrationsCloseDate',
         ]
-
-    def to_representation(self, instance):
-        """Convert None references to TBC"""
-        ret = super().to_representation(instance)
-        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate',]:
-            if ret[field] is None:
-                ret[field] = 'TBC'
-        return ret
 
 # *****Committee Member*****
 
