@@ -1,5 +1,4 @@
 from django import forms
-from datetime import datetime
 
 from events.models import Division, Year
 from schools.models import Campus
