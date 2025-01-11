@@ -2,10 +2,7 @@ from django import forms
 from datetime import datetime
 
 from events.models import Division, Year
-from regions.models import State
 from schools.models import Campus
-
-from coordination.permissions import checkCoordinatorPermission
 
 class BaseEventAttendanceFormInitMixin:
     # Override init to filter division and campus, set school and event
