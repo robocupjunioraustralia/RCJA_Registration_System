@@ -46,29 +46,16 @@
         <h1>{{state}} Activity Summary Report {{year}}</h1>
     </div>
     <div class="row" id="inputForm">
-        {% if form.errors or form.non_field_errors %}
-        <!-- Error messaging -->
-        <div class="ui message left-aligned-text">
-            <div class="">
-            <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-            {{ form.non_field_errors }}
-            
-            <ul>
-                {% for field in form %}
-                {% if field.errors %}
-                <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                {% endfor %}
-            
-            </ul>
-            </div>
-        </div>
-        <!-- /Error messaging -->
-        {% endif %}
         <form action="" method="get" class = "ui form">
             <div class="two fields">
                 <div class = "field">
                   <label>State: </label>
                     {{form.state}}
+                    {% if form.state.errors %}
+                    <div class="ui pointing red basic label">
+                        {{ form.state.errors|striptags }}
+                    </div>
+                    {% endif %}
                 </div>
                 <div class = "field">
                   <label> Year: </label>
