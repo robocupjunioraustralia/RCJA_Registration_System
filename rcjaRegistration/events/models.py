@@ -268,7 +268,7 @@ class Event(SaveDeleteMixin, models.Model):
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', default=None, blank=True, null=True)
+    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', blank=True, null=True)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Competition billing settings
