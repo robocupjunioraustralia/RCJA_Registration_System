@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -334,17 +334,19 @@ def getEventsForSummary(state, year):
 def summaryReport(request):
     if not request.user.is_staff:
         raise PermissionDenied("You do not have permission to view this page")
-    
-    if request.method == 'GET':
-        form = getSummaryForm(request)
-        if form.is_valid():
-            selected_state = State.objects.get(id = form.cleaned_data["state"])
-            selected_year = Year.objects.get(year = form.cleaned_data["year"])
-            events = getEventsForSummary(selected_state, selected_year)
-        else:
-            events = []
-            selected_state = None
-            selected_year = None
+
+    if request.method != 'GET':
+        return HttpResponseNotAllowed()
+
+    form = getSummaryForm(request)
+    if form.is_valid():
+        selected_state = State.objects.get(id = form.cleaned_data["state"])
+        selected_year = Year.objects.get(year = form.cleaned_data["year"])
+        events = getEventsForSummary(selected_state, selected_year)
+    else:
+        events = []
+        selected_state = None
+        selected_year = None
 
     context = {
         "events": events,

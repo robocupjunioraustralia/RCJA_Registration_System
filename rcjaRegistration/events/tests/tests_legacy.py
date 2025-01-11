@@ -1183,7 +1183,9 @@ class TestSummaryPage(TestCase):
 
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
-    
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student2', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student3', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
+
     def createGetQuery(self, state: str, year: int):
         return f"?state={State.objects.get(name=state).id}&year={year}"
 
@@ -1243,7 +1245,13 @@ class TestSummaryPage(TestCase):
     def testWorkshop(self):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
         response = self.client.get(url, follow=True)
-        self.assertContains(response, r"50%F, 50%M, 0% other")
+        self.assertContains(response, r"25%F, 25%M, 50% other")
+
+    def testWorkshopNoAttendees(self):
+        WorkshopAttendee.objects.all().delete()
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, r"0%F, 0%M, 0% other")
 
     def testVenues(self):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
@@ -1255,3 +1263,20 @@ class TestSummaryPage(TestCase):
         url = reverse('events:summaryReport')
         response = self.client.get(url, follow=True)
         self.assertContains(response, "Select State and Year for Activity Summary Report")
+
+    def testEventNoDate(self):
+        self.newEvent.startDate = None
+        self.newEvent.endDate = None
+        self.newEvent.save()
+
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, "test old not reg")
+        self.assertContains(response, "future event")
+        self.assertContains(response, "test new yes reg")
+        self.assertContains(response, "test old yes reg")
+
+    def testPost(self):
+        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
+        response = self.client.post(url, follow=True)
+        self.assertEqual(response.status_code, 405)
