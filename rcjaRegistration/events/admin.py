@@ -191,6 +191,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
 
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+    empty_value_display = "TBC"
     list_display = [
         '__str__',
         'eventType',

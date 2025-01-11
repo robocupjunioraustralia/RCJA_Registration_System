@@ -58,7 +58,7 @@
     <br>
    
     <div class="row">  
-        {% if currentEvents or openForRegistrationWorkshops or openForRegistrationCompetitions or pastEvents %}
+        {% if currentEvents or openForRegistrationWorkshops or openForRegistrationCompetitions or pastEvents or futureEvents%}
             {% if currentEvents %}
             {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
             <br>
@@ -71,6 +71,11 @@
 
             {% if openForRegistrationCompetitions %}
             {% include "events/eventRow.html" with comps=openForRegistrationCompetitions rowHeading="Open for registration competitions:" %}
+            <br>
+            {% endif %}
+
+            {% if futureEvents %}
+            {% include "events/eventRow.html" with comps=futureEvents rowHeading="Future events:" %}
             <br>
             {% endif %}
 
