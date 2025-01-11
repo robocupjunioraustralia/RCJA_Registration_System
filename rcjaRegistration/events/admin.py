@@ -295,9 +295,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'state',
         'directEnquiriesTo',
     ]
-    inlines = [
+    competition_inlines = [
         AvailableDivisionInline,
         EventAvailableFileTypeInline,
+    ]
+    workshop_inlines = [
+        AvailableDivisionInline,
     ]
     add_inlines = [ # Don't include available divisions here so the divisions will be filtered when shown
     ]
@@ -371,16 +374,19 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             return self.competition_fieldsets
 
         return super().get_fieldsets(request, obj)
-    
-    """    
-    # Make dates able to be blank
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
-            form.base_fields[field].required = False
-            form.base_fields[field].blank = True
-        return form
-    """
+
+    def get_inlines(self, request, obj=None):
+        if not obj:
+            return self.add_inlines
+
+        if obj.eventType == 'workshop':
+            return self.workshop_inlines
+
+        if obj.eventType == 'competition':
+            return self.competition_inlines
+
+        return super().get_inlines(request, obj)
+
     # Message user during save
     def save_model(self, request, obj, form, change):
         if obj.pk:
