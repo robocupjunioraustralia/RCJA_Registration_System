@@ -118,10 +118,10 @@
         </div>
         <div class = "right menu">
             {% if environment is not None %}
-            <a class="item" style="color:red; max-width:48%" >
+            <span class="item" style="color:red; max-width:48%" >
                 <i class="important"></i>
                 <b>{{environment}}</b>
-            </a>
+            </span>
             {% endif %}
             {% if user.is_staff %}
             <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
