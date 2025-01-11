@@ -117,6 +117,12 @@
             </a>     
         </div>
         <div class = "right menu">
+            {% if environment is not None %}
+            <span class="item" style="color:red; max-width:48%" >
+                <i class="important"></i>
+                <b>{{environment}}</b>
+            </span>
+            {% endif %}
             {% if user.is_staff %}
             <a class="item" href="{% url 'events:summaryReport' %}">
                 <i class="eye icon"></i>

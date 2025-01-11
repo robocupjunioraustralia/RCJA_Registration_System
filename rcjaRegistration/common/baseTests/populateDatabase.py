@@ -180,6 +180,7 @@ def createEvents(self):
     self.division2_state2 = Division.objects.create(name='Division 2', state=self.state2)
     self.division3 = Division.objects.create(name='Division 3')
     self.division4 = Division.objects.create(name='Division 4')
+    self.division5 = Division.objects.create(name='Division 5', active=False)
 
     # Available Divisions
 
