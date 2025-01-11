@@ -135,6 +135,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'rcjaRegistration.defaultContexts.yearsContext',
+                'rcjaRegistration.defaultContexts.environmentContext',
             ],
         },
     },
@@ -338,6 +339,3 @@ if SENTRY_DSN != 'SENTRY_DSN':
 
 # Environment
 ENVIRONMENT = env('ENVIRONMENT')
-
-if ENVIRONMENT != 'production':
-    TEMPLATES[0]['OPTIONS']['context_processors'].append('common.contextProcesses.environment_context')
