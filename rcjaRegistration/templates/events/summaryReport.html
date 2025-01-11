@@ -43,7 +43,11 @@
 {% block content %}
 <div class="ui aligned container" >
     <div class="row">
-        <h1>{{state}} Activity Summary Report {{year}}</h1>
+        {% if state and year %}
+        <h1>{{state.name}} Activity Summary Report {{year.year}}</h1>
+        {% else %}
+        <h1>Activity Summary Report</h1>
+        {% endif %}
     </div>
     <div class="row" id="inputForm">
         <form action="" method="get" class = "ui form">
@@ -65,6 +69,7 @@
             <input type="submit" value="Get Events">
         </form>
     </div>
+    {% if state and year %}
     <div class="row">
         <table class="ui celled table">
             <thead>
@@ -89,6 +94,7 @@
             </tbody>
         </table>
     </div>
+    {% endif %}
 
     <br>
 </div>
