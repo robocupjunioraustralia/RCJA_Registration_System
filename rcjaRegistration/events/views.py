@@ -336,7 +336,7 @@ def summaryReport(request):
         raise PermissionDenied("You do not have permission to view this page")
 
     if request.method != 'GET':
-        return HttpResponseNotAllowed()
+        return HttpResponseNotAllowed(['GET'])
 
     form = getSummaryForm(request)
     if form.is_valid():

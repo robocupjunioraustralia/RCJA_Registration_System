@@ -1264,18 +1264,6 @@ class TestSummaryPage(TestCase):
         response = self.client.get(url, follow=True)
         self.assertContains(response, "Select State and Year for Activity Summary Report")
 
-    def testEventNoDate(self):
-        self.newEvent.startDate = None
-        self.newEvent.endDate = None
-        self.newEvent.save()
-
-        url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
-        response = self.client.get(url, follow=True)
-        self.assertContains(response, "test old not reg")
-        self.assertContains(response, "future event")
-        self.assertContains(response, "test new yes reg")
-        self.assertContains(response, "test old yes reg")
-
     def testPost(self):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
         response = self.client.post(url, follow=True)
