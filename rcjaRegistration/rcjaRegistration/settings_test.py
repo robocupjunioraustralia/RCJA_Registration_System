@@ -20,6 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     USE_SQLLITE_DB=(bool, False),
+    ENVIRONMENT=(str, "testing")
 )
 
 assert (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should only be used to run tests"
@@ -96,7 +97,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'rcjaRegistration.defaultContexts.yearsContext',
+                'common.globalContexts.yearsContext',
+                'common.globalContexts.environmentContext',
             ],
         },
     },
@@ -249,3 +251,6 @@ PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+
+# Environment
+ENVIRONMENT = env('ENVIRONMENT')
