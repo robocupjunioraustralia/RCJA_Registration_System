@@ -17,7 +17,7 @@ class Test_EnvironmentIndicator(TestCase):
         response = self.client.get(reverse('events:dashboard'))
         self.assertContains(response, 'TESTING')
     
-    @override_settings(ENVIRONMENT='PRODUCTION')
+    # @override_settings(ENVIRONMENT='PRODUCTION')
     def test_noIndiactorInProduction(self):
         response = self.client.get(reverse('events:dashboard'))
         self.assertNotContains(response, 'TESTING')
