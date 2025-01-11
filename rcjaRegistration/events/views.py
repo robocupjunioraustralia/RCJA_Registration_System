@@ -332,6 +332,9 @@ def getEventsForSummary(state, year):
 
 @login_required
 def summaryReport(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+    
     if request.method == 'GET':
         form = getSummaryForm(request)
         if form.is_valid():

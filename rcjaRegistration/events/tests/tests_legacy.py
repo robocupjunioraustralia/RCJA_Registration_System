@@ -1192,6 +1192,13 @@ class TestSummaryPage(TestCase):
         response = self.client.get(reverse('events:summaryReport'))
         self.assertEqual(response.status_code, 302)
 
+    def testNotStaffDenied(self):
+        self.admin.is_superuser = False
+        self.admin.save()
+
+        response = self.client.get(reverse('events:summaryReport'))
+        self.assertEqual(response.status_code, 403)
+
     def testPageLoads(self):
         url = reverse('events:summaryReport')
         response = self.client.get(url)
