@@ -1185,7 +1185,17 @@ class TestSummaryPage(TestCase):
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
     
     def createGetQuery(self, state: str, year: int):
-        return f"?state={State.objects.filter(name=state)[0].id}&year={year}"
+        return f"?state={State.objects.get(name=state).id}&year={year}"
+
+    def testLoginRequired(self):
+        self.client.logout()
+        response = self.client.get(reverse('events:summaryReport'))
+        self.assertEqual(response.status_code, 302)
+
+    def testPageLoads(self):
+        url = reverse('events:summaryReport')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
 
     def testTitle(self):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
@@ -1234,19 +1244,7 @@ class TestSummaryPage(TestCase):
         self.assertContains(response, "Venue 1", 1)
         self.assertContains(response, "None", 4)
 
-    def testDefault(self):
+    def testNoSelection(self):
         url = reverse('events:summaryReport')
         response = self.client.get(url, follow=True)
-        self.assertContains(response, "Choose State Activity Summary Report Choose Year")
-        
-    def testDefaultByAdminSettings(self):
-        self.admin.currentlySelectedAdminState = State.objects.filter(name='Victoria')[0]
-        self.admin.currentlySelectedAdminYear = Year.objects.filter(year=2019)[0]
-        self.admin.save()
-        url = reverse('events:summaryReport')
-        response = self.client.get(url, follow=True)
-
-        self.assertContains(response, "test old not reg")
-        self.assertContains(response, "future event")
-        self.assertContains(response, "test new yes reg")
-        self.assertContains(response, "test old yes reg")
+        self.assertContains(response, "Select State and Year for Activity Summary Report")
