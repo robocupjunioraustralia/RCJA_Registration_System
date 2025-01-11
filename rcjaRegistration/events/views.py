@@ -335,21 +335,18 @@ def summaryReport(request):
     if request.method == 'GET':
         form = getSummaryForm(request)
         if form.is_valid():
-            # Save user
-            user_state = State.objects.filter(id = form.cleaned_data["state"])[0]
-            year = Year.objects.filter(year = form.cleaned_data["year"])[0]
-            events = getEventsForSummary(user_state, year)
-            state_name = user_state.name
-            year_str = str(year.year)
+            selected_state = State.objects.get(id = form.cleaned_data["state"])
+            selected_year = Year.objects.get(year = form.cleaned_data["year"])
+            events = getEventsForSummary(selected_state, selected_year)
         else:
             events = []
-            state_name = "Choose State"
-            year_str = "Choose Year"
+            selected_state = None
+            selected_year = None
 
     context = {
         "events": events,
         "form": form,
-        'state': state_name,
-        'year': year_str,
+        'state': selected_state,
+        'year': selected_year,
     }
     return render(request, 'events/summaryReport.html', context)

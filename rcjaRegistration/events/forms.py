@@ -34,17 +34,13 @@ class BaseEventAttendanceFormInitMixin:
 def getSummaryForm(request):
     # Use constructor function as user from request is required for permissions
     class SummaryRequestForm(forms.Form):
-        states = []
-        for state in State.objects.all():
-            if checkCoordinatorPermission(request, State, state, 'view'):            
-                states.append((state.pk,state.name))
-
-        years = []
-        for year in Year.objects.all():
-            years.append((year.year,year.year))
+        states = [(state.pk, state.name) for state in request.user.adminViewableStates()]
+        states.insert(0, ('', '---------'))
         
-        state = forms.ChoiceField(choices=states)
-        year = forms.TypedChoiceField(choices=years, initial=datetime.now().year)
+        years = [(year.year, year.year) for year in Year.objects.all()]
+
+        state = forms.TypedChoiceField(choices=states, coerce=int)
+        year = forms.TypedChoiceField(choices=years, coerce=int)
 
     return SummaryRequestForm(request.GET)
 
