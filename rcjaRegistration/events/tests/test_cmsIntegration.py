@@ -2,7 +2,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
+from django.contrib.admin.sites import site
 from users.models import User
+from events.admin import EventAdmin
+from events.models import Event
 from common.baseTests.populateDatabase import createStates, createUsers, createEvents
 import jwt
 
@@ -103,3 +106,34 @@ class TestEventCMSEventIdValidation(TestCase):
         event.eventType = "competition"
         event.cmsEventId = "SHOULD_PASS"
         event.clean()
+
+class TestEventAdminCMSLink(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+        createEvents(cls)
+
+    def setUp(self):
+        self.admin_site = EventAdmin(Event, site)
+        self.competition = self.state1_openCompetition
+        self.workshop = self.state1_openWorkshop
+
+    def test_link_view_if_cmsEventId_exists(self):
+        """Should return a 'View' link if cmsEventId is set"""
+        self.competition.cmsEventId = "25_VI_STATE_427"
+        self.competition.save()
+        link_html = self.admin_site.cmsLink(self.competition)
+        self.assertIn("View", link_html)
+
+    def test_link_create_if_no_cmsEventId_competition(self):
+        """Should return a 'Create' link if no cmsEventId and eventType='competition'"""
+        self.competition.cmsEventId = None
+        link_html = self.admin_site.cmsLink(self.competition)
+        self.assertIn("Create", link_html)
+
+    def test_link_none_if_not_competition(self):
+        """Should return None if eventType is not a competition"""
+        self.workshop.cmsEventId = None
+        link_html = self.admin_site.cmsLink(self.workshop)
+        self.assertIsNone(link_html)
