@@ -185,10 +185,6 @@ def copyTeam(request, eventID, teamID):
     if team.event == event:
         raise PermissionDenied("Team already in this event.")
 
-    # Check team from current year
-    if team.event.year != event.year:
-        raise PermissionDenied("Team not from current event year.")
-
     # Check event limits
     checkEventLimitsReached(request, event)
 

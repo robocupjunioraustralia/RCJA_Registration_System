@@ -126,7 +126,6 @@ def getAvailableToCopyTeams(request, event):
 
     # Replace event filtering with year filtering
     del filterDict['event']
-    filterDict['event__year'] = event.year
     filterDict['event__status'] = 'published'
 
     availableDivisions = event.availabledivision_set.values_list('division', flat=True)

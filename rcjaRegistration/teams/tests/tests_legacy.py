@@ -977,13 +977,6 @@ class TestCopyTeamsList(TestCase):
         response = self.client.get(url)
         self.assertNotIn(self.newEventTeam, response.context['availableToCopyTeams'])
 
-    def testContext_availableToCopyTeams_previousYearEventTeamNotIn(self):
-        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-
-        response = self.client.get(url)
-        self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
-
     def testContext_availableToCopyTeams_divisionMismatchNotIn(self):
         self.newEventAvailableDivision1.delete()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
@@ -1113,14 +1106,6 @@ class TestCopyTeam(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Team already in this event.', status_code=403)
-
-    def testDenied_teamNotFromCurrentYear(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.previousYearTeam.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Team not from current event year.', status_code=403)
 
     def testDenied_eventSchoolMaxReached(self):
         self.newEvent.event_maxTeamsPerSchool = 1
