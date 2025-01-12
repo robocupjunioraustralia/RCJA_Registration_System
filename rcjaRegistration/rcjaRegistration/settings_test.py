@@ -228,6 +228,13 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
+# CMS SETTINGS
+
+CMS_JWT_SECRET = "TESTONLY_slfgdjheaklfgjb34wuhgb35789gbne97urgblskdg"
+CMS_JWT_EXPIRY_MINUTES = 5
+CMS_EVENT_URL_VIEW = "https://localhost/rcj_cms?comp={EVENT_ID}"
+CMS_EVENT_URL_CREATE = "https://localhost/rcj_cms/event/create?token={TOKEN}"
+
 # Static
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]

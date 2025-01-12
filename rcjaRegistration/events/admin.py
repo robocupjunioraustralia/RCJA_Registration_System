@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import F, Q
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermission
 from coordination.models import Coordinator
 from django.contrib import messages
 from django import forms
@@ -203,11 +203,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'directEnquiriesToName',
         'venue',
         'registrationsLink',
+        'cmsLink',
     ]
     competition_fieldsets = (
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink', 'cmsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -284,11 +285,25 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         if obj.status == 'published' and (obj.baseeventattendance_set.exists() or obj.invoice_set.exists()):
             readonly_fields = readonly_fields + ['status']
 
+        # Add cmsLink if the event has an ID or if the user can create an event
+        if obj.cmsEventId or checkCoordinatorPermission(request, Event, obj, 'change'):
+            readonly_fields = readonly_fields + ['cmsLink']
+
         return readonly_fields
 
     def registrationsLink(self, obj):
-        return format_html('<a href="{}">-></a>', obj.registrationsAdminURL())
+        return format_html('<a href="{}" class="viewlink">View</a>', obj.registrationsAdminURL())
     registrationsLink.short_description = 'View registrations'
+
+    def cmsLink(self, obj):
+        if obj.cmsEventId:
+            return format_html('<a href="{}" target="_blank" class="viewlink">View</a>', obj.get_cms_url())
+
+        if obj.eventType == 'competition':
+            return format_html('<a href="{}" target="_blank" class="addlink">Create</a>', obj.get_cms_url())
+
+        return
+    cmsLink.short_description = 'View CMS'
 
     autocomplete_fields = [
         'state',

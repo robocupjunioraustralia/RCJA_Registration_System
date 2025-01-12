@@ -67,6 +67,7 @@ class EventSerializer(serializers.ModelSerializer):
             'state',
             'name',
             'eventType',
+            'cmsEventId',
             # Dates
             'startDate',
             'endDate',
