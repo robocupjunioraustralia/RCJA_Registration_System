@@ -451,19 +451,25 @@ class Event(SaveDeleteMixin, models.Model):
             return ''
         
     def decidedOnDates(self):
-        return self.registrationsCloseDate is not None \
-            and self.registrationsOpenDate is not None \
-            and self.startDate  is not None \
-            and self.endDate  is not None 
+        return (self.registrationsCloseDate is not None 
+            and self.registrationsOpenDate is not None 
+            and self.startDate  is not None 
+            and self.endDate  is not None )
+    
+    def hasAllDetails(self):
+        return (self.decidedOnDates() and 
+            self.event_defaultEntryFee is not None and
+            self.venue is not None
+        )
 
     def registrationsOpen(self):
-        if self.decidedOnDates():
+        if self.hasAllDetails():
             return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
         else:
             return False # Registration is not open until all details are added
 
     def registrationNotOpenYet(self):
-        if self.decidedOnDates():
+        if self.hasAllDetails():
             return self.registrationsOpenDate > datetime.datetime.today().date()
         else:
             return True
