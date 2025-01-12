@@ -114,7 +114,7 @@
             <a class="item" href="{% url 'association:membership' %}">
                 <i class="briefcase icon"></i>
                 Association Membership
-            </a>                   
+            </a>     
         </div>
         <div class = "right menu">
             {% if environment is not None %}
@@ -124,6 +124,10 @@
             </span>
             {% endif %}
             {% if user.is_staff %}
+            <a class="item" href="{% url 'events:summaryReport' %}">
+                <i class="eye icon"></i>
+                Summary Report
+            </a>
             <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
                 <i class="id badge icon"></i>
                 Admin
