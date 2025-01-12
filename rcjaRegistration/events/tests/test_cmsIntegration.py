@@ -1,6 +1,7 @@
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.http import HttpRequest
+from django.core.exceptions import ValidationError
 from users.models import User
 from common.baseTests.populateDatabase import createStates, createUsers, createEvents
 import jwt
@@ -80,3 +81,25 @@ class TestCMSView(TestCase):
 
         user_obj = User.objects.get(email=self.email_user_state1_fullcoordinator)
         self.assertEqual(payload["user"], user_obj.id)
+
+class TestEventCMSEventIdValidation(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        createStates(cls)
+        createUsers(cls)
+        createEvents(cls)
+
+    def test_cmsEventId_only_for_competitions(self):
+        """Setting cmsEventId on a non-competition event should error"""
+        event = self.state1_openWorkshop
+        event.eventType = "workshop"
+        event.cmsEventId = "SHOULD_FAIL"
+        event.save()
+        self.assertRaises(ValidationError, event.clean)
+
+    def test_cmsEventId_ok_for_competition(self):
+        """Setting cmsEventId on a competition event should not error"""
+        event = self.state1_openCompetition
+        event.eventType = "competition"
+        event.cmsEventId = "SHOULD_PASS"
+        event.clean()
