@@ -270,9 +270,9 @@ def multiplePageAdminSummary(request, events):
     elif competition:
         return mergeMultipleCompsAdminSummary(request, event_list)
     elif workshop:
-        return render(request, 'events/adminMultiWorkDetails.html', context)
+        return mergeMultipleWorkshopsAdminSummary(request, event_list)
     else:
-        return HttpResponse(content=404, status=422)
+        return HttpResponse(content='', status=404)
 
 def mergeMultipleCompsAdminSummary(request, events):
     comps_number = len(events)
@@ -295,13 +295,25 @@ def mergeMultipleCompsAdminSummary(request, events):
     for division_cat in divisions['categories']:
         rows = len(divisions['categories'][division_cat]['divisions'].keys())
         divisions['categories'][division_cat]['rows']=rows+1
-
+    
+    # Schools
+    schools = {'teams':[0]*comps_number,'students':[0]*comps_number,'schools':{}}
+    for event_no, event in enumerate(events):
+        for school in event['schools']:
+            school_dict = schools['schools'].get(school['name'], {'name':school['name'],'teams':[0]*comps_number,'students':[0]*comps_number})
+            school_dict['teams'][event_no] += school['teams']
+            school_dict['students'][event_no] += school['students']
+            schools['schools'][school['name']] = school_dict
+            schools['students'][event_no] += school_dict['students'][event_no]
+            schools['teams'][event_no] += school_dict['teams'][event_no]
 
     context = {'divisions':divisions,
-               'events':events,
-               'eventNumbers':list(range(comps_number))}
+               'schools':schools,
+               'events':events,}
     return render(request, 'events/adminMultiCompDetails.html', context)
 
+def mergeMultipleWorkshopsAdminSummary(request, events):
+    pass
 
 def getAdminCompSummary(event):
     # Divisions

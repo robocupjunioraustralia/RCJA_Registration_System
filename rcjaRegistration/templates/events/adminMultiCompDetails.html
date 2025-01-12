@@ -36,10 +36,10 @@
                     </tr>
                     <tr>
                     {% endfor %}
-                        <td>Subtotal</td>
-                        {% for event in division_cat.teams %}
-                        <td>{{event}}</td>
-                        {% endfor %}
+                    <td>Subtotal</td>
+                    {% for event in division_cat.teams %}
+                    <td>{{event}}</td>
+                    {% endfor %}
                     </tr>
                 {% endfor %}
             </tbody>
@@ -54,28 +54,104 @@
     </div>
     <br> 
     <div class="row">
-        <h2>Schools</h2>
+        <h2>Students Per Division</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
-            <thead>
-            <tr><th>School</th>
-            <th>Teams</th>
-            <th>Students</th>
+            <thead><tr>
+                <th>Category</th>
+                <th>Division</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
             </tr></thead>
             <tbody>
-                {% for school in schools %}
-                <tr>
-                    <td>{{school.name}}</td>
-                    <td>{{school.teams}}</td>
-                    <td>{{school.students}}</td>
-                </tr>
+                {% for division_cat in divisions.categories.values %}
+                    <tr>
+                        <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
+                    {% for division in division_cat.divisions.values %}
+                        <td>{{division.name}}</td>
+                        {% for event in division.results %}
+                        <td>{{event.students}}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                    {% endfor %}
+                    <td>Subtotal</td>
+                    {% for event in division_cat.students %}
+                    <td>{{event}}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th colspan="2">Total</th>
+                {% for event in divisions.students %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br>
+    <br> 
+    <div class="row">
+        <h2>Teams Per School</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>School</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for school in schools.schools.values %}
+                    <tr>
+                        <td>{{school.name}}</td>
+                    {% for event in school.teams %}
+                        <td>{{event}}</td>
+                        {% endfor %}
+                    </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr><th>Total</th>
-                <th>{{school_teams}}</th>
-                <th>{{school_students}}</th>
+                {% for event in schools.teams %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br> 
+    <div class="row">
+        <h2>Students Per School</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>School</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for school in schools.schools.values %}
+                    <tr>
+                        <td>{{school.name}}</td>
+                    {% for event in school.students %}
+                        <td>{{event}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th>
+                {% for event in schools.students %}
+                    <td>{{event}}</td>
+                {% endfor %}
             </tr>
             </tfoot>
         </table>
