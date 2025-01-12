@@ -1,0 +1,53 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title>Event Comparisons</title>
+
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Event Comparisons</h1>
+        <h1>{{output}}</h1>
+    </div>
+
+    <div class="row">
+        <div class="form form-group left-aligned-text"></div>
+            {% if form.non_field_errors %}
+
+            <!-- Error messaging -->
+            <div class="ui message left-aligned-text">
+                <div class="">
+                    <p class="header">There were some errors in the information you entered. Please correct
+                        the following:</p>
+                    {{ form.non_field_errors }}
+                </div>
+            </div>
+            <!-- /Error messaging -->
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="three fields">
+                    <div class="field">
+                        {{form.type.label_tag}}
+                        {{form.type}}
+                    </div>
+                    <div class="field">
+                        {{form.competitions.label_tag}}
+                        {{form.competitions}}
+                    </div>
+                    <div class="field">
+                        {{form.workshops.label_tag}}
+                        {{form.workshops}}
+                    </div>
+                </div>
+                <input type="submit" value="Submit"> 
+            </form>
+    </div>
+    </div>
+
+</div>
+
+{% endblock %}

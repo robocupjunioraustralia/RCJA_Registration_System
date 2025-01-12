@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
 from coordination.permissions import checkCoordinatorPermission
+from django.forms import formset_factory
 
 import datetime
 
@@ -14,6 +15,7 @@ from .models import Event, BaseEventAttendance, DivisionCategory
 from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
+from .forms import AdminEventsForm
 
 # Need to check if schooladministrator is None
 
@@ -236,46 +238,43 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         return HttpResponse(status=204)
 
 @login_required
-def eventAdminSummary(request, events):
-    events_list = events.split('/')
-    if len(events_list)==1:
-        event = get_object_or_404(Event, pk=events_list[0])
-        return singlePageAdminSummary(request, event)
-    else:
-        events = [get_object_or_404(Event, pk=event_id) for event_id in events_list]
-        return multiplePageAdminSummary(request, events)
-    
-def singlePageAdminSummary(request, event):
-    if event.boolWorkshop():
-        context = getAdminWorkSummary(event)
-        return render(request, 'events/adminWorkshopDetails.html', context)
-    else:
-        context = getAdminCompSummary(event)
-        return render(request, 'events/adminCompetitionDetails.html', context)
+def eventAdminSummary(request):
+    output = ""
+    if request.method == "POST":
+        form = AdminEventsForm(request.POST)
+        if form.is_valid():
+            output = form.cleaned_data
+            workshops = len(form.cleaned_data['workshops'])>0
+            competitions = len(form.cleaned_data['competitions'])>0
 
-def multiplePageAdminSummary(request, events):
-    competition = False
-    workshop = False
-    event_list = []
-    for event in events:
-        if event.boolWorkshop():
-            workshop = True
-            event_list.append(getAdminWorkSummary(event))
-        else:
-            competition = True
-            event_list.append(getAdminCompSummary(event))
+            if workshops and competitions:
+                raise ValidationError("Cannot directly compare workshops and competitions")
 
-    if competition and workshop:
-       return render(request, 'events/adminCompetitionAndWorkshop.html', status=422)
-    elif competition:
-        return mergeMultipleCompsAdminSummary(request, event_list)
-    elif workshop:
-        return mergeMultipleWorkshopsAdminSummary(request, event_list)
+            if workshops:
+                events_list = form.cleaned_data['workshops']
+                if len(events_list)==1:
+                    event = get_object_or_404(Event, pk=events_list[0])
+                    context = getAdminWorkSummary(event)
+                    return render(request, 'events/adminWorkshopDetails.html', context)
+                else:
+                    events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                    return mergeMultipleWorkshopsAdminSummary(request, events)
+            else:
+                events_list = form.cleaned_data['competitions']
+                if len(events_list)==1:
+                    event = get_object_or_404(Event, pk=events_list[0])
+                    context = getAdminCompSummary(event)
+                    return render(request, 'events/adminCompetitionDetails.html', context)
+                else:
+                    events = [getAdminCompSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                    return mergeMultipleCompsAdminSummary(request, events)
     else:
-        return HttpResponse(content='', status=404)
+        form = AdminEventsForm()
+    return render(request, "events/adminBlank.html", {"form": form, 'output':output})
 
 def mergeMultipleCompsAdminSummary(request, events):
     comps_number = len(events)
+
     # Divisions
     divisions = {'teams':[0]*comps_number,'students':[0]*comps_number,'categories':{}}
     for event_no, event in enumerate(events):
