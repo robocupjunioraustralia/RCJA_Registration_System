@@ -286,7 +286,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             readonly_fields = readonly_fields + ['status']
 
         # Add cmsLink if the event has an ID or if the user can create an event
-        if obj.cmsEventId or checkCoordinatorPermission(request, Event, self, 'change'):
+        if obj.cmsEventId or checkCoordinatorPermission(request, Event, obj, 'change'):
             readonly_fields = readonly_fields + ['cmsLink']
 
         return readonly_fields
