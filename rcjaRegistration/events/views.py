@@ -112,7 +112,7 @@ def getDivisionsMaxReachedWarnings(event, user):
 
         if availableDivision.maxDivisionTeamsTotalReached():
             divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
-
+    
     return divisionsMaxReachedWarnings
 
 def getAvailableToCopyTeams(request, event):
@@ -177,11 +177,11 @@ def details(request, eventID):
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
     }
-    return render(request, 'events/details.html', context)
+    return render(request, 'events/details.html', context)   
 
 @login_required
 def loggedInUnderConstruction(request):
-    return render(request,'common/loggedInUnderConstruction.html')
+    return render(request,'common/loggedInUnderConstruction.html') 
 
 def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     if request.user.currentlySelectedSchool:
@@ -193,7 +193,7 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
         # If not a school administrator allow editing individually entered eventAttendances
         if eventAttendance.mentorUser != request.user or eventAttendance.school:
             return False
-
+    
     return True
 
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
