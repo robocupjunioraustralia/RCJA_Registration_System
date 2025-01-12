@@ -1,6 +1,6 @@
 from django import forms
 
-from events.models import Division
+from events.models import Division, Year
 from schools.models import Campus
 
 class BaseEventAttendanceFormInitMixin:
@@ -26,3 +26,17 @@ class BaseEventAttendanceFormInitMixin:
         self.fields['event'].initial = event.id
         self.fields['event'].disabled = True
         self.fields['event'].widget = forms.HiddenInput()
+
+def getSummaryForm(request):
+    # Use constructor function as user from request is required for permissions
+    class SummaryRequestForm(forms.Form):
+        states = [(state.pk, state.name) for state in request.user.adminViewableStates()]
+        states.insert(0, ('', '---------'))
+        
+        years = [(year.year, year.year) for year in Year.objects.all()]
+
+        state = forms.TypedChoiceField(choices=states, coerce=int)
+        year = forms.TypedChoiceField(choices=years, coerce=int)
+
+    return SummaryRequestForm(request.GET)
+
