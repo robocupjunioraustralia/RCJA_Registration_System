@@ -19,6 +19,9 @@ Router.register(r'states', views.StateViewSet)
 
 # # *****Events*****
 
+# # *****CMS*****
+Router.register(r'cms', views.CMSIntegrationViewSet, basename='cms')
+
 # # **********URL patterns**********
 
 app_name = 'apiv1'
