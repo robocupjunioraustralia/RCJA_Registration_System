@@ -5,7 +5,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('events', '0023_division_active'),
+        ('events', '0024_alter_availabledivision_division'),
     ]
 
     operations = [
