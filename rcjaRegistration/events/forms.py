@@ -29,8 +29,13 @@ class BaseEventAttendanceFormInitMixin:
         self.fields['event'].widget = forms.HiddenInput()
 
 class AdminEventsForm(forms.Form):
-    type = forms.ChoiceField(choices=[('W','Workshop'),('C','Competition')],required=True)
     COMPETITIONS_CHOICES = [(event.pk, event.name) for event in Event.objects.filter(status='published', eventType='competition')]
     competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=COMPETITIONS_CHOICES)
     WORKSHOPS_CHOICES = [(event.pk, event.name) for event in Event.objects.filter(status='published', eventType='workshop')]
     workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=WORKSHOPS_CHOICES)
+
+    def clean(self):
+        workshops = len(self.cleaned_data['workshops'])>0
+        competitions = len(self.cleaned_data['competitions'])>0
+        if workshops and competitions:
+            raise ValidationError("Cannot directly compare workshops and competitions")

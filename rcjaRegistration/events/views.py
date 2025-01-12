@@ -245,10 +245,6 @@ def eventAdminSummary(request):
         if form.is_valid():
             output = form.cleaned_data
             workshops = len(form.cleaned_data['workshops'])>0
-            competitions = len(form.cleaned_data['competitions'])>0
-
-            if workshops and competitions:
-                raise ValidationError("Cannot directly compare workshops and competitions")
 
             if workshops:
                 events_list = form.cleaned_data['workshops']
@@ -312,7 +308,43 @@ def mergeMultipleCompsAdminSummary(request, events):
     return render(request, 'events/adminMultiCompDetails.html', context)
 
 def mergeMultipleWorkshopsAdminSummary(request, events):
-    pass
+    workshop_number = len(events)
+
+    # Divisions
+    divisions = {'students':[0]*workshop_number,'teachers':[0]*workshop_number,'categories':{}}
+    for event_no, event in enumerate(events):
+        for division_cat in event['division_categories'].values():
+            division_cat_dict = divisions['categories'].get(division_cat['name'], {'name':division_cat['name'], 'divisions':{},'teachers':[0]*workshop_number,'students':[0]*workshop_number})
+            for division in division_cat['divisions']:
+                division_dict = division_cat_dict['divisions'].get(division['name'], {'name':division['name'],'results':['Division not included']*workshop_number})
+                division_dict['results'][event_no] = {'teachers':division['teachers'],'students':division['students']}
+                division_cat_dict['teachers'][event_no] += division['teachers']
+                division_cat_dict['students'][event_no] += division['students']
+                division_cat_dict['divisions'][division['name']] = division_dict
+            divisions['categories'][division_cat['name']] = division_cat_dict
+            divisions['students'][event_no] += division_cat_dict['students'][event_no]
+            divisions['teachers'][event_no] += division_cat_dict['teachers'][event_no]
+
+
+    for division_cat in divisions['categories']:
+        rows = len(divisions['categories'][division_cat]['divisions'].keys())
+        divisions['categories'][division_cat]['rows']=rows+1
+    
+    # Schools
+    schools = {'teachers':[0]*workshop_number,'students':[0]*workshop_number,'schools':{}}
+    for event_no, event in enumerate(events):
+        for school in event['schools']:
+            school_dict = schools['schools'].get(school['name'], {'name':school['name'],'teachers':[0]*workshop_number,'students':[0]*workshop_number})
+            school_dict['teachers'][event_no] += school['teachers']
+            school_dict['students'][event_no] += school['students']
+            schools['schools'][school['name']] = school_dict
+            schools['students'][event_no] += school_dict['students'][event_no]
+            schools['teachers'][event_no] += school_dict['teachers'][event_no]
+
+    context = {'divisions':divisions,
+               'schools':schools,
+               'events':events,}
+    return render(request, 'events/adminMultiWorkDetails.html', context)
 
 def getAdminCompSummary(event):
     # Divisions
