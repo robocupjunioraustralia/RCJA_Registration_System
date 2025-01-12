@@ -27,18 +27,13 @@
                 {% for division_cat in division_categories.values %}
                     <tr>
                         <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
                     {% for division in division_cat.divisions %}
-                    <tr>
                         <td>{{division.name}}</td>
                         <td>{{division.students}}</td>
                         <td>{{division.teachers}}</td>
                     </tr>
-                    {% endfor %}
                     <tr>
+                    {% endfor %}
                         <td>Subtotal</td>
                         <td>{{division_cat.students}}</td>
                         <td>{{division_cat.teachers}}</td>

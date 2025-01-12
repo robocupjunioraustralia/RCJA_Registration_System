@@ -243,7 +243,7 @@ def eventAdminSummary(request, events):
         return singlePageAdminSummary(request, event)
     else:
         events = [get_object_or_404(Event, pk=event_id) for event_id in events_list]
-        multiplePageAdminSummary(request, events)
+        return multiplePageAdminSummary(request, events)
     
 def singlePageAdminSummary(request, event):
     if event.boolWorkshop():
@@ -256,23 +256,52 @@ def singlePageAdminSummary(request, event):
 def multiplePageAdminSummary(request, events):
     competition = False
     workshop = False
-    context = {'events'}
+    event_list = []
     for event in events:
         if event.boolWorkshop():
             workshop = True
-            context['events'].append(getAdminWorkSummary(event))
+            event_list.append(getAdminWorkSummary(event))
         else:
             competition = True
-            context['events'].append(getAdminCompSummary(event))
+            event_list.append(getAdminCompSummary(event))
 
     if competition and workshop:
-        raise IndexError
+       return render(request, 'events/adminCompetitionAndWorkshop.html', status=422)
     elif competition:
-        return render(request, 'events/adminMultiCompDetails.html', context)
+        return mergeMultipleCompsAdminSummary(request, event_list)
     elif workshop:
         return render(request, 'events/adminMultiWorkDetails.html', context)
     else:
-        raise KeyError
+        return HttpResponse(content=404, status=422)
+
+def mergeMultipleCompsAdminSummary(request, events):
+    comps_number = len(events)
+    # Divisions
+    divisions = {'teams':[0]*comps_number,'students':[0]*comps_number,'categories':{}}
+    for event_no, event in enumerate(events):
+        for division_cat in event['division_categories'].values():
+            division_cat_dict = divisions['categories'].get(division_cat['name'], {'name':division_cat['name'], 'divisions':{},'teams':[0]*comps_number,'students':[0]*comps_number})
+            for division in division_cat['divisions']:
+                division_dict = division_cat_dict['divisions'].get(division['name'], {'name':division['name'],'results':['Division not included']*comps_number})
+                division_dict['results'][event_no] = {'teams':division['teams'],'students':division['students']}
+                division_cat_dict['teams'][event_no] += division['teams']
+                division_cat_dict['students'][event_no] += division['students']
+                division_cat_dict['divisions'][division['name']] = division_dict
+            divisions['categories'][division_cat['name']] = division_cat_dict
+            divisions['students'][event_no] += division_cat_dict['students'][event_no]
+            divisions['teams'][event_no] += division_cat_dict['teams'][event_no]
+
+
+    for division_cat in divisions['categories']:
+        rows = len(divisions['categories'][division_cat]['divisions'].keys())
+        divisions['categories'][division_cat]['rows']=rows+1
+
+
+    context = {'divisions':divisions,
+               'events':events,
+               'eventNumbers':list(range(comps_number))}
+    return render(request, 'events/adminMultiCompDetails.html', context)
+
 
 def getAdminCompSummary(event):
     # Divisions
@@ -301,7 +330,7 @@ def getAdminCompSummary(event):
         else:
             division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
                                                           'divisions':[divisionDict], 
-                                                          'rows': 3,
+                                                          'rows': 2,
                                                           'students': students,
                                                           'teams': teams.count()}
 
@@ -363,7 +392,7 @@ def getAdminWorkSummary(event):
         else:
             division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
                                                           'divisions':[divisionDict], 
-                                                          'rows': 3,
+                                                          'rows': 2,
                                                           'teachers': teachers,
                                                           'students': students}
 

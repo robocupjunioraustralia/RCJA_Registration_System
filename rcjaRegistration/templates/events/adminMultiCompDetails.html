@@ -25,31 +25,29 @@
                 {% endfor %}
             </tr></thead>
             <tbody>
-                {% for division_cat in division_categories.values %}
+                {% for division_cat in divisions.categories.values %}
                     <tr>
                         <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    {% for division in division_cat.divisions %}
-                    <tr>
+                    {% for division in division_cat.divisions.values %}
                         <td>{{division.name}}</td>
-                        <td>{{division.teams}}</td>
-                        <td>{{division.students}}</td>
+                        {% for event in division.results %}
+                        <td>{{event.teams}}</td>
+                        {% endfor %}
                     </tr>
-                    {% endfor %}
                     <tr>
+                    {% endfor %}
                         <td>Subtotal</td>
-                        <td>{{division_cat.teams}}</td>
-                        <td>{{division_cat.students}}</td>
+                        {% for event in division_cat.teams %}
+                        <td>{{event}}</td>
+                        {% endfor %}
                     </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr><th colspan="2">Total</th>
-                <th>{{division_teams}}</th>
-                <th>{{division_students}}</th>
+                {% for event in divisions.teams %}
+                    <td>{{event}}</td>
+                {% endfor %}
             </tr>
             </tfoot>
         </table>
