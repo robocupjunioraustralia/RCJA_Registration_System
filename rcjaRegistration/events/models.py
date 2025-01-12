@@ -310,11 +310,19 @@ class Event(SaveDeleteMixin, models.Model):
 
         # Check if all dates are not null
         nullDates = 0
-        for field in ['startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate']:
+        for field in ['startDate', 'endDate', 'registrationsCloseDate']:
             if getattr(self,field, None) is None:
                 nullDates += 1
-        if 0 < nullDates < 4:
-            errors.append(ValidationError("All dates must be blank or all must be filled in"))
+        if 0 < nullDates < 3:
+            errors.append(ValidationError("All competition dates and registration end must all be blank or all three must be filled in"))
+
+        # Check registration
+        if self.event_defaultEntryFee is not None:
+            if self.registrationsOpenDate is None:
+                errors.append(ValidationError("The fee and date for registrations opening must be chosen at the same time"))
+        else:
+            if self.registrationsOpenDate is not None:
+                errors.append(ValidationError("The fee and date for registrations opening must be chosen at the same time"))
 
         if nullDates == 0:
             # Check close and end date after start dates
