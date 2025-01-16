@@ -54,6 +54,10 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             if sourceTeam.event == event:
                 raise PermissionDenied("Team source event can't be same as destination event.")
 
+            #  Checkk source team event year is current or previous year
+            if sourceTeam.event.year.year < event.year.year - 1 or sourceTeam.event.year.year > event.year.year:
+                raise PermissionDenied("Team source event year must be current or previous year.")
+
         if not team:
             if event.maxEventTeamsForSchoolReached(request.user):
                 raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")

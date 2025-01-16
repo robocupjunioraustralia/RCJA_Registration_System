@@ -124,8 +124,10 @@ def getAvailableToCopyTeams(request, event):
     # Get teams already copied
     copiedTeamsList = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
 
-    # Replace event filtering with year filtering
+    # Replace event filtering with year filtering for current and previous event year
     del filterDict['event']
+    filterDict['event__year__year__gte'] = event.year.year - 1
+    filterDict['event__year__year__lte'] = event.year.year
     filterDict['event__status'] = 'published'
 
     availableDivisions = event.availabledivision_set.values_list('division', flat=True)
@@ -134,7 +136,6 @@ def getAvailableToCopyTeams(request, event):
     teams = Team.objects.filter(**filterDict)
     teams = teams.exclude(event=event) # Exclude teams of the current event
     availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
-    availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
 
     return teams, copiedTeamsList, availableToCopyTeams
 
