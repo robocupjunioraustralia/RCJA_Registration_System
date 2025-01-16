@@ -345,10 +345,6 @@ class Event(SaveDeleteMixin, models.Model):
         if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
             errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
 
-        # Validate CMS event ID
-        if self.cmsEventId is not None and self.eventType != 'competition':
-            errors.append(ValidationError("CMS Event ID can only be set for competitions"))
-
         # Raise any errors
         if errors:
             raise ValidationError(errors)
