@@ -822,6 +822,8 @@ class TestTeamEditPermissions(TestCase):
 
 def createAdditionalEvents(self):
     self.previousYear = Year.objects.create(year=2019)
+    self.twoYearsAgo = Year.objects.create(year=2018)
+    self.nextYear = Year.objects.create(year=2021)
     self.previousYearEvent = Event.objects.create(
         year=self.previousYear,
         state=self.state1,
@@ -977,22 +979,30 @@ class TestCopyTeamsList(TestCase):
         response = self.client.get(url)
         self.assertNotIn(self.newEventTeam, response.context['availableToCopyTeams'])
 
-    def testContext_availableToCopyTeams_previousYearEventTeamNotIn(self):
+    def testContext_availableToCopyTeams_previousYearEventTeamIn(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertIn(self.previousYearTeam, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_twoYearsAgoEventTeamNotIn(self):
+        self.previousYearEvent.year = self.twoYearsAgo
+        self.previousYearEvent.save()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         response = self.client.get(url)
         self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
 
-    def testContext_availableToCopyTeams_divisionMismatchNotIn(self):
-        self.newEventAvailableDivision1.delete()
+    def testContext_availableToCopyTeams_nextYearEventTeamNotIn(self):
+        self.previousYearEvent.year = self.nextYear
+        self.previousYearEvent.save()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
+
         response = self.client.get(url)
-        self.assertNotIn(self.team1, response.context['availableToCopyTeams'])
-        self.assertNotIn(self.team2, response.context['availableToCopyTeams'])
-        self.assertNotIn(self.team3, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
 
     def testContext_availableToCopyTeams_copiedTeamNotIn(self):
         self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
