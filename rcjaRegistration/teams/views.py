@@ -38,8 +38,21 @@ def details(request, teamID):
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
-    def common(self, request, event, team):
+    def common(self, request, event, team, sourceTeam=None):
         super().common(request, event, team)
+
+        if sourceTeam:
+            # Check source team permissions
+            if not mentorEventAttendanceAccessPermissions(request, sourceTeam):
+                raise PermissionDenied("You are not an administrator of this team.")
+
+            # Check not already copied
+            if Team.objects.filter(event=event, copiedFrom=sourceTeam):
+                raise PermissionDenied("Team already copied to this event.")
+
+            # Check not from the current event
+            if sourceTeam.event == event:
+                raise PermissionDenied("Team source event can't be same as destination event.")
 
         if not team:
             if event.maxEventTeamsForSchoolReached(request.user):
@@ -60,29 +73,59 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             validate_min = True,
         )
 
-    def get(self, request, eventID=None, teamID=None):
-        if teamID is not None:
+    def get(self, request, eventID=None, teamID=None, sourceTeamID=None):
+        sourceTeam = None
+        event = None
+        team = None
+        if sourceTeamID is not None:
+            sourceTeam = get_object_or_404(Team, pk=sourceTeamID)
+            event = get_object_or_404(Event, pk=eventID)
+        elif teamID is not None:
             team = get_object_or_404(Team, pk=teamID)
             event = team.event
         else:
             event = get_object_or_404(Event, pk=eventID)
-            team = None
-        self.common(request, event, team)
+        self.common(request, event, team, sourceTeam=sourceTeam)
+
+        formInitial = {}
+        studentsInitial = []
+        if sourceTeam:
+            formInitial = {
+                'name': sourceTeam.name,
+                'division': sourceTeam.division,
+                'campus': sourceTeam.campus,
+                'hardwarePlatform': sourceTeam.hardwarePlatform,
+                'softwarePlatform': sourceTeam.softwarePlatform,
+            }
+
+            studentsInitial = []
+            for student in sourceTeam.student_set.all():
+                studentsInitial.append({
+                    'firstName': student.firstName,
+                    'lastName': student.lastName,
+                    'yearLevel': student.yearLevel,
+                    'gender': student.gender,
+                })
 
         # Get form
-        form = TeamForm(instance=team, user=request.user, event=event)
-        formset = self.StudentInLineFormSet(instance=team)
+        form = TeamForm(instance=team, user=request.user, event=event, initial=formInitial)
+        formset = self.StudentInLineFormSet(instance=team, initial=studentsInitial)
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
-    def post(self, request, eventID=None, teamID=None):
-        if teamID is not None:
+    def post(self, request, eventID=None, teamID=None, sourceTeamID=None):
+        sourceTeam = None
+        event = None
+        team = None
+        if sourceTeamID is not None:
+            sourceTeam = get_object_or_404(Team, pk=sourceTeamID)
+            event = get_object_or_404(Event, pk=eventID)
+        elif teamID is not None:
             team = get_object_or_404(Team, pk=teamID)
             event = team.event
         else:
             event = get_object_or_404(Event, pk=eventID)
-            team = None
-        self.common(request, event, team)
+        self.common(request, event, team, sourceTeam=sourceTeam)
 
         newTeam = team is None
 
@@ -93,6 +136,9 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             # Create team object but don't save so can set foreign keys
             team = form.save(commit=False)
             team.mentorUser = request.user
+
+            if newTeam and sourceTeam:
+                team.copiedFrom = sourceTeam
 
             # Save team
             team.save()
@@ -158,80 +204,3 @@ def copyTeamsList(request, eventID):
     }
 
     return render(request, 'teams/copyTeamsList.html', context)
-
-@login_required
-def copyTeam(request, eventID, teamID):
-    if request.method != "POST":
-        raise PermissionDenied("Forbidden method")
-
-    event = get_object_or_404(Event, pk=eventID)
-    team = get_object_or_404(Team, pk=teamID)
-
-    teamCreatePermissionForEvent(event)
-
-    # Check event for team is published
-    if not team.event.published():
-        raise PermissionDenied("Event for team is not published")
-
-    # Check team permissions
-    if not mentorEventAttendanceAccessPermissions(request, team):
-        raise PermissionDenied("You are not an administrator of this team/ attendee")
-
-    # Check not already copied
-    if Team.objects.filter(event=event, copiedFrom=team):
-        raise PermissionDenied("Team already copied.")
-
-    # Check not from the current event
-    if team.event == event:
-        raise PermissionDenied("Team already in this event.")
-
-    # Check event limits
-    checkEventLimitsReached(request, event)
-
-    # Check division allowed on new event and get available division
-    try:
-        availableDivision = AvailableDivision.objects.get(event=event, division=team.division)
-    except AvailableDivision.DoesNotExist:
-        raise PermissionDenied("Division not allowed for this event.")
-
-    # Check division limits
-    if availableDivision.maxDivisionTeamsForSchoolReached(request.user):
-        raise PermissionDenied("Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
-
-    if availableDivision.maxDivisionTeamsTotalReached():
-        raise PermissionDenied("Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
-
-    # Check number students doesn't exceed maximum allowed on new event
-    if team.student_set.count() > event.maxMembersPerTeam:
-        raise PermissionDenied("Number students in team exceeds limit for new event")
-
-    # Copy students
-    oldStudents = team.student_set.all()
-
-    # Duplicate team
-    newTeam = Team(
-        event=event,
-        division=team.division,
-        mentorUser = team.mentorUser,
-        school = team.school,
-        campus = team.campus,
-        name = team.name,
-        hardwarePlatform = team.hardwarePlatform,
-        softwarePlatform = team.softwarePlatform,
-    )
-    newTeam.copiedFrom = Team.objects.get(pk=team.pk)
-
-    # Clean and save
-    try:
-        newTeam.full_clean()
-    except ValidationError as e:
-        raise PermissionDenied(', '.join(e.messages))
-    newTeam.save()
-
-    # Add members to new group
-    for oldStudent in oldStudents:
-        oldStudent.pk = None
-        oldStudent.team = newTeam
-        oldStudent.save()
-
-    return redirect(reverse('teams:copyTeamsList', kwargs = {'eventID':event.id}))

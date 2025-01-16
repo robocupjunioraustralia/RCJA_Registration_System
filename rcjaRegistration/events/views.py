@@ -216,10 +216,15 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, teamID=None, attendeeID=None, eventID=None):
+    def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
         # This endpoint should never be called with eventID
         if eventID is not None:
             return HttpResponseForbidden()
+        
+        # This endpoint should never be called with sourceTeamID
+        if sourceTeamID is not None:
+            return HttpResponseForbidden()
+        
         # Accept multiple variables because used for both teams and workshops
         # Need to lookup the relevant one
         eventAttendanceID = None
