@@ -977,6 +977,13 @@ class TestCopyTeamsList(TestCase):
         response = self.client.get(url)
         self.assertNotIn(self.newEventTeam, response.context['availableToCopyTeams'])
 
+    def testContext_availableToCopyTeams_previousYearEventTeamNotIn(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
+
     def testContext_availableToCopyTeams_divisionMismatchNotIn(self):
         self.newEventAvailableDivision1.delete()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
