@@ -74,7 +74,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             Student,
             form = StudentForm,
             min_num = 1,
-            extra = 0,
+            extra = sourceTeam.student_set.count() - 1 if sourceTeam else 0,
             max_num = event.maxMembersPerTeam,
             can_delete = team is not None,
             validate_max = True,
