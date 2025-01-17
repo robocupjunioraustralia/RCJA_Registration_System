@@ -1307,10 +1307,19 @@ class TestTeamDelete(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertRaises(Team.DoesNotExist, lambda: Team.objects.get(pk=self.team1.pk))
 
-    def testWrongEndpointDenied(self):
+    def testWrongEndpointDenied_eventID(self):
         Team.objects.get(pk=self.team1.pk)
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
         url = reverse('teams:create', kwargs={'eventID':self.team1.id})
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        Team.objects.get(pk=self.team1.pk)
+
+    def testWrongEndpointDenied_sourceTeamID(self):
+        Team.objects.get(pk=self.team1.pk)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:create', kwargs={'sourceTeamID':self.team1.id})
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
