@@ -1039,6 +1039,7 @@ class TestCopyTeam(TestCase):
         newCommonSetUp(self)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
         self.student1 = Student.objects.create(team=self.team1, firstName='First 1', lastName='Last 1', yearLevel=1, gender='other')
+        self.student2 = Student.objects.create(team=self.team1, firstName='First 2', lastName='Last 2', yearLevel=2, gender='other')
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
         createAdditionalEvents(self)
@@ -1066,9 +1067,14 @@ class TestCopyTeam(TestCase):
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
         response = self.client.get(url)
-        self.assertEqual(response.context['formset'][0]['firstName'].value(), self.team1.student_set.first().firstName)
-        self.assertEqual(response.context['formset'][0]['lastName'].value(), self.team1.student_set.first().lastName)
-        self.assertEqual(response.context['formset'][0]['yearLevel'].value(), self.team1.student_set.first().yearLevel)
+        # Check student 1
+        self.assertEqual(response.context['formset'][0]['firstName'].value(), self.student1.firstName)
+        self.assertEqual(response.context['formset'][0]['lastName'].value(), self.student1.lastName)
+        self.assertEqual(response.context['formset'][0]['yearLevel'].value(), self.student1.yearLevel)
+        # Check student 2
+        self.assertEqual(response.context['formset'][1]['firstName'].value(), self.student2.firstName)
+        self.assertEqual(response.context['formset'][1]['lastName'].value(), self.student2.lastName)
+        self.assertEqual(response.context['formset'][1]['yearLevel'].value(), self.student2.yearLevel)
 
     def testContext_studentYearIncremented(self):
         url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.previousYearTeam.id})
