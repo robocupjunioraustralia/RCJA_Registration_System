@@ -111,7 +111,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
                 studentsInitial.append({
                     'firstName': student.firstName,
                     'lastName': student.lastName,
-                    'yearLevel': student.yearLevel,
+                    'yearLevel': student.yearLevel + event.year.year - sourceTeam.event.year.year,
                     'gender': student.gender,
                 })
 
