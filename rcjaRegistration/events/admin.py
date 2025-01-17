@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from common.filters import FilteredRelatedOnlyFieldListFilter
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
@@ -26,6 +27,34 @@ from regions.admin import StateAdmin
 class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
     pass
 
+class DivisionActiveFilter(admin.SimpleListFilter):
+    title = _('Active')
+
+    parameter_name = 'active'
+
+    def lookups(self, request, model_admin):
+        return (
+            (None, _('Active')),
+            ('inactive', _('Inactive')),
+            ('all', _('All'))
+        )
+    
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': changelist.get_query_string({self.parameter_name: lookup,},[]),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'inactive':
+            return queryset.filter(active=False) 
+        elif self.value() == 'all':
+            return queryset.all()   
+        else:
+            return queryset.filter(active=True)
+
 @admin.register(Division)
 class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -33,6 +62,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'state',
         'category',
         'description',
+        'active'
     ]
     search_fields = [
         'name',
@@ -43,6 +73,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
     list_filter = [
         'category',
         ('state', admin.RelatedOnlyFieldListFilter),
+        DivisionActiveFilter,
     ]
     actions = [
         'export_as_csv',
@@ -53,6 +84,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'state',
         'category',
         'description',
+        'active'
     ]
     autocomplete_fields = [
         'state',
@@ -62,6 +94,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'category',
         'state',
         'description',
+        'active'
     ]
 
     # State based filtering
@@ -261,9 +294,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'state',
         'directEnquiriesTo',
     ]
-    inlines = [
+    competition_inlines = [
         AvailableDivisionInline,
         EventAvailableFileTypeInline,
+    ]
+    workshop_inlines = [
+        AvailableDivisionInline,
     ]
     add_inlines = [ # Don't include available divisions here so the divisions will be filtered when shown
     ]
@@ -337,6 +373,18 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             return self.competition_fieldsets
 
         return super().get_fieldsets(request, obj)
+
+    def get_inlines(self, request, obj=None):
+        if not obj:
+            return self.add_inlines
+
+        if obj.eventType == 'workshop':
+            return self.workshop_inlines
+
+        if obj.eventType == 'competition':
+            return self.competition_inlines
+
+        return super().get_inlines(request, obj)
 
     # Message user during save
     def save_model(self, request, obj, form, change):

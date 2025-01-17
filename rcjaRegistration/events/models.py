@@ -87,6 +87,7 @@ class Division(models.Model):
     name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
     category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
+    active = models.BooleanField('Active', default=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -540,7 +541,7 @@ class Event(SaveDeleteMixin, models.Model):
 class AvailableDivision(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
+    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT, limit_choices_to={'active': True})
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)

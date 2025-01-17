@@ -39,6 +39,7 @@ class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
 class StudentInline(InlineAdminPermissions, admin.TabularInline):
     model = Student
     extra = 0
+    min_num = 1
 
 @admin.register(Team)
 class TeamAdmin(BaseWorkshopAttendanceAdmin):
@@ -51,6 +52,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'withdrawn',
     ]
     fieldsets = (
         (None, {
@@ -116,6 +118,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'updatedDateTime',
         'pk',
         'name',
+        'withdrawn',
         'event',
         'division',
         'mentorUserName',
