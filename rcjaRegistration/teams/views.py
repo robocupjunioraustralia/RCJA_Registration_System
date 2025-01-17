@@ -119,7 +119,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         form = TeamForm(instance=team, user=request.user, event=event, initial=formInitial)
         formset = self.StudentInLineFormSet(instance=team, initial=studentsInitial)
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'sourceTeam': sourceTeam, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
     def post(self, request, eventID=None, teamID=None, sourceTeamID=None):
         sourceTeam = None
@@ -161,12 +161,15 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             if 'add_text' in request.POST and newTeam and not (event.maxEventTeamsForSchoolReached(request.user) or event.maxEventTeamsTotalReached()):
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
 
+            if sourceTeam:
+                return redirect(reverse('teams:copyTeamsList', kwargs = {'eventID':event.id}))
+
             elif not newTeam:
                 return redirect(reverse('teams:details', kwargs = {"teamID":team.id}))
 
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'sourceTeam': sourceTeam, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
 def teamCreatePermissionForEvent(event):
     # Check event is published

@@ -1215,6 +1215,29 @@ class TestCopyTeam(TestCase):
         response = self.client.post(url, data=payload)
         self.assertEqual(Team.objects.filter(copiedFrom=self.team1).count(), 1)
 
+    def testSuccess_correctRedirect(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.team1.division)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":1,
+            "name":self.team1.name,
+            "division":self.team1.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(url, data=payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/copyExisting/{self.newEvent.id}")
+
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
