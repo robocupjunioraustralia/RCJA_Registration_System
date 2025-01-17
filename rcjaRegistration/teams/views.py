@@ -52,9 +52,13 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
             # Check not from the current event
             if sourceTeam.event == event:
-                raise PermissionDenied("Team source event can't be same as destination event.")
+                raise PermissionDenied("Team source event can not be same as destination event.")
+            
+            # Check source team event is published
+            if not sourceTeam.event.published():
+                raise PermissionDenied("Team source event is not published.")
 
-            #  Checkk source team event year is current or previous year
+            #  Check source team event year is current or previous year
             if sourceTeam.event.year.year < event.year.year - 1 or sourceTeam.event.year.year > event.year.year:
                 raise PermissionDenied("Team source event year must be current or previous year.")
 
