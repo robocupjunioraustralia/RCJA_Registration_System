@@ -164,6 +164,11 @@ class User(SaveDeleteMixin, AbstractUser):
         self.user_permissions.clear()
         self.user_permissions.add(*permissionObjects)
 
+        # Set state filtering to None if no longer a coordinator of that state
+        if self.currentlySelectedAdminState and not (self.is_superuser or coordinators.filter(state=self.currentlySelectedAdminState).exists()):
+            self.currentlySelectedAdminState = None
+            self.save(update_fields=['currentlySelectedAdminState'], skipPrePostSave=True)
+
     # Reset forcePasswordChange
     def set_password(self, password):
         super().set_password(password)
