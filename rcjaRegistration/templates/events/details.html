@@ -25,13 +25,13 @@
     
     <div class="row">
         <h3>Dates</h3>
-        {% if dates.startDate == dates.endDate %}
-        <p>Event date: {{dates.startDate}}</p>
+        {% if event.startDate == event.endDate %}
+        <p>Event date: {{event.startDate|default_if_none:"TBC"}}</p>
         {% else %}
-        <p>Start date: {{dates.startDate}}</p>
-        <p>End date: {{dates.endDate}}</p>
+        <p>Start date: {{event.startDate|default_if_none:"TBC"}}</p>
+        <p>End date: {{event.endDate|default_if_none:"TBC"}}</p>
         {% endif %}
-        <p>Registrations close: {{dates.registrationsCloseDate}}</p>
+        <p>Registrations close: {{event.registrationsCloseDate|default_if_none:"TBC"}}</p>
         {% if not event.boolWorkshop %}<h3>Max members per team: {{ event.maxMembersPerTeam }}</h3>{% endif %}
         <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
         <h3>Payment</h3>
