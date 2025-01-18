@@ -486,18 +486,21 @@ class Event(SaveDeleteMixin, models.Model):
         return self.status == 'published'
 
     def paidEvent(self):
-        if self.competition_defaultEntryFee is None:
-            return False
-        if self.competition_defaultEntryFee > 0 or (self.competition_specialRateFee and self.competition_specialRateFee > 0):
-            return True
-        # Workshops don't rely on the default entry fee
+        # Competition
+        if self.eventType == 'competition':
+            if self.competition_defaultEntryFee is None:
+                return False
+            if self.competition_defaultEntryFee > 0 or (self.competition_specialRateFee and self.competition_specialRateFee > 0):
+                return True
+
+            return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
+        
+        # Workshop
         if self.eventType == 'workshop':
             if self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0:
                 return True
             if self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0:
                 return True
-
-        return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
 
     def getBaseEventAttendanceFilterDict(self, user):
         # Create dict of attributes to filter teams/ workshop attendees by
