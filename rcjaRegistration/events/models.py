@@ -268,14 +268,14 @@ class Event(SaveDeleteMixin, models.Model):
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', blank=True, null=True)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Competition billing settings
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
-    event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
-    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
-    event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
+    competition_defaultEntryFee = models.PositiveIntegerField('Default entry fee', blank=True, null=True)
+    competition_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
+    competition_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
+    competition_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
 
     # Workshop billing settings
     workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
@@ -317,7 +317,7 @@ class Event(SaveDeleteMixin, models.Model):
             errors.append(ValidationError("All competition dates and registration end must all be blank or all three must be filled in"))
 
         # Check registration
-        if self.event_defaultEntryFee is not None:
+        if self.competition_defaultEntryFee is not None:
             if self.registrationsOpenDate is None:
                 errors.append(ValidationError("The fee and date for registrations opening must be chosen at the same time"))
         else:
@@ -334,13 +334,13 @@ class Event(SaveDeleteMixin, models.Model):
                 errors.append(ValidationError('Registration close date must be before or on event start date'))
 
         # Validate billing settings
-        if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
+        if (self.competition_specialRateNumber is None) != (self.competition_specialRateFee is None):
             errors.append(ValidationError('Both special rate number and fee must either be blank or not blank'))
 
-        if self.pk and (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
+        if self.pk and (self.competition_specialRateNumber is not None or self.competition_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
             errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
 
-        if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.event_billingType != 'team':
+        if (self.competition_specialRateNumber is not None or self.competition_specialRateFee is not None) and self.competition_billingType != 'team':
             errors.append(ValidationError('Special billing rate only available for team billing'))
 
         # Validate division states
@@ -379,17 +379,17 @@ class Event(SaveDeleteMixin, models.Model):
     def preSave(self):
         # Set workshop prices
         if self.workshopTeacherEntryFee is None:
-            self.workshopTeacherEntryFee = self.event_defaultEntryFee
+            self.workshopTeacherEntryFee = self.competition_defaultEntryFee
 
         if self.workshopStudentEntryFee is None:
-            self.workshopStudentEntryFee = self.event_defaultEntryFee
+            self.workshopStudentEntryFee = self.competition_defaultEntryFee
 
         if self.eventType == 'workshop':
             # Set maxMembersPerTeam to 0 if eventType is workshop
             self.maxMembersPerTeam = 0
 
             # Set billing type to team or event if eventType is workshop
-            self.event_billingType = 'team'
+            self.competition_billingType = 'team'
             if self.pk:
                 self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
                 self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
@@ -414,10 +414,10 @@ class Event(SaveDeleteMixin, models.Model):
 
         return (
             self.entryFeeIncludesGST != previousEvent.entryFeeIncludesGST or
-            self.event_defaultEntryFee != previousEvent.event_defaultEntryFee or
-            self.event_billingType != previousEvent.event_billingType or
-            self.event_specialRateNumber != previousEvent.event_specialRateNumber or
-            self.event_specialRateFee != previousEvent.event_specialRateFee or
+            self.competition_defaultEntryFee != previousEvent.competition_defaultEntryFee or
+            self.competition_billingType != previousEvent.competition_billingType or
+            self.competition_specialRateNumber != previousEvent.competition_specialRateNumber or
+            self.competition_specialRateFee != previousEvent.competition_specialRateFee or
             self.workshopTeacherEntryFee != previousEvent.workshopTeacherEntryFee or
             self.workshopStudentEntryFee != previousEvent.workshopStudentEntryFee
         )
@@ -466,7 +466,7 @@ class Event(SaveDeleteMixin, models.Model):
     
     def hasAllDetails(self):
         return (self.decidedOnDates() and 
-            self.event_defaultEntryFee is not None and
+            self.competition_defaultEntryFee is not None and
             self.venue is not None
         )
 
@@ -486,9 +486,9 @@ class Event(SaveDeleteMixin, models.Model):
         return self.status == 'published'
 
     def paidEvent(self):
-        if self.event_defaultEntryFee is None:
+        if self.competition_defaultEntryFee is None:
             return False
-        if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
+        if self.competition_defaultEntryFee > 0 or (self.competition_specialRateFee and self.competition_specialRateFee > 0):
             return True
         # Workshops don't rely on the default entry fee
         if self.eventType == 'workshop':
@@ -612,7 +612,7 @@ class AvailableDivision(SaveDeleteMixin, models.Model):
             errors.append(ValidationError('Division entry fee must not be blank if event billing settings not selected'))
 
         # Validate division_billingType
-        if self.division_billingType != 'event' and (self.event.event_specialRateNumber is not None or self.event.event_specialRateFee is not None):
+        if self.division_billingType != 'event' and (self.event.competition_specialRateNumber is not None or self.event.competition_specialRateFee is not None):
             errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
 
         if self.division_billingType == 'student' and self.event.eventType == 'workshop':

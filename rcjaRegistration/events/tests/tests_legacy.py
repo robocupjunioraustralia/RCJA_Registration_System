@@ -60,7 +60,7 @@ def commonSetUp(obj):
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -76,7 +76,7 @@ def commonSetUp(obj):
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=10)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=10)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
@@ -92,7 +92,7 @@ def commonSetUp(obj):
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -108,7 +108,7 @@ def commonSetUp(obj):
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-6)).date(),
@@ -478,7 +478,7 @@ class TestEventClean(TestCase):
             name='Event 1',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
@@ -574,34 +574,34 @@ class TestEventClean(TestCase):
     # Billing settings validation
 
     def testSpecialRateValidComplete(self):
-        self.event.event_specialRateFee = 50
-        self.event.event_specialRateNumber = 5
+        self.event.competition_specialRateFee = 50
+        self.event.competition_specialRateNumber = 5
         self.event.clean()
 
     def testSpecialRateInvalid(self):
-        self.event.event_specialRateFee = 50
+        self.event.competition_specialRateFee = 50
         self.assertRaises(ValidationError, self.event.clean)
 
     def testSpecialRateStudentInvalid(self):
-        self.event.event_specialRateFee = 50
-        self.event.event_specialRateNumber = 5
+        self.event.competition_specialRateFee = 50
+        self.event.competition_specialRateNumber = 5
         self.event.clean()
 
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.assertRaises(ValidationError, self.event.clean)
     
     def testSpecialRateBillingAvailableDivisionValid(self):
         self.event.save()
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
-        self.event.event_specialRateFee = 50
-        self.event.event_specialRateNumber = 5
+        self.event.competition_specialRateFee = 50
+        self.event.competition_specialRateNumber = 5
         self.event.clean()
 
     def testSpecialRateBillingAvailableDivisionInValid(self):
         self.event.save()
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
-        self.event.event_specialRateFee = 50
-        self.event.event_specialRateNumber = 5
+        self.event.competition_specialRateFee = 50
+        self.event.competition_specialRateNumber = 5
         self.event.clean()
 
         self.availableDivision.division_billingType = 'team'
@@ -679,7 +679,7 @@ class TestEventMethods(TestCase):
             name='Event 1',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
@@ -704,23 +704,23 @@ class TestEventMethods(TestCase):
 
     def testSave_competition(self):
         self.event.eventType = 'competition'
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.assertEqual(self.event.maxMembersPerTeam, 5)
-        self.assertEqual(self.event.event_billingType, 'student')
+        self.assertEqual(self.event.competition_billingType, 'student')
 
         self.event.save()
         self.assertEqual(self.event.maxMembersPerTeam, 5)
-        self.assertEqual(self.event.event_billingType, 'student')
+        self.assertEqual(self.event.competition_billingType, 'student')
 
     def testSave_workshop(self):
         self.event.eventType = 'workshop'
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.assertEqual(self.event.maxMembersPerTeam, 5)
-        self.assertEqual(self.event.event_billingType, 'student')
+        self.assertEqual(self.event.competition_billingType, 'student')
 
         self.event.save()
         self.assertEqual(self.event.maxMembersPerTeam, 0)
-        self.assertEqual(self.event.event_billingType, 'team')
+        self.assertEqual(self.event.competition_billingType, 'team')
 
     def testStr_state(self):
         self.assertEqual(str(self.event), "Event 1 2019 (VIC)")
@@ -750,26 +750,26 @@ class TestEventMethods(TestCase):
         self.assertNotIn('<h1>', self.event.bleachedEventDetails())
         self.assertIn('&lt;h1&gt;', self.event.bleachedEventDetails())
 
-    def testPaidEvent_defaultEntryFee(self):
+    def testPaidcompetition_defaultEntryFee(self):
         self.assertTrue(self.event.paidEvent())
 
     def testPaidEvent_free(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.assertFalse(self.event.paidEvent())
 
-    def testPaidEvent_specialRateFee(self):
-        self.event.event_defaultEntryFee = 0
-        self.event.event_specialRateFee = 5
+    def testPaidcompetition_specialRateFee(self):
+        self.event.competition_defaultEntryFee = 0
+        self.event.competition_specialRateFee = 5
         self.assertTrue(self.event.paidEvent())
 
     def testPaidEvent_free_withDivision(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
 
         self.assertFalse(self.event.paidEvent())
 
     def testPaidEvent_division_entryFee(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
         self.availableDivision.division_entryFee = 5
         self.availableDivision.save()
@@ -778,18 +778,18 @@ class TestEventMethods(TestCase):
 
     def testPaidEvent_workshop_studentEntryFee(self):
         self.event.eventType = 'workshop'
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.event.workshopStudentEntryFee = 5
         self.assertTrue(self.event.paidEvent())
 
     def testPaidEvent_workshop_teacherEntryFee(self):
         self.event.eventType = 'workshop'
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.event.workshopTeacherEntryFee = 5
         self.assertTrue(self.event.paidEvent())
 
     def testPaidEvent_NullValue(self):
-        self.event.event_defaultEntryFee = None
+        self.event.competition_defaultEntryFee = None
         self.assertFalse(self.event.paidEvent())
 
     def test_published_draft(self):
@@ -850,7 +850,7 @@ class TestEventMethods(TestCase):
             eventType='competition',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -864,20 +864,20 @@ class TestEventMethods(TestCase):
         self.event.entryFeeIncludesGST = False
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
-    def test_checkBillingDetailsChanged_event_defaultEntryFee(self):
-        self.event.event_defaultEntryFee = 6
+    def test_checkBillingDetailsChanged_competition_defaultEntryFee(self):
+        self.event.competition_defaultEntryFee = 6
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
-    def test_checkBillingDetailsChanged_event_billingType(self):
-        self.event.event_billingType = 'student'
+    def test_checkBillingDetailsChanged_competition_billingType(self):
+        self.event.competition_billingType = 'student'
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
-    def test_checkBillingDetailsChanged_event_specialRateNumber(self):
-        self.event.event_specialRateNumber = 10
+    def test_checkBillingDetailsChanged_competition_specialRateNumber(self):
+        self.event.competition_specialRateNumber = 10
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
-    def test_checkBillingDetailsChanged_event_specialRateFee(self):
-        self.event.event_specialRateFee = 50
+    def test_checkBillingDetailsChanged_competition_specialRateFee(self):
+        self.event.competition_specialRateFee = 50
         self.assertTrue(self.event.checkBillingDetailsChanged())
 
     def test_checkBillingDetailsChanged_workshopTeacherEntryFee(self):
@@ -899,7 +899,7 @@ class TestEventMethods(TestCase):
             eventType='competition',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -910,14 +910,14 @@ class TestEventMethods(TestCase):
         self.assertFalse(self.unsavedEvent.checkEventConvertedToPaid())
     
     def test_checkEventConvertedToPaid_toFree(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.assertFalse(self.event.checkEventConvertedToPaid())
 
     def test_checkEventConvertedToPaid_toPaid(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.event.save()
 
-        self.event.event_defaultEntryFee = 5
+        self.event.competition_defaultEntryFee = 5
         self.assertTrue(self.event.checkEventConvertedToPaid())
 
     def test_preSave_surchageAmount_notSet(self):
@@ -931,7 +931,7 @@ class TestEventMethods(TestCase):
             eventType='competition',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -951,7 +951,7 @@ class TestEventMethods(TestCase):
             eventType='competition',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -978,7 +978,7 @@ class TestEventMethods(TestCase):
             eventType='competition',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -1017,7 +1017,7 @@ def newSetupEvent(self):
         name='Event 1',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
@@ -1049,15 +1049,15 @@ class TestAvailableDivisionClean(TestCase):
         self.assertRaises(ValidationError, self.availableDivision.clean)
 
     def testSpecialRateValid(self):
-        self.event.event_specialRateFee = 50
-        self.event.event_specialRateNumber = 5
+        self.event.competition_specialRateFee = 50
+        self.event.competition_specialRateNumber = 5
         self.event.save()
 
         self.availableDivision.clean()
 
     def testSpecialRateInValid(self):
-        self.event.event_specialRateFee = 50
-        self.event.event_specialRateNumber = 5
+        self.event.competition_specialRateFee = 50
+        self.event.competition_specialRateNumber = 5
         self.event.save()
 
         self.availableDivision.division_billingType = 'team'
@@ -1202,7 +1202,7 @@ class TestSummaryPage(TestCase):
             eventType='workshop',
             status='published',
             maxMembersPerTeam=5,
-            event_defaultEntryFee = 4,
+            competition_defaultEntryFee = 4,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),

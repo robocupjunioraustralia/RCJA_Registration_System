@@ -172,7 +172,7 @@ def details(request, eventID):
     if event.boolWorkshop():
         billingTypeLabel = 'attendee'
     else:
-        billingTypeLabel = event.event_billingType
+        billingTypeLabel = event.competition_billingType
 
     _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
