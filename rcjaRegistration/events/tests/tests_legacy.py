@@ -12,7 +12,6 @@ from coordination.models import Coordinator
 from eventfiles.models import EventAvailableFileType, MentorEventFileType
 from invoices.models import Invoice, InvoiceGlobalSettings
 from workshops.models import WorkshopAttendee
-from events.views import formatEvents
 
 import datetime
 # Create your tests here.
@@ -1298,58 +1297,3 @@ class TestSummaryPage(TestCase):
         url = reverse('events:summaryReport') + self.createGetQuery('Victoria', 2019)
         response = self.client.post(url, follow=True)
         self.assertEqual(response.status_code, 405)
-
-def newNoDatesEvent(obj):
-    obj.blankEvent = Event.objects.create(
-        year=obj.year,
-        state=obj.newState,
-        name='No dates',
-        eventType='competition',
-        status='published',
-        maxMembersPerTeam=5,
-        event_defaultEntryFee = None,
-        startDate=None,
-        endDate = None,
-        registrationsOpenDate = None,
-        registrationsCloseDate = None,
-        directEnquiriesTo = obj.user     
-    )
-    obj.oldEvent.divisions.add(obj.division)
-
-class TestDashboard(TestCase):
-    def setUp(self):
-        commonSetUp(self)
-        newSetupEvent(self)
-        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
-        createVenues(self)
-        newNoDatesEvent(self)
-        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
-
-    def testReplaceNullValues(self):
-        response = self.client.get(reverse('events:dashboard'))
-        self.assertContains(response,'TBC', count=2)
-
-    def testTbcFormat(self):
-        response = self.client.get(reverse('events:dashboard'))
-        self.assertContains(response,"""TBC<br>Registrations close: TBC""")
-
-class TestFormatEvents(TestCase):
-    def setUp(self):
-        commonSetUp(self)
-        newSetupEvent(self)
-        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
-        createVenues(self)
-        newNoDatesEvent(self)
-
-    def testDates(self):
-        events = formatEvents(Event.objects.filter(name ='No dates'))
-        self.assertEqual(events[0].startDate, 'TBC')
-        self.assertEqual(events[0].endDate, 'TBC')
-        self.assertEqual(events[0].registrationsOpenDate, 'TBC')
-        self.assertEqual(events[0].registrationsCloseDate, 'TBC')
-
-    def testFee(self):
-        events = formatEvents(Event.objects.filter(name ='No dates'))
-        self.assertEqual(events[0].event_defaultEntryFee, 'TBC')
-
-    
