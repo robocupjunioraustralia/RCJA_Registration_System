@@ -541,7 +541,10 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
                 'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
             },
             'event': {
-                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
+                'queryset': Event.objects.filter(
+                    eventType=cls.eventTypeMapping,
+                    registrationsOpenDate__isnull=False,
+                ),
             },
         }
 
