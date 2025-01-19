@@ -752,7 +752,7 @@ class TestEventMethods(TestCase):
         self.event.eventType = 'workshop'
         self.assertEqual(self.event.boolWorkshop(), True)
 
-    def testSave_competition(self):
+    def testPreSave_competition(self):
         self.event.eventType = 'competition'
         self.event.competition_billingType = 'student'
         self.assertEqual(self.event.maxMembersPerTeam, 5)
@@ -762,7 +762,7 @@ class TestEventMethods(TestCase):
         self.assertEqual(self.event.maxMembersPerTeam, 5)
         self.assertEqual(self.event.competition_billingType, 'student')
 
-    def testSave_workshop(self):
+    def testPreSave_workshop(self):
         self.event.eventType = 'workshop'
         self.event.competition_billingType = 'student'
         self.assertEqual(self.event.maxMembersPerTeam, 5)
@@ -771,6 +771,18 @@ class TestEventMethods(TestCase):
         self.event.save()
         self.assertEqual(self.event.maxMembersPerTeam, 0)
         self.assertEqual(self.event.competition_billingType, 'team')
+
+    def testPreSave_setsWorkshopEntryFees_notSet(self):
+        self.assertEqual(self.event.workshopTeacherEntryFee, 4)
+        self.assertEqual(self.event.workshopStudentEntryFee, 4)
+
+    def testPreSave_setsWorkshopEntryFees_set(self):
+        self.event.workshopTeacherEntryFee = 5
+        self.event.workshopStudentEntryFee = 6
+        self.event.save()
+
+        self.assertEqual(self.event.workshopTeacherEntryFee, 5)
+        self.assertEqual(self.event.workshopStudentEntryFee, 6)
 
     def testStr_state(self):
         self.assertEqual(str(self.event), "Event 1 2019 (VIC)")
@@ -848,15 +860,25 @@ class TestEventMethods(TestCase):
         self.event.workshopTeacherEntryFee = 5
         self.assertTrue(self.event.paidEvent())
 
-    def testPaidEvent_workshop_free(self):
+    def testPaidEvent_workshop_freeDefaultEntryFeeSet(self):
         self.event.eventType = 'workshop'
         self.event.competition_defaultEntryFee = 50
         self.event.workshopTeacherEntryFee = 0
         self.event.workshopStudentEntryFee = 0
         self.assertFalse(self.event.paidEvent())
 
-    def testPaidEvent_workshop_none(self):
+    def testPaidEvent_workshop_freeDefaultEntryFeeNone(self):
         self.event.eventType = 'workshop'
+        self.event.competition_defaultEntryFee = None
+        self.event.workshopTeacherEntryFee = 0
+        self.event.workshopStudentEntryFee = 0
+        self.assertFalse(self.event.paidEvent())
+
+    def testPaidEvent_workshop_allFieldsNone(self):
+        self.event.eventType = 'workshop'
+        self.event.competition_defaultEntryFee = None
+        self.event.workshopTeacherEntryFee = None
+        self.event.workshopStudentEntryFee = None
         self.assertFalse(self.event.paidEvent())
 
     def test_published_draft(self):
