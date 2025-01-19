@@ -308,30 +308,31 @@ class Event(SaveDeleteMixin, models.Model):
         if self.pk and self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
             errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
-        # Check if all dates are not null
-        nullDates = 0
-        for field in ['startDate', 'endDate', 'registrationsCloseDate']:
-            if getattr(self,field, None) is None:
-                nullDates += 1
-        if 0 < nullDates < 3:
-            errors.append(ValidationError("All competition dates and registration end must all be blank or all three must be filled in"))
+        # Check close and end date after start dates
+        if self.startDate is not None and self.endDate is not None and self.startDate > self.endDate:
+            errors.append(ValidationError('Start date must not be after end date'))
 
-        # Check registration
-        if self.competition_defaultEntryFee is not None:
-            if self.registrationsOpenDate is None:
-                errors.append(ValidationError("The fee and date for registrations opening must be chosen at the same time"))
-        else:
-            if self.registrationsOpenDate is not None:
-                errors.append(ValidationError("The fee and date for registrations opening must be chosen at the same time"))
+        if self.registrationsOpenDate is not None and self.registrationsCloseDate is not None and self.registrationsOpenDate > self.registrationsCloseDate:
+            errors.append(ValidationError('Registration open date must not be after registration close date'))
 
-        if nullDates == 0:
-            # Check close and end date after start dates
-            if self.startDate > self.endDate:
-                errors.append(ValidationError('Start date must not be after end date'))
-            if self.registrationsOpenDate > self.registrationsCloseDate:
-                errors.append(ValidationError('Registration open date must not be after registration close date'))
-            if self.registrationsCloseDate > self.startDate:
-                errors.append(ValidationError('Registration close date must be before or on event start date'))
+        if self.registrationsCloseDate is not None and self.startDate is not None and self.registrationsCloseDate > self.startDate:
+            errors.append(ValidationError('Registration close date must be before or on event start date'))
+
+        # Check either both start and end date or neither
+        if (self.startDate is None) != (self.endDate is None):
+            errors.append(ValidationError('Event start and end date must either both be set or both be blank'))
+        
+        # Check start and end date set if registrations close date set
+        if self.registrationsCloseDate is not None and (self.startDate is None or self.endDate is None):
+            errors.append(ValidationError('Event start and end date must be set if registrations close date is set'))
+        
+        # Check all dates set if registration open date set
+        if self.registrationsOpenDate is not None and (self.startDate is None or self.endDate is None or self.registrationsCloseDate is None):
+            errors.append(ValidationError('Event start and end date and registrations close date must be set if registrations open date is set'))
+        
+        # Check default payment amount set if registration open date set for competitions
+        if self.eventType == 'competition' and self.registrationsOpenDate is not None and self.competition_defaultEntryFee is None:
+            errors.append(ValidationError('Default entry fee must be not blank if registrations open date is not blank'))
 
         # Validate billing settings
         if (self.competition_specialRateNumber is None) != (self.competition_specialRateFee is None):
@@ -353,13 +354,11 @@ class Event(SaveDeleteMixin, models.Model):
             errors.append(ValidationError('Venue must be from same state as event'))
 
         # Validate file upload deadline if start date or registrations clsoe date changed
-        if self.startDate:
-            if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
-                errors.append(ValidationError("Event start date must on or after file upload deadlines"))
+        if self.pk and self.startDate is not None and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
+            errors.append(ValidationError("Event start date must on or after file upload deadlines"))
 
-        if self.registrationsCloseDate:
-            if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
-                errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
+        if self.pk and self.registrationsCloseDate is not None and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
+            errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
 
         # Raise any errors
         if errors:
