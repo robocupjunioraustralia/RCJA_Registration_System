@@ -395,6 +395,9 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
             if not obj.published():
                 self.message_user(request, f"{obj}: Event is not published, publish event to make visible.", messages.WARNING)
+            
+            if not obj.hasAllDetails():
+                self.message_user(request, f"{obj}: You haven't filled in all details yet, people won't be able to register.", messages.WARNING)
 
         super().save_model(request, obj, form, change)
 
