@@ -260,7 +260,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         }),
         ('Billing settings', {
             'description': "More options will be available after you click save",
-            'fields': ('entryFeeIncludesGST', 'competition_defaultEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
+            'fields': ('entryFeeIncludesGST', 'competition_defaultEntryFee', 'paymentDueDate')
         }),
         ('Details', {
             'description': "More options will be available after you click save",
