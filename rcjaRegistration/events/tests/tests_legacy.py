@@ -666,6 +666,7 @@ class TestEventMethods(TestCase):
             year=self.year,
             state=self.newState,
             name='Event 1',
+            eventType='competition',
             status='published',
             maxMembersPerTeam=5,
             competition_defaultEntryFee = 4,
@@ -739,25 +740,29 @@ class TestEventMethods(TestCase):
         self.assertNotIn('<h1>', self.event.bleachedEventDetails())
         self.assertIn('&lt;h1&gt;', self.event.bleachedEventDetails())
 
-    def testPaidcompetition_defaultEntryFee(self):
+    def testPaidEvent_competition_defaultEntryFee(self):
         self.assertTrue(self.event.paidEvent())
 
-    def testPaidEvent_free(self):
+    def testPaidEvent_noDefaultEntryFee(self):
+        self.event.competition_defaultEntryFee = None
+        self.assertFalse(self.event.paidEvent())
+
+    def testPaidEvent_competition_free(self):
         self.event.competition_defaultEntryFee = 0
         self.assertFalse(self.event.paidEvent())
 
-    def testPaidcompetition_specialRateFee(self):
+    def testPaidEvent_competition_specialRateFee(self):
         self.event.competition_defaultEntryFee = 0
         self.event.competition_specialRateFee = 5
         self.assertTrue(self.event.paidEvent())
 
-    def testPaidEvent_free_withDivision(self):
+    def testPaidEvent_competition_free_withDivision(self):
         self.event.competition_defaultEntryFee = 0
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
 
         self.assertFalse(self.event.paidEvent())
 
-    def testPaidEvent_division_entryFee(self):
+    def testPaidEvent_competition_division_entryFee(self):
         self.event.competition_defaultEntryFee = 0
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
         self.availableDivision.division_entryFee = 5
@@ -777,8 +782,21 @@ class TestEventMethods(TestCase):
         self.event.workshopTeacherEntryFee = 5
         self.assertTrue(self.event.paidEvent())
 
-    def testPaidEvent_NullValue(self):
+    def testPaidEvent_workshop_teacherEntryFeeDefaultNone(self):
+        self.event.eventType = 'workshop'
         self.event.competition_defaultEntryFee = None
+        self.event.workshopTeacherEntryFee = 5
+        self.assertTrue(self.event.paidEvent())
+
+    def testPaidEvent_workshop_free(self):
+        self.event.eventType = 'workshop'
+        self.event.competition_defaultEntryFee = 50
+        self.event.workshopTeacherEntryFee = 0
+        self.event.workshopStudentEntryFee = 0
+        self.assertFalse(self.event.paidEvent())
+
+    def testPaidEvent_workshop_none(self):
+        self.event.eventType = 'workshop'
         self.assertFalse(self.event.paidEvent())
 
     def test_published_draft(self):

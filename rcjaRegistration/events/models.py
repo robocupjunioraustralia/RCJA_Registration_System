@@ -383,13 +383,6 @@ class Event(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def preSave(self):
-        # Set workshop prices
-        if self.workshopTeacherEntryFee is None:
-            self.workshopTeacherEntryFee = self.competition_defaultEntryFee
-
-        if self.workshopStudentEntryFee is None:
-            self.workshopStudentEntryFee = self.competition_defaultEntryFee
-
         if self.eventType == 'workshop':
             # Set maxMembersPerTeam to 0 if eventType is workshop
             self.maxMembersPerTeam = 0
@@ -504,10 +497,7 @@ class Event(SaveDeleteMixin, models.Model):
         
         # Workshop
         if self.eventType == 'workshop':
-            if self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0:
-                return True
-            if self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0:
-                return True
+            return bool((self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0) or (self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0))
 
     def getBaseEventAttendanceFilterDict(self, user):
         # Create dict of attributes to filter teams/ workshop attendees by
