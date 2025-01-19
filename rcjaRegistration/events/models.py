@@ -337,7 +337,7 @@ class Event(SaveDeleteMixin, models.Model):
         if self.eventType == 'competition' and self.registrationsOpenDate is not None and self.competition_defaultEntryFee is None:
             errors.append(ValidationError('Default entry fee must be set if registrations open date is set'))
 
-        # Check all details set if registrations exist
+        # Check all details set if registrations exist - because registrationsOpenDate can only be set if all other dates set per above checks
         if self.pk and self.baseeventattendance_set.exists() and self.registrationsOpenDate is None:
             errors.append(ValidationError('All dates must be set once event registrations exist'))
 
