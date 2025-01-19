@@ -383,6 +383,13 @@ class Event(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def preSave(self):
+        # Set workshop prices
+        if self.workshopTeacherEntryFee is None:
+            self.workshopTeacherEntryFee = self.competition_defaultEntryFee
+
+        if self.workshopStudentEntryFee is None:
+            self.workshopStudentEntryFee = self.competition_defaultEntryFee
+
         if self.eventType == 'workshop':
             # Set maxMembersPerTeam to 0 if eventType is workshop
             self.maxMembersPerTeam = 0
