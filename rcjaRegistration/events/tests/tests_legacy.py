@@ -508,21 +508,68 @@ class TestEventClean(TestCase):
 
     # Dates validation
 
-    def teststartDateNoneInvalid(self):
+    def testStartDateNoneInvalid(self):
         self.event.startDate = None
-        self.assertRaises(ValidationError, self.event.clean)
+        self.assertRaisesMessage(ValidationError, 'Event start and end date must either both be set or both be blank', self.event.clean)
 
-    def testendDateNoneInvalid(self):
+    def testEndDateNoneInvalid(self):
         self.event.endDate = None
-        self.assertRaises(ValidationError, self.event.clean)
+        self.assertRaisesMessage(ValidationError, 'Event start and end date must either both be set or both be blank', self.event.clean)
 
-    def testRegistrationsOpenDateNoneInvalid(self):
+    def testRegistrationsOpenDateNoneValid(self):
         self.event.registrationsOpenDate = None
-        self.assertRaises(ValidationError, self.event.clean)
+        self.event.clean()
 
     def testRegistrationsCloseDateNoneInvalid(self):
         self.event.registrationsCloseDate = None
-        self.assertRaises(ValidationError, self.event.clean)
+        self.assertRaisesMessage(ValidationError, 'Event start date, event end date, and registrations close date must be set if registrations open date is set', self.event.clean)
+
+    def testNoDatesOrDefaultPaymentValid(self):
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.event.startDate = None
+        self.event.endDate = None
+        self.event.competition_defaultEntryFee = None
+        self.event.clean()
+
+    def testJustStartAndEndDateValid(self):
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.event.competition_defaultEntryFee = None
+        self.event.clean()
+    
+    def testJustStartDateInvalid(self):
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.event.endDate = None
+        self.event.competition_defaultEntryFee = None
+        self.assertRaisesMessage(ValidationError, 'Event start and end date must either both be set or both be blank', self.event.clean)
+    
+    def testJustRegistrationsCloseDateInvalid(self):
+        self.event.registrationsOpenDate = None
+        self.event.startDate = None
+        self.event.endDate = None
+        self.event.competition_defaultEntryFee = None
+        self.assertRaisesMessage(ValidationError, 'Event start and end date must be set if registrations close date is set', self.event.clean)
+
+    def testJustRegistrationsOpenDateInvalid(self):
+        self.event.startDate = None
+        self.event.endDate = None
+        self.event.competition_defaultEntryFee = None
+        self.assertRaisesMessage(ValidationError, 'Event start date, event end date, and registrations close date must be set if registrations open date is set', self.event.clean)
+    
+    def testDefaultEntryFeeNone_CompetitionInvalid(self):
+        self.event.competition_defaultEntryFee = None
+        self.assertRaisesMessage(ValidationError, 'Default entry fee must be set if registrations open date is set', self.event.clean)
+
+    def testDefaultEntryFeeNone_WorkshopValid(self):
+        self.event.competition_defaultEntryFee = None
+        self.event.eventType = 'workshop'
+        self.event.clean()
+
+    def testAllDetailsRequiredIfRegistrations(self):
+        self.oldEventWithTeams.registrationsOpenDate = None
+        self.assertRaisesMessage(ValidationError, 'All dates must be set once event registrations exist', self.oldEventWithTeams.clean)
 
     def testMultidayEventOK(self):
         self.event.clean()
@@ -658,6 +705,18 @@ class TestEventClean(TestCase):
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=self.event.startDate + datetime.timedelta(days=1))
         self.availableFileType1.save()
         self.assertRaises(ValidationError, self.event.clean)
+
+    def testUploadDeadlineNoRegistrationCloseOrStartDate(self):
+        self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.event.startDate = None
+        self.event.endDate = None
+        self.event.competition_defaultEntryFee = None
+        self.event.save()
+        self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
+        self.availableFileType1.save()
+        self.assertEqual(self.event.clean(), None)
 
 class TestEventMethods(TestCase):
     def setUp(self):
