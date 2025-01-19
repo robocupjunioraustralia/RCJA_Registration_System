@@ -953,6 +953,13 @@ class TestEventMethods(TestCase):
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         self.assertTrue(self.event.registrationNotOpenYet())
 
+    def test_registrationNotOpenYet_pastEventNoRegistrationDates(self):
+        self.event.startDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
+        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
+        self.event.registrationsOpenDate = None
+        self.event.registrationsCloseDate = None
+        self.assertFalse(self.event.registrationNotOpenYet())
+
     def test_registrationNotOpenYet_closed(self):
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertFalse(self.event.registrationNotOpenYet())
