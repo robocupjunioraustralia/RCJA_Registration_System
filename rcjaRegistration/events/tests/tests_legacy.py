@@ -506,32 +506,21 @@ class TestEventClean(TestCase):
         self.assertRaises(ValidationError, self.event.clean)
 
     # Dates validation
-    def testAllNullDates(self):
-        self.event.startDate=None
-        self.event.endDate = None
-        self.event.registrationsOpenDate = None
-        self.event.registrationsCloseDate = None
-        self.event.clean()
 
-    def testOneNullDate(self):
-        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date()
-        self.event.endDate = None
-        self.event.registrationsOpenDate = None
-        self.event.registrationsCloseDate = None
+    def teststartDateNoneInvalid(self):
+        self.event.startDate = None
         self.assertRaises(ValidationError, self.event.clean)
 
-    def testTwoNullDates(self):
-        self.event.startDate=None
-        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+9)).date()
-        self.event.registrationsOpenDate = None
-        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date()
+    def testendDateNoneInvalid(self):
+        self.event.endDate = None
         self.assertRaises(ValidationError, self.event.clean)
 
-    def testThreeNullDates(self):
-        self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+4)).date()
-        self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
+    def testRegistrationsOpenDateNoneInvalid(self):
         self.event.registrationsOpenDate = None
-        self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
+        self.assertRaises(ValidationError, self.event.clean)
+
+    def testRegistrationsCloseDateNoneInvalid(self):
+        self.event.registrationsCloseDate = None
         self.assertRaises(ValidationError, self.event.clean)
 
     def testMultidayEventOK(self):
