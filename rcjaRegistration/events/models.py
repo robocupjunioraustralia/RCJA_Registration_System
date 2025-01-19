@@ -297,6 +297,9 @@ class Event(SaveDeleteMixin, models.Model):
     class Meta:
         verbose_name = 'Event'
         unique_together = ('year', 'state', 'name')
+        constraints = [
+            models.CheckConstraint(check=models.Q(eventType='workshop') | models.Q(eventType='competition'), name='eventType_check'),
+        ]
         ordering = ['-startDate']
 
     def clean(self):
