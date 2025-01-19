@@ -328,11 +328,15 @@ class Event(SaveDeleteMixin, models.Model):
         
         # Check all dates set if registration open date set
         if self.registrationsOpenDate is not None and (self.startDate is None or self.endDate is None or self.registrationsCloseDate is None):
-            errors.append(ValidationError('Event start and end date and registrations close date must be set if registrations open date is set'))
+            errors.append(ValidationError('Event start date, event end date, and registrations close date must be set if registrations open date is set'))
         
         # Check default payment amount set if registration open date set for competitions
         if self.eventType == 'competition' and self.registrationsOpenDate is not None and self.competition_defaultEntryFee is None:
-            errors.append(ValidationError('Default entry fee must be not blank if registrations open date is not blank'))
+            errors.append(ValidationError('Default entry fee must be set if registrations open date is set'))
+
+        # Check all details if registrations exist
+        if self.pk and self.baseeventattendance_set.exists() and self.registrationsOpenDate is None:
+            errors.append(ValidationError('All dates must be set once event registrations exist'))
 
         # Validate billing settings
         if (self.competition_specialRateNumber is None) != (self.competition_specialRateFee is None):
