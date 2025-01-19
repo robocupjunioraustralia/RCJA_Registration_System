@@ -85,12 +85,12 @@
     <div class="row">
         {% if not event.published %}
         <h5> Event is not published. </h5>
-        {% elif not event.decidedOnDates %}
+        {% elif not event.hasAllDates %}
         <h1> The dates are still to be confirmed. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% elif event.registrationNotOpenYet %}
-        <h1> Registration for this event hasn't opened yet. Please wait until registrations open on {{ dates.registrationsOpenDate }} to register. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
-        {% elif event.registrationsOpen %} 
-            {% if event.boolWorkshop %}  
+        <h1> Registration for this event hasn't opened yet. Please wait until registrations open{% if event.registrationOpenDate %} on {{ event.registrationsOpenDate }} to register{% endif %}. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+        {% elif event.registrationsOpen %}
+            {% if event.boolWorkshop %}
             <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
             {% else %} {# Competition #}
                 {% if maxEventTeamsForSchoolReached %}
@@ -99,7 +99,7 @@
                 <h1> Maximium number of teams for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
                 {% else %}
                 <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
-                    {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
+                {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
                 {% endif %}
             {% endif %}
         {% else %}
