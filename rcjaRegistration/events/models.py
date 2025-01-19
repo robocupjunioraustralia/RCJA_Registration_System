@@ -457,17 +457,16 @@ class Event(SaveDeleteMixin, models.Model):
         except InvoiceGlobalSettings.DoesNotExist:
             return ''
         
-    def decidedOnDates(self):
-        return (self.registrationsCloseDate is not None 
-            and self.registrationsOpenDate is not None 
-            and self.startDate  is not None 
-            and self.endDate  is not None )
+    def hasAllDates(self):
+        return (
+            self.registrationsOpenDate is not None and
+            self.registrationsCloseDate is not None and
+            self.startDate  is not None and
+            self.endDate  is not None
+        )
     
     def hasAllDetails(self):
-        return (self.decidedOnDates() and 
-            self.competition_defaultEntryFee is not None and
-            self.venue is not None
-        )
+        return self.hasAllDates() and (self.eventType == 'workshop' or self.competition_defaultEntryFee is not None)
 
     def registrationsOpen(self):
         if self.hasAllDetails():
@@ -478,6 +477,8 @@ class Event(SaveDeleteMixin, models.Model):
     def registrationNotOpenYet(self):
         if self.hasAllDetails():
             return self.registrationsOpenDate > datetime.datetime.today().date()
+        elif self.startDate is not None:
+            return self.startDate > datetime.datetime.today().date() # This check stops events that are created but not updated from displaying indefinitely
         else:
             return True
 
