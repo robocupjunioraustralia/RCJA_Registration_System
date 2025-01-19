@@ -486,6 +486,18 @@ class Test_EventAvailableFileType_Clean(TestCase):
         self.availableFileType1.uploadDeadline = self.event.startDate + datetime.timedelta(days=1)
         self.assertRaises(ValidationError, self.availableFileType1.clean)
 
+    def testUploadDeadlineNoRegistrationsCloseDate(self):
+        self.event.registrationsCloseDate = None
+        self.event.save()
+
+        self.assertEqual(self.availableFileType1.clean(), None)
+
+    def testUploadDeadlineNoStartDate(self):
+        self.event.startDate = None
+        self.event.save()
+
+        self.assertEqual(self.availableFileType1.clean(), None)
+
 class Test_MentorEventFileType_Methods(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
