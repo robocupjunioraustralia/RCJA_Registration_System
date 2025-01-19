@@ -258,6 +258,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
+        ('Billing settings', {
+            'description': "More options will be available after you click save",
+            'fields': ('entryFeeIncludesGST', 'competition_defaultEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
+        }),
         ('Details', {
             'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
