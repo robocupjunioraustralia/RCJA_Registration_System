@@ -79,12 +79,12 @@ class EventSerializer(serializers.ModelSerializer):
             'event_maxTeamsForEvent',
             # Billing
             'entryFeeIncludesGST',
-            'event_defaultEntryFee',
+            'competition_defaultEntryFee',
             'paymentDueDate',
             # Competition billing
-            'event_billingType',
-            'event_specialRateNumber',
-            'event_specialRateFee',
+            'competition_billingType',
+            'competition_specialRateNumber',
+            'competition_specialRateFee',
             # Workshop billing
             'workshopTeacherEntryFee',
             'workshopStudentEntryFee',

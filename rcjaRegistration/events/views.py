@@ -47,9 +47,21 @@ def dashboard(request):
 
     eventsAvailable = openForRegistrationEvents.exists()
 
-    # Filter open events by state
+    # Get not open events
+    futureEvents = Event.objects.filter(
+        Q(registrationsOpenDate__gt=datetime.datetime.today()) | Q(registrationsOpenDate__isnull=True),
+        Q(startDate__gt=datetime.datetime.today()) | Q(startDate__isnull=True),
+        status='published',
+    ).exclude(
+        pk__in=openForRegistrationEvents.values_list('pk', flat=True),
+    ).exclude(
+        baseeventattendance__in=usersEventAttendances,
+    ).prefetch_related('state', 'year').order_by('startDate').distinct()
+
+    # Filter open and future events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
+        futureEvents = futureEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
 
     # Split competitions and workshops
     openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')
@@ -75,6 +87,7 @@ def dashboard(request):
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0.05]) # Rounded because consistent with what user sees and not used in subsequent calculations
 
     context = {
+        'futureEvents': futureEvents,
         'openForRegistrationCompetitions': openForRegistrationCompetitions,
         'openForRegistrationWorkshops': openForRegistrationWorkshops,
         'currentEvents': currentEvents,
@@ -126,9 +139,10 @@ def getAvailableToCopyTeams(request, event):
     # Get teams already copied
     copiedTeamsList = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
 
-    # Replace event filtering with year filtering
+    # Replace event filtering with year filtering for current and previous event year
     del filterDict['event']
-    filterDict['event__year'] = event.year
+    filterDict['event__year__year__gte'] = event.year.year - 1
+    filterDict['event__year__year__lte'] = event.year.year
     filterDict['event__status'] = 'published'
 
     availableDivisions = event.availabledivision_set.values_list('division', flat=True)
@@ -137,7 +151,6 @@ def getAvailableToCopyTeams(request, event):
     teams = Team.objects.filter(**filterDict)
     teams = teams.exclude(event=event) # Exclude teams of the current event
     availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
-    availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
 
     return teams, copiedTeamsList, availableToCopyTeams
 
@@ -164,7 +177,7 @@ def details(request, eventID):
     if event.boolWorkshop():
         billingTypeLabel = 'attendee'
     else:
-        billingTypeLabel = event.event_billingType
+        billingTypeLabel = event.competition_billingType
 
     _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
@@ -238,10 +251,11 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, teamID=None, attendeeID=None, eventID=None):
-        # This endpoint should never be called with eventID
-        if eventID is not None:
+    def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
+        # This endpoint should never be called with eventID or sourceTeamID
+        if eventID or sourceTeamID:
             return HttpResponseForbidden()
+        
         # Accept multiple variables because used for both teams and workshops
         # Need to lookup the relevant one
         eventAttendanceID = None

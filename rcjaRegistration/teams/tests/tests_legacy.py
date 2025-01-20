@@ -49,7 +49,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -65,7 +65,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         eventType='competition',
         status='published',
         maxMembersPerTeam=2,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -81,7 +81,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-6)).date(),
@@ -648,8 +648,8 @@ def newCommonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -822,6 +822,8 @@ class TestTeamEditPermissions(TestCase):
 
 def createAdditionalEvents(self):
     self.previousYear = Year.objects.create(year=2019)
+    self.twoYearsAgo = Year.objects.create(year=2018)
+    self.nextYear = Year.objects.create(year=2021)
     self.previousYearEvent = Event.objects.create(
         year=self.previousYear,
         state=self.state1,
@@ -830,8 +832,8 @@ def createAdditionalEvents(self):
         status='published',
         maxMembersPerTeam=5,
         entryFeeIncludesGST=True,
-        event_billingType='team',
-        event_defaultEntryFee = 50,
+        competition_billingType='team',
+        competition_defaultEntryFee = 50,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -839,6 +841,7 @@ def createAdditionalEvents(self):
         directEnquiriesTo = self.user1,
     )
     self.previousYearTeam = Team.objects.create(event=self.previousYearEvent, mentorUser=self.user1, name='Team 1', division=self.division1)
+    self.previousYearStudent = Student.objects.create(team=self.previousYearTeam, firstName='First 1', lastName='Last 1', yearLevel=1, gender='other')
 
     self.newEvent = Event.objects.create(
         year=self.year,
@@ -848,8 +851,8 @@ def createAdditionalEvents(self):
         status='published',
         maxMembersPerTeam=3,
         entryFeeIncludesGST=True,
-        event_billingType='team',
-        event_defaultEntryFee = 50,
+        competition_billingType='team',
+        competition_defaultEntryFee = 50,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -977,22 +980,30 @@ class TestCopyTeamsList(TestCase):
         response = self.client.get(url)
         self.assertNotIn(self.newEventTeam, response.context['availableToCopyTeams'])
 
-    def testContext_availableToCopyTeams_previousYearEventTeamNotIn(self):
+    def testContext_availableToCopyTeams_previousYearEventTeamIn(self):
+        url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertIn(self.previousYearTeam, response.context['availableToCopyTeams'])
+
+    def testContext_availableToCopyTeams_twoYearsAgoEventTeamNotIn(self):
+        self.previousYearEvent.year = self.twoYearsAgo
+        self.previousYearEvent.save()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
 
         response = self.client.get(url)
         self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
 
-    def testContext_availableToCopyTeams_divisionMismatchNotIn(self):
-        self.newEventAvailableDivision1.delete()
+    def testContext_availableToCopyTeams_nextYearEventTeamNotIn(self):
+        self.previousYearEvent.year = self.nextYear
+        self.previousYearEvent.save()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
+
         response = self.client.get(url)
-        self.assertNotIn(self.team1, response.context['availableToCopyTeams'])
-        self.assertNotIn(self.team2, response.context['availableToCopyTeams'])
-        self.assertNotIn(self.team3, response.context['availableToCopyTeams'])
+        self.assertNotIn(self.previousYearTeam, response.context['availableToCopyTeams'])
 
     def testContext_availableToCopyTeams_copiedTeamNotIn(self):
         self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
@@ -1027,229 +1038,211 @@ class TestCopyTeam(TestCase):
     def setUp(self):
         newCommonSetUp(self)
         self.team1 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 1', division=self.division1)
+        self.student1 = Student.objects.create(team=self.team1, firstName='First 1', lastName='Last 1', yearLevel=1, gender='other')
+        self.student2 = Student.objects.create(team=self.team1, firstName='First 2', lastName='Last 2', yearLevel=2, gender='other')
         self.team2 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 2', division=self.division1)
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1, school=self.school1)
         createAdditionalEvents(self)
+        self.hardware = HardwarePlatform.objects.create(name='Hardware 1')
+        self.software = SoftwarePlatform.objects.create(name='Software 1')
 
-    def testLoginRequired(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-
-        response = self.client.post(url, follow=True)
-        self.assertContains(response, "Login")
-    
-        response = self.client.post(url)
-        self.assertEqual(response.url, f"/accounts/login/?next=/teams/copyExisting/{self.newEvent.id}/create/{self.team1.id}")
-        self.assertEqual(response.status_code, 302)
-
-    def testDenied_get(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+    def testGetLoads(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Forbidden method', status_code=403)
+        self.assertEqual(response.status_code, 200)
+
+    def testContext_formInitialFilled(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.context['form']['name'].value(), self.team1.name)
+        self.assertEqual(response.context['form']['division'].value(), self.team1.division.pk)
+        self.assertEqual(response.context['form']['campus'].value(), None)
+
+    def testContext_studentInitialFilled(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        # Check student 1
+        self.assertEqual(response.context['formset'][0]['firstName'].value(), self.student1.firstName)
+        self.assertEqual(response.context['formset'][0]['lastName'].value(), self.student1.lastName)
+        self.assertEqual(response.context['formset'][0]['yearLevel'].value(), self.student1.yearLevel)
+        # Check student 2
+        self.assertEqual(response.context['formset'][1]['firstName'].value(), self.student2.firstName)
+        self.assertEqual(response.context['formset'][1]['lastName'].value(), self.student2.lastName)
+        self.assertEqual(response.context['formset'][1]['yearLevel'].value(), self.student2.yearLevel)
+
+    def testContext_studentYearIncremented(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.previousYearTeam.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
+        self.assertEqual(response.context['formset'][0]['yearLevel'].value(), self.previousYearTeam.student_set.first().yearLevel + 1)
 
     def testDenied_notPublished(self):
         self.newEvent.status = 'draft'
         self.newEvent.save()
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Event is not published', status_code=403)
 
     def testDenied_registrationsClosed(self):
         self.newEvent.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.newEvent.save()
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testDenied_workshop(self):
         self.newEvent.eventType = 'workshop'
         self.newEvent.save()
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
+        self.assertContains(response, 'Teams/ attendees cannot be created for this event type', status_code=403)
 
     def testDenied_teamEventNotPublished(self):
         self.event.status = 'draft'
         self.event.save()
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Event for team is not published', status_code=403)
+        self.assertContains(response, 'Team source event is not published.', status_code=403)
 
     def testDenied_noTeamPermission(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email2, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'You are not an administrator of this team/ attendee', status_code=403)
+        self.assertContains(response, 'You are not an administrator of this team.', status_code=403)
 
     def testDenied_alreadyCopied(self):
         self.newEventTeam1Copy = Team.objects.create(event=self.newEvent, mentorUser=self.user1, name='Team 1', division=self.division1, copiedFrom=self.team1)
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Team already copied.', status_code=403)
+        self.assertContains(response, 'Team already copied to this event.', status_code=403)
 
     def testDenied_teamInEvent(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.newEventTeam.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.newEventTeam.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Team already in this event.', status_code=403)
+        self.assertContains(response, 'Team source event can not be same as destination event.', status_code=403)
 
-    def testDenied_teamNotFromCurrentYear(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.previousYearTeam.id})
+    def testSuccess_teamPreviousYear(self):
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.previousYearTeam.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def testDenied_teamTwoYearsAgo(self):
+        self.previousYearEvent.year = self.twoYearsAgo
+        self.previousYearEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.previousYearTeam.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+    
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Team not from current event year.', status_code=403)
+        self.assertContains(response, 'Team source event year must be current or previous year.', status_code=403)
 
-    def testDenied_eventSchoolMaxReached(self):
-        self.newEvent.event_maxTeamsPerSchool = 1
-        self.newEvent.save()
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+    def testDenied_teamNextYear(self):
+        self.previousYearEvent.year = self.nextYear
+        self.previousYearEvent.save()
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.previousYearTeam.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
     
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.', status_code=403)
+        self.assertContains(response, 'Team source event year must be current or previous year.', status_code=403)
 
-    def testDenied_eventOverallMaxReached(self):
-        self.newEvent.event_maxTeamsForEvent = 1
-        self.newEvent.save()
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+    def testSuccess_post(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.team1.division)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Max teams for this event reached. Contact the organiser if you want to register more teams for this event.', status_code=403)
 
-    def testDenied_divisionNotAllowed(self):
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Division not allowed for this event.', status_code=403)
-
-    def testDenied_divisionSchoolMaxReached(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1, division_maxTeamsPerSchool=1)
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
-
-    def testDenied_divisionOverallMaxReached(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1, division_maxTeamsForDivision=1)
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.', status_code=403)
-
-    def testDenied_existingName(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team2.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Team with this name in this event already exists', status_code=403)
-
-    def testDenied_numStudentsExceedsMax(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        for i in range(4):
-            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Number students in team exceeds limit for new event', status_code=403)
-
-    def testSuccess_correctRedirect(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        for i in range(3):
-            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":1,
+            "name":self.team1.name,
+            "division":self.team1.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"/teams/copyExisting/{self.newEvent.id}")
-
-    def testSuccess_oldTeamUnchanged(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        for i in range(3):
-            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
-        updatedTime = self.team1.updatedDateTime
-        numStudents = self.team1.student_set.count()
-
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.team1.refresh_from_db()
-        self.assertEqual(self.team1.updatedDateTime, updatedTime)
-        self.assertEqual(self.team1.event, self.event)
-        self.assertEqual(self.team1.student_set.count(), numStudents)
-
-    def testSuccess_newTeamCreated(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        for i in range(3):
-            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
-        self.assertEqual(Team.objects.filter(event=self.newEvent, name=self.team1.name).count(), 0)
-
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(Team.objects.filter(event=self.newEvent, name=self.team1.name).count(), 1)
-
-    def testSuccess_studentsCopied(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        for i in range(3):
-            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
-        self.assertEqual(Student.objects.filter(team__event=self.newEvent, team__name=self.team1.name).count(), 0)
-
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
-        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
-        self.assertEqual(Student.objects.filter(team__event=self.newEvent, team__name=self.team1.name).count(), 3)
 
     def testSuccess_copiedFromSet(self):
-        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.division1)
-        for i in range(3):
-            Student.objects.create(firstName=str(i), lastName=str(i), yearLevel=5, gender='other', team=self.team1)
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.team1.division)
         self.assertEqual(Team.objects.filter(copiedFrom=self.team1).count(), 0)
 
-        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'teamID': self.team1.id})
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-    
-        response = self.client.post(url)
+
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":1,
+            "name":self.team1.name,
+            "division":self.team1.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(url, data=payload)
         self.assertEqual(Team.objects.filter(copiedFrom=self.team1).count(), 1)
+
+    def testSuccess_correctRedirect(self):
+        self.newEventAvailableDivision1 = AvailableDivision.objects.create(event=self.newEvent, division=self.team1.division)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.newEvent.id, 'sourceTeamID': self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        payload = {
+            'student_set-TOTAL_FORMS':1,
+            "student_set-INITIAL_FORMS":0,
+            "student_set-MIN_NUM_FORMS":1,
+            "student_set-MAX_NUM_FORMS":1,
+            "name":self.team1.name,
+            "division":self.team1.division.id,
+            'hardwarePlatform': self.hardware.id,
+            'softwarePlatform': self.software.id,
+            "student_set-0-firstName":"test",
+            "student_set-0-lastName":"test",
+            "student_set-0-yearLevel":"1",
+            "student_set-0-gender":"male"
+        }
+        response = self.client.post(url, data=payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/teams/copyExisting/{self.newEvent.id}")
 
 class TestTeamDelete(TestCase):
     email1 = 'user1@user.com'
@@ -1320,10 +1313,19 @@ class TestTeamDelete(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertRaises(Team.DoesNotExist, lambda: Team.objects.get(pk=self.team1.pk))
 
-    def testWrongEndpointDenied(self):
+    def testWrongEndpointDenied_eventID(self):
         Team.objects.get(pk=self.team1.pk)
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        url = reverse('teams:create', kwargs={'eventID':self.team1.id})
+        url = reverse('teams:create', kwargs={'eventID': self.team1.event.id})
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+        Team.objects.get(pk=self.team1.pk)
+
+    def testWrongEndpointDenied_sourceTeamID(self):
+        Team.objects.get(pk=self.team1.pk)
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        url = reverse('teams:copyTeam', kwargs={'eventID': self.team1.event.id, 'sourceTeamID':self.team1.id})
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
@@ -1423,7 +1425,7 @@ class TestInvoiceMethods(TestCase):
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
 
     def testSave_NoSchool_NoExistingInvoice_freeEvent(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.event.save()
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 0)
 

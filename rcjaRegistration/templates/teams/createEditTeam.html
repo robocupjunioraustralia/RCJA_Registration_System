@@ -46,7 +46,9 @@
         <div class = "form form-group left-aligned-text">
           <div>
             <h1>{{event}}</h1>
-            {% if team %}
+            {% if sourceTeam %}
+            <h2>Copying {{sourceTeam.name}} from {{sourceTeam.event}}</h2>
+            {% elif team %}
             <h2> Editing: Team {{team.name}} </h2>
             {% else %}
             <h2>Add a new team</h2> 

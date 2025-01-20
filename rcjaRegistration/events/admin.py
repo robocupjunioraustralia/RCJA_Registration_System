@@ -191,6 +191,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
 
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+    empty_value_display = "TBC"
     list_display = [
         '__str__',
         'eventType',
@@ -221,7 +222,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
+            'fields': ('entryFeeIncludesGST', 'competition_billingType', 'competition_defaultEntryFee', ('competition_specialRateNumber', 'competition_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
@@ -257,6 +258,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Billing settings', {
+            'description': "More options will be available after you click save",
+            'fields': ('entryFeeIncludesGST', 'competition_defaultEntryFee', 'paymentDueDate')
         }),
         ('Details', {
             'description': "More options will be available after you click save",
@@ -355,10 +360,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'event_maxTeamsPerSchool',
         'event_maxTeamsForEvent',
         'entryFeeIncludesGST',
-        'event_billingType',
-        'event_defaultEntryFee',
-        'event_specialRateNumber',
-        'event_specialRateFee',
+        'competition_billingType',
+        'competition_defaultEntryFee',
+        'competition_specialRateNumber',
+        'competition_specialRateFee',
         'workshopTeacherEntryFee',
         'workshopStudentEntryFee',
         'paymentDueDate',
@@ -409,6 +414,9 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
             if not obj.published():
                 self.message_user(request, f"{obj}: Event is not published, publish event to make visible.", messages.WARNING)
+            
+            if not obj.hasAllDetails():
+                self.message_user(request, f"{obj}: You haven't filled in all details yet, people won't be able to register.", messages.WARNING)
 
         super().save_model(request, obj, form, change)
 
@@ -424,10 +432,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     # Filter in team and workshop autocompletes
     def get_search_results(self, request, queryset, search_term):
         if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
-            queryset = queryset.filter(eventType='competition', status='published')
+            queryset = queryset.filter(eventType='competition', status='published', registrationsOpenDate__isnull=False)
 
         if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
-            queryset = queryset.filter(eventType='workshop', status='published')
+            queryset = queryset.filter(eventType='workshop', status='published', registrationsOpenDate__isnull=False)
 
         return super().get_search_results(request, queryset, search_term)
 
@@ -555,7 +563,10 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
                 'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
             },
             'event': {
-                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
+                'queryset': Event.objects.filter(
+                    eventType=cls.eventTypeMapping,
+                    registrationsOpenDate__isnull=False,
+                ),
             },
         }
 
