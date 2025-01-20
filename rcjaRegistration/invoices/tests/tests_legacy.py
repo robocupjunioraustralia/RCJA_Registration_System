@@ -54,8 +54,8 @@ def commonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -1081,14 +1081,14 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
     def testDefaultRateStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
     def testAddStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1106,7 +1106,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(37 * 50, 2))
 
     def testDeleteStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1118,8 +1118,8 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(35 * 50, 2))
 
     def testSpecialRateInclGST(self):
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1128,8 +1128,8 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     def testSpecialRateExclGST(self):
         self.event.entryFeeIncludesGST = False
 
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1213,14 +1213,14 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50 + 6 * 11, 2))
 
     def testDefaultRateStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(18 * 50, 2))
 
     def testChangeStudentTeam(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1233,8 +1233,8 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(17 * 50, 2))
 
     def testSpecialRate(self):
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1298,15 +1298,15 @@ class TestInvoiceCalculations_Independent(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 12 * 11, 2))
 
     def testDefaultRateStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
     def testSpecialRate(self):
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1361,8 +1361,8 @@ class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 35,
+            competition_billingType='team',
+            competition_defaultEntryFee = 35,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -1624,8 +1624,8 @@ class TestInvoiceCreation(TestCase):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 0,
+            competition_billingType='team',
+            competition_defaultEntryFee = 0,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -1636,7 +1636,7 @@ class TestInvoiceCreation(TestCase):
 
     def testFreeEventToPaidCreatesInvoices(self):
         self.assertEqual(Invoice.objects.count(), 0)
-        self.freeEvent.event_defaultEntryFee = 50
+        self.freeEvent.competition_defaultEntryFee = 50
         self.freeEvent.save()
 
         self.assertEqual(Invoice.objects.count(), 1)

@@ -49,7 +49,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
@@ -65,7 +65,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         eventType='competition',
         status='published',
         maxMembersPerTeam=2,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date(),
@@ -81,7 +81,7 @@ def commonSetUp(obj): #copied from events, todo refactor
         eventType='competition',
         status='published',
         maxMembersPerTeam=5,
-        event_defaultEntryFee = 4,
+        competition_defaultEntryFee = 4,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-4)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-6)).date(),
@@ -648,8 +648,8 @@ def newCommonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -832,8 +832,8 @@ def createAdditionalEvents(self):
         status='published',
         maxMembersPerTeam=5,
         entryFeeIncludesGST=True,
-        event_billingType='team',
-        event_defaultEntryFee = 50,
+        competition_billingType='team',
+        competition_defaultEntryFee = 50,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -851,8 +851,8 @@ def createAdditionalEvents(self):
         status='published',
         maxMembersPerTeam=3,
         entryFeeIncludesGST=True,
-        event_billingType='team',
-        event_defaultEntryFee = 50,
+        competition_billingType='team',
+        competition_defaultEntryFee = 50,
         startDate=(datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -1425,7 +1425,7 @@ class TestInvoiceMethods(TestCase):
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 1)
 
     def testSave_NoSchool_NoExistingInvoice_freeEvent(self):
-        self.event.event_defaultEntryFee = 0
+        self.event.competition_defaultEntryFee = 0
         self.event.save()
         self.assertEqual(Invoice.objects.filter(event=self.event, invoiceToUser=self.user1, school=None).count(), 0)
 

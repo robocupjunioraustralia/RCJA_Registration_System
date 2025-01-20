@@ -196,9 +196,9 @@ class Event_Base:
         'state': 0,
         'name': 'New Event',
         'eventType': 'competition',
-        'event_defaultEntryFee': 50,
+        'competition_defaultEntryFee': 50,
         'status': 'published', # Needed for change tests
-        'event_billingType': 'team', # Needed for change tests
+        'competition_billingType': 'team', # Needed for change tests
         'maxMembersPerTeam': 5, # Needed for change tests
         'startDate': (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         'endDate': (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
