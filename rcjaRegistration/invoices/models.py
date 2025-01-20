@@ -216,7 +216,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     def specialRateTeamsForSchool(self):
         from teams.models import Team
 
-        numberSpecialRateTeams = self.event.event_specialRateNumber
+        numberSpecialRateTeams = self.event.competition_specialRateNumber
 
         # Check for special rate enabled
         if not numberSpecialRateTeams:
@@ -342,9 +342,9 @@ class Invoice(SaveDeleteMixin, models.Model):
 
             # Get values
             quantity = numberSpecialRateTeams
-            unitCost = self.event.event_specialRateFee
+            unitCost = self.event.competition_specialRateFee
 
-            maxNumberSpecialRateTeams = self.event.event_specialRateNumber
+            maxNumberSpecialRateTeams = self.event.competition_specialRateNumber
             name = f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}"
             description = 'This is measured across all campuses from this school'
 
@@ -361,8 +361,8 @@ class Invoice(SaveDeleteMixin, models.Model):
             teams = self.standardRateTeams().filter(division=division)
 
             # Get unit cost, use availableDivision value if present, otherwise use value from event
-            unitCost = self.event.event_defaultEntryFee
-            unit = self.event.event_billingType
+            unitCost = self.event.competition_defaultEntryFee
+            unit = self.event.competition_billingType
             if availableDivision and availableDivision.division_entryFee is not None:
                 unitCost = availableDivision.division_entryFee
                 unit = availableDivision.division_billingType
