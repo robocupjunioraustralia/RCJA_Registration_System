@@ -34,15 +34,6 @@ def dashboard(request):
     else:
         currentState = request.user.homeState
 
-    # Get not open events
-    futureEvents = Event.objects.filter(
-        status='published',
-    ).exclude(
-        registrationsOpenDate__lte=datetime.datetime.today(),
-    ).exclude(
-        startDate__lte=datetime.datetime.today(),
-    ).prefetch_related('state', 'year').order_by('startDate').distinct()
-
     # Get open events
     openForRegistrationEvents = Event.objects.filter(
         status='published',
@@ -54,9 +45,21 @@ def dashboard(request):
 
     eventsAvailable = openForRegistrationEvents.exists()
 
-    # Filter open events by state
+    # Get not open events
+    futureEvents = Event.objects.filter(
+        Q(registrationsOpenDate__gt=datetime.datetime.today()) | Q(registrationsOpenDate__isnull=True),
+        Q(startDate__gt=datetime.datetime.today()) | Q(startDate__isnull=True),
+        status='published',
+    ).exclude(
+        pk__in=openForRegistrationEvents.values_list('pk', flat=True),
+    ).exclude(
+        baseeventattendance__in=usersEventAttendances,
+    ).prefetch_related('state', 'year').order_by('startDate').distinct()
+
+    # Filter open and future events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
+        futureEvents = futureEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
 
     # Split competitions and workshops
     openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')
