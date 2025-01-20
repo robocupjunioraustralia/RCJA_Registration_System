@@ -137,9 +137,10 @@ def getAvailableToCopyTeams(request, event):
     # Get teams already copied
     copiedTeamsList = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
 
-    # Replace event filtering with year filtering
+    # Replace event filtering with year filtering for current and previous event year
     del filterDict['event']
-    filterDict['event__year'] = event.year
+    filterDict['event__year__year__gte'] = event.year.year - 1
+    filterDict['event__year__year__lte'] = event.year.year
     filterDict['event__status'] = 'published'
 
     availableDivisions = event.availabledivision_set.values_list('division', flat=True)
@@ -148,7 +149,6 @@ def getAvailableToCopyTeams(request, event):
     teams = Team.objects.filter(**filterDict)
     teams = teams.exclude(event=event) # Exclude teams of the current event
     availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
-    availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
 
     return teams, copiedTeamsList, availableToCopyTeams
 
@@ -230,10 +230,11 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, teamID=None, attendeeID=None, eventID=None):
-        # This endpoint should never be called with eventID
-        if eventID is not None:
+    def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
+        # This endpoint should never be called with eventID or sourceTeamID
+        if eventID or sourceTeamID:
             return HttpResponseForbidden()
+        
         # Accept multiple variables because used for both teams and workshops
         # Need to lookup the relevant one
         eventAttendanceID = None
