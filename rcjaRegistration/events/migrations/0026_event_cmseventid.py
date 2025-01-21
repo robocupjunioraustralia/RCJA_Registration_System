@@ -5,7 +5,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('events', '0024_alter_availabledivision_division'),
+        ('events', '0025_rename_event_billingtype_event_competition_billingtype_and_more'),
     ]
 
     operations = [
