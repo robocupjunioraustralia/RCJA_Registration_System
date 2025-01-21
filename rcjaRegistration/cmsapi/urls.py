@@ -10,8 +10,7 @@ from common.apiPermissions import CmsSecretPermission
 
 # **********Routers**********
 
-Router = routers.DefaultRouter()
-Router.get_api_root_view().cls.permission_classes = (CmsSecretPermission,)
+Router = routers.SimpleRouter()
 
 # # *****CMS*****
 Router.register(r'integration', views.CMSIntegrationViewSet, basename='cms')
