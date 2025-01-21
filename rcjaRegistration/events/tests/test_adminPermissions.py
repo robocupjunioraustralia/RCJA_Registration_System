@@ -304,6 +304,7 @@ class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_Supe
     ]
     expectedChangeReadonlyFields = [
         ('eventType', 'Event type'),
+        ('cmsLink', 'View CMS'),
     ]
 
 class Event_Coordinators_Base(Event_Base):
@@ -346,6 +347,7 @@ class Test_Event_FullCoordinator(AdditionalEventTestsMixin, Event_Coordinators_B
     ]
     expectedChangeReadonlyFields = [
         ('eventType', 'Event type'),
+        ('cmsLink', 'View CMS'),
     ]
 
     # Additional tests
@@ -359,4 +361,14 @@ class Test_Event_FullCoordinator(AdditionalEventTestsMixin, Event_Coordinators_B
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Event_ViewCoordinator(Event_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    expectedChangeMissingFields = [
+        ('cmsLink', 'View CMS'),
+    ]
+
+    # Additional tests
+
+    def test_cmsLink_present_if_cmsEventId(self):
+        getattr(self, self.state1Obj).cmsEventId = 'TEST'
+        getattr(self, self.state1Obj).save()
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+        self.checkReadonly(response, [('cmsLink', 'View CMS'),])
