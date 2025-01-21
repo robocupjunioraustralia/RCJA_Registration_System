@@ -40,7 +40,7 @@ class CMSIntegrationViewSet(viewsets.ViewSet):
             )
 
         event.cmsEventId = cms_event_id
-        event.save(fields=["cmsEventId"], skipPrePostSave=True)
+        event.save(update_fields=["cmsEventId"], skipPrePostSave=True)
 
         return Response(
             {"detail": f"Successfully linked '{cms_event_id}' to '{event}'."},
