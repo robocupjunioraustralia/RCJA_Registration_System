@@ -539,7 +539,6 @@ class Event(SaveDeleteMixin, models.Model):
     directEnquiriesToEmail.admin_order_field = 'directEnquiriesTo__email'
 
     def get_absolute_url(self):
-        from django.urls import reverse
         return reverse('events:details', kwargs = {"eventID": self.id})
 
     def get_cms_url(self):
