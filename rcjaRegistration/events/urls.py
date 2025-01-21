@@ -22,6 +22,7 @@ app_name = 'events'
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('events/<int:eventID>', views.details, name='details'),
+    path('events/<int:eventID>/cms', views.cms, name='cms'),
     path('error/underConstruction',views.loggedInUnderConstruction,name='loggedInConstruction'),
     path('events/summaryReport', views.summaryReport, name='summaryReport')
 ]

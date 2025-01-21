@@ -250,6 +250,7 @@ class Event(SaveDeleteMixin, models.Model):
     eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
     statusChoices = (('draft', 'Draft'), ('published', 'Published'))
     status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
+    cmsEventId = models.CharField('CMS Event ID', max_length=15, blank=False, null=True, editable=False, help_text='The ID of this event in the RCJ CMS')
 
     # Banner image
     eventBannerImage = UUIDImageField('Banner image', storage=PublicMediaStorage(), upload_prefix='EventBannerImage', original_filename_field='eventBannerImageOriginalFilename', null=True, blank=True)
@@ -538,8 +539,10 @@ class Event(SaveDeleteMixin, models.Model):
     directEnquiriesToEmail.admin_order_field = 'directEnquiriesTo__email'
 
     def get_absolute_url(self):
-        from django.urls import reverse
         return reverse('events:details', kwargs = {"eventID": self.id})
+
+    def get_cms_url(self):
+        return reverse('events:cms', kwargs = {"eventID": self.id})
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'

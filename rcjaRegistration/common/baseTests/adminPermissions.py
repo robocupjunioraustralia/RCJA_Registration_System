@@ -166,6 +166,7 @@ class DoesLoadBase(Base):
     expectedAddReadonlyFields = []
     expectedChangeEditableFields = []
     expectedChangeReadonlyFields = []
+    expectedChangeMissingFields = []
 
     def checkReadonly(self, response, fields):
         for expectedField in fields:
@@ -177,6 +178,14 @@ class DoesLoadBase(Base):
         for expectedField in fields:
             self.assertContains(response, f'id="id_{expectedField[0]}"')
             self.assertContains(response, f'name="{expectedField[0]}"')
+    
+    def checkMissingFields(self, response, fields):
+        for expectedField in fields:
+            self.assertNotContains(response, f'id="id_{expectedField[0]}"')
+            self.assertNotContains(response, f'name="{expectedField[0]}"')
+            self.assertNotContains(response, f'<label>{expectedField[1]}:</label>')
+            self.assertNotContains(response, f'id="id_{expectedField[0]}"')
+            self.assertNotContains(response, f'name="{expectedField[0]}"')
 
     def testCorrectAddEditableFields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
@@ -193,6 +202,10 @@ class DoesLoadBase(Base):
     def testCorrectChangeReadonlyFields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.checkReadonly(response, self.expectedChangeReadonlyFields)
+
+    def testCorrectChangeMissingFields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+        self.checkMissingFields(response, self.expectedChangeMissingFields)
 
     # Post tests
     def testPostAdd(self):

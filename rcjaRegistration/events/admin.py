@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import F, Q
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermission
 from coordination.models import Coordinator
 from django.contrib import messages
 from django import forms
@@ -204,8 +204,9 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'directEnquiriesToName',
         'venue',
         'registrationsLink',
+        'cmsLink',
     ]
-    competition_fieldsets = (
+    competition_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
@@ -226,8 +227,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
         }),
-    )
-    workshop_fieldsets = (
+    ]
+    # CMS fieldset is added in the get_fieldsets method if the event has a cmsEventId or if the user can create an event
+    competition_cms_fieldset = ('CMS', {
+        'fields': ('cmsLink',)
+    })
+    workshop_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
@@ -245,8 +250,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
         }),
-    )
-    add_fieldsets = (
+    ]
+    add_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name')
@@ -266,7 +271,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
         }),
-    )
+    ]
 
     readonly_fields = [
         'eventType', # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
@@ -275,6 +280,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'effectiveBannerImageTag',
         'registrationsLink',
         'eventSurchargeAmount',
+        'cmsLink'
     ]
     add_readonly_fields = [
     ]
@@ -292,8 +298,18 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         return readonly_fields
 
     def registrationsLink(self, obj):
-        return format_html('<a href="{}">-></a>', obj.registrationsAdminURL())
+        return format_html('<a href="{}" class="viewlink">View</a>', obj.registrationsAdminURL())
     registrationsLink.short_description = 'View registrations'
+
+    def cmsLink(self, obj):
+        if obj.cmsEventId:
+            return format_html('<a href="{}" target="_blank" class="viewlink">View</a>', obj.get_cms_url())
+
+        if obj.eventType == 'competition':
+            return format_html('<a href="{}" target="_blank" class="addlink">Create</a>', obj.get_cms_url())
+
+        return "CMS Unavailable"
+    cmsLink.short_description = 'View CMS'
 
     autocomplete_fields = [
         'state',
@@ -375,7 +391,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             return self.workshop_fieldsets
 
         if obj.eventType == 'competition':
-            return self.competition_fieldsets
+            comp_fieldsets = self.competition_fieldsets.copy() # Copy so we don't modify the class variable and add a new copy of the CMS fieldset on every page load
+
+            if obj.cmsEventId or checkCoordinatorPermission(request, Event, obj, 'change'):
+                comp_fieldsets.insert(1, self.competition_cms_fieldset)
+
+            return comp_fieldsets
 
         return super().get_fieldsets(request, obj)
 
