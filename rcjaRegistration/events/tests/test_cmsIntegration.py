@@ -145,4 +145,4 @@ class TestEventAdminCMSLink(TestCase):
         """Should return None if eventType is not a competition"""
         self.workshop.cmsEventId = None
         link_html = self.admin_site.cmsLink(self.workshop)
-        self.assertIsNone(link_html)
+        self.assertEqual(link_html, "CMS Unavailable")
