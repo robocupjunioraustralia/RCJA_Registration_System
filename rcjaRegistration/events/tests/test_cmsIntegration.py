@@ -47,6 +47,15 @@ class TestCMSView(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(self.cmsEventId, response.url)
 
+    def test_cms_redirect_if_cmsEventId_exists_not_logged_in(self):
+        """If cmsEventId is already set, it should redirect to CMS_EVENT_URL_VIEW for non logged in users"""
+        self.competition.cmsEventId = self.cmsEventId
+        self.competition.save()
+
+        response = self.client.get(self.url_competition)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(self.cmsEventId, response.url)
+
     def test_cms_permission_denied_if_event_not_competition(self):
         """If the event is a workshop, raise PermissionDenied => 403"""
         self.client.login(request=HttpRequest(), email=self.email_user_state1_fullcoordinator, password=self.password)
