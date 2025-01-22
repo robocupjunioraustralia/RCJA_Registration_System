@@ -519,11 +519,11 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     def __str__(self):
         if self.campus:
-            return f'Invoice {self.invoiceNumber} - {self.event}: {self.school}, {self.campus}'
+            return f'Invoice {self.invoiceNumber}: {self.school}, {self.campus}'
         elif self.school:
-            return f'Invoice {self.invoiceNumber} - {self.event}: {self.school}'
+            return f'Invoice {self.invoiceNumber}: {self.school}'
         else:
-            return f'Invoice {self.invoiceNumber} - {self.event}: {self.invoiceToUser.fullname_or_email()}'
+            return f'Invoice {self.invoiceNumber}: {self.invoiceToUser.fullname_or_email()}'
 
     # *****CSV export methods*****
 

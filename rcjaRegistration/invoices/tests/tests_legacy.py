@@ -1618,15 +1618,15 @@ class TestInvoiceMethods(TestCase):
 
     def testStr_campus(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[0])
-        self.assertEqual(str(self.invoice), "Invoice 1 - Test event 1 2020 (VIC): School 1, Campus 0")
+        self.assertEqual(str(self.invoice), "Invoice 1: School 1, Campus 0")
 
     def testStr_schoolNoCampus(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
-        self.assertEqual(str(self.invoice), "Invoice 1 - Test event 1 2020 (VIC): School 1")
+        self.assertEqual(str(self.invoice), "Invoice 1: School 1")
 
     def testStr_independent(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.assertEqual(str(self.invoice), "Invoice 1 - Test event 1 2020 (VIC): First Last")
+        self.assertEqual(str(self.invoice), "Invoice 1: First Last")
 
     def testInvoiceToUserName(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
