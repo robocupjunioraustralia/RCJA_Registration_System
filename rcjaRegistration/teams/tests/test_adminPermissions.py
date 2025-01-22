@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams, POST_VALIDATION_FAILURE, POST_SUCCESS
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams, createInvoices, POST_VALIDATION_FAILURE, POST_SUCCESS
 
 from django.test import TestCase
 from django.urls import reverse
@@ -32,6 +32,7 @@ class Team_Base:
     @classmethod
     def additionalSetup(cls):
         createEvents(cls)
+        createInvoices(cls)
         createTeams(cls)
 
     @classmethod
@@ -135,6 +136,22 @@ class Test_Team_SuperUser(AdditionalTeamPostTestsMixin, Team_Base, Base_Test_Sup
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
+    def testPostInvoiceOverride_success(self):
+        payload = self.validPayload.copy()
+        payload['invoiceOverride'] = self.state1_event1_invoice1.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+    def testPostInvoiceOverride_wrong_event(self):
+        payload = self.validPayload.copy()
+        payload['invoiceOverride'] = self.state2_event1_invoice2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Please correct the error below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
 class Team_Coordinators_Base(Team_Base):
     expectedListItems = 2
     expectedStrings = [
@@ -163,6 +180,22 @@ class Test_Team_FullCoordinator(AdditionalTeamPostTestsMixin, Team_Coordinators_
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def testPostInvoiceOverride_success(self):
+        payload = self.validPayload.copy()
+        payload['invoiceOverride'] = self.state1_event1_invoice1.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+    def testPostInvoiceOverride_wrong_event(self):
+        payload = self.validPayload.copy()
+        payload['invoiceOverride'] = self.state2_event1_invoice2.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Team_ViewCoordinator(Team_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
