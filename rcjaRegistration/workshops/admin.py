@@ -83,6 +83,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'homeState',
         'homeRegion',
         'schoolPostcode',
+        'invoiceOverride',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',

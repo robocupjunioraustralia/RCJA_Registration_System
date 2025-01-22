@@ -135,6 +135,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
+        'invoiceOverride',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',
