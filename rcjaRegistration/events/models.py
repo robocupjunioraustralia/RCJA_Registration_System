@@ -778,6 +778,12 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         self.createUpdateInvoices()
         if self.schoolValuesChanged:
             self.previousObject.createUpdateInvoices()
+            
+            if self.previousObject.invoiceOverride:
+                self.previousObject.invoiceOverride.calculateAndSaveAllTotals()
+
+        if self.invoiceOverride:
+            self.invoiceOverride.calculateAndSaveAllTotals()
 
     def postDelete(self):
         self.createUpdateInvoices()
@@ -789,7 +795,8 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         return (
             self.school != self.previousObject.school or
             self.mentorUser != self.previousObject.mentorUser or
-            self.campus != self.previousObject.campus
+            self.campus != self.previousObject.campus or
+            self.invoiceOverride != self.previousObject.invoiceOverride
         )
 
     # Get previous school, mentorUser and campus if changed and set fields on object with old values
