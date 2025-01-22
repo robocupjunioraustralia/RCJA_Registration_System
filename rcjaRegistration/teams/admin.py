@@ -73,6 +73,10 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
                 'withdrawn',
             )
         }),
+        ('Advanced billing settings', {
+            'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this team from that invoice and add it to a different invoice, which can be for a different school or mentor.",
+            'fields': ('invoiceOverride', )
+        }),
     )
     add_fieldsets = (
         (None, {
@@ -131,6 +135,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
+        'invoiceOverride',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',

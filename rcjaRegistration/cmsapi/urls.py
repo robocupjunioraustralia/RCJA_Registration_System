@@ -6,22 +6,18 @@ from rest_framework import routers
 
 from . import views
 
-from common.apiPermissions import ReadOnly
+from common.apiPermissions import CmsSecretPermission
 
 # **********Routers**********
 
-Router = routers.DefaultRouter()
-Router.get_api_root_view().cls.permission_classes = (ReadOnly,)
+Router = routers.SimpleRouter()
 
-# # *****Regions*****
-
-Router.register(r'states', views.StateViewSet)
-
-# # *****Events*****
+# # *****CMS*****
+Router.register(r'integration', views.CMSIntegrationViewSet, basename='cms')
 
 # # **********URL patterns**********
 
-app_name = 'publicapiv1'
+app_name = 'cmsapiv1'
 urlpatterns = [
     re_path(r'', include(Router.urls)),
 ]

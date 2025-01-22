@@ -41,8 +41,8 @@ def newCommonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -485,6 +485,18 @@ class Test_EventAvailableFileType_Clean(TestCase):
     def testUploadDeadlineAfterStartDate(self):
         self.availableFileType1.uploadDeadline = self.event.startDate + datetime.timedelta(days=1)
         self.assertRaises(ValidationError, self.availableFileType1.clean)
+
+    def testUploadDeadlineNoRegistrationsCloseDate(self):
+        self.event.registrationsCloseDate = None
+        self.event.save()
+
+        self.assertEqual(self.availableFileType1.clean(), None)
+
+    def testUploadDeadlineNoStartDate(self):
+        self.event.startDate = None
+        self.event.save()
+
+        self.assertEqual(self.availableFileType1.clean(), None)
 
 class Test_MentorEventFileType_Methods(TestCase):
     email1 = 'user1@user.com'

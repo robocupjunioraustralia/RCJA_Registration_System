@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.template import loader
 from django.contrib.auth.decorators import login_required
@@ -6,9 +6,11 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
+from django.conf import settings
 from coordination.permissions import checkCoordinatorPermission
 
 import datetime
+import jwt
 
 from .models import Event, BaseEventAttendance, Year
 from regions.models import State
@@ -45,9 +47,21 @@ def dashboard(request):
 
     eventsAvailable = openForRegistrationEvents.exists()
 
-    # Filter open events by state
+    # Get not open events
+    futureEvents = Event.objects.filter(
+        Q(registrationsOpenDate__gt=datetime.datetime.today()) | Q(registrationsOpenDate__isnull=True),
+        Q(startDate__gt=datetime.datetime.today()) | Q(startDate__isnull=True),
+        status='published',
+    ).exclude(
+        pk__in=openForRegistrationEvents.values_list('pk', flat=True),
+    ).exclude(
+        baseeventattendance__in=usersEventAttendances,
+    ).prefetch_related('state', 'year').order_by('startDate').distinct()
+
+    # Filter open and future events by state
     if request.method == 'GET' and not 'viewAll' in request.GET:
         openForRegistrationEvents = openForRegistrationEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
+        futureEvents = futureEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
 
     # Split competitions and workshops
     openForRegistrationCompetitions = openForRegistrationEvents.filter(eventType='competition')
@@ -73,6 +87,7 @@ def dashboard(request):
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0.05]) # Rounded because consistent with what user sees and not used in subsequent calculations
 
     context = {
+        'futureEvents': futureEvents,
         'openForRegistrationCompetitions': openForRegistrationCompetitions,
         'openForRegistrationWorkshops': openForRegistrationWorkshops,
         'currentEvents': currentEvents,
@@ -114,7 +129,7 @@ def getDivisionsMaxReachedWarnings(event, user):
 
         if availableDivision.maxDivisionTeamsTotalReached():
             divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
-    
+
     return divisionsMaxReachedWarnings
 
 def getAvailableToCopyTeams(request, event):
@@ -124,9 +139,10 @@ def getAvailableToCopyTeams(request, event):
     # Get teams already copied
     copiedTeamsList = Team.objects.filter(**filterDict).filter(copiedFrom__isnull=False).values_list('copiedFrom', flat=True)
 
-    # Replace event filtering with year filtering
+    # Replace event filtering with year filtering for current and previous event year
     del filterDict['event']
-    filterDict['event__year'] = event.year
+    filterDict['event__year__year__gte'] = event.year.year - 1
+    filterDict['event__year__year__lte'] = event.year.year
     filterDict['event__status'] = 'published'
 
     availableDivisions = event.availabledivision_set.values_list('division', flat=True)
@@ -135,7 +151,6 @@ def getAvailableToCopyTeams(request, event):
     teams = Team.objects.filter(**filterDict)
     teams = teams.exclude(event=event) # Exclude teams of the current event
     availableToCopyTeams = teams.exclude(pk__in=copiedTeamsList) # Exclude already copied teams
-    availableToCopyTeams = availableToCopyTeams.filter(division__in=availableDivisions) # Filter to teams that have a division compatible with the target event
 
     return teams, copiedTeamsList, availableToCopyTeams
 
@@ -162,7 +177,7 @@ def details(request, eventID):
     if event.boolWorkshop():
         billingTypeLabel = 'attendee'
     else:
-        billingTypeLabel = event.event_billingType
+        billingTypeLabel = event.competition_billingType
 
     _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
@@ -180,11 +195,33 @@ def details(request, eventID):
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
     }
-    return render(request, 'events/details.html', context)   
+    return render(request, 'events/details.html', context)
+
+def cms(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    if event.cmsEventId:
+        return redirect(settings.CMS_EVENT_URL_VIEW.replace("{EVENT_ID}", event.cmsEventId))
+
+    # Check permissions for cms event creation
+    # Only challenge coordinators with permission to change the event can create the CMS event instance for competitions
+    if event.eventType != 'competition':
+        raise PermissionDenied("The CMS for this event is unavailable")
+
+    if not checkCoordinatorPermission(request, Event, event, 'change'):
+        raise PermissionDenied("The CMS for this event is unavailable")
+
+    cmsPayload = {
+        "event": event.id,
+        "user": request.user.id,
+        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=settings.CMS_JWT_EXPIRY_MINUTES)
+    }
+    cmsToken = jwt.encode(cmsPayload, settings.CMS_JWT_SECRET, algorithm='HS256')
+    return redirect(settings.CMS_EVENT_URL_CREATE.replace("{TOKEN}", cmsToken))
 
 @login_required
 def loggedInUnderConstruction(request):
-    return render(request,'common/loggedInUnderConstruction.html') 
+    return render(request,'common/loggedInUnderConstruction.html')
 
 def mentorEventAttendanceAccessPermissions(request, eventAttendance):
     if request.user.currentlySelectedSchool:
@@ -196,7 +233,7 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
         # If not a school administrator allow editing individually entered eventAttendances
         if eventAttendance.mentorUser != request.user or eventAttendance.school:
             return False
-    
+
     return True
 
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
@@ -217,10 +254,11 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
-    def delete(self, request, teamID=None, attendeeID=None, eventID=None):
-        # This endpoint should never be called with eventID
-        if eventID is not None:
+    def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
+        # This endpoint should never be called with eventID or sourceTeamID
+        if eventID or sourceTeamID:
             return HttpResponseForbidden()
+        
         # Accept multiple variables because used for both teams and workshops
         # Need to lookup the relevant one
         eventAttendanceID = None
@@ -253,7 +291,7 @@ def getEventsForSummary(state, year):
             else:
                 eventDict["date"] = None
         else:
-            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"     
+            eventDict["date"] = f"{event.startDate.strftime('%d/%m/%Y')} - {event.endDate.strftime('%d/%m/%Y')}"
 
         if event.eventType == "competition":
             # Initialise counting variables
@@ -325,7 +363,7 @@ def getEventsForSummary(state, year):
             eventDict["location"] = event.venue.name
         else:
             eventDict["location"] = "None"
-        
+
         events.append(eventDict)
 
     return events

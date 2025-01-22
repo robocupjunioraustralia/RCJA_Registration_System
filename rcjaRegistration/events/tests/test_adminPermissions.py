@@ -196,9 +196,9 @@ class Event_Base:
         'state': 0,
         'name': 'New Event',
         'eventType': 'competition',
-        'event_defaultEntryFee': 50,
+        'competition_defaultEntryFee': 50,
         'status': 'published', # Needed for change tests
-        'event_billingType': 'team', # Needed for change tests
+        'competition_billingType': 'team', # Needed for change tests
         'maxMembersPerTeam': 5, # Needed for change tests
         'startDate': (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         'endDate': (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
@@ -304,6 +304,7 @@ class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_Supe
     ]
     expectedChangeReadonlyFields = [
         ('eventType', 'Event type'),
+        ('cmsLink', 'View CMS'),
     ]
 
 class Event_Coordinators_Base(Event_Base):
@@ -346,6 +347,7 @@ class Test_Event_FullCoordinator(AdditionalEventTestsMixin, Event_Coordinators_B
     ]
     expectedChangeReadonlyFields = [
         ('eventType', 'Event type'),
+        ('cmsLink', 'View CMS'),
     ]
 
     # Additional tests
@@ -359,4 +361,14 @@ class Test_Event_FullCoordinator(AdditionalEventTestsMixin, Event_Coordinators_B
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Event_ViewCoordinator(Event_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    expectedChangeMissingFields = [
+        ('cmsLink', 'View CMS'),
+    ]
+
+    # Additional tests
+
+    def test_cmsLink_present_if_cmsEventId(self):
+        getattr(self, self.state1Obj).cmsEventId = 'TEST'
+        getattr(self, self.state1Obj).save()
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+        self.checkReadonly(response, [('cmsLink', 'View CMS'),])

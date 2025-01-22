@@ -42,8 +42,8 @@ def newCommonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -60,6 +60,53 @@ def newCommonSetUp(self):
             invoiceFromDetails='Test Details Text',
             invoiceFooterMessage='Test Footer Text',
         )
+
+class TestWorkshopAttendeeMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+        self.attendee1 = WorkshopAttendee(
+            event=self.event,
+            mentorUser=self.user1,
+            school=None,
+            division=self.division1,
+            attendeeType='teacher',
+            firstName='First1',
+            lastName='Last1',
+            yearLevel='10',
+            gender='male',
+            email='test@test.com'
+        )
+        self.attendee2 = WorkshopAttendee(
+            event=self.event,
+            mentorUser=self.user1,
+            school=self.school2,
+            division=self.division1,
+            attendeeType='student',
+            firstName='First2',
+            lastName='Last2',
+            yearLevel='10',
+            gender='male',
+        )
+
+        self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        self.schoolAdmin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
+
+    def test_strNameAndSchool_no_school(self):
+        self.assertEqual(self.attendee1.strNameAndSchool(), "First1 Last1 (First Last)")
+
+    def test_strNameAndSchool_school(self):
+        self.assertEqual(self.attendee2.strNameAndSchool(), "First2 Last2 (School 2)")
 
 class TestWorkshopAttendeeClean(TestCase):
     email1 = 'user1@user.com'
@@ -274,8 +321,8 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),

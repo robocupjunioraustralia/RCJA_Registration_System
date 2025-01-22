@@ -39,6 +39,7 @@ urlpatterns = [
 
     # Project urls
     path('api/v1/public/', include('publicapi.urls')),
+    path('api/v1/cms/', include('cmsapi.urls')),
     path('', include('events.urls')),
     path('',include('schools.urls')),
     path('',include('teams.urls')),

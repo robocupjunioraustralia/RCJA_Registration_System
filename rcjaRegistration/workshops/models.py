@@ -75,6 +75,12 @@ class WorkshopAttendee(BaseEventAttendance):
     attendeeFullName.short_description = 'Name'
     attendeeFullName.admin_order_field = 'lastName'
 
+    def strNameAndSchool(self):
+        if self.school:
+            return f"{self.attendeeFullName()} ({self.school})"
+
+        return f"{self.attendeeFullName()} ({self.mentorUser.fullname_or_email()})"
+
     def __str__(self):
         return f"{self.attendeeFullName()} ({self.event.name} {self.event.year})"
 
