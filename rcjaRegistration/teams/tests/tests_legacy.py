@@ -1516,7 +1516,7 @@ class TestTeamMethods(TestCase):
         self.assertEqual(self.team1.strNameAndSchool(), "Team 1 (First Last)")
 
     def test_strNameAndSchool_school(self):
-        self.assertEqual(self.team2.strNameAndSchool(), "Team 1 (School 2)")
+        self.assertEqual(self.team2.strNameAndSchool(), "Team 2 (School 2)")
 
     def testMentorUserName(self):
         self.assertEqual(self.team1.mentorUserName(), 'First Last')
