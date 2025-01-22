@@ -34,6 +34,10 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details for teachers', {
             'fields': ('email',)
         }),
+        ('Advanced billing settings', {
+            'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this attendee from that invoice and add it to a different invoice, which can be for a different school or mentor.",
+            'fields': ('invoiceOverride', )
+        }),
     )
     add_fieldsets = (
         ('Event', {
@@ -79,6 +83,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'homeState',
         'homeRegion',
         'schoolPostcode',
+        'invoiceOverride',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',

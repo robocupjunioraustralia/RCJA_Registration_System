@@ -682,6 +682,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
 
+    # Advanced billing
+    invoiceOverride =models.ForeignKey('invoices.Invoice', verbose_name='Invoice override', on_delete=models.PROTECT, null=True, blank=True, help_text='Select an invoice to bill this team/ attendee to instead of the default behaviour.')
+
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
@@ -775,6 +778,12 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         self.createUpdateInvoices()
         if self.schoolValuesChanged:
             self.previousObject.createUpdateInvoices()
+            
+            if self.previousObject.invoiceOverride:
+                self.previousObject.invoiceOverride.calculateAndSaveAllTotals()
+
+        if self.invoiceOverride:
+            self.invoiceOverride.calculateAndSaveAllTotals()
 
     def postDelete(self):
         self.createUpdateInvoices()
@@ -786,7 +795,8 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         return (
             self.school != self.previousObject.school or
             self.mentorUser != self.previousObject.mentorUser or
-            self.campus != self.previousObject.campus
+            self.campus != self.previousObject.campus or
+            self.invoiceOverride != self.previousObject.invoiceOverride
         )
 
     # Get previous school, mentorUser and campus if changed and set fields on object with old values
@@ -812,6 +822,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     def childObject(self):
         # Get team or workshop attendance object for this eventAttendee
         return getattr(self, self.eventAttendanceType())
+
+    def strNameAndSchool(self):
+        return self.childObject().strNameAndSchool()
 
     def __str__(self):
         return str(self.childObject())

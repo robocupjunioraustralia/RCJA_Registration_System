@@ -145,6 +145,12 @@ class Team(BaseEventAttendance):
 
     # *****Get Methods*****
 
+    def strNameAndSchool(self):
+        if self.school:
+            return f"{self.name} ({self.school})"
+
+        return f"{self.name} ({self.mentorUser.fullname_or_email()})"
+
     def __str__(self):
         return f"{self.name} ({self.event.name} {self.event.year})"
 
