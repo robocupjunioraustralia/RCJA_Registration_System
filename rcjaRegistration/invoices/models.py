@@ -187,14 +187,16 @@ class Invoice(SaveDeleteMixin, models.Model):
             return {
                 'event': self.event,
                 'school': self.school,
-                'campus': self.campus
+                'campus': self.campus,
+                'invoiceOverride': None,
             }
 
         elif self.school:
             # If school but campuses not enableed filter by school
             return {
                 'event': self.event,
-                'school': self.school
+                'school': self.school,
+                'invoiceOverride': None,
             }
 
         else:
@@ -202,7 +204,8 @@ class Invoice(SaveDeleteMixin, models.Model):
             return {
                 'event': self.event,
                 'mentorUser': self.invoiceToUser,
-                'school': None
+                'school': None,
+                'invoiceOverride': None,
             }
 
     # Queryset of teams covered by this invoice
@@ -298,12 +301,8 @@ class Invoice(SaveDeleteMixin, models.Model):
             'totalInclGST': totalInclGST,
         }
 
-    def workshopInvoiceItems(self):
-        from workshops.models import WorkshopAttendee
+    def workshopInvoiceItems(self, attendees):
         invoiceItems = []
-
-        # All workshop attendees for this invoice        
-        attendees = WorkshopAttendee.objects.filter(**self.allItemsFilterFields())
 
         # Get details
         teacherUnitCost = self.event.workshopTeacherEntryFee
@@ -331,9 +330,34 @@ class Invoice(SaveDeleteMixin, models.Model):
         
         return invoiceItems
 
-    def competitionInvoiceItems(self):
+    def competitionDivisionInvoiceItem(self, teams, division, namePrefix = ""):
         from events.models import AvailableDivision
         from teams.models import Student
+        # Get available division
+        try:
+            availableDivision = self.event.availabledivision_set.get(division=division)
+        except AvailableDivision.DoesNotExist:
+            availableDivision = None
+
+        # Get unit cost, use availableDivision value if present, otherwise use value from event
+        unitCost = self.event.competition_defaultEntryFee
+        unit = self.event.competition_billingType
+        if availableDivision and availableDivision.division_entryFee is not None:
+            unitCost = availableDivision.division_entryFee
+            unit = availableDivision.division_billingType
+
+        # Get quantity
+        quantity = 0
+        if unit == 'team':
+            quantity = teams.count()
+
+        elif unit == 'student':
+            quantity = Student.objects.filter(team__in=teams).count()
+            
+        return self.invoiceItem(f"{namePrefix}{division.name}", "", quantity, unitCost, unit)
+
+    def competitionInvoiceItems(self):
+
         invoiceItems = []
 
         # Special rate entries
@@ -352,41 +376,43 @@ class Invoice(SaveDeleteMixin, models.Model):
 
         # Standard rate entries
         for division in self.standardRateDivisions():
-            # Get available division
-            try:
-                availableDivision = self.event.availabledivision_set.get(division=division)
-            except AvailableDivision.DoesNotExist:
-                availableDivision = None
-
             teams = self.standardRateTeams().filter(division=division)
-
-            # Get unit cost, use availableDivision value if present, otherwise use value from event
-            unitCost = self.event.competition_defaultEntryFee
-            unit = self.event.competition_billingType
-            if availableDivision and availableDivision.division_entryFee is not None:
-                unitCost = availableDivision.division_entryFee
-                unit = availableDivision.division_billingType
-
-            # Get quantity
-            quantity = 0
-            if unit == 'team':
-                quantity = teams.count()
-
-            elif unit == 'student':
-                quantity = Student.objects.filter(team__in=teams).count()
         
-            invoiceItems.append(self.invoiceItem(division.name, "", quantity, unitCost, unit))
+            invoiceItems.append(self.competitionDivisionInvoiceItem(teams, division))
+
+        return invoiceItems
+
+    def overrideInvoiceItems(self):
+        from teams.models import Team
+        from events.models import Division
+        from workshops.models import WorkshopAttendee
+
+        invoiceItems = []
+
+        teams = Team.objects.filter(invoiceOverride=self)
+        divisions = Division.objects.filter(baseeventattendance__in=teams).distinct()
+
+        for division in divisions:
+            invoiceItems.append(self.competitionDivisionInvoiceItem(teams, division, namePrefix="Other teams: "))
+
+        attendees = WorkshopAttendee.objects.filter(invoiceOverride=self)
+        invoiceItems += self.workshopInvoiceItems(attendees)
 
         return invoiceItems
 
     def invoiceItems(self):
+        from workshops.models import WorkshopAttendee
         invoiceItems = []
 
         if self.event.eventType == 'workshop':
-            invoiceItems += self.workshopInvoiceItems()
+            # All workshop attendees for this invoice        
+            attendees = WorkshopAttendee.objects.filter(**self.allItemsFilterFields())
+            invoiceItems += self.workshopInvoiceItems(attendees)
 
         elif self.event.eventType == 'competition':
             invoiceItems += self.competitionInvoiceItems()
+
+        invoiceItems += self.overrideInvoiceItems()
 
         # Add surcharge if not $0
         surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
