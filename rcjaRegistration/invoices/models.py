@@ -302,7 +302,8 @@ class Invoice(SaveDeleteMixin, models.Model):
         }
 
     def workshopInvoiceItem(self, attendees, division, nameSuffix, unitCost, override):
-        name = f'{division.name} - {nameSuffix}'
+        namePrefix = "Other attendees - " if override else ""
+        name = f'{namePrefix}{division.name} - {nameSuffix}'
         description = ", ".join(map(lambda attendee: attendee.strNameAndSchool(), attendees)) if override else ""
         return self.invoiceItem(name, description, attendees.count(), unitCost)
     
@@ -398,7 +399,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         for division in divisions:
             divisionTeams = teams.filter(division=division)
             teamNames = ", ".join(map(lambda team: team.strNameAndSchool(), divisionTeams))
-            invoiceItems.append(self.competitionDivisionInvoiceItem(divisionTeams, division, namePrefix="Other teams: ", description=teamNames))
+            invoiceItems.append(self.competitionDivisionInvoiceItem(divisionTeams, division, namePrefix="Other teams - ", description=teamNames))
 
         attendees = WorkshopAttendee.objects.filter(invoiceOverride=self)
         invoiceItems += self.workshopInvoiceItems(attendees, override=True)
