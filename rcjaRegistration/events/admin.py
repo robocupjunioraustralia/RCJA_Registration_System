@@ -18,6 +18,7 @@ from schools.models import Campus
 from eventfiles.adminInlines import EventAvailableFileTypeInline
 from teams.models import Team
 from workshops.models import WorkshopAttendee
+from invoices.models import Invoice
 
 from regions.admin import StateAdmin
 
@@ -573,6 +574,9 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
                     eventType=cls.eventTypeMapping,
                     registrationsOpenDate__isnull=False,
                 ),
+            },
+            'invoiceOverride': {
+                'queryset': Invoice.objects.filter(event=obj.event) if obj is not None else Invoice.objects.none() # Field not displayed on create so user will never see fallback to None
             },
         }
 

@@ -682,6 +682,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
 
+    # Advanced billing
+    invoiceOverride =models.ForeignKey('invoices.Invoice', verbose_name='Invoice override', on_delete=models.PROTECT, null=True, blank=True, help_text='Select an invoice to bill this team/ attendee to instead of the default behaviour.')
+
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
