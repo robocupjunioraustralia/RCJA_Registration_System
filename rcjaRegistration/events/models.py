@@ -823,6 +823,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         # Get team or workshop attendance object for this eventAttendee
         return getattr(self, self.eventAttendanceType())
 
+    def strNameAndSchool(self):
+        return self.childObject().strNameAndSchool()
+
     def __str__(self):
         return str(self.childObject())
 

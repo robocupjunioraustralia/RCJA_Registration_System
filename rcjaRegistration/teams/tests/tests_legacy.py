@@ -1512,6 +1512,12 @@ class TestTeamMethods(TestCase):
     def testChildObject(self):
         self.assertEqual(self.team1.childObject(), self.team1)
 
+    def test_strNameAndSchool_no_school(self):
+        self.assertEqual(self.team1.strNameAndSchool(), "Team 1 (First Last)")
+
+    def test_strNameAndSchool_school(self):
+        self.assertEqual(self.team2.strNameAndSchool(), "Team 1 (School 2)")
+
     def testMentorUserName(self):
         self.assertEqual(self.team1.mentorUserName(), 'First Last')
 

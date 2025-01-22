@@ -301,7 +301,14 @@ class Invoice(SaveDeleteMixin, models.Model):
             'totalInclGST': totalInclGST,
         }
 
-    def workshopInvoiceItems(self, attendees):
+    def workshopInvoiceItem(self, attendees, division, nameSuffix, unitCost, override):
+        name = f'{division.name} - {nameSuffix}'
+        description = ""
+        if override:
+            description = ", ".join(map(lambda attendee: attendee.strNameAndSchool(), attendees))
+        return self.invoiceItem(name, description, attendees.count(), unitCost)
+    
+    def workshopInvoiceItems(self, attendees, override=False):
         invoiceItems = []
 
         # Get details
@@ -317,20 +324,18 @@ class Invoice(SaveDeleteMixin, models.Model):
             # Split teacher and student
 
             # Teachers
-            teacherAttedees = attendees.filter(division=division, attendeeType='teacher').count()
-            if teacherAttedees > 0:
-                name = f'{division.name} - teacher'
-                invoiceItems.append(self.invoiceItem(name, "", teacherAttedees, teacherUnitCost))
+            teacherAttedees = attendees.filter(division=division, attendeeType='teacher')
+            if teacherAttedees.count() > 0:
+                invoiceItems.append(self.workshopInvoiceItem(teacherAttedees, division, 'teacher', teacherUnitCost, override))
 
             # Students
-            studentAttedees = attendees.filter(division=division, attendeeType='student').count()
-            if studentAttedees > 0:
-                name = f'{division.name} - student'
-                invoiceItems.append(self.invoiceItem(name, "", studentAttedees, studentUnitCost))
+            studentAttedees = attendees.filter(division=division, attendeeType='student')
+            if studentAttedees.count() > 0:
+                invoiceItems.append(self.workshopInvoiceItem(studentAttedees, division, 'student', studentUnitCost, override))
         
         return invoiceItems
 
-    def competitionDivisionInvoiceItem(self, teams, division, namePrefix = ""):
+    def competitionDivisionInvoiceItem(self, teams, division, namePrefix = "", description = ""):
         from events.models import AvailableDivision
         from teams.models import Student
         # Get available division
@@ -354,7 +359,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         elif unit == 'student':
             quantity = Student.objects.filter(team__in=teams).count()
             
-        return self.invoiceItem(f"{namePrefix}{division.name}", "", quantity, unitCost, unit)
+        return self.invoiceItem(f"{namePrefix}{division.name}", description, quantity, unitCost, unit)
 
     def competitionInvoiceItems(self):
 
@@ -393,10 +398,12 @@ class Invoice(SaveDeleteMixin, models.Model):
         divisions = Division.objects.filter(baseeventattendance__in=teams).distinct()
 
         for division in divisions:
-            invoiceItems.append(self.competitionDivisionInvoiceItem(teams, division, namePrefix="Other teams: "))
+            divisionTeams = teams.filter(division=division)
+            teamNames = ", ".join(map(lambda team: team.strNameAndSchool(), divisionTeams))
+            invoiceItems.append(self.competitionDivisionInvoiceItem(divisionTeams, division, namePrefix="Other teams: ", description=teamNames))
 
         attendees = WorkshopAttendee.objects.filter(invoiceOverride=self)
-        invoiceItems += self.workshopInvoiceItems(attendees)
+        invoiceItems += self.workshopInvoiceItems(attendees, override=True)
 
         return invoiceItems
 
