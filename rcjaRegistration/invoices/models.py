@@ -303,9 +303,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     def workshopInvoiceItem(self, attendees, division, nameSuffix, unitCost, override):
         name = f'{division.name} - {nameSuffix}'
-        description = ""
-        if override:
-            description = ", ".join(map(lambda attendee: attendee.strNameAndSchool(), attendees))
+        description = ", ".join(map(lambda attendee: attendee.strNameAndSchool(), attendees)) if override else ""
         return self.invoiceItem(name, description, attendees.count(), unitCost)
     
     def workshopInvoiceItems(self, attendees, override=False):
