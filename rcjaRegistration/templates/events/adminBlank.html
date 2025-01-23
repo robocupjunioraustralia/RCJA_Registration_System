@@ -10,9 +10,8 @@
 <div class="ui aligned container">
     <div class="row">
         <h1>Event Comparisons</h1>
-        <h1>{{output}}</h1>
     </div>
-
+    <br>
     <div class="row">
         <div class="form form-group left-aligned-text"></div>
             {% if form.non_field_errors %}
@@ -29,16 +28,16 @@
             {% endif %}
             <form method="post">
                 {% csrf_token %}
-                <div class="three fields">
-                    <div class="field">
-                        {{form.competitions.label_tag}}
-                        {{form.competitions}}
-                    </div>
-                    <div class="field">
-                        {{form.workshops.label_tag}}
-                        {{form.workshops}}
-                    </div>
+                <div class="row">
+                    <h2>{{form.competitions.label_tag}}</h2>
+                    <p>{{form.competitions}}</p>
                 </div>
+                <br>
+                <div class="row">
+                    <h2>{{form.workshops.label_tag}}</h2>
+                    <p>{{form.workshops}}</p>
+                </div>
+               
                 <input type="submit" value="Submit"> 
             </form>
     </div>

@@ -1162,6 +1162,9 @@ class TestAdminSummaryContext(TestCase):
             region=self.newRegion
         )
 
+        self.division2 = Division.objects.create(name='Div2',category = self.divCategory)
+        self.oldEventWithTeams.divisions.add(self.division2)
+
         # self.oldeventTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='test')
         # self.oldTeamStudent.objects.create = Student(team=self.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='male')
         self.oldeventTeam2 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='second')
@@ -1169,9 +1172,12 @@ class TestAdminSummaryContext(TestCase):
         self.oldeventTeam3 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.school2, mentorUser=self.user, name='third')
         Student.objects.create(team=self.oldeventTeam3,firstName='Third1',lastName='Third1',yearLevel=1,gender='male')
         Student.objects.create(team=self.oldeventTeam3,firstName='Third2',lastName='Third2',yearLevel=1,gender='other')
+        self.oldeventTeam4 = Team.objects.create(event=self.oldEventWithTeams, division=self.division2, school=self.newSchool, mentorUser=self.user, name='second')
+        Student.objects.create(team=self.oldeventTeam4,firstName='Fourth1',lastName='Fourth1',yearLevel=1,gender='male')
 
         self.venue = Venue.objects.create(name='Venue 1', state=self.newState)
         self.oldEvent.venue = self.venue
+        
         self.oldEvent.save()
 
         self.workshop = Event.objects.create(year=self.year,
@@ -1187,12 +1193,14 @@ class TestAdminSummaryContext(TestCase):
             directEnquiriesTo = self.user     
             )
         self.workshop.divisions.add(self.division)
+        self.workshop.divisions.add(self.division2)
 
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.school2, mentorUser=self.user,attendeeType='student', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
-        
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division2, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
+
         self.workshop2 = Event.objects.create(year=self.year,
             state=self.newState,
             name='Workshop 2 Test',
@@ -1205,7 +1213,7 @@ class TestAdminSummaryContext(TestCase):
             registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
             directEnquiriesTo = self.user     
             )
-        self.workshop.divisions.add(self.division)
+        self.workshop2.divisions.add(self.division)
 
         WorkshopAttendee.objects.create(event = self.workshop2, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop2, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
@@ -1216,18 +1224,25 @@ class TestAdminSummaryContext(TestCase):
         returned = getAdminCompSummary(self.oldEventWithTeams)
         context = {
             "name": self.oldEventWithTeams.name,
-            "division_categories": {1:
-                {'divisions':[{
+            "division_categories": {self.divCategory.pk:
+                {'divisions':[
+                    {
+                        'name': 'Div2',
+                        'teams': 1,
+                        'students': 1,
+                    },
+                    {
                         'name': 'test',
                         'teams': 3,
                         'students': 4,
-                    }],
-                'name': 'Test', 'rows': 2,'students': 4,'teams': 3}},
-            'division_teams': 3,
-            'division_students': 4,
-            "schools": [{'name':self.newSchool.name,'teams':2,'students':2},{'name':self.school2.name,'teams':1,'students':2},{'name': 'Independent', 'teams': 0, 'students': 0}],
-            'school_teams': 3,
-            'school_students': 4,
+                    },
+                    ],
+                'name': 'Test', 'rows': 3,'students': 5,'teams': 4}},
+            'division_teams': 4,
+            'division_students': 5,
+            "schools": [{'name':self.newSchool.name,'teams':3,'students':3},{'name':self.school2.name,'teams':1,'students':2},{'name': 'Independent', 'teams': 0, 'students': 0}],
+            'school_teams': 4,
+            'school_students': 5,
         }
         self.assertEqual(context, returned)
 
@@ -1236,18 +1251,29 @@ class TestAdminSummaryContext(TestCase):
         context = {
             "name": self.workshop.name,
             "division_categories": {self.divCategory.pk:
-                {'divisions':[{
+                {'divisions':[
+                    {
+                        'name': 'Div2',
+                        'students': 1,
+                        'teachers': 0,
+                    },
+                    {
                         'name': 'test',
                         'students': 3,
                         'teachers': 1,
-                    }],
-                'name':'Test','rows':2,'students':3,'teachers':1}},
-            'division_students': 3,
+                    },],
+                'name':'Test','rows':3,'students':4,'teachers':1}},
+            'division_students': 4,
             'division_teachers': 1,
-            "schools": [{'name':self.newSchool.name,'students':2,'teachers':1},{'name':self.school2.name,'students':1,'teachers':0},{'name': 'Independent', 'students': 0, 'teachers': 0}],            'school_students': 3,
+            "schools": [{'name':self.newSchool.name,'students':3,'teachers':1},{'name':self.school2.name,'students':1,'teachers':0},{'name': 'Independent', 'students': 0, 'teachers': 0}],
+            'school_students': 4,
             'school_teachers': 1,
         }
         self.assertEqual(context, returned)
+
+    def testBlankForm(self):
+        response = self.client.get(reverse('events:eventAdminSummary'))
+        self.assertContains(response,'Event Comparisons')
 
     def testWorkshopAndCompetition(self):
         response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id],'workshops':[self.workshop.id]})
