@@ -406,7 +406,7 @@ def getAdminCompSummary(event):
     
     independent = schools.pop(None, {'name': 'Independent', 'teams': 0, 'students': 0})
     school_list = list(schools.values())
-    school_list.sort()
+    school_list.sort(key=lambda x: x['name'])
     school_list.append(independent)
     
     context = {
@@ -451,7 +451,7 @@ def getAdminWorkSummary(event):
 
     # Change rows to strings
     for division_cat in division_categories.values():
-        division_cat["rows"] = str(division_cat["rows"])
+        division_cat["rows"] = division_cat["rows"]
 
     # Schools
     schools = {}
@@ -478,7 +478,7 @@ def getAdminWorkSummary(event):
     
     independent = schools.pop(None, {'name': 'Independent', 'students': 0, 'teachers': 0})
     school_list = list(schools.values())
-    school_list.sort()
+    school_list.sort(key=lambda x: x['name'])
     school_list.append(independent)
     
     context = {

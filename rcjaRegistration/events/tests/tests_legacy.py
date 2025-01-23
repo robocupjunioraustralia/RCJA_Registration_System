@@ -6,11 +6,13 @@ from django.http import HttpRequest
 from regions.models import State,Region
 from schools.models import School, SchoolAdministrator
 from teams.models import Team, Student
-from events.models import Event, Division, Year, AvailableDivision, Venue
+from events.models import Event, Division, Year, AvailableDivision, Venue, DivisionCategory
 from users.models import User
 from coordination.models import Coordinator
 from eventfiles.models import EventAvailableFileType, MentorEventFileType
 from invoices.models import Invoice, InvoiceGlobalSettings
+from events.views import getAdminCompSummary, getAdminWorkSummary
+from workshops.models import WorkshopAttendee
 
 import datetime
 # Create your tests here.
@@ -50,7 +52,8 @@ def commonSetUp(obj):
         user=obj.user
     )
     obj.year = Year.objects.create(year=2019)
-    obj.division = Division.objects.create(name='test')
+    obj.divCategory = DivisionCategory.objects.create(name='Test')
+    obj.division = Division.objects.create(name='test',category = obj.divCategory)
 
     obj.oldEvent = Event.objects.create(
         year=obj.year,
@@ -116,10 +119,10 @@ def commonSetUp(obj):
     )
     obj.oldEventWithTeams.divisions.add(obj.division)
     obj.oldeventTeam = Team.objects.create(event=obj.oldEventWithTeams, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test')
-    obj.oldTeamStudent = Student(team=obj.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male')
+    obj.oldTeamStudent = Student.objects.create(team=obj.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='Male')
 
     obj.newEventTeam = Team.objects.create(event=obj.newEvent, division=obj.division, school=obj.newSchool, mentorUser=obj.user, name='test new team')
-    obj.newTeamStudent = Student(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male')
+    obj.newTeamStudent = Student.objects.create(team=obj.newEventTeam,firstName='test',lastName='new',yearLevel=1,gender='Male')
 
     obj.invoiceSettings = InvoiceGlobalSettings.objects.create(
         invoiceFromName='From Name',
@@ -1145,3 +1148,84 @@ class TestVenueMethods(TestCase):
 
     def testGetState(self):
         self.assertEqual(self.venue1.getState(), self.newState)
+
+class TestAdminSummaryContext(TestCase):
+    def setUp(self):
+        self.maxDiff = None
+        commonSetUp(self)
+        newSetupEvent(self)
+
+        self.school2 = School.objects.create(
+            name='School 2',
+            abbreviation='sch2',
+            state=self.newState,
+            region=self.newRegion
+        )
+
+        # self.oldeventTeam = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='test')
+        # self.oldTeamStudent.objects.create = Student(team=self.oldeventTeam,firstName='test',lastName='old',yearLevel=1,gender='male')
+        self.oldeventTeam2 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.newSchool, mentorUser=self.user, name='second')
+        Student.objects.create(team=self.oldeventTeam2,firstName='Second1',lastName='Second1',yearLevel=1,gender='female')
+        self.oldeventTeam3 = Team.objects.create(event=self.oldEventWithTeams, division=self.division, school=self.school2, mentorUser=self.user, name='third')
+        Student.objects.create(team=self.oldeventTeam3,firstName='Third1',lastName='Third1',yearLevel=1,gender='male')
+        Student.objects.create(team=self.oldeventTeam3,firstName='Third2',lastName='Third2',yearLevel=1,gender='other')
+
+        self.venue = Venue.objects.create(name='Venue 1', state=self.newState)
+        self.oldEvent.venue = self.venue
+        self.oldEvent.save()
+
+        self.workshop = Event.objects.create(year=self.year,
+            state=self.newState,
+            name='Workshop',
+            eventType='workshop',
+            status='published',
+            maxMembersPerTeam=5,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+            )
+        self.workshop.divisions.add(self.division)
+
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.school2, mentorUser=self.user,attendeeType='student', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
+
+    def testCompetitionDict(self):
+        returned = getAdminCompSummary(self.oldEventWithTeams)
+        context = {
+            "name": self.oldEventWithTeams.name,
+            "division_categories": {1:
+                {'divisions':[{
+                        'name': 'test',
+                        'teams': 3,
+                        'students': 4,
+                    }],
+                'name': 'Test', 'rows': 2,'students': 4,'teams': 3}},
+            'division_teams': 3,
+            'division_students': 4,
+            "schools": [{'name':self.newSchool.name,'teams':2,'students':2},{'name':self.school2.name,'teams':1,'students':2},{'name': 'Independent', 'teams': 0, 'students': 0}],
+            'school_teams': 3,
+            'school_students': 4,
+        }
+        self.assertEqual(context, returned)
+
+    def testWorkshopDict(self):
+        returned = getAdminWorkSummary(self.workshop)
+        context = {
+            "name": self.workshop.name,
+            "division_categories": {2:
+                {'divisions':[{
+                        'name': 'test',
+                        'students': 3,
+                        'teachers': 1,
+                    }],
+                'name':'Test','rows':2,'students':3,'teachers':1}},
+            'division_students': 3,
+            'division_teachers': 1,
+            "schools": [{'name':self.newSchool.name,'students':2,'teachers':1},{'name':self.school2.name,'students':1,'teachers':0},{'name': 'Independent', 'students': 0, 'teachers': 0}],            'school_students': 3,
+            'school_teachers': 1,
+        }
+        self.assertEqual(context, returned)
