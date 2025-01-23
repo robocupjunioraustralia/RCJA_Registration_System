@@ -94,7 +94,7 @@ class TestUserModelMethods(TestCase):
 
         qs = self.user1.adminViewableStates()
         self.assertTrue(qs.exists())
-        self.assertQuerysetEqual(qs, State.objects.all(), ordered=False)
+        self.assertQuerySetEqual(qs, State.objects.all(), ordered=False)
 
     def test_adminViewableStates_coordinator(self):
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
@@ -102,7 +102,7 @@ class TestUserModelMethods(TestCase):
 
         qs = self.user1.adminViewableStates()
         self.assertTrue(qs.exists())
-        self.assertQuerysetEqual(qs, State.objects.filter(id=self.state1.id), ordered=False)
+        self.assertQuerySetEqual(qs, State.objects.filter(id=self.state1.id), ordered=False)
 
 class TestUpdateUserPermissions(TestCase):
     def setUp(self):

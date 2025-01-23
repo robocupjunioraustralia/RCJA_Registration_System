@@ -848,7 +848,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertEquals(response.url, reverse("events:dashboard"))
+        self.assertEqual(response.url, reverse("events:dashboard"))
         School.objects.get(name='New name')
 
     def testChangeName_success_continueEditing(self):
@@ -875,7 +875,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertEquals(response.url, reverse('schools:details'))
+        self.assertEqual(response.url, reverse('schools:details'))
         School.objects.get(name='New name')
 
     def testMissingManagementFormData(self):
@@ -892,7 +892,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
@@ -909,7 +909,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testChangeName_failure(self):
@@ -1053,7 +1053,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Cannot delete some instances of model &#x27;Campus&#x27; because they are referenced through protected foreign keys:")
         Campus.objects.get(name='test 1')
         self.assertEqual(Campus.objects.count(), numberExistingCampuses)
@@ -1159,7 +1159,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Cannot delete some instances of model &#x27;SchoolAdministrator&#x27; because they are referenced through a protected foreign key:")
         SchoolAdministrator.objects.get(pk=self.admin2.pk)
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins)

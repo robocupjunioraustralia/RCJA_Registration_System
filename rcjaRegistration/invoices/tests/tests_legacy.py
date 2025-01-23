@@ -1781,7 +1781,7 @@ class TestInvoiceSummaryView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['user'], self.user1)
-        self.assertQuerysetEqual(response.context['invoices'], Invoice.objects.none())
+        self.assertQuerySetEqual(response.context['invoices'], Invoice.objects.none())
 
     def testPageLoads_invoices(self):
         self.invoice3 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2)

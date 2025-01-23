@@ -428,11 +428,11 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+1)
-        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEqual(Student.objects.get(firstName="First 1").firstName, "First 1")
 
     def testAdd2StudentsSucceeds(self):
         existingStudents = self.newEventTeam.student_set.count()
@@ -456,12 +456,12 @@ class TestTeamEdit(TestCase):
             "student_set-1-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+2)
-        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
-        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertEqual(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEqual(Student.objects.get(firstName="First 2").firstName, "First 2")
 
     def testAdd3StudentsFails(self):
         existingStudents = self.newEventTeam.student_set.count()
@@ -489,7 +489,7 @@ class TestTeamEdit(TestCase):
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
@@ -520,12 +520,12 @@ class TestTeamEdit(TestCase):
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
-        self.assertEquals(Student.objects.get(firstName="New 1").firstName, "New 1")
-        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertEqual(Student.objects.get(firstName="New 1").firstName, "New 1")
+        self.assertEqual(Student.objects.get(firstName="First 2").firstName, "First 2")
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
 
@@ -554,12 +554,12 @@ class TestTeamEdit(TestCase):
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
-        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
-        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertEqual(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEqual(Student.objects.get(firstName="First 2").firstName, "First 2")
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="New 1"))
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
 
@@ -579,7 +579,7 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
@@ -598,7 +598,7 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testEditStudentWithInvalidFails(self):
