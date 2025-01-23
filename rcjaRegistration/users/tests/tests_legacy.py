@@ -110,15 +110,15 @@ class AuthViewTests(TestCase):
         self.assertEqual(response.status_code,302) #ensure a successful login works and redirects
 
     def testLogoutByUrl(self):
-        response = self.client.get('/accounts/logout/')
+        response = self.client.post('/accounts/logout/')
         self.assertEqual(response.status_code, 200)
 
     def testLogoutByName(self):
-        response = self.client.get(reverse('logout'))
+        response = self.client.post(reverse('logout'))
         self.assertEqual(response.status_code, 200)
 
     def testLogoutUsesCorrectTemplate(self):
-        response = self.client.get(reverse('logout'))
+        response = self.client.post(reverse('logout'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/logged_out.html')
 
@@ -129,7 +129,7 @@ class AuthViewTests(TestCase):
         )
         user.save()
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-        self.client.get(reverse('logout'))
+        self.client.post(reverse('logout'))
         # Try an unauthorized page
         response = self.client.get(reverse('events:dashboard'))
         self.assertEqual(response.status_code, 302)
