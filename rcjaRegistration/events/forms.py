@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.functional import lazy
 
 from events.models import Division, Event
 from schools.models import Campus
@@ -28,11 +29,17 @@ class BaseEventAttendanceFormInitMixin:
         self.fields['event'].disabled = True
         self.fields['event'].widget = forms.HiddenInput()
 
+def COMPETITIONS_CHOICES():
+    for event in Event.objects.filter(status='published', eventType='competition'):
+        yield (event.pk, event.name)
+
+def WORKSHOPS_CHOICES():
+    for event in Event.objects.filter(status='published', eventType='workshop'):
+        yield (event.pk, event.name)
+
 class AdminEventsForm(forms.Form):
-    COMPETITIONS_CHOICES = ((event.pk, event.name) for event in Event.objects.filter(status='published', eventType='competition'))
-    competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=COMPETITIONS_CHOICES)
-    WORKSHOPS_CHOICES = ((event.pk, event.name) for event in Event.objects.filter(status='published', eventType='workshop'))
-    workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=WORKSHOPS_CHOICES)
+    competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))
+    workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(WORKSHOPS_CHOICES, tuple))
 
     def clean(self):
         workshops = len(self.cleaned_data['workshops'])>0
