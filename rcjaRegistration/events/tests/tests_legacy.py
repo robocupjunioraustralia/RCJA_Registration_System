@@ -1176,7 +1176,7 @@ class TestAdminSummaryContext(TestCase):
 
         self.workshop = Event.objects.create(year=self.year,
             state=self.newState,
-            name='Workshop',
+            name='Workshop Test',
             eventType='workshop',
             status='published',
             maxMembersPerTeam=5,
@@ -1192,6 +1192,25 @@ class TestAdminSummaryContext(TestCase):
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.school2, mentorUser=self.user,attendeeType='student', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
+        
+        self.workshop2 = Event.objects.create(year=self.year,
+            state=self.newState,
+            name='Workshop 2 Test',
+            eventType='workshop',
+            status='published',
+            maxMembersPerTeam=5,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            endDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo = self.user     
+            )
+        self.workshop.divisions.add(self.division)
+
+        WorkshopAttendee.objects.create(event = self.workshop2, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
+        WorkshopAttendee.objects.create(event = self.workshop2, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
+        
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testCompetitionDict(self):
         returned = getAdminCompSummary(self.oldEventWithTeams)
@@ -1216,7 +1235,7 @@ class TestAdminSummaryContext(TestCase):
         returned = getAdminWorkSummary(self.workshop)
         context = {
             "name": self.workshop.name,
-            "division_categories": {2:
+            "division_categories": {self.divCategory.pk:
                 {'divisions':[{
                         'name': 'test',
                         'students': 3,
@@ -1229,3 +1248,53 @@ class TestAdminSummaryContext(TestCase):
             'school_teachers': 1,
         }
         self.assertEqual(context, returned)
+
+    def testWorkshopAndCompetition(self):
+        response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id],'workshops':[self.workshop.id]})
+        self.assertContains(response,'Cannot directly compare workshops and competitions')
+
+    def testCompetitionFromURL(self):
+        response = self.client.post(reverse('events:eventAdminSummarySpecific', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        self.assertContains(response,'Students', 3)
+        self.assertContains(response,'Teams', 3)
+        self.assertContains(response,'Divisions', 1)
+        self.assertContains(response,'Schools', 1)
+
+    def testCompetitionFromForm(self):
+        response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id],'workshops':[]})
+        self.assertContains(response,'Students', 3)
+        self.assertContains(response,'Teams', 3)
+        self.assertContains(response,'Divisions', 1)
+        self.assertContains(response,'Schools', 1)
+
+    def testMultipleCompetitions(self):
+        response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id, self.newEvent.id],'workshops':[]})
+        self.assertContains(response,'Students Per Division', 1)
+        self.assertContains(response,'Teams Per Division', 1)
+        self.assertContains(response,'Students Per School', 1)
+        self.assertContains(response,'Teams Per School', 1)
+        self.assertContains(response,self.oldEventWithTeams.name, 4)
+        self.assertContains(response,self.newEvent.name, 4)
+
+    def testWorkshopFromURL(self):
+        response = self.client.post(reverse('events:eventAdminSummarySpecific', kwargs= {'eventID':self.workshop.id}))
+        self.assertContains(response,'Students', 3)
+        self.assertContains(response,'Teachers', 2)
+        self.assertContains(response,'Divisions', 1)
+        self.assertContains(response,'Schools', 1)
+
+    def testWorkshopFromForm(self):
+        response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[],'workshops':[self.workshop.id]})
+        self.assertContains(response,'Students', 3)
+        self.assertContains(response,'Teachers', 2)
+        self.assertContains(response,'Divisions', 1)
+        self.assertContains(response,'Schools', 1)
+
+    def testMultipleWorkshop(self):
+        response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[],'workshops':[self.workshop.id, self.workshop2.id]})
+        self.assertContains(response,'Students Per Division', 1)
+        self.assertContains(response,'Teachers Per Division', 1)
+        self.assertContains(response,'Students Per School', 1)
+        self.assertContains(response,'Teachers Per School', 1)
+        self.assertContains(response,self.workshop.name, 4)
+        self.assertContains(response,self.workshop2.name, 4)
