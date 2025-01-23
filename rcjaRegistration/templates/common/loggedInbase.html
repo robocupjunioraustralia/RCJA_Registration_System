@@ -55,19 +55,7 @@
         <a class="item" href="{% url 'events:dashboard' %}">
             <i class="home icon"></i>
             Dashboard
-        </a>  
-        <!-- <a class="item" href="{% url 'events:loggedInConstruction' %}">
-            <i class="calendar alternate icon"></i>
-            My Events
-        </a>  
-        <a class="item" href="{% url 'events:loggedInConstruction' %}">
-            <i class="users icon"></i>
-            My Teams
-        </a>  
-        <a class="item" href="{% url 'events:loggedInConstruction' %}">
-            <i class="user icon"></i>
-            My Students
-        </a>        -->
+        </a>
         <a class="item" href="{% url 'invoices:summary' %}">
             <i class="credit card icon"></i>
             My Invoices
@@ -75,27 +63,7 @@
         <a class="item" href="{% url 'association:membership' %}">
             <i class="briefcase icon"></i>
             Association Membership
-        </a>   
-        {% if user.is_staff %}
-        <a class="item" href="{% url 'admin:index' %}" >
-            <i class="id badge icon"></i>
-            Admin
-        </a>     
-        {% endif %}
-        <div class="vertical menu item" >
-            <i class="user circle icon"></i>
-            <span style="width:3.5rem;overflow: hidden; text-overflow: ellipsis;">
-            {{ user.fullname_or_email }}
-            </span>
-                <div class="menu">
-                    <a href="{% url 'users:details' %}" class="item">My details</a>
-                    {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
-                    <a href = "{% url 'password_change' %}" class="item">Change password</a>
-                    <a href = "{% url 'logout' %}" class="item">Log out</a>
-                    <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
-                    {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
-                </div>
-        </div>      
+        </a> 
     </div>
     <div class="ui top massive fixed menu">
         <a class="item" style="margin-right:1rem;" onclick = "toggleSidebar()">
@@ -163,7 +131,10 @@
                         <a href="{% url 'users:details' %}" class="item">My details</a>
                         {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
                         <a href = "{% url 'password_change' %}" class="item">Change password</a>
-                        <a href = "{% url 'logout' %}" class="item">Log out</a>
+                        <form method="post" action="{% url 'logout' %}" class="button-form">
+                            {% csrf_token %}
+                            <input class="header-button item" type="submit" value="Log out"/>
+                        </form>
                         <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
                         {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
                     </div>

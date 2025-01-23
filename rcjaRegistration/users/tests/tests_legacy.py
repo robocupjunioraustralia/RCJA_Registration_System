@@ -110,15 +110,15 @@ class AuthViewTests(TestCase):
         self.assertEqual(response.status_code,302) #ensure a successful login works and redirects
 
     def testLogoutByUrl(self):
-        response = self.client.get('/accounts/logout/')
+        response = self.client.post('/accounts/logout/')
         self.assertEqual(response.status_code, 200)
 
     def testLogoutByName(self):
-        response = self.client.get(reverse('logout'))
+        response = self.client.post(reverse('logout'))
         self.assertEqual(response.status_code, 200)
 
     def testLogoutUsesCorrectTemplate(self):
-        response = self.client.get(reverse('logout'))
+        response = self.client.post(reverse('logout'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/logged_out.html')
 
@@ -129,7 +129,7 @@ class AuthViewTests(TestCase):
         )
         user.save()
         self.client.login(request=HttpRequest(), username=self.email, password=self.password)
-        self.client.get(reverse('logout'))
+        self.client.post(reverse('logout'))
         # Try an unauthorized page
         response = self.client.get(reverse('events:dashboard'))
         self.assertEqual(response.status_code, 302)
@@ -179,7 +179,7 @@ class TestEditDetails(TestCase):
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(302,response.status_code)
-        self.assertEquals(response.url, reverse('events:dashboard'))
+        self.assertEqual(response.url, reverse('events:dashboard'))
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
     def testEditWorks_continueEditing(self):
@@ -198,7 +198,7 @@ class TestEditDetails(TestCase):
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(302,response.status_code)
-        self.assertEquals(response.url, reverse('users:details'))
+        self.assertEqual(response.url, reverse('users:details'))
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
     def testEditWorks_displayAgain(self):
@@ -219,7 +219,7 @@ class TestEditDetails(TestCase):
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
         self.assertEqual(302,response.status_code)
-        self.assertEquals(response.url, reverse('users:details'))
+        self.assertEqual(response.url, reverse('users:details'))
         self.assertEqual(User.objects.get(first_name="Admin").email,'admon@admon.com')
 
     def testMissingManagementFormData(self):
@@ -232,7 +232,7 @@ class TestEditDetails(TestCase):
             'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
@@ -245,7 +245,7 @@ class TestEditDetails(TestCase):
             'homeRegion': self.newRegion.id,
         }
         response = self.client.post(path=reverse('users:details'),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testInvalidEditFails(self):
