@@ -23,5 +23,6 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('events/<int:eventID>', views.details, name='details'),
     path('events/adminSummary/', views.eventAdminSummary, name='eventAdminSummary'),
+    path('events/adminSummary/<int:eventID>', views.singlePageAdminSummary, name='eventAdminSummarySpecific'),
     path('error/underConstruction',views.loggedInUnderConstruction,name='loggedInConstruction'),
 ]

@@ -238,6 +238,16 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         return HttpResponse(status=204)
 
 @login_required
+def singlePageAdminSummary(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+    if event.boolWorkshop():
+        context = getAdminWorkSummary(event)
+        return render(request, 'events/adminWorkshopDetails.html', context)
+    else:
+        context = getAdminCompSummary(event)
+        return render(request, 'events/adminCompetitionDetails.html', context)
+
+@login_required
 def eventAdminSummary(request):
     output = ""
     if request.method == "POST":

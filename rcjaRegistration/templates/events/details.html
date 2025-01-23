@@ -16,7 +16,7 @@
     <h2>Administration Shortcuts</h2>
     <p>Only event administrators can see this section.</p>
     <p>{{ event.baseeventattendance_set.count }} registrations so far.</p>
-    <a href="{% url 'events:eventAdminSummary' event.id %}"><button class="ui primary button">View Attendance Summary</button></a>
+    <a href="{% url 'events:eventAdminSummarySpecific' event.id %}"><button class="ui primary button">View Attendance Summary</button></a>
     <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui primary button">Edit Event</button></a>
     <a href="{{ event.registrationsAdminURL }}"><button class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</button></a>
     <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}"><button class="ui primary button">View Invoices</button></a>
