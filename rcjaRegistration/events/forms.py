@@ -29,9 +29,9 @@ class BaseEventAttendanceFormInitMixin:
         self.fields['event'].widget = forms.HiddenInput()
 
 class AdminEventsForm(forms.Form):
-    COMPETITIONS_CHOICES = [(event.pk, event.name) for event in Event.objects.filter(status='published', eventType='competition')]
+    COMPETITIONS_CHOICES = ((event.pk, event.name) for event in Event.objects.filter(status='published', eventType='competition'))
     competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=COMPETITIONS_CHOICES)
-    WORKSHOPS_CHOICES = [(event.pk, event.name) for event in Event.objects.filter(status='published', eventType='workshop')]
+    WORKSHOPS_CHOICES = ((event.pk, event.name) for event in Event.objects.filter(status='published', eventType='workshop'))
     workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=WORKSHOPS_CHOICES)
 
     def clean(self):
