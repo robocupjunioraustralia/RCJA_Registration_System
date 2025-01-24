@@ -1,13 +1,12 @@
 services:
   web:
     image: rcja-registration:development
-    build:
-      context: .
-      dockerfile: Dockerfile.development
+    build: .
     ports:
       - 8000:8000
     volumes:
       - ./rcjaRegistration:/app
+    command: manage.py runserver 0.0.0.0:8000
     environment:
       - DEBUG=true
       - SECRET_KEY=u75_y555kb_-11g)u3f&3z5bk&+noj0!a4ddo8_8a%oqe6&tu!
