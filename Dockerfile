@@ -5,6 +5,10 @@ WORKDIR /app
 ENV PATH="${PATH}:/app"
 ENV PORT=8000
 
+# We need curl for the healthcheck on production
+RUN apt-get update
+RUN apt-get install -y curl
+
 # To avoid python creating .pyc files and buffering output
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
