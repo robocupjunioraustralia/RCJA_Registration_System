@@ -136,6 +136,17 @@ class Test_Team_SuperUser(AdditionalTeamPostTestsMixin, Team_Base, Base_Test_Sup
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
+    def test_event_autocomplete_no_workshops(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertNotContains(response, self.state1_openWorkshop.name)
+
+    def test_event_autocomplete_contains_correct_competitions(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertContains(response, self.state1_openCompetition.name)
+        self.assertContains(response, self.state2_openCompetition.name)
+
     def testPostInvoiceOverride_success(self):
         payload = self.validPayload.copy()
         payload['invoiceOverride'] = self.state1_event1_invoice1.id
@@ -198,5 +209,22 @@ class Test_Team_FullCoordinator(AdditionalTeamPostTestsMixin, Team_Coordinators_
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
+    def test_event_autocomplete_no_workshops(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertNotContains(response, self.state1_openWorkshop.name)
+
+    def test_event_autocomplete_contains_correct_competitions(self):
+        from coordination.models import Coordinator
+        self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state2, permissionLevel='viewall', position='Text')
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertContains(response, self.state1_openCompetition.name)
+        self.assertNotContains(response, self.state2_openCompetition.name)
+
 class Test_Team_ViewCoordinator(Team_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    def test_event_autocomplete_contains_correct_competitions(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertNotContains(response, self.state1_openCompetition.name)
+        self.assertNotContains(response, self.state2_openCompetition.name)
