@@ -42,7 +42,6 @@ def commonSetUp(obj):
     )
     obj.newSchool = School.objects.create(
         name='Melbourne High',
-        abbreviation='MHS',
         state=obj.newState,
         region=obj.newRegion
     )
