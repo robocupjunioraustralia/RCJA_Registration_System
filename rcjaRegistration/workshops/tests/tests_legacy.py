@@ -9,7 +9,7 @@ from regions.models import State, Region
 from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
-from .models import WorkshopAttendee
+from workshops.models import WorkshopAttendee
 
 import datetime
 

@@ -268,7 +268,7 @@ class AdditionalEventTestsMixin:
         ])
 
 class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_SuperUser, TestCase):
-    expectedListItems = 6
+    expectedListItems = 7
     expectedStrings = [
         'State 1 Open Competition',
         'State 1 Open Workshop',
