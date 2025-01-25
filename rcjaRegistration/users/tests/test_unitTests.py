@@ -13,7 +13,7 @@ from users.forms import UserForm, UserSignupForm
 class TestUserManager(TestCase):
     def setUp(self):
         # Use create (instead of create_user) here beause not setting password and testing the user object and manager
-        self.user1 = User.objects.create(email='test@test.com')
+        self.user1 = User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com')
 
     def test_get_by_natural_key_exact(self):
         self.assertEqual(User.objects.get_by_natural_key('test@test.com'), self.user1)
@@ -25,11 +25,11 @@ class TestUserManager(TestCase):
         self.assertRaises(User.DoesNotExist, lambda : User.objects.get_by_natural_key('not@test.com'))
 
 def unitTestsSetup(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
     self.region1 = Region.objects.create(name='Region 1')
 
     # Use create (instead of create_user) here beause not setting password and testing the user object and manager
-    self.user1 = User.objects.create(email='test@test.com', first_name="First", last_name="Last", homeState=self.state1)
+    self.user1 = User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com', first_name="First", last_name="Last", homeState=self.state1)
     self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
 
 class TestUserModelMethods(TestCase):
@@ -84,6 +84,25 @@ class TestUserModelMethods(TestCase):
     def test_str_nameNotPresent(self):
         user2 = User(email='not@test.com')
         self.assertEqual(str(user2), "not@test.com")
+
+    def test_adminViewableStates_notStaff(self):
+        self.assertFalse(self.user1.adminViewableStates().exists())
+
+    def test_adminViewableStates_superUser(self):
+        self.user1.is_superuser = True
+        self.user1.save()
+
+        qs = self.user1.adminViewableStates()
+        self.assertTrue(qs.exists())
+        self.assertQuerySetEqual(qs, State.objects.all(), ordered=False)
+
+    def test_adminViewableStates_coordinator(self):
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Position')
+
+        qs = self.user1.adminViewableStates()
+        self.assertTrue(qs.exists())
+        self.assertQuerySetEqual(qs, State.objects.filter(id=self.state1.id), ordered=False)
 
 class TestUpdateUserPermissions(TestCase):
     def setUp(self):
@@ -233,6 +252,41 @@ class TestUserForm(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors["email"], ["User with this email address already exists."])
+
+    def test_first_name_illegalCharacter(self):
+        payload = self.validPayload.copy()
+        payload['first_name'] = 'First$'
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["first_name"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."])
+
+    def test_last_name_illegalCharacter(self):
+        payload = self.validPayload.copy()
+        payload['last_name'] = 'Last$'
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["last_name"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."])
+
+    def test_mobileNumber_illegalCharacter(self):
+        payload = self.validPayload.copy()
+        payload['mobileNumber'] = '12345^'
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["mobileNumber"], ["Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space."])
+
+    def test_invalidRegion(self):
+        self.extraState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Extra State', abbreviation='ext')
+        self.extraRegion = Region.objects.create(name='Extra Region', state=self.extraState)
+
+        payload = self.validPayload.copy()
+        payload['homeRegion'] = self.extraRegion
+        form = self.createForm(payload)
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors["homeRegion"], ["Region not valid for selected state"])
 
 class TestUserSignupForm(TestUserForm):
     validPayload = {

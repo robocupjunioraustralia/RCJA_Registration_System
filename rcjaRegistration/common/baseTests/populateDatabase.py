@@ -5,12 +5,14 @@ from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision, Venue
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
+from userquestions.models import Question, QuestionResponse
+from association.models import AssociationMember
 
 import datetime
 
 def createStates(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
-    self.state2 = State.objects.create(typeRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 1', abbreviation='ST1', typeWebsite=True)
+    self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
 
     self.region1 = Region.objects.create(name='Region 1')
     self.region2_state1 = Region.objects.create(name='Region 2', state=self.state1)
@@ -31,18 +33,18 @@ def createUsers(self):
     self.email_user_state1_independent_mentor5 = 'user10@user.com'
     self.password = 'chdj48958DJFHJGKDFNM' # Complex random password so passes validation tests
 
-    self.user_state1_super1 = User.objects.create_superuser(email=self.email_user_state1_super1, password=self.password, homeState=self.state1)
-    self.user_state2_super2 = User.objects.create_superuser(email=self.email_user_state2_super2, password=self.password, homeState=self.state2)
-    self.user_notstaff = User.objects.create_user(email=self.email_user_notstaff, password=self.password)
-    self.user_state1_fullcoordinator = User.objects.create_user(email=self.email_user_state1_fullcoordinator, password=self.password, homeState=self.state1)
-    self.user_state1_viewcoordinator = User.objects.create_user(email=self.email_user_state1_viewcoordinator, password=self.password, homeState=self.state1)
-    self.user_state2_fullcoordinator = User.objects.create_user(email=self.email_user_state2_fullcoordinator, password=self.password, homeState=self.state2)
-    self.user_state2_viewcoordinator = User.objects.create_user(email=self.email_user_state2_viewcoordinator, password=self.password, homeState=self.state2)
-    self.user_state1_school1_mentor1 = User.objects.create_user(email=self.email_user_state1_school1_mentor1, password=self.password, homeState=self.state1)
-    self.user_state1_school1_mentor2 = User.objects.create_user(email=self.email_user_state1_school1_mentor2, password=self.password, homeState=self.state1)
-    self.user_state1_school2_mentor3 = User.objects.create_user(email=self.email_user_state1_school2_mentor3, password=self.password, homeState=self.state1)
-    self.user_state2_school3_mentor4 = User.objects.create_user(email=self.email_user_state2_school3_mentor4, password=self.password, homeState=self.state2)
-    self.user_state1_independent_mentor5 = User.objects.create_user(email=self.email_user_state1_independent_mentor5, password=self.password, homeState=self.state1)
+    self.user_state1_super1 = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_super1, password=self.password, homeState=self.state1)
+    self.user_state2_super2 = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_super2, password=self.password, homeState=self.state2)
+    self.user_notstaff = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_notstaff, password=self.password)
+    self.user_state1_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_fullcoordinator, password=self.password, homeState=self.state1)
+    self.user_state1_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_viewcoordinator, password=self.password, homeState=self.state1)
+    self.user_state2_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_fullcoordinator, password=self.password, homeState=self.state2)
+    self.user_state2_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_viewcoordinator, password=self.password, homeState=self.state2)
+    self.user_state1_school1_mentor1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor1, password=self.password, homeState=self.state1)
+    self.user_state1_school1_mentor2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor2, password=self.password, homeState=self.state1)
+    self.user_state1_school2_mentor3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school2_mentor3, password=self.password, homeState=self.state1)
+    self.user_state2_school3_mentor4 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_school3_mentor4, password=self.password, homeState=self.state2)
+    self.user_state1_independent_mentor5 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_independent_mentor5, password=self.password, homeState=self.state1)
 
     self.coord_state1_fullcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state1, permissionLevel='full', position='Text')
     self.coord_state1_viewcoordinator = Coordinator.objects.create(user=self.user_state1_viewcoordinator, state=self.state1, permissionLevel='viewall', position='Text')
@@ -88,7 +90,7 @@ def createEvents(self):
         name = 'State 1 Open Competition',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -103,7 +105,7 @@ def createEvents(self):
         name = 'State 1 Open Workshop',
         eventType = 'workshop',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -118,7 +120,7 @@ def createEvents(self):
         name = 'State 1 Closed Competition 1',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -133,7 +135,7 @@ def createEvents(self):
         name = 'State 1 Closed Competition 2',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -148,7 +150,7 @@ def createEvents(self):
         name = 'State 1 Past Competition',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -163,7 +165,7 @@ def createEvents(self):
         name = 'State 2 Open Competition',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=20)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=20)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -178,6 +180,7 @@ def createEvents(self):
     self.division2_state2 = Division.objects.create(name='Division 2', state=self.state2)
     self.division3 = Division.objects.create(name='Division 3')
     self.division4 = Division.objects.create(name='Division 4')
+    self.division5 = Division.objects.create(name='Division 5', active=False)
 
     # Available Divisions
 
@@ -215,4 +218,55 @@ def createTeams(self):
         name='Team 3',
         hardwarePlatform=self.hardwarePlatform,
         softwarePlatform=self.softwarePlatform,
+    )
+
+def createInvoices(self):
+    self.state1_event1_invoice1 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state1_openCompetition
+    )
+    self.state2_event1_invoice2 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state2_openCompetition
+    )
+
+def createQuestionsAndResponses(self):
+    self.question1 = Question.objects.create(
+        shortTitle='Consent',
+        questionText='Do you consent to the terms and conditions?',
+        required=False,
+    )
+    self.questionResponse1 = QuestionResponse.objects.create(
+        question=self.question1,
+        user=self.user_state1_school1_mentor1,
+        response=True,
+    )
+
+    self.question2 = Question.objects.create(
+        shortTitle='Marketing',
+        questionText='Do you consent to receive marketing communications?',
+        required=False,
+    )
+    self.questionResponse1 = QuestionResponse.objects.create(
+        question=self.question2,
+        user=self.user_state1_school1_mentor1,
+        response=False,
+    )
+
+def createAssociationMemberships(self):
+    self.state1_associationMember1 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor1,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+    )
+
+    self.state1_associationMember2 = AssociationMember.objects.create(
+        user=self.user_state1_school1_mentor2,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+    )
+
+    self.state2_associationMember3 = AssociationMember.objects.create(
+        user=self.user_state2_school3_mentor4,
+        birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
     )

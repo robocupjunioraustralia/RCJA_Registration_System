@@ -1,0 +1,64 @@
+name: Build and Deploy to Azure VM
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.13
+    - name: Install dependencies
+      run: |
+        python -m venv env
+        source env/bin/activate
+        pip install -r requirements.txt
+    - name: 'Docker login'
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/rcja-registration:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/production' && 'rcja-app-prod' || 'rcja-app-staging' }}
+    steps:
+    - name: Execute local deployment
+      run: |
+        echo "Deploying image ${{ github.sha }}..."
+        TEMP_FILE=$(mktemp)
+        trap 'rm -f "$TEMP_FILE"' EXIT
+
+        curl "${{ secrets.DEPLOY_URL }}" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
+          -d '{"image": "${{ github.sha }}", "environment": "${{ github.ref == 'refs/heads/production' && 'prod' || 'staging' }}"}' \
+          --show-error \
+          --fail-with-body | tee "$TEMP_FILE"
+
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+          exit 1
+        fi
+
+        if ! tail -n 1 "$TEMP_FILE" | grep -q 'Deployment complete.'; then
+          exit 3
+        fi
+
+        exit 0
+      shell: bash

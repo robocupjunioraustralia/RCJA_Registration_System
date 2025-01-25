@@ -46,14 +46,16 @@
         <div class = "form form-group left-aligned-text">
           <div>
             <h1>{{event}}</h1>
-            {% if team %}
+            {% if sourceTeam %}
+            <h2>Copying {{sourceTeam.name}} from {{sourceTeam.event}}</h2>
+            {% elif team %}
             <h2> Editing: Team {{team.name}} </h2>
             {% else %}
             <h2>Add a new team</h2> 
             {% endif %}
 
             <!-- Error messaging -->
-            {% if form.errors %}
+            {% if form.errors or form.non_field_errors %}
             <div class="ui message left-aligned-text">
               <div class="">
                 <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
@@ -70,7 +72,15 @@
             </div>
             <!-- /Error messaging -->
             {% endif %}
-          
+
+            {% if divisionsMaxReachedWarnings and not team %}
+            <ul>
+                {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
             <form method="post" class = "ui form">
               {% csrf_token %}
               {{ formset.management_form }}
@@ -93,10 +103,6 @@
                     {{ form.campus|attr:"class:ui dropdown"}} 
                 </div>
               </div>
-              <div class = "field">
-                <label>Notes:</label>
-                  {{ form.notes|attr:"rows:2"}} 
-              </div>
 
               <h2>Platform</h2>
 
@@ -113,7 +119,7 @@
 
               <!-- Students -->
               <h2>Students</h2>
-              {% if formset.errors %}
+              {% if formset.non_form_errors %}
                 <div class="ui message left-aligned-text">
                     <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                     {{ formset.non_form_errors }}

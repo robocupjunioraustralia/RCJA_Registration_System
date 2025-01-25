@@ -15,6 +15,11 @@ class InvoiceGlobalSettings(models.Model):
     invoiceFromDetails = models.TextField('Invoice from details')
     invoiceFooterMessage = models.TextField('Invoice footer message')
     firstInvoiceNumber = models.PositiveIntegerField('First invoice number', default=1)
+    # Surcharge
+    surchargeAmount = models.FloatField('Surcharge amount', default=0, help_text="Amount includes GST.")
+    surchargeName = models.CharField('Surcharge name', max_length=30, default='Surcharge', help_text="Name of the surcharge on the invoice.")
+    surchargeInvoiceDescription = models.CharField('Surcharge invoice description', max_length=70, blank=True, help_text="Appears in small text below the surcharge name on the invoice.")
+    surchargeEventDescription = models.CharField('Surcharge event page description', max_length=200, blank=True, help_text="Appears on the event page below the surcharge amount.")
 
     # *****Meta and clean*****
     class Meta:
@@ -53,6 +58,12 @@ class Invoice(SaveDeleteMixin, models.Model):
     invoicedDate = models.DateField('Invoiced date', null=True, blank=True) # Set when invoice first viewed
     purchaseOrderNumber = models.CharField('Purchase order number', max_length=30, blank=True)
     notes = models.TextField('Notes', blank=True)
+
+    # Cache fields
+    cache_amountGST_unrounded = models.FloatField('amountGST_unrounded', blank=True, null=True, editable=False)
+    cache_totalQuantity = models.IntegerField('cache_totalQuantity', blank=True, null=True, editable=False)
+    cache_invoiceAmountExclGST_unrounded = models.FloatField('cache_invoiceAmountExclGST_unrounded', blank=True, null=True, editable=False)
+    cache_invoiceAmountInclGST_unrounded = models.FloatField('cache_invoiceAmountInclGST_unrounded', blank=True, null=True, editable=False)
 
     # *****Meta and clean*****
     class Meta:
@@ -95,6 +106,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     # *****Save & Delete Methods*****
 
     def preSave(self):
+        # Set invoice number
         if self.invoiceNumber is None:
             try:
                 self.invoiceNumber = Invoice.objects.latest('invoiceNumber').invoiceNumber + 1
@@ -103,6 +115,18 @@ class Invoice(SaveDeleteMixin, models.Model):
                     self.invoiceNumber = InvoiceGlobalSettings.objects.get().firstInvoiceNumber
                 except InvoiceGlobalSettings.DoesNotExist:
                     self.invoiceNumber = 1
+        
+        # Set invoiced date to payment due date if None, when mentor views invoice date will get brought forward to current date if before paymend due date
+        if self.invoicedDate is None:
+            self.invoicedDate = self.event.paymentDueDate
+
+    def postSave(self):
+        self.calculateAndSaveAllTotals()
+
+    def postDelete(self):
+        # In case campus invoicing enabled and an invoice is deleted, recalculate totals on remaining
+        for invoice in Invoice.objects.filter(school=self.school, event=self.event):
+            invoice.calculateAndSaveAllTotals()
 
     # *****Methods*****
 
@@ -123,7 +147,7 @@ class Invoice(SaveDeleteMixin, models.Model):
         return Invoice.objects.filter(Q(invoiceToUser=user) | Q(school__schooladministrator__user=user)).distinct()
 
     def hiddenInvoice(self):
-        return self.totalQuantity() == 0 and not self.invoicepayment_set.exists()
+        return self.invoiceAmountInclGST_unrounded() < 0.05 and not self.invoicepayment_set.exists()
 
     def get_absolute_url(self):
         from django.urls import reverse
@@ -163,14 +187,16 @@ class Invoice(SaveDeleteMixin, models.Model):
             return {
                 'event': self.event,
                 'school': self.school,
-                'campus': self.campus
+                'campus': self.campus,
+                'invoiceOverride': None,
             }
 
         elif self.school:
             # If school but campuses not enableed filter by school
             return {
                 'event': self.event,
-                'school': self.school
+                'school': self.school,
+                'invoiceOverride': None,
             }
 
         else:
@@ -178,7 +204,8 @@ class Invoice(SaveDeleteMixin, models.Model):
             return {
                 'event': self.event,
                 'mentorUser': self.invoiceToUser,
-                'school': None
+                'school': None,
+                'invoiceOverride': None,
             }
 
     # Queryset of teams covered by this invoice
@@ -192,7 +219,7 @@ class Invoice(SaveDeleteMixin, models.Model):
     def specialRateTeamsForSchool(self):
         from teams.models import Team
 
-        numberSpecialRateTeams = self.event.event_specialRateNumber
+        numberSpecialRateTeams = self.event.competition_specialRateNumber
 
         # Check for special rate enabled
         if not numberSpecialRateTeams:
@@ -210,7 +237,7 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     # Standard rate teams for this invoice - teams that don't receive the special rate
     def standardRateTeams(self):
-        # Filter teams for this invoice to those that receive special rate
+        # Filter teams for this invoice to exclude those that receive special rate
         return self.allTeams().exclude(pk__in=self.specialRateTeamsForSchool().values_list('pk', flat=True))
 
     # Need methods to calculate teams or students that get special rate and teams that don't
@@ -222,15 +249,17 @@ class Invoice(SaveDeleteMixin, models.Model):
         from events.models import Division
         return Division.objects.filter(baseeventattendance__in=self.standardRateTeams()).distinct()
 
-    def invoiceItem(self, name, description, quantity, unitCost, unit=None):
+    def invoiceItem(self, name, description, quantity, rawUnitCost, unit=None, excludeFromSurcharge=False):
         # Calculate totals
         if self.event.entryFeeIncludesGST:
-            totalInclGST = quantity * unitCost
+            unitCost = rawUnitCost / 1.1
+            totalInclGST = quantity * rawUnitCost
             totalExclGST = totalInclGST / 1.1
             gst = totalInclGST - totalExclGST
 
         else:
-            totalExclGST = quantity * unitCost
+            unitCost = rawUnitCost
+            totalExclGST = quantity * rawUnitCost
             gst = 0.1 * totalExclGST
             totalInclGST = totalExclGST * 1.1
 
@@ -238,7 +267,7 @@ class Invoice(SaveDeleteMixin, models.Model):
             'name': name,
             'description': description,
             'quantity': quantity,
-            'quantityString': quantity,
+            'surchargeQuantity': quantity if unitCost > 0 and not excludeFromSurcharge else 0,
             'unitCost': unitCost,
             'unit': unit,
             'totalExclGST': totalExclGST,
@@ -246,12 +275,40 @@ class Invoice(SaveDeleteMixin, models.Model):
             'totalInclGST': totalInclGST,
         }
 
-    def workshopInvoiceItems(self):
-        from workshops.models import WorkshopAttendee
-        invoiceItems = []
+    def surchargeInvoiceItem(self, quantity):
+        # Get surcharge name and description
+        try:
+            surchargeName = InvoiceGlobalSettings.objects.get().surchargeName
+            surchargeInvoiceDescription = InvoiceGlobalSettings.objects.get().surchargeInvoiceDescription
+        except InvoiceGlobalSettings.DoesNotExist:
+            surchargeName = 'Surcharge'
+            surchargeInvoiceDescription = ''
 
-        # All workshop attendees for this invoice        
-        attendees = WorkshopAttendee.objects.filter(**self.allItemsFilterFields())
+        # Get values
+        unitCost = self.event.eventSurchargeAmount / 1.1
+        totalExclGST = quantity * unitCost
+        gst = 0.1 * totalExclGST
+        totalInclGST = quantity * self.event.eventSurchargeAmount
+
+        return {
+            'name': surchargeName,
+            'description': surchargeInvoiceDescription,
+            'quantity': quantity,
+            'unitCost': unitCost,
+            'unit': None,
+            'totalExclGST': totalExclGST,
+            'gst': gst,
+            'totalInclGST': totalInclGST,
+        }
+
+    def workshopInvoiceItem(self, attendees, division, nameSuffix, unitCost, override):
+        namePrefix = "Other attendees - " if override else ""
+        name = f'{namePrefix}{division.name} - {nameSuffix}'
+        description = ", ".join(map(lambda attendee: attendee.strNameAndSchool(), attendees)) if override else ""
+        return self.invoiceItem(name, description, attendees.count(), unitCost)
+    
+    def workshopInvoiceItems(self, attendees, override=False):
+        invoiceItems = []
 
         # Get details
         teacherUnitCost = self.event.workshopTeacherEntryFee
@@ -266,22 +323,45 @@ class Invoice(SaveDeleteMixin, models.Model):
             # Split teacher and student
 
             # Teachers
-            teacherAttedees = attendees.filter(division=division, attendeeType='teacher').count()
-            if teacherAttedees > 0:
-                name = f'{division.name} - teacher'
-                invoiceItems.append(self.invoiceItem(name, "", teacherAttedees, teacherUnitCost))
+            teacherAttedees = attendees.filter(division=division, attendeeType='teacher')
+            if teacherAttedees.count() > 0:
+                invoiceItems.append(self.workshopInvoiceItem(teacherAttedees, division, 'teacher', teacherUnitCost, override))
 
             # Students
-            studentAttedees = attendees.filter(division=division, attendeeType='student').count()
-            if studentAttedees > 0:
-                name = f'{division.name} - student'
-                invoiceItems.append(self.invoiceItem(name, "", studentAttedees, studentUnitCost))
+            studentAttedees = attendees.filter(division=division, attendeeType='student')
+            if studentAttedees.count() > 0:
+                invoiceItems.append(self.workshopInvoiceItem(studentAttedees, division, 'student', studentUnitCost, override))
         
         return invoiceItems
 
-    def competitionInvoiceItems(self):
+    def competitionDivisionInvoiceItem(self, teams, division, namePrefix = "", description = ""):
         from events.models import AvailableDivision
         from teams.models import Student
+        # Get available division
+        try:
+            availableDivision = self.event.availabledivision_set.get(division=division)
+        except AvailableDivision.DoesNotExist:
+            availableDivision = None
+
+        # Get unit cost, use availableDivision value if present, otherwise use value from event
+        unitCost = self.event.competition_defaultEntryFee
+        unit = self.event.competition_billingType
+        if availableDivision and availableDivision.division_entryFee is not None:
+            unitCost = availableDivision.division_entryFee
+            unit = availableDivision.division_billingType
+
+        # Get quantity
+        quantity = 0
+        if unit == 'team':
+            quantity = teams.count()
+
+        elif unit == 'student':
+            quantity = Student.objects.filter(team__in=teams).count()
+            
+        return self.invoiceItem(f"{namePrefix}{division.name}", description, quantity, unitCost, unit)
+
+    def competitionInvoiceItems(self):
+
         invoiceItems = []
 
         # Special rate entries
@@ -290,10 +370,9 @@ class Invoice(SaveDeleteMixin, models.Model):
 
             # Get values
             quantity = numberSpecialRateTeams
-            quantityString = f"{quantity} {'team' if quantity <= 1 else 'teams'}"
-            unitCost = self.event.event_specialRateFee
+            unitCost = self.event.competition_specialRateFee
 
-            maxNumberSpecialRateTeams = self.event.event_specialRateNumber
+            maxNumberSpecialRateTeams = self.event.competition_specialRateNumber
             name = f"First {maxNumberSpecialRateTeams} {'team' if maxNumberSpecialRateTeams <= 1 else 'teams'}"
             description = 'This is measured across all campuses from this school'
 
@@ -301,94 +380,139 @@ class Invoice(SaveDeleteMixin, models.Model):
 
         # Standard rate entries
         for division in self.standardRateDivisions():
-            # Get available division
-            try:
-                availableDivision = self.event.availabledivision_set.get(division=division)
-            except AvailableDivision.DoesNotExist:
-                availableDivision = None
-
             teams = self.standardRateTeams().filter(division=division)
-
-            # Get unit cost, use availableDivision value if present, otherwise use value from event
-            unitCost = self.event.event_defaultEntryFee
-            unit = self.event.event_billingType
-            if availableDivision and availableDivision.division_entryFee is not None:
-                unitCost = availableDivision.division_entryFee
-                unit = availableDivision.division_billingType
-
-            # Get quantity
-            quantity = 0
-            if unit == 'team':
-                quantity = teams.count()
-
-            elif unit == 'student':
-                quantity = Student.objects.filter(team__in=teams).count()
         
-            invoiceItems.append(self.invoiceItem(division.name, "", quantity, unitCost, unit))
+            invoiceItems.append(self.competitionDivisionInvoiceItem(teams, division))
+
+        return invoiceItems
+
+    def overrideInvoiceItems(self):
+        from teams.models import Team
+        from events.models import Division
+        from workshops.models import WorkshopAttendee
+
+        invoiceItems = []
+
+        teams = Team.objects.filter(invoiceOverride=self)
+        divisions = Division.objects.filter(baseeventattendance__in=teams).distinct()
+
+        for division in divisions:
+            divisionTeams = teams.filter(division=division)
+            teamNames = ", ".join(map(lambda team: team.strNameAndSchool(), divisionTeams))
+            invoiceItems.append(self.competitionDivisionInvoiceItem(divisionTeams, division, namePrefix="Other teams - ", description=teamNames))
+
+        attendees = WorkshopAttendee.objects.filter(invoiceOverride=self)
+        invoiceItems += self.workshopInvoiceItems(attendees, override=True)
 
         return invoiceItems
 
     def invoiceItems(self):
+        from workshops.models import WorkshopAttendee
         invoiceItems = []
 
         if self.event.eventType == 'workshop':
-            invoiceItems += self.workshopInvoiceItems()
+            # All workshop attendees for this invoice        
+            attendees = WorkshopAttendee.objects.filter(**self.allItemsFilterFields())
+            invoiceItems += self.workshopInvoiceItems(attendees)
 
         elif self.event.eventType == 'competition':
             invoiceItems += self.competitionInvoiceItems()
-        
+
+        invoiceItems += self.overrideInvoiceItems()
+
+        # Add surcharge if not $0
+        surchargeQuantity = sum([item['surchargeQuantity'] for item in invoiceItems])
+        if self.event.eventSurchargeAmount > 0 and surchargeQuantity > 0:
+            invoiceItems.append(self.surchargeInvoiceItem(surchargeQuantity))
+
         return invoiceItems
+
+    # Calculate and save cached totals
+    def calculateAndSaveAllTotals(self):
+        self.cache_amountGST_unrounded = self.calculate_amountGST_unrounded()
+        self.cache_totalQuantity = self.calculate_totalQuantity()
+        self.cache_invoiceAmountExclGST_unrounded = self.calculate_invoiceAmountExclGST_unrounded()
+        self.cache_invoiceAmountInclGST_unrounded = self.calculate_invoiceAmountInclGST_unrounded()
+
+        self.save(skipPrePostSave=True, update_fields=[
+            'cache_amountGST_unrounded',
+            'cache_totalQuantity',
+            'cache_invoiceAmountExclGST_unrounded',
+            'cache_invoiceAmountInclGST_unrounded',
+        ])
 
     # Totals
 
     def amountPaid_unrounded(self):
-        return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
+        try:
+            return self._sumPayments if self._sumPayments is not None else 0
+        except AttributeError:
+            return sum(self.invoicepayment_set.values_list('amountPaid', flat=True))
 
     def amountPaid(self):
         return round(self.amountPaid_unrounded(), 2)
     amountPaid.short_description = 'Amount paid'
+    amountPaid.admin_order_field = '_sumPayments'
+
+    def calculate_amountGST_unrounded(self):
+        return sum([item['gst'] for item in self.invoiceItems()])
 
     def amountGST_unrounded(self):
-        return sum([item['gst'] for item in self.invoiceItems()])
+        if self.cache_amountGST_unrounded is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_amountGST_unrounded
 
     def amountGST(self):
         return round(self.amountGST_unrounded(), 2)
     amountGST.short_description = 'GST'
 
-    def totalQuantity(self):
+    def calculate_totalQuantity(self):
         return sum([item['quantity'] for item in self.invoiceItems()])
+
+    def totalQuantity(self):
+        if self.cache_totalQuantity is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_totalQuantity
 
     # Invoice amount
 
-    def invoiceAmountExclGST_unrounded(self):
+    def calculate_invoiceAmountExclGST_unrounded(self):
         return sum([item['totalExclGST'] for item in self.invoiceItems()])
+
+    def invoiceAmountExclGST_unrounded(self):
+        if self.cache_invoiceAmountExclGST_unrounded is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_invoiceAmountExclGST_unrounded
 
     def invoiceAmountExclGST(self):
         return round(self.invoiceAmountExclGST_unrounded(), 2)
     invoiceAmountExclGST.short_description = 'Invoice amount (ex GST)'
 
-    def invoiceAmountInclGST_unrounded(self):
+    def calculate_invoiceAmountInclGST_unrounded(self):
         return sum([item['totalInclGST'] for item in self.invoiceItems()])
+
+    def invoiceAmountInclGST_unrounded(self):
+        if self.cache_invoiceAmountInclGST_unrounded is None:
+            self.calculateAndSaveAllTotals()
+        return self.cache_invoiceAmountInclGST_unrounded
 
     def invoiceAmountInclGST(self):
         return round(self.invoiceAmountInclGST_unrounded(), 2)
     invoiceAmountInclGST.short_description = 'Invoice amount (incl GST)'
+    invoiceAmountInclGST.admin_order_field = 'cache_invoiceAmountInclGST_unrounded'
 
     # Amount due
 
-    def amountDueExclGST_unrounded(self):
-        return self.invoiceAmountExclGST_unrounded() - self.amountPaid_unrounded()
-
-    def amountDueExclGST(self):
-        return round(self.amountDueExclGST_unrounded(), 2)
-    amountDueExclGST.short_description = 'Amount due (ex GST)'
-
     def amountDueInclGST_unrounded(self):
-        return self.invoiceAmountInclGST_unrounded() - self.amountPaid_unrounded()
+        amountDue = self.invoiceAmountInclGST_unrounded() - self.amountPaid_unrounded()
+        if amountDue < 0:
+            return 0
+        return amountDue
 
     def amountDueInclGST(self):
         return round(self.amountDueInclGST_unrounded(), 2)
     amountDueInclGST.short_description = 'Amount due (incl GST)'
+    amountDueInclGST.admin_order_field = '_amountDueUnrounded'
 
     def amountDuePaypal(self):
         if self.amountDueInclGST_unrounded() < 0.05: # 0.05 to avoid tiny sum edge caes
@@ -401,11 +525,11 @@ class Invoice(SaveDeleteMixin, models.Model):
 
     def __str__(self):
         if self.campus:
-            return f'{self.event}: {self.school}, {self.campus}'
+            return f'Invoice {self.invoiceNumber}: {self.school}, {self.campus}'
         elif self.school:
-            return f'{self.event}: {self.school}'
+            return f'Invoice {self.invoiceNumber}: {self.school}'
         else:
-            return f'{self.event}: {self.invoiceToUser.fullname_or_email()}'
+            return f'Invoice {self.invoiceNumber}: {self.invoiceToUser.fullname_or_email()}'
 
     # *****CSV export methods*****
 
@@ -418,7 +542,7 @@ class InvoicePayment(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    amountPaid = models.PositiveIntegerField('Amount paid')
+    amountPaid = models.FloatField('Amount paid')
     datePaid = models.DateField('Date paid')
 
     # *****Meta and clean*****

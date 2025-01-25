@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from events.models import BaseEventAttendance
 
@@ -15,17 +16,14 @@ class WorkshopAttendee(BaseEventAttendance):
     attendeeType = models.CharField('Attendee type', max_length=15, choices=attendeeTypeChoices)
 
     # Compulsory for all attendee types
-    firstName = models.CharField('First name', max_length=50)
-    lastName = models.CharField('Last name', max_length=50)
+    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
     yearLevel = models.CharField('Year level', max_length=10)
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
 
     # Required for teachers
     email = models.EmailField('Email', blank=True)
-
-    # Required for students
-    birthday = models.DateField('Birthday', null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -40,7 +38,7 @@ class WorkshopAttendee(BaseEventAttendance):
 
         # Check student fields are filled out
         if self.attendeeType == 'student':
-            for field in ['birthday']:
+            for field in []:
                 if not getattr(self, field, None):
                     errors.append(ValidationError('{} must not be blank for student attendee'.format(self._meta.get_field(field).verbose_name)))
 
@@ -76,6 +74,12 @@ class WorkshopAttendee(BaseEventAttendance):
         return f'{self.firstName} {self.lastName}'
     attendeeFullName.short_description = 'Name'
     attendeeFullName.admin_order_field = 'lastName'
+
+    def strNameAndSchool(self):
+        if self.school:
+            return f"{self.attendeeFullName()} ({self.school})"
+
+        return f"{self.attendeeFullName()} ({self.mentorUser.fullname_or_email()})"
 
     def __str__(self):
         return f"{self.attendeeFullName()} ({self.event.name} {self.event.year})"

@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
 from common.adminMixins import ExportCSVMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
 from .models import User
 
@@ -139,10 +140,10 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         'homeRegion__name',
     ]
     list_filter = DjangoUserAdmin.list_filter + (
-        'homeState',
-        'homeRegion',
+        ('homeState', admin.RelatedOnlyFieldListFilter),
+        ('homeRegion', admin.RelatedOnlyFieldListFilter),
         User_QuestionResponse_Filter,
-        'baseeventattendance__event',
+        ('baseeventattendance__event', FilteredRelatedOnlyFieldListFilter),
     )
     autocomplete_fields = [
         'homeState',
@@ -168,6 +169,13 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
     ]
     exportFieldsManyRelations = ['questionresponse_set']
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('homeState', 'homeRegion')
+
+        return qs
+
     # Set forceDetailsUpdate if a field is blank
     def save_model(self, request, obj, form, change):
         for field in ['first_name', 'last_name', 'mobileNumber', 'homeState', 'homeRegion']:
@@ -186,7 +194,9 @@ class UserAdmin(FKActionsRemove, AdminPermissions, DjangoUserAdmin, ExportCSVMix
         },
     }
 
-    stateFilterLookup = 'homeState__coordinator'
+    statePermissionsFilterLookup = 'homeState__coordinator'
+    stateSelectedFilterLookup = 'baseeventattendance__event__state'
+    yearSelectedFilterLookup = 'baseeventattendance__event__year'
 
     # Only superuser can change permissions on users
     def get_readonly_fields(self, request, obj=None):

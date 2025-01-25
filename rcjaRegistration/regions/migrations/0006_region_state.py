@@ -3,16 +3,6 @@
 from django.db import migrations, models
 import django.db.models.deletion
 
-def forwards_func(apps, schema_editor):
-    # Normally need to get the model from the versioned app registry;
-    # But need to access updateUserPermissions so directly import
-    from users.models import User
-    for user in User.objects.all():
-        user.updateUserPermissions()
-
-def reverse_func(apps, schema_editor):
-    pass
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -25,5 +15,4 @@ class Migration(migrations.Migration):
             name='state',
             field=models.ForeignKey(blank=True, help_text='Leave blank for a global region. Global regions are only editable by global administrators.', limit_choices_to={'typeRegistration': True}, null=True, on_delete=django.db.models.deletion.PROTECT, to='regions.State', verbose_name='State'),
         ),
-        migrations.RunPython(forwards_func, reverse_func),
     ]

@@ -1,31 +1,33 @@
 # RCJA Registration System
 
-![](https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System/workflows/Django%20Build%20Tests/badge.svg
-)
-[![codecov](https://codecov.io/gh/MelbourneHighSchoolRobotics/RCJA_Registration_System/branch/main/graph/badge.svg?token=TGG6NwrrJw)](https://codecov.io/gh/MelbourneHighSchoolRobotics/RCJA_Registration_System)
+![](https://github.com/robocupjunioraustralia/RCJA_Registration_System/actions/workflows/django-ci.yml/badge.svg
+)[![codecov](https://codecov.io/gh/robocupjunioraustralia/RCJA_Registration_System/graph/badge.svg?token=TGG6NwrrJw)](https://codecov.io/gh/robocupjunioraustralia/RCJA_Registration_System)
 
 ## Development Getting Started
 
 1. Install Docker and Docker Compose
 
-2. Start the app
+2. Clone the repository
+    - **Note for Windows:** Ensure `core.autocrlf` is set to `false` in git config before cloning to avoid line ending issues
+        ```
+        git config --global core.autocrlf false
+        ``` 
+    ```
+    git clone https://github.com/robocupjunioraustralia/RCJA_Registration_System.git
+    ```
+3. Setup the ```.env``` file by creating a copy of ```.env.dev.sample``` and naming it ```.env```
 
-```
-docker-compose up -d
-```
+4. Start the app
+    ```
+    docker-compose up -d
+    ```
 
-3. Initialise Django
-
-```
-docker-compose exec web manage.py migrate
-docker-compose exec web manage.py createsuperuser
-```
-
-## Deploying
-
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-For detailed instructions and alternate deployment methods see [DEPLOY.md](DEPLOY.md).
+5. Initialise Django
+    ```
+    docker-compose exec web manage.py migrate
+    docker-compose exec web manage.py collectstatic
+    docker-compose exec web manage.py createsuperuser
+    ```
 
 ## CI Instructions
 

@@ -16,15 +16,15 @@ import datetime
 # Create your tests here.
 
 def newCommonSetUp(self):
-        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+        self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
-        self.state2 = State.objects.create(typeRegistration=True, name='NSW', abbreviation='NSW')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password, homeState=self.state1)
-        self.user3 = User.objects.create_user(email=self.email3, password=self.password)
-        self.superUser = User.objects.create_user(email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password, homeState=self.state1)
+        self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password)
+        self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
         self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
@@ -42,8 +42,8 @@ def newCommonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -60,6 +60,53 @@ def newCommonSetUp(self):
             invoiceFromDetails='Test Details Text',
             invoiceFooterMessage='Test Footer Text',
         )
+
+class TestWorkshopAttendeeMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+        self.attendee1 = WorkshopAttendee(
+            event=self.event,
+            mentorUser=self.user1,
+            school=None,
+            division=self.division1,
+            attendeeType='teacher',
+            firstName='First1',
+            lastName='Last1',
+            yearLevel='10',
+            gender='male',
+            email='test@test.com'
+        )
+        self.attendee2 = WorkshopAttendee(
+            event=self.event,
+            mentorUser=self.user1,
+            school=self.school2,
+            division=self.division1,
+            attendeeType='student',
+            firstName='First2',
+            lastName='Last2',
+            yearLevel='10',
+            gender='male',
+        )
+
+        self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
+        self.schoolAdmin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
+
+        self.user1.first_name = 'First'
+        self.user1.last_name = 'Last'
+        self.user1.save()
+
+    def test_strNameAndSchool_no_school(self):
+        self.assertEqual(self.attendee1.strNameAndSchool(), "First1 Last1 (First Last)")
+
+    def test_strNameAndSchool_school(self):
+        self.assertEqual(self.attendee2.strNameAndSchool(), "First2 Last2 (School 2)")
 
 class TestWorkshopAttendeeClean(TestCase):
     email1 = 'user1@user.com'
@@ -93,7 +140,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last2',
             yearLevel='10',
             gender='male',
-            birthday=datetime.datetime.today()
         )
 
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
@@ -199,20 +245,6 @@ class TestWorkshopAttendeeClean(TestCase):
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 
-    def testStudentMissingBirthday(self):
-        self.attendee3 = WorkshopAttendee(
-            event=self.event,
-            mentorUser=self.user1,
-            school=self.school1,
-            division=self.division1,
-            attendeeType='student',
-            firstName='First1',
-            lastName='Last1',
-            yearLevel='10',
-            gender='male',
-        )
-        self.assertRaises(ValidationError, self.attendee3.clean)
-
     def testTeacherValidYearLevel(self):
         self.attendee3 = WorkshopAttendee(
             event=self.event,
@@ -254,7 +286,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last1',
             yearLevel='9',
             gender='male',
-            birthday=datetime.datetime.today()
         )
         self.assertEqual(self.attendee3.clean(), None)
 
@@ -269,7 +300,6 @@ class TestWorkshopAttendeeClean(TestCase):
             lastName='Last1',
             yearLevel='3-5',
             gender='male',
-            birthday=datetime.datetime.today()
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 
@@ -291,8 +321,8 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),

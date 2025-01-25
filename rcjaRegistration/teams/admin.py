@@ -4,24 +4,42 @@ from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from django.contrib import messages
 from django.forms import Textarea
 from django.db import models
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
-from .models import HardwarePlatform, SoftwarePlatform, Team, Student
+from .models import PlatformCategory, HardwarePlatform, SoftwarePlatform, Team, Student
 
 from events.admin import BaseWorkshopAttendanceAdmin
 
 # Register your models here.
 
+@admin.register(PlatformCategory)
+class PlatformCategoryAdmin(AdminPermissions, admin.ModelAdmin):
+    pass
+
 @admin.register(HardwarePlatform)
 class HardwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
-    pass
+    list_display = [
+        'name',
+        'category',
+    ]
+    list_filter = [
+        'category',
+    ]
 
 @admin.register(SoftwarePlatform)
 class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
-    pass
+    list_display = [
+        'name',
+        'category',
+    ]
+    list_filter = [
+        'category',
+    ]
 
 class StudentInline(InlineAdminPermissions, admin.TabularInline):
     model = Student
     extra = 0
+    min_num = 1
 
 @admin.register(Team)
 class TeamAdmin(BaseWorkshopAttendanceAdmin):
@@ -29,10 +47,12 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'name',
         'event',
         'division',
+        'creationDateTime',
         'mentorUserName',
         'school',
         'campus',
         'homeState',
+        'withdrawn',
     ]
     fieldsets = (
         (None, {
@@ -45,7 +65,17 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
+            'fields': (
+                'hardwarePlatform',
+                'softwarePlatform',
+                'creationDateTime',
+                'updatedDateTime',
+                'withdrawn',
+            )
+        }),
+        ('Advanced billing settings', {
+            'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this team from that invoice and add it to a different invoice, which can be for a different school or mentor.",
+            'fields': ('invoiceOverride', )
         }),
     )
     add_fieldsets = (
@@ -60,9 +90,14 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('mentorUser', 'school',)
         }),
         ('Details', {
-            'fields': ('hardwarePlatform', 'softwarePlatform', 'notes',)
+            'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
     )
+
+    readonly_fields = [
+        'creationDateTime',
+        'updatedDateTime',
+    ]
 
     inlines = [
         StudentInline
@@ -74,12 +109,20 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'student__lastName',
     ]
 
+    list_filter = BaseWorkshopAttendanceAdmin.list_filter + [
+        'hardwarePlatform',
+        'softwarePlatform',
+    ]
+
     actions = [
         'export_as_csv'
     ]
     exportFields = [
+        'creationDateTime',
+        'updatedDateTime',
         'pk',
         'name',
+        'withdrawn',
         'event',
         'division',
         'mentorUserName',
@@ -92,9 +135,10 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
-        'notes',
+        'invoiceOverride',
     ]
     exportFieldsManyRelations = [
+        'mentor_questionresponse_set',
         'student_set',
     ]
     autocompleteFilters = {
@@ -121,8 +165,8 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'team',
     ]
     list_filter = [
-        'team__event',
-        'team__division',
+        ('team__event', FilteredRelatedOnlyFieldListFilter),
+        ('team__division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'firstName',
@@ -151,7 +195,6 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'lastName',
         'yearLevel',
         'gender',
-        'birthday',
     ]
 
     # State based filtering
@@ -162,4 +205,7 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         },
     }
 
-    stateFilterLookup = 'team__event__state__coordinator'
+    statePermissionsFilterLookup = 'team__event__state__coordinator'
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'team__event__state'
+    yearSelectedFilterLookup = 'team__event__year'

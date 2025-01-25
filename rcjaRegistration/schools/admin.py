@@ -23,8 +23,8 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'postcode',
     ]
     list_filter = [
-        'state',
-        'region'
+        ('state', admin.RelatedOnlyFieldListFilter),
+        ('region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'state__name',
@@ -58,6 +58,13 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'schools/schooladministrator/': SchoolAdministrator,
     }
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('region', 'state')
+
+        return qs
+
     # Set forceDetailsUpdate if a field is blank
     def save_model(self, request, obj, form, change):
         for field in ['postcode']:
@@ -65,7 +72,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
                 obj.forceSchoolDetailsUpdate = True
         
         # For existing campuses
-        if obj.campus_set.filter(postcode=None).exists():
+        if obj.pk and obj.campus_set.filter(postcode=None).exists():
             obj.forceSchoolDetailsUpdate = True
 
         super().save_model(request, obj, form, change)
@@ -88,7 +95,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
     fieldFilteringModel = School
 
     # Actions
@@ -106,8 +113,8 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'postcode',
     ]
     list_filter = [
-        'school__state',
-        'school__region',
+        ('school__state', admin.RelatedOnlyFieldListFilter),
+        ('school__region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'name',
@@ -139,7 +146,7 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         },
     }
 
-    stateFilterLookup = 'school__state__coordinator'
+    statePermissionsFilterLookup = 'school__state__coordinator'
 
     fields = [
         'school',
@@ -171,8 +178,8 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
         'campus'
     ]
     list_filter = [
-        'school__state',
-        'school__region'
+        ('school__state', admin.RelatedOnlyFieldListFilter),
+        ('school__region', admin.RelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'user__first_name',
@@ -221,4 +228,4 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
             },
         }
 
-    stateFilterLookup = 'school__state__coordinator'
+    statePermissionsFilterLookup = 'school__state__coordinator'

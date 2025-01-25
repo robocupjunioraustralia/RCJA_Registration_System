@@ -70,7 +70,7 @@
           <table class="ui celled table">
             <thead>
               <tr>
-                <th>Division</th>
+                <th>Item</th>
                 <th class="text-center colfix">Unit Cost (ex GST)</th>
                 <th class="text-center colfix">Quantity</th>
                 <th class="text-center colfix">Total (ex GST)</th>
@@ -90,7 +90,7 @@
                 </td>
                 <td class="text-right">
                   <span class="mono">
-                    ${{ invoiceItem.unitCost }}
+                    ${{ invoiceItem.unitCost|floatformat:2 }}
                     {% if invoiceItem.unit %} per {{ invoiceItem.unit }} {% endif %}
                   </span>
                 </td>

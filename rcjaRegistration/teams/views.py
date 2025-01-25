@@ -10,9 +10,9 @@ from .forms import TeamForm, StudentForm
 import datetime
 
 from .models import Student, Team
-from events.models import Event
+from events.models import Event, AvailableDivision
 
-from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams
 
 # Create your views here.
 
@@ -38,80 +38,180 @@ def details(request, teamID):
 
 class CreateEditTeam(CreateEditBaseEventAttendance):
     eventType = 'competition'
-    def common(self, request, event, team):
+    def common(self, request, event, team, sourceTeam=None):
         super().common(request, event, team)
+
+        if sourceTeam:
+            # Check source team permissions
+            if not mentorEventAttendanceAccessPermissions(request, sourceTeam):
+                raise PermissionDenied("You are not an administrator of this team.")
+
+            # Check not already copied
+            if Team.objects.filter(event=event, copiedFrom=sourceTeam):
+                raise PermissionDenied("Team already copied to this event.")
+
+            # Check not from the current event
+            if sourceTeam.event == event:
+                raise PermissionDenied("Team source event can not be same as destination event.")
+            
+            # Check source team event is published
+            if not sourceTeam.event.published():
+                raise PermissionDenied("Team source event is not published.")
+
+            #  Check source team event year is current or previous year
+            if sourceTeam.event.year.year < event.year.year - 1 or sourceTeam.event.year.year > event.year.year:
+                raise PermissionDenied("Team source event year must be current or previous year.")
+
+        if not team:
+            if event.maxEventTeamsForSchoolReached(request.user):
+                raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+            if event.maxEventTeamsTotalReached():
+                raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
 
         self.StudentInLineFormSet = inlineformset_factory(
             Team,
             Student,
             form = StudentForm,
-            extra = 1 if team is None else 0,
+            min_num = 1,
+            extra = sourceTeam.student_set.count() - 1 if sourceTeam else 0,
             max_num = event.maxMembersPerTeam,
             can_delete = team is not None,
             validate_max = True,
+            validate_min = True,
         )
 
-    def get(self, request, eventID=None, teamID=None):
-        if teamID is not None:
+    def get(self, request, eventID=None, teamID=None, sourceTeamID=None):
+        sourceTeam = None
+        event = None
+        team = None
+        if sourceTeamID is not None:
+            sourceTeam = get_object_or_404(Team, pk=sourceTeamID)
+            event = get_object_or_404(Event, pk=eventID)
+        elif teamID is not None:
             team = get_object_or_404(Team, pk=teamID)
             event = team.event
         else:
             event = get_object_or_404(Event, pk=eventID)
-            team = None
-        self.common(request, event, team)
+        self.common(request, event, team, sourceTeam=sourceTeam)
+
+        formInitial = {}
+        studentsInitial = []
+        if sourceTeam:
+            formInitial = {
+                'name': sourceTeam.name,
+                'division': sourceTeam.division,
+                'campus': sourceTeam.campus,
+                'hardwarePlatform': sourceTeam.hardwarePlatform,
+                'softwarePlatform': sourceTeam.softwarePlatform,
+            }
+
+            studentsInitial = []
+            for student in sourceTeam.student_set.all():
+                studentsInitial.append({
+                    'firstName': student.firstName,
+                    'lastName': student.lastName,
+                    'yearLevel': student.yearLevel + event.year.year - sourceTeam.event.year.year,
+                    'gender': student.gender,
+                })
 
         # Get form
-        form = TeamForm(instance=team, user=request.user, event=event)
-        formset = self.StudentInLineFormSet(instance=team)
+        form = TeamForm(instance=team, user=request.user, event=event, initial=formInitial)
+        formset = self.StudentInLineFormSet(instance=team, initial=studentsInitial)
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'sourceTeam': sourceTeam, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
-    def post(self, request, eventID=None, teamID=None):
-        if teamID is not None:
+    def post(self, request, eventID=None, teamID=None, sourceTeamID=None):
+        sourceTeam = None
+        event = None
+        team = None
+        if sourceTeamID is not None:
+            sourceTeam = get_object_or_404(Team, pk=sourceTeamID)
+            event = get_object_or_404(Event, pk=eventID)
+        elif teamID is not None:
             team = get_object_or_404(Team, pk=teamID)
             event = team.event
         else:
             event = get_object_or_404(Event, pk=eventID)
-            team = None
-        self.common(request, event, team)
+        self.common(request, event, team, sourceTeam=sourceTeam)
 
         newTeam = team is None
 
-        formset = self.StudentInLineFormSet(request.POST, instance=team)
+        formset = self.StudentInLineFormSet(request.POST, instance=team, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
         form = TeamForm(request.POST, instance=team, user=request.user, event=event)
-        form.mentorUser = request.user # Needed in form validation to check number of teams for independents not exceeded
 
-        try:
-            if all([x.is_valid() for x in (form, formset)]):
-                # Create team object but don't save so can set foreign keys
-                team = form.save(commit=False)
-                team.mentorUser = request.user
+        if all([x.is_valid() for x in (form, formset)]):
+            # Create team object but don't save so can set foreign keys
+            team = form.save(commit=False)
+            team.mentorUser = request.user
 
-                # Save team
-                team.save()
+            if newTeam and sourceTeam:
+                team.copiedFrom = sourceTeam
 
-                # Save student formset
-                if newTeam:
-                    # This is needed because it is possible to create teams and add students in one request
-                    formset.instance = team
-                formset.save()
+            # Save team
+            team.save()
 
-                # Redirect if add another in response
-                if 'add_text' in request.POST and newTeam:
-                    return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
+            # Save student formset
+            if newTeam:
+                # This is needed because it is possible to create teams and add students in one request
+                formset.instance = team
+            formset.save()
 
-                elif not newTeam:
-                    return redirect(reverse('teams:details', kwargs = {"teamID":team.id}))
+            # Redirect if add another in response
+            if 'add_text' in request.POST and newTeam and not (event.maxEventTeamsForSchoolReached(request.user) or event.maxEventTeamsTotalReached()):
+                return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
 
-                return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
+            if sourceTeam:
+                return redirect(reverse('teams:copyTeamsList', kwargs = {'eventID':event.id}))
 
-        # To catch missing management data
-        except ValidationError as e:
-            # Reset the formsets so that are valid and won't cause an error when passed to render
-            formset = self.StudentInLineFormSet(instance=team)
+            elif not newTeam:
+                return redirect(reverse('teams:details', kwargs = {"teamID":team.id}))
 
-            # Add error to the form
-            form.add_error(None, e.message)
+            return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
-        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team})
+        return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'sourceTeam': sourceTeam, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
+def teamCreatePermissionForEvent(event):
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    if event.eventType != 'competition':
+        raise PermissionDenied("Can only copy teams for competitions")
+
+def checkEventLimitsReached(request, event):
+    if event.maxEventTeamsForSchoolReached(request.user):
+        raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+    if event.maxEventTeamsTotalReached():
+        raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
+
+@login_required
+def copyTeamsList(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    teamCreatePermissionForEvent(event)
+
+    try:
+        checkEventLimitsReached(request, event)
+    except PermissionDenied:
+        return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
+
+    teams, copiedTeamsList, availableToCopyTeams = getAvailableToCopyTeams(request, event)
+    availableToCopyTeams = availableToCopyTeams.prefetch_related('student_set', 'division', 'campus', 'event')
+
+    copiedTeams = teams.filter(pk__in=copiedTeamsList)
+    copiedTeams = copiedTeams.prefetch_related('student_set', 'division', 'campus', 'event')
+
+    context = {
+        'event': event,
+        'availableToCopyTeams': availableToCopyTeams,
+        'copiedTeams': copiedTeams,
+        'showCampusColumn': teams.exclude(campus=None).exists(),
+    }
+
+    return render(request, 'teams/copyTeamsList.html', context)

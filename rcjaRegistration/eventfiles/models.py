@@ -88,6 +88,23 @@ class EventAvailableFileType(models.Model):
         unique_together = ('event', 'fileType')
         ordering = ['event', 'fileType']
 
+    def clean(self):
+        errors = []
+        # Check required fields are not None
+        checkRequiredFieldsNotNone(self, ['event', 'uploadDeadline'])
+
+        # Validate upload deadline
+        if self.event.registrationsCloseDate is not None and self.uploadDeadline < self.event.registrationsCloseDate:
+            errors.append(ValidationError("Upload date must be on or after registrations close date"))
+
+        # Validate upload deadline
+        if self.event.startDate is not None and self.uploadDeadline > self.event.startDate:
+            errors.append(ValidationError("Upload date must be on or before event state date"))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
     # *****Permissions*****
     @classmethod
     def stateCoordinatorPermissions(cls, level):
@@ -144,7 +161,7 @@ class MentorEventFileUpload(models.Model):
             extension = self.fileUpload.name.rsplit('.', 1)[1]
         except IndexError:
             raise ValidationError("File must have a file extension")
-        if self.fileType.allowedFileTypes and extension not in self.fileType.allowedFileTypes:
+        if self.fileType.allowedFileTypes and extension.lower() not in self.fileType.allowedFileTypes.lower():
             errors.append(ValidationError(f'File not of allowed type, must be: {self.fileType.allowedFileTypes}'))
 
         # Check within size limit
@@ -179,6 +196,11 @@ class MentorEventFileUpload(models.Model):
         return self.eventAttendance.event
     event.short_description = 'Event'
     event.admin_order_field = 'eventAttendance__event'
+
+    def division(self):
+        return self.eventAttendance.division
+    division.short_description = "Division"
+    division.admin_order_field = 'eventAttendance__division'
 
     # File methods
 

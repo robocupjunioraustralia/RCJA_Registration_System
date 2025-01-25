@@ -13,10 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import environ
 import sys
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 env = environ.Env(
     DEBUG=(bool, False),
     SENDGRID_API_KEY=(str, 'API_KEY'),
@@ -25,10 +26,19 @@ env = environ.Env(
     USE_SQLLITE_DB=(bool, False),
     AWS_ACCESS_KEY_ID=(str, 'AWS_ACCESS_KEY_ID'),
     AWS_SECRET_ACCESS_KEY=(str, 'AWS_SECRET_ACCESS_KEY'),
+    CMS_JWT_SECRET=(str, 'CMS_JWT_SECRET'),
+    CMS_JWT_EXPIRY_MINUTES=(int, 'CMS_JWT_EXPIRY_MINUTES'),
+    CMS_EVENT_URL_VIEW=(str, 'CMS_EVENT_URL'), # {EVENT_ID} will be replaced
+    CMS_EVENT_URL_CREATE=(str, 'CMS_EVENT_URL'), # {TOKEN} will be replaced
     STATIC_BUCKET=(str, 'STATIC_BUCKET'),
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
+    SENTRY_DSN = (str, 'SENTRY_DSN'),
+    SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
+    DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
+    USE_PROXY=(bool, False),
+    ENVIRONMENT=(str, 'development')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -49,19 +59,24 @@ CORS_ALLOWED_ORIGINS = [
     "https://robocupjunior.org.au", # For public api
 ]
 
-# Add the allowed hosts to cors
-# https unless is the default local_hosts for dev
-if env('ALLOWED_HOSTS') == ['127.0.0.1', 'localhost']:
-    for allowed_host in env('ALLOWED_HOSTS'):
-        CORS_ALLOWED_ORIGINS.append(f'http://{allowed_host}:8000')
-else:
-    if isinstance(env('ALLOWED_HOSTS'), list):
-        for allowed_host in env('ALLOWED_HOSTS'):
-            CORS_ALLOWED_ORIGINS.append(f'https://{allowed_host}')
-    else:
-        CORS_ALLOWED_ORIGINS.append(f"https://{env('ALLOWED_HOSTS')}")
+CSRF_TRUSTED_ORIGINS = []
 
 DEV_SETTINGS = env('DEV_SETTINGS')
+
+# Add the allowed hosts to cors
+# https unless is the default local_hosts for dev
+_allowed_hosts_list = env('ALLOWED_HOSTS') if isinstance(env('ALLOWED_HOSTS'), list) else [env('ALLOWED_HOSTS')]
+_allowed_hosts_list = [f"https://{host}" for host in _allowed_hosts_list]
+if DEV_SETTINGS:
+    _allowed_hosts_list.append("http://127.0.0.1:8000")
+    _allowed_hosts_list.append("http://localhost:8000")
+
+CORS_ALLOWED_ORIGINS += _allowed_hosts_list
+CSRF_TRUSTED_ORIGINS += _allowed_hosts_list
+
+if env('USE_PROXY'):
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -77,6 +92,7 @@ INSTALLED_APPS = [
     'invoices.apps.InvoicesConfig',
     'schools.apps.SchoolsConfig',
     'workshops.apps.WorkshopsConfig',
+    'association.apps.AssociationConfig',
     'common.apps.CommonConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -86,13 +102,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'keyvaluestore',
     'axes',
     'storages',
     'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -121,6 +138,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'common.globalContexts.yearsContext',
+                'common.globalContexts.environmentContext',
             ],
         },
     },
@@ -141,7 +160,7 @@ AUTHENTICATION_BACKENDS = [
 AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
-AXES_META_PRECEDENCE_ORDER = [
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
    'HTTP_X_FORWARDED_FOR',
 ]
 # 20 failed attempts results in hour long lockout
@@ -190,7 +209,6 @@ else:
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.UnsaltedSHA1PasswordHasher',
 ]
 
 # HIBP settings
@@ -217,7 +235,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 SERVER_EMAIL = 'system@enter.robocupjunior.org.au'
-DEFAULT_FROM_EMAIL = 'system@enter.robocupjunior.org.au'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 # REST
 
@@ -275,6 +293,13 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
+# CMS SETTINGS
+
+CMS_JWT_SECRET = env('CMS_JWT_SECRET')
+CMS_JWT_EXPIRY_MINUTES = env('CMS_JWT_EXPIRY_MINUTES')
+CMS_EVENT_URL_VIEW = env('CMS_EVENT_URL_VIEW')
+CMS_EVENT_URL_CREATE = env('CMS_EVENT_URL_CREATE')
+
 # Static
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
@@ -302,3 +327,25 @@ PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+
+
+SENTRY_DSN = env('SENTRY_DSN')
+if SENTRY_DSN != 'SENTRY_DSN':
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=env('SENTRY_ENV'),
+        enable_tracing=False,
+        sample_rate=1.0,
+        send_default_pii=True,
+        integrations=[
+            DjangoIntegration(
+                transaction_style='url',
+                middleware_spans=False,
+                signals_spans=False,
+                cache_spans=False,
+            ),
+        ]
+    )
+
+# Environment
+ENVIRONMENT = env('ENVIRONMENT')

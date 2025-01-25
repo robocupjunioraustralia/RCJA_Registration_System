@@ -2,6 +2,7 @@ from django.contrib import admin
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from django.utils.html import format_html
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from common.filters import FilteredRelatedOnlyFieldListFilter
 
 from .models import MentorEventFileType, EventAvailableFileType, MentorEventFileUpload
 
@@ -23,6 +24,7 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         'eventAttendance',
         'fileType',
         'event',
+        'division',
         'uploadedBy',
         'filesize',
     ]
@@ -31,6 +33,7 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         'eventAttendance',
         'fileLinkNewTab',
         'event',
+        'division',
         'uploadedBy',
         'filesize',
         'originalFilename',
@@ -41,7 +44,8 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
 
     list_filter = [
         'fileType',
-        'eventAttendance__event',
+        ('eventAttendance__event', FilteredRelatedOnlyFieldListFilter),
+        ('eventAttendance__division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'fileType__name',
@@ -84,4 +88,7 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         },
     }
 
-    stateFilterLookup = 'eventAttendance__event__state__coordinator'
+    statePermissionsFilterLookup = 'eventAttendance__event__state__coordinator'
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'eventAttendance__event__state'
+    yearSelectedFilterLookup = 'eventAttendance__event__year'

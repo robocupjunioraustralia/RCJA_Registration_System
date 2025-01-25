@@ -14,9 +14,11 @@ The minimum required to implement state based permissions on a model is to:
 - define `stateCoordinatorPermissions` on the model
 - define `getState` on the model
 - Inherit from `AdminPermissions` for the admin
-- Define `stateFilterLookup` on the admin
+- Define `statePermissionsFilterLookup` on the admin
 
 To filter foreign key fields that link to the model, you must include the foreign key field in `fkFilterFields` on the ModelAdmin for the model with the field.
+
+To filter the autocomplete results for fields that link to the model, you must include the model with the foreign key in `autocompleteFilters`.
 
 ## Global objects
 
@@ -26,8 +28,8 @@ By default superusers can edit global objects and global coordinator permissions
 
 There are three possible scenarios for global objects:
 - Only superusers have access. Don't define `stateCoordinatorPermissions`, `getState` or any other permissions method. Don't inherit from `AdminPermissions`. Superuser only access is the default. For example `InvoiceSettings`.
-- Model has no connection to state. Don't define `getState`, don't define `globalFilterLookup` or `stateFilterLookup` (is impossible to do so anyway). For state coordinators to view must define `stateCoordinatorPermissions` and if want global coordinators to be able to edit (in addition to superusers) must define `globalCoordinatorPermissions`.
-- Model has a connection to state, but the state field may be None, resulting in global objects. If you want state coordinators with the appropriate permissions to be able to view global objects (with permissions as defined in `stateCoordinatorPermissions`), must set `stateCoordinatorViewGlobal = True`. Must also define `getState`. Must also inherit from `AdminPermissions` on admin. Must define both `stateFilterLookup` and `globalFilterLookup`. If state coordinator should only be able to view objects with a state do not set `stateCoordinatorViewGlobal = True` and do not define `globalFilterLookup`, but must define `stateCoordinatorPermissions`, `getState` and `stateFilterLookup`. In both cases global coordinator permissions will be defined by `globalCoordinatorPermissions` if defined or `stateCoordinatorPermissions`.
+- Model has no connection to state. Don't define `getState`, don't define `globalPermissionsFilterLookup` or `statePermissionsFilterLookup` (is impossible to do so anyway). For state coordinators to view must define `stateCoordinatorPermissions` and if want global coordinators to be able to edit (in addition to superusers) must define `globalCoordinatorPermissions`.
+- Model has a connection to state, but the state field may be None, resulting in global objects. If you want state coordinators with the appropriate permissions to be able to view global objects (with permissions as defined in `stateCoordinatorPermissions`), must set `stateCoordinatorViewGlobal = True`. Must also define `getState`. Must also inherit from `AdminPermissions` on admin. Must define both `statePermissionsFilterLookup` and `globalPermissionsFilterLookup`. If state coordinator should only be able to view objects with a state do not set `stateCoordinatorViewGlobal = True` and do not define `globalPermissionsFilterLookup`, but must define `stateCoordinatorPermissions`, `getState` and `statePermissionsFilterLookup`. In both cases global coordinator permissions will be defined by `globalCoordinatorPermissions` if defined or `stateCoordinatorPermissions`.
 
 ## Definitions
 
@@ -37,10 +39,15 @@ There are three possible scenarios for global objects:
 | `stateCoordinatorViewGlobal` | Model | Boolean | On global models if state coordinators can view global objects. |  |
 | `globalCoordinatorPermissions` | Model | Function returns list | If global coordinators should have different permissions to state coordinators. | Takes permission level and returns the Django permissions, for global coordinators. Based on the coordinator status of the user, not whether the object that this is defined on is a global object. Can be defined on models that are never global to give global coordinators different permissions. |
 | `getState` | Model | Function returns state object | If object is filtered through relationship with state. | Returns the state that this object is related to. |
-| `stateFilterLookup` | Admin | String | If object is filtered through relationship with state. | Relationship of this model to state coordinator using double underscore notation. |
-| `globalFilterLookup` | Admin | String | If object is filtered through relationship with state and state coordinators should have access to globals. | Relationship of this model to state using double underscore notation. |
+| `statePermissionsFilterLookup` | Admin | String | If object is filtered through relationship with state. | Relationship of this model to state coordinator using double underscore notation. |
+| `globalPermissionsFilterLookup` | Admin | String | If object is filtered through relationship with state and state coordinators should have access to globals. | Relationship of this model to state using double underscore notation. |
 | `fkFilterFields` | Admin | Dictionary | If model has foreign key fields that need to be filtered based on coordinator permissions. |  |
-| `fkObjectFilterFields` | Admin  | Function returns dictionary | If model has foreign key fields that require custom filtering logic. |  |
+| `fkObjectFilterFields` | Admin | Function returns dictionary | If model has foreign key fields that require custom filtering logic. |  |
+| `autocompleteFilters` | Admin of target field | Dictionary | If autocomplete field references this model and needs to be filtered. | Dictionary of admin url and model defined on the admin of the model that populates the autocomplete dialog. Used to filter the autocomplete results. |
+| `fieldFilteringModel` | Admin of target field | Model | If `fieldModel` not defined in `fkFilterFields`. | |
+| `filterQuerysetOnSelected` | Admin | Boolean | If want to filter queryset based on selected state and year. | |
+| `stateSelectedFilterLookup` | Admin | String | If want to filter queryset or filters based on selected state. | |
+| `yearSelectedFilterLookup` | Admin | String | If want to filter queryset or filters based on selected year. | |
 
 ### `AdminPermissions`
 The class that provides advanced coordinator permissions for the model admin. Must inherit from this class or only builtin Django permissions will apply.
@@ -61,11 +68,11 @@ Defines the permissions that apply to global coordinators (a coordinator of all 
 Defined on the model class.
 Should return the state of the object.
 
-### `stateFilterLookup`
+### `statePermissionsFilterLookup`
 Defined on the admin class.
 String using double underscore notation to the coordinator for the model via the state field.
 
-### `globalFilterLookup`
+### `globalPermissionsFilterLookup`
 Defined on the admin class.
 String using double underscore notation to the state for the model if state filtering, in which case the objects with no state will be returned.
 

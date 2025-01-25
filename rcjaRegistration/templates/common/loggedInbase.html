@@ -13,12 +13,31 @@
     <link rel="icon" type="image/png" sizes="16x16" href= "{% static 'favicon-16x16.png' %}">
     <link rel="manifest" href="{% static 'site.webmanifest' %}">
     <style type="text/css">
+        .errorlist {
+            color: red;
+        }
         body {
         background-color: #ffffff;
         }
         .menu-set {
             margin-bottom: 0rem !important;
             margin-top: 0rem !important;
+        }
+        .header-button {
+            background: none;
+            border: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+        .button-form {
+            margin: 0px;
+            padding: 0px;
+            display: inline;
+        }
+        .header-button:hover {
+            background-color: rgba(0,0,0,.03) !important;
         }
     </style>
 
@@ -36,43 +55,15 @@
         <a class="item" href="{% url 'events:dashboard' %}">
             <i class="home icon"></i>
             Dashboard
-        </a>  
-        <!-- <a class="item" href="{% url 'events:loggedInConstruction' %}">
-            <i class="calendar alternate icon"></i>
-            My Events
-        </a>  
-        <a class="item" href="{% url 'events:loggedInConstruction' %}">
-            <i class="users icon"></i>
-            My Teams
-        </a>  
-        <a class="item" href="{% url 'events:loggedInConstruction' %}">
-            <i class="user icon"></i>
-            My Students
-        </a>        -->
+        </a>
         <a class="item" href="{% url 'invoices:summary' %}">
             <i class="credit card icon"></i>
             My Invoices
         </a>   
-        {% if user.is_staff %}
-        <a class="item" href="{% url 'admin:index' %}" >
-            <i class="id badge icon"></i>
-            Admin
-        </a>     
-        {% endif %}
-        <div class="vertical menu item" >
-            <i class="user circle icon"></i>
-            <span style="width:3.5rem;overflow: hidden; text-overflow: ellipsis;">
-            {{ user.fullname_or_email }}
-            </span>
-                <div class="menu">
-                    <a href="{% url 'users:details' %}" class="item">My details</a>
-                    {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
-                    <a href = "{% url 'password_change' %}" class="item">Change password</a>
-                    <a href = "{% url 'logout' %}" class="item">Log out</a>
-                    <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
-                    <a class="item">Help</a>
-                </div>
-        </div>      
+        <a class="item" href="{% url 'association:membership' %}">
+            <i class="briefcase icon"></i>
+            Association Membership
+        </a> 
     </div>
     <div class="ui top massive fixed menu">
         <a class="item" style="margin-right:1rem;" onclick = "toggleSidebar()">
@@ -87,10 +78,24 @@
             <a class="item" href="{% url 'invoices:summary' %}">
                 <i class="credit card icon"></i>
                 My Invoices
-            </a>                          
+            </a>            
+            <a class="item" href="{% url 'association:membership' %}">
+                <i class="briefcase icon"></i>
+                Association Membership
+            </a>     
         </div>
         <div class = "right menu">
+            {% if environment is not None %}
+            <span class="item" style="color:red; max-width:48%" >
+                <i class="important"></i>
+                <b>{{environment}}</b>
+            </span>
+            {% endif %}
             {% if user.is_staff %}
+            <a class="item" href="{% url 'events:summaryReport' %}">
+                <i class="eye icon"></i>
+                Summary Report
+            </a>
             <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
                 <i class="id badge icon"></i>
                 Admin
@@ -108,7 +113,10 @@
                         <i class="dropdown icon"></i>
                         <div class="menu">
                             {% for schoolAdmin in user.schooladministrator_set.all %}
-                                <a href="{% url 'schools:setCurrentSchool' schoolAdmin.school.id %}" class="item">{{ schoolAdmin.school.abbreviation }}</a>
+                                <form method="post" action="{% url 'schools:setCurrentSchool' schoolAdmin.school.id %}" class="button-form">
+                                    {% csrf_token %}
+                                    <input class="header-button item" type="submit" value="{{ schoolAdmin.school.abbreviation }}"/>
+                                </form>
                             {% endfor %}
                         </div>
                 </div>
@@ -123,9 +131,12 @@
                         <a href="{% url 'users:details' %}" class="item">My details</a>
                         {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
                         <a href = "{% url 'password_change' %}" class="item">Change password</a>
-                        <a href = "{% url 'logout' %}" class="item">Log out</a>
+                        <form method="post" action="{% url 'logout' %}" class="button-form">
+                            {% csrf_token %}
+                            <input class="header-button item" type="submit" value="Log out"/>
+                        </form>
                         <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
-                        <a class="item">Help</a>
+                        {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
                     </div>
             </div>
         </div>             
@@ -135,25 +146,51 @@
         {% block content %}
         {% endblock %} 
     </div>
-<div class="footer">
-  <p>RCJA Registration System. This site is in beta. For the bext experience, use Chrome on a computer. View the source on <a href = "https://github.com/MelbourneHighSchoolRobotics/RCJA_Registration_System"> GitHub. </a></p>
-</div></body>
+    <footer>
+        <a href="https://robocupjunior.org.au">RoboCup Junior Australia</a>
+        <span> - </span>
+        <a href="mailto:digitalplatforms@robocupjunior.org.au?subject=Support%2FFeedback%3A%20Registration%20System">Support and Feedback</a>
+        <span> - </span>
+        <a href="https://rcja.app/contributors">Contributors</a>
+        <span> - </span>
+        <a href="https://rcja.app">RCJA Portal</a>
+        <span> - </span>
+        <a href="https://facebook.com/robocupjunioraustralia/"><i class="facebook icon"></i></a>
+        <a href="https://instagram.com/robocupjunioraustralia"><i class="instagram icon"></i></a>
+        <a href="https://twitter.com/rcj_australia"><i class="twitter icon"></i></a>
+        <a href="https://linkedin.com/company/rcja"><i class="linkedin icon"></i></a>
+        <a href="https://youtube.com/user/RobocupJuniorAust"><i class="youtube icon"></i></a>
+    </footer>
+</body>
 
 <style>
-.footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  min-height:1rem;
-  margin-top:1rem;
-  background-color: #c9c9c9;
-  color: black;
-  text-align: center;
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    min-height: 24px;
+    text-align: center;
+    background-color: #CCC;
+    font-size: 16px;
+}
+
+footer a {
+    color: #222;
+}
+
+footer a:not(:has(i)) {
+    text-decoration: underline;
+}
+
+footer span {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+footer i {
+    text-decoration: none;
 }
 </style>
-
-
     
 <script>
 function toggleSidebar() {

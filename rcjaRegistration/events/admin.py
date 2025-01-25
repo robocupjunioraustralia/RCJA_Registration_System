@@ -1,13 +1,16 @@
 from django.contrib import admin
 from django.db.models import F, Q
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
-from coordination.permissions import AdminPermissions, InlineAdminPermissions
+from coordination.permissions import AdminPermissions, InlineAdminPermissions, checkCoordinatorPermission
 from coordination.models import Coordinator
 from django.contrib import messages
 from django import forms
 from django.forms import TextInput, Textarea
 from django.core.exceptions import ValidationError
 from django.db import models
+from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from .models import DivisionCategory, Division, Venue, Year, Event, AvailableDivision
 from regions.models import State
@@ -15,6 +18,7 @@ from schools.models import Campus
 from eventfiles.adminInlines import EventAvailableFileTypeInline
 from teams.models import Team
 from workshops.models import WorkshopAttendee
+from invoices.models import Invoice
 
 from regions.admin import StateAdmin
 
@@ -24,6 +28,34 @@ from regions.admin import StateAdmin
 class DivisionCategoryAdmin(AdminPermissions, admin.ModelAdmin):
     pass
 
+class DivisionActiveFilter(admin.SimpleListFilter):
+    title = _('Active')
+
+    parameter_name = 'active'
+
+    def lookups(self, request, model_admin):
+        return (
+            (None, _('Active')),
+            ('inactive', _('Inactive')),
+            ('all', _('All'))
+        )
+    
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': changelist.get_query_string({self.parameter_name: lookup,},[]),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'inactive':
+            return queryset.filter(active=False) 
+        elif self.value() == 'all':
+            return queryset.all()   
+        else:
+            return queryset.filter(active=True)
+
 @admin.register(Division)
 class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
@@ -31,6 +63,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'state',
         'category',
         'description',
+        'active'
     ]
     search_fields = [
         'name',
@@ -40,7 +73,8 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
     ]
     list_filter = [
         'category',
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
+        DivisionActiveFilter,
     ]
     actions = [
         'export_as_csv',
@@ -51,6 +85,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'state',
         'category',
         'description',
+        'active'
     ]
     autocomplete_fields = [
         'state',
@@ -60,6 +95,7 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         'category',
         'state',
         'description',
+        'active'
     ]
 
     # State based filtering
@@ -71,8 +107,8 @@ class DivisionAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportC
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
-    globalFilterLookup = 'state'
+    statePermissionsFilterLookup = 'state__coordinator'
+    globalPermissionsFilterLookup = 'state'
 
 @admin.register(Venue)
 class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
@@ -99,7 +135,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         'address',
     ]
     list_filter = [
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
     ]
     actions = [
         'export_as_csv',
@@ -122,7 +158,7 @@ class VenueAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVM
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
 
 @admin.register(Year)
 class YearAdmin(AdminPermissions, admin.ModelAdmin):
@@ -156,6 +192,7 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
 
 @admin.register(Event)
 class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
+    empty_value_display = "TBC"
     list_display = [
         '__str__',
         'eventType',
@@ -167,11 +204,13 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'registrationsCloseDate',
         'directEnquiriesToName',
         'venue',
+        'registrationsLink',
+        'cmsLink',
     ]
-    competition_fieldsets = (
+    competition_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -184,16 +223,20 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'event_billingType', 'event_defaultEntryFee', ('event_specialRateNumber', 'event_specialRateFee'), 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'competition_billingType', 'competition_defaultEntryFee', ('competition_specialRateNumber', 'competition_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
         }),
-    )
-    workshop_fieldsets = (
+    ]
+    # CMS fieldset is added in the get_fieldsets method if the event has a cmsEventId or if the user can create an event
+    competition_cms_fieldset = ('CMS', {
+        'fields': ('cmsLink',)
+    })
+    workshop_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -203,13 +246,13 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Billing settings', {
-            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate')
+            'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
             'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
         }),
-    )
-    add_fieldsets = (
+    ]
+    add_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
             'fields': ('year', ('state', 'globalEvent'), 'name')
@@ -223,19 +266,22 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         }),
         ('Billing settings', {
             'description': "More options will be available after you click save",
-            'fields': ('entryFeeIncludesGST', 'event_defaultEntryFee')
+            'fields': ('entryFeeIncludesGST', 'competition_defaultEntryFee', 'paymentDueDate')
         }),
         ('Details', {
             'description': "More options will be available after you click save",
             'fields': ('directEnquiriesTo',)
         }),
-    )
+    ]
 
     readonly_fields = [
         'eventType', # Can't change event type after creation, because would make team and workshop fk validation very difficult and messy
         'eventBannerImageOriginalFilename',
         'bannerImageFilesize',
         'effectiveBannerImageTag',
+        'registrationsLink',
+        'eventSurchargeAmount',
+        'cmsLink'
     ]
     add_readonly_fields = [
     ]
@@ -252,21 +298,37 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
         return readonly_fields
 
+    def registrationsLink(self, obj):
+        return format_html('<a href="{}" class="viewlink">View</a>', obj.registrationsAdminURL())
+    registrationsLink.short_description = 'View registrations'
+
+    def cmsLink(self, obj):
+        if obj.cmsEventId:
+            return format_html('<a href="{}" target="_blank" class="viewlink">View</a>', obj.get_cms_url())
+
+        if obj.eventType == 'competition':
+            return format_html('<a href="{}" target="_blank" class="addlink">Create</a>', obj.get_cms_url())
+
+        return "CMS Unavailable"
+    cmsLink.short_description = 'View CMS'
+
     autocomplete_fields = [
         'state',
         'directEnquiriesTo',
     ]
-    inlines = [
+    competition_inlines = [
         AvailableDivisionInline,
         EventAvailableFileTypeInline,
+    ]
+    workshop_inlines = [
+        AvailableDivisionInline,
     ]
     add_inlines = [ # Don't include available divisions here so the divisions will be filtered when shown
     ]
     list_filter = [
         'status',
         'eventType',
-        'year',
-        'state',
+        ('state', admin.RelatedOnlyFieldListFilter),
         'globalEvent',
     ]
     search_fields = [
@@ -300,10 +362,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'event_maxTeamsPerSchool',
         'event_maxTeamsForEvent',
         'entryFeeIncludesGST',
-        'event_billingType',
-        'event_defaultEntryFee',
-        'event_specialRateNumber',
-        'event_specialRateFee',
+        'competition_billingType',
+        'competition_defaultEntryFee',
+        'competition_specialRateNumber',
+        'competition_specialRateFee',
+        'workshopTeacherEntryFee',
+        'workshopStudentEntryFee',
         'paymentDueDate',
         'eventDetails',
         'additionalInvoiceMessage',
@@ -328,9 +392,26 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             return self.workshop_fieldsets
 
         if obj.eventType == 'competition':
-            return self.competition_fieldsets
+            comp_fieldsets = self.competition_fieldsets.copy() # Copy so we don't modify the class variable and add a new copy of the CMS fieldset on every page load
+
+            if obj.cmsEventId or checkCoordinatorPermission(request, Event, obj, 'change'):
+                comp_fieldsets.insert(1, self.competition_cms_fieldset)
+
+            return comp_fieldsets
 
         return super().get_fieldsets(request, obj)
+
+    def get_inlines(self, request, obj=None):
+        if not obj:
+            return self.add_inlines
+
+        if obj.eventType == 'workshop':
+            return self.workshop_inlines
+
+        if obj.eventType == 'competition':
+            return self.competition_inlines
+
+        return super().get_inlines(request, obj)
 
     # Message user during save
     def save_model(self, request, obj, form, change):
@@ -340,6 +421,9 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
             if not obj.published():
                 self.message_user(request, f"{obj}: Event is not published, publish event to make visible.", messages.WARNING)
+            
+            if not obj.hasAllDetails():
+                self.message_user(request, f"{obj}: You haven't filled in all details yet, people won't be able to register.", messages.WARNING)
 
         super().save_model(request, obj, form, change)
 
@@ -356,10 +440,10 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     def get_search_results(self, request, queryset, search_term):
         if 'autocomplete' in request.path_info:
             if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
-                queryset = queryset.filter(eventType='competition', status='published')
+                queryset = queryset.filter(eventType='competition', status='published', registrationsOpenDate__isnull=False)
 
             if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
-                queryset = queryset.filter(eventType='workshop', status='published')
+                queryset = queryset.filter(eventType='workshop', status='published', registrationsOpenDate__isnull=False)
 
         return super().get_search_results(request, queryset, search_term)
 
@@ -371,8 +455,11 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         },
     }
 
-    stateFilterLookup = 'state__coordinator'
+    statePermissionsFilterLookup = 'state__coordinator'
     fieldFilteringModel = Event
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'state'
+    yearSelectedFilterLookup = 'year'
 
     @classmethod
     def fkObjectFilterFields(cls, request, obj):
@@ -420,8 +507,8 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school',
     ]
     list_filter = [
-        'event',
-        'division',
+        ('event', FilteredRelatedOnlyFieldListFilter),
+        ('division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
         'school__state__name',
@@ -454,6 +541,13 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
 
     form = BaseWorkshopAttendanceForm
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        qs = qs.prefetch_related('event', 'division', 'mentorUser__homeState', 'school__state', 'campus')
+
+        return qs
+
     # Set school and campus to that of mentor if only one option
     def save_model(self, request, obj, form, change):
         if not obj.pk and obj.school is None and obj.mentorUser.schooladministrator_set.count() == 1:
@@ -477,8 +571,17 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
                 'queryset': Campus.objects.filter(school=obj.school) if obj is not None else Campus.objects.none(), # Field not displayed on create so user will never see fallback to None
             },
             'event': {
-                'queryset': Event.objects.filter(eventType=cls.eventTypeMapping),
+                'queryset': Event.objects.filter(
+                    eventType=cls.eventTypeMapping,
+                    registrationsOpenDate__isnull=False,
+                ),
+            },
+            'invoiceOverride': {
+                'queryset': Invoice.objects.filter(event=obj.event) if obj is not None else Invoice.objects.none() # Field not displayed on create so user will never see fallback to None
             },
         }
 
-    stateFilterLookup = 'event__state__coordinator'
+    statePermissionsFilterLookup = 'event__state__coordinator'
+    filterQuerysetOnSelected = True
+    stateSelectedFilterLookup = 'event__state'
+    yearSelectedFilterLookup = 'event__year'

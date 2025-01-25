@@ -20,6 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     USE_SQLLITE_DB=(bool, False),
+    ENVIRONMENT=(str, "testing")
 )
 
 assert (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should only be used to run tests"
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'invoices.apps.InvoicesConfig',
     'schools.apps.SchoolsConfig',
     'workshops.apps.WorkshopsConfig',
+    'association.apps.AssociationConfig',
     'common.apps.CommonConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,13 +62,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'keyvaluestore',
     'axes',
     'storages',
     'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -94,6 +97,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'common.globalContexts.yearsContext',
+                'common.globalContexts.environmentContext',
             ],
         },
     },
@@ -114,7 +119,7 @@ AUTHENTICATION_BACKENDS = [
 AXES_USERNAME_FORM_FIELD = 'email'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
-AXES_META_PRECEDENCE_ORDER = [
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
    'HTTP_X_FORWARDED_FOR',
 ]
 # 20 failed attempts results in hour long lockout
@@ -186,8 +191,8 @@ REST_FRAMEWORK = {
         ),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
-    # 'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
-    # 'PAGE_SIZE': 50
+    'DEFAULT_PAGINATION_CLASS': 'common.headerLinkPagination.LinkHeaderPagination',
+    'PAGE_SIZE': 50
 }
 
 
@@ -223,6 +228,13 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
+# CMS SETTINGS
+
+CMS_JWT_SECRET = "TESTONLY_slfgdjheaklfgjb34wuhgb35789gbne97urgblskdg"
+CMS_JWT_EXPIRY_MINUTES = 5
+CMS_EVENT_URL_VIEW = "https://localhost/rcj_cms?comp={EVENT_ID}"
+CMS_EVENT_URL_CREATE = "https://localhost/rcj_cms/event/create?token={TOKEN}"
+
 # Static
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
@@ -246,3 +258,6 @@ PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
 DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+
+# Environment
+ENVIRONMENT = env('ENVIRONMENT')

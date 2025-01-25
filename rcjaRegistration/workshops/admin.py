@@ -15,6 +15,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'attendeeType',
         'event',
         'division',
+        'creationDateTime',
         'mentorUserName',
         'school',
         'campus',
@@ -30,11 +31,12 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details', {
             'fields': ('attendeeType', 'firstName', 'lastName', 'yearLevel', 'gender')
         }),
-        ('Required details for students', {
-            'fields': ('birthday',)
-        }),
         ('Required details for teachers', {
             'fields': ('email',)
+        }),
+        ('Advanced billing settings', {
+            'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this attendee from that invoice and add it to a different invoice, which can be for a different school or mentor.",
+            'fields': ('invoiceOverride', )
         }),
     )
     add_fieldsets = (
@@ -47,9 +49,6 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         }),
         ('Required details', {
             'fields': ('attendeeType', 'firstName', 'lastName', 'yearLevel', 'gender')
-        }),
-        ('Required details for students', {
-            'fields': ('birthday',)
         }),
         ('Required details for teachers', {
             'fields': ('email',)
@@ -73,9 +72,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'attendeeType',
         'yearLevel',
         'gender',
-        'birthday',
         'event',
         'division',
+        'creationDateTime',
         'mentorUserName',
         'mentorUserEmail',
         'mentorUserPK',
@@ -84,6 +83,10 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'homeState',
         'homeRegion',
         'schoolPostcode',
+        'invoiceOverride',
+    ]
+    exportFieldsManyRelations = [
+        'mentor_questionresponse_set',
     ]
 
     eventTypeMapping = 'workshop'

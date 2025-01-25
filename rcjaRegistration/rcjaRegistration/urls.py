@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import include, url
+from django.conf.urls import include
 from django.contrib import admin
 from django.urls import path, include, reverse_lazy
 from django.views.generic.base import RedirectView
@@ -39,6 +39,7 @@ urlpatterns = [
 
     # Project urls
     path('api/v1/public/', include('publicapi.urls')),
+    path('api/v1/cms/', include('cmsapi.urls')),
     path('', include('events.urls')),
     path('',include('schools.urls')),
     path('',include('teams.urls')),
@@ -46,4 +47,5 @@ urlpatterns = [
     path('',include('users.urls')),
     path('',include('invoices.urls')),
     path('',include('eventfiles.urls')),
+    path('',include('association.urls')),
 ]

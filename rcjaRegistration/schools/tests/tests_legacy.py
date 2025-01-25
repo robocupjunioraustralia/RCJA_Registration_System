@@ -21,8 +21,8 @@ from schools.forms import SchoolForm, SchoolEditForm, CampusForm, SchoolAdminist
 # Unit Tests
 
 def schoolSetUp(self):
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
 
     self.region1 = Region.objects.create(name='Test Region', description='test desc')
     self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
@@ -42,7 +42,7 @@ class TestSchoolClean(TestCase):
             region=self.region1
         )
 
-        self.assertEqual(school2.clean(), None)
+        self.assertEqual(school2.full_clean(), None)
 
     def testValidPostcode(self):
         school2 = School(
@@ -53,7 +53,7 @@ class TestSchoolClean(TestCase):
             postcode='1234',
         )
 
-        self.assertEqual(school2.clean(), None)
+        self.assertEqual(school2.full_clean(), None)
 
     def testNameCaseInsensitive(self):
         school2 = School(
@@ -62,7 +62,7 @@ class TestSchoolClean(TestCase):
             state=self.state1,
             region=self.region1
         )
-        self.assertRaises(ValidationError, school2.clean)
+        self.assertRaises(ValidationError, school2.full_clean)
 
     def testAbbreviationCaseInsensitive(self):
         school2 = School(
@@ -71,7 +71,7 @@ class TestSchoolClean(TestCase):
             state=self.state1,
             region=self.region1
         )
-        self.assertRaises(ValidationError, school2.clean)
+        self.assertRaises(ValidationError, school2.full_clean)
 
     def testAbbreviationMinLength(self):
         school2 = School(
@@ -80,7 +80,7 @@ class TestSchoolClean(TestCase):
             state=self.state1,
             region=self.region1
         )
-        self.assertRaises(ValidationError, school2.clean)
+        self.assertRaises(ValidationError, school2.full_clean)
 
     def testAbbreviationNotIND(self):
         school2 = School(
@@ -108,7 +108,7 @@ class TestSchoolClean(TestCase):
             region=self.region1,
             postcode='ab12',
         )
-        self.assertRaises(ValidationError, school2.clean)  
+        self.assertRaises(ValidationError, school2.full_clean)  
 
     def testTooShortPostcode(self):
         school2 = School(
@@ -118,7 +118,7 @@ class TestSchoolClean(TestCase):
             region=self.region1,
             postcode='12',
         )
-        self.assertRaises(ValidationError, school2.clean)  
+        self.assertRaises(ValidationError, school2.full_clean)  
 
 class TestSchoolModelMethods(TestCase):
     email1 = 'user@user.com'
@@ -164,7 +164,7 @@ class TestCampusClean(TestCase):
             school=self.school1,
         )
 
-        self.assertEqual(campus2.clean(), None)
+        self.assertEqual(campus2.full_clean(), None)
 
     def testValidPostcode(self):
         campus2 = Campus(
@@ -173,7 +173,7 @@ class TestCampusClean(TestCase):
             postcode='1234',
         )
 
-        self.assertEqual(campus2.clean(), None)
+        self.assertEqual(campus2.full_clean(), None)
 
     def testInvalidPostcode(self):
         campus2 = Campus(
@@ -181,7 +181,7 @@ class TestCampusClean(TestCase):
             school=self.school1,
             postcode='12ah',
         )
-        self.assertRaises(ValidationError, campus2.clean)  
+        self.assertRaises(ValidationError, campus2.full_clean)  
 
     def testTooShortPostcode(self):
         campus2 = Campus(
@@ -189,7 +189,7 @@ class TestCampusClean(TestCase):
             school=self.school1,
             postcode='12',
         )
-        self.assertRaises(ValidationError, campus2.clean)  
+        self.assertRaises(ValidationError, campus2.full_clean)  
 
 class TestCampusModelMethods(TestCase):
     email1 = 'user@user.com'
@@ -290,8 +290,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors["name"], ["School with this Name already exists."])
-        self.assertEqual(form.non_field_errors(), ["School with this name exists. Please ask your school administrator to add you."])
+        self.assertEqual(form.errors['name'], ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testTeamNameDifferentCase(self):
         form = self.createForm({
@@ -303,7 +302,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), ["School with this name exists. Please ask your school administrator to add you."])
+        self.assertEqual(form.errors['name'], ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testAbbreviationSameCase(self):
         form = self.createForm({
@@ -315,8 +314,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors["abbreviation"], ["School with this Abbreviation already exists."])
-        self.assertEqual(form.non_field_errors(), ["School with this abbreviation exists. Please ask your school administrator to add you."])
+        self.assertEqual(form.errors['abbreviation'], ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testAbbreviationDifferentCase(self):
         form = self.createForm({
@@ -328,7 +326,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), ["School with this abbreviation exists. Please ask your school administrator to add you."])
+        self.assertEqual(form.errors['abbreviation'], ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
     def testIndependentClean(self):
         form = self.createForm({
@@ -340,8 +338,10 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), [
+        self.assertEqual(form.errors['abbreviation'], [
             'IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.',
+        ])
+        self.assertEqual(form.errors['name'], [
             "Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.",
         ])
 
@@ -355,7 +355,7 @@ class TestSchoolForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), [
+        self.assertEqual(form.errors['postcode'], [
             'Postcode must be numeric',
             'Postcode too short',
         ])
@@ -421,7 +421,7 @@ class TestCampusForm(TestCase):
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.non_field_errors(), [
+        self.assertEqual(form.errors['postcode'], [
             'Postcode must be numeric',
             'Postcode too short',
         ])
@@ -437,7 +437,7 @@ class TestSchoolAdministratorForm(TestCase):
         self.campus1 = Campus.objects.create(school=self.school1, name="Campus 1")
         self.campus2 = Campus.objects.create(school=self.school2, name="Campus 2")
 
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
 
         SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
 
@@ -532,10 +532,10 @@ class TestCurrentlySelectedSchool(TestCase):
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user1 = User.objects.create_user(email=self.email1, password=self.password)
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -629,10 +629,10 @@ class TestCurrentlySelectedSchool(TestCase):
 # School frontend view permissions tests
 
 def schoolViewSetup(self):
-    self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+    self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
     self.region1 = Region.objects.create(name='Region 1',)
 
-    self.user1 = User.objects.create_user(email=self.email1, password=self.password)
+    self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
 
     self.school1 = School.objects.create(name='School 1',abbreviation='SCH1', state=self.state1, region=self.region1)
     self.school2 = School.objects.create(name='School 2',abbreviation='SCH2', state=self.state1, region=self.region1)
@@ -660,7 +660,7 @@ class Test_SchoolViews_LoginRequired(Base_Test_SchoolViews, TestCase):
     def testSetCurrentSchool(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
-        response = self.client.get(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
+        response = self.client.post(reverse('schools:setCurrentSchool', kwargs= {'schoolID':self.school2.id}))
         self.assertEqual(response.url, f"/accounts/login/?next=/schools/setCurrentSchool/{self.school2.id}")
         self.assertEqual(response.status_code, 302)
 
@@ -710,17 +710,29 @@ class Test_SetCurrentSchool_Permissions(Base_Test_SchoolViews_Permissions, TestC
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
         # Change to school 2
-        response = self.client.get(self.url(self.school2))
+        response = self.client.post(self.url(self.school2))
         self.assertEqual(response.status_code, 302)
 
         # Check school changed
         self.user1.refresh_from_db()
         self.assertEqual(self.user1.currentlySelectedSchool, self.school2)
 
+    def testDeniedGet(self):
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
+        # Change to school 2
+        response = self.client.get(self.url(self.school2))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Forbidden method', status_code=403)
+
+        # Check still school 1
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
+
     def testDeniedNotAdmin(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.school1)
 
-        response = self.client.get(self.url(self.school3))
+        response = self.client.post(self.url(self.school3))
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You do not have permission to view this school", status_code=403)
 
@@ -748,8 +760,8 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     inValidCreateCode = 200
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.username, password=self.password)
-        self.newState = State.objects.create(typeRegistration=True, name='Victoria',abbreviation='VIC')
+        self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.username, password=self.password)
+        self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
         self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
@@ -776,8 +788,8 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         response = self.client.post(reverse(self.reverseString),data=payload)
 
         self.assertEqual(response.status_code,self.inValidCreateCode)
-        self.assertContains(response, 'School with this Abbreviation already exists.')
-        self.assertContains(response, 'School with this Name already exists.')
+        self.assertContains(response, 'School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au')
+        self.assertContains(response, 'School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au')
 
 class TestEditSchoolDetails(TestCase):
     email = 'user@user.com'
@@ -785,10 +797,10 @@ class TestEditSchoolDetails(TestCase):
     password = 'chdj48958DJFHJGKDFNM'
 
     def setUp(self):
-        self.user = User.objects.create_user(email=self.email, password=self.password)
-        self.user2 = User.objects.create_user(email=self.email2, password=self.password)
+        self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email, password=self.password)
+        self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
 
-        self.state1 = State.objects.create(typeRegistration=True, name='Victoria', abbreviation='VIC')
+        self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
         self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
@@ -804,8 +816,8 @@ class TestEditSchoolDetails(TestCase):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -836,7 +848,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertEquals(response.url, reverse("events:dashboard"))
+        self.assertEqual(response.url, reverse("events:dashboard"))
         School.objects.get(name='New name')
 
     def testChangeName_success_continueEditing(self):
@@ -863,7 +875,7 @@ class TestEditSchoolDetails(TestCase):
 
         response = self.client.post(url, data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertEquals(response.url, reverse('schools:details'))
+        self.assertEqual(response.url, reverse('schools:details'))
         School.objects.get(name='New name')
 
     def testMissingManagementFormData(self):
@@ -880,7 +892,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
@@ -897,7 +909,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testChangeName_failure(self):
@@ -1041,7 +1053,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Cannot delete some instances of model &#x27;Campus&#x27; because they are referenced through protected foreign keys:")
         Campus.objects.get(name='test 1')
         self.assertEqual(Campus.objects.count(), numberExistingCampuses)
@@ -1147,7 +1159,7 @@ class TestEditSchoolDetails(TestCase):
         }
 
         response = self.client.post(url, data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Cannot delete some instances of model &#x27;SchoolAdministrator&#x27; because they are referenced through a protected foreign key:")
         SchoolAdministrator.objects.get(pk=self.admin2.pk)
         self.assertEqual(SchoolAdministrator.objects.count(), numberExistingAdmins)

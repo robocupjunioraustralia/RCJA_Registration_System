@@ -30,7 +30,7 @@
                 <div class="form form-group left-aligned-text">
                 
                     <h1> School details </h1>
-                    {% if form.errors %}
+                    {% if form.errors or form.non_field_errors %}
                     
                     <!-- Error messaging -->
                     <div class="ui message left-aligned-text">
@@ -82,7 +82,7 @@
                         <!-- Campus -->
                         <h1>Campuses</h1>
                         <p>Campuses can be used to ease the management of large schools. Each administrator can be assigned a campus and you can choose to be invoiced on a per campus basis.</p>
-                        {% if campusFormset.errors %}
+                        {% if campusFormset.non_form_errors%}
                             <div class="ui message left-aligned-text">
                                 <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                                 {{ campusFormset.non_form_errors }}
@@ -107,7 +107,7 @@
                         <!-- Administrators -->
                         <h1>Administrators</h1>
                         <p>Administrators can manage the school.</p>
-                        {% if schoolAdministratorFormset.errors %}
+                        {% if schoolAdministratorFormset.non_form_errors%}
                             <div class="ui message left-aligned-text">
                                 <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
                                 {{ schoolAdministratorFormset.non_form_errors }}
@@ -117,9 +117,10 @@
                             {{administratorForm.id|attr:"type:hidden"}}
                             <div class="ui segment">
                                 <h4 class="ui dividing header">Administrator {{forloop.counter}}</h4>
-                                {% if administratorForm.errors %}
+                                {% if administratorForm.errors or administratorForm.non_field_errors %}
                                 <div class="ui message left-aligned-text">
                                     <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                    {{ administratorForm.non_field_errors }}
                                     <ul>
                                         {% for field in administratorForm %}
                                         {% if field.errors %}
@@ -157,7 +158,9 @@
 
                         <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
                         <input class="primary ui button" type="submit" value="Save and exit" />
+                        {% if not request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
                         <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                        {% endif %}
                     </form>
 
                 </div>
