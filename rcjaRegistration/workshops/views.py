@@ -56,7 +56,7 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
             attendee.save()
 
             # Redirect if add another in response
-            if 'add_text' in request.POST and newAttendee:
+            if 'add_text' in request.POST and newAttendee and not (event.maxEventRegistrationsForSchoolReached(request.user) or event.maxEventRegistrationsTotalReached()):
                 return redirect(reverse('workshops:create', kwargs = {"eventID":event.id}))
 
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
