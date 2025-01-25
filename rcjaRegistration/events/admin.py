@@ -515,7 +515,6 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school__state__abbreviation',
         'school__region__name',
         'school__name',
-        'school__abbreviation',
         'campus__name',
         'mentorUser__first_name',
         'mentorUser__last_name',

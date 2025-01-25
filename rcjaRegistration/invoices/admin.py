@@ -108,7 +108,6 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'event__state__abbreviation',
         'event__name',
         'school__name',
-        'school__abbreviation',
         'campus__name',
         'invoiceToUser__first_name',
         'invoiceToUser__last_name',

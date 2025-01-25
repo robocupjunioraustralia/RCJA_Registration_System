@@ -9,7 +9,7 @@ from schools.models import Campus
 class SchoolForm(ModelForm):
     class Meta:
         model = School
-        fields = ['name', 'abbreviation', 'state', 'region', 'postcode']
+        fields = ['name', 'state', 'region', 'postcode']
 
     # Make fields required
     def __init__(self, *args, **kwargs):

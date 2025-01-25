@@ -327,7 +327,6 @@ class TestEventDetailsPage_school(TestCase):
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
             name='School 2',
-            abbreviation='sch2',
             state=self.newState,
             region=self.newRegion
         )
@@ -404,7 +403,6 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
             name='School 2',
-            abbreviation='sch2',
             state=self.newState,
             region=self.newRegion
         )
