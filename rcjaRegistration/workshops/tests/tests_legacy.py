@@ -303,7 +303,7 @@ class TestWorkshopAttendeeClean(TestCase):
         )
         self.assertRaises(ValidationError, self.attendee3.clean)
 
-class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tests, check teams actually saved to db properly
+class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tests, check workshop attendees actually saved to db properly
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
     email3 = 'user3@user.com'
@@ -312,7 +312,7 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
 
     def setUp(self):
         newCommonSetUp(self)
-        self.event.divisions.add(self.division1)
+        self.availableDivision = AvailableDivision.objects.create(division=self.division1, event=self.event)
         self.closedEvent = Event.objects.create(
             year=self.year,
             state=self.state1,
@@ -330,6 +330,26 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
             directEnquiriesTo = self.user1,
         )
         self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+        WorkshopAttendee.objects.create(
+            event=self.event,
+            mentorUser=self.user1,
+            division=self.division1,
+            attendeeType='student',
+            firstName='First1',
+            lastName='Last1',
+            yearLevel='10',
+            gender='male',
+        )
+        WorkshopAttendee.objects.create(
+            event=self.event,
+            mentorUser=self.user1,
+            division=self.division1,
+            attendeeType='student',
+            firstName='First2',
+            lastName='Last2',
+            yearLevel='10',
+            gender='male',
+        )
 
     def testOpenRegoDoesLoad(self):
         response = self.client.get(reverse('workshops:create',kwargs={'eventID':self.event.id}))
@@ -380,3 +400,123 @@ class TestWorkshopAttendeeCreateFrontend(TestCase): #TODO more comprehensive tes
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/workshopattendee/create/{self.event.id}")
         self.assertEqual(WorkshopAttendee.objects.count(), numberAttendees+1)
+
+    def testInValidCreate_schoolEventMax(self):
+        self.event.event_maxRegistrationsPerSchool = 2
+        self.event.save()
+
+        payload = {
+            'division':self.division1.id,
+            'attendeeType':'teacher',
+            'firstName':'First1',
+            'lastName':'Last1',
+            'yearLevel':'10',
+            'gender':'male',
+            'email':'test@test.com'
+        }
+        response = self.client.post(reverse('workshops:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "Max workshop attendees for school for this event reached. Contact the organiser if you want to register more workshop attendees for this event.", status_code=403)
+
+    def testValidCreate_schoolEventMaxReached_redirectAddAnotherIgnored(self):
+        self.event.event_maxRegistrationsPerSchool = 3
+        self.event.save()
+
+        payload = {
+            'division':self.division1.id,
+            'attendeeType':'teacher',
+            'firstName':'First1',
+            'lastName':'Last1',
+            'yearLevel':'10',
+            'gender':'male',
+            'email':'test@test.com'
+        }
+        response = self.client.post(reverse('workshops:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.event.id}")
+
+    def testValidCreate_overallEventMaxReached_redirectAddAnotherIgnored(self):
+        self.event.event_maxRegistrationsForEvent = 3
+        self.event.save()
+
+        payload = {
+            'division':self.division1.id,
+            'attendeeType':'teacher',
+            'firstName':'First1',
+            'lastName':'Last1',
+            'yearLevel':'10',
+            'gender':'male',
+            'email':'test@test.com'
+        }
+        response = self.client.post(reverse('workshops:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"/events/{self.event.id}")
+
+    def testInValidCreate_overallEventMax(self):
+        self.event.event_maxRegistrationsForEvent = 2
+        self.event.save()
+
+        payload = {
+            'division':self.division1.id,
+            'attendeeType':'teacher',
+            'firstName':'First1',
+            'lastName':'Last1',
+            'yearLevel':'10',
+            'gender':'male',
+            'email':'test@test.com'
+        }
+        response = self.client.post(reverse('workshops:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "Max workshop attendees for this event reached. Contact the organiser if you want to register more workshop attendees for this event.", status_code=403)
+
+    def testInValidCreate_schoolDivisionMax(self):
+        self.availableDivision.division_maxRegistrationsPerSchool = 1
+        self.availableDivision.save()
+
+        payload = {
+            'division':self.division1.id,
+            'attendeeType':'teacher',
+            'firstName':'First1',
+            'lastName':'Last1',
+            'yearLevel':'10',
+            'gender':'male',
+            'email':'test@test.com'
+        }
+        response = self.client.post(reverse('workshops:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertContains(response, "Division 1: Max workshop attendees for school for this event division reached. Contact the organiser if you want to register more workshop attendees in this division.")
+
+    def testGet_schoolDivisionMax(self):
+        self.availableDivision.division_maxRegistrationsPerSchool = 1
+        self.availableDivision.save()
+
+        response = self.client.get(reverse('workshops:create', kwargs={'eventID':self.event.id}), follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division 1: Max workshop attendees for school for this event division reached. Contact the organiser if you want to register more workshop attendees in this division.")
+
+    def testInValidCreate_overallDivisionMax(self):
+        self.availableDivision.division_maxRegistrationsForDivision = 2
+        self.availableDivision.save()
+
+        payload = {
+            'division':self.division1.id,
+            'attendeeType':'teacher',
+            'firstName':'First1',
+            'lastName':'Last1',
+            'yearLevel':'10',
+            'gender':'male',
+            'email':'test@test.com'
+        }
+        response = self.client.post(reverse('workshops:create', kwargs={'eventID':self.event.id}), data=payload, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division: Select a valid choice. That choice is not one of the available choices.")
+        self.assertContains(response, "Division 1: Max workshop attendees for this event division reached. Contact the organiser if you want to register more workshop attendees in this division.")
+
+    def testGet_overallDivisionMax(self):
+        self.availableDivision.division_maxRegistrationsForDivision = 2
+        self.availableDivision.save()
+
+        response = self.client.get(reverse('workshops:create', kwargs={'eventID':self.event.id}), follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Division 1: Max workshop attendees for this event division reached. Contact the organiser if you want to register more workshop attendees in this division.")

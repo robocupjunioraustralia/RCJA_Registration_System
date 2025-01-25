@@ -125,10 +125,10 @@ def getDivisionsMaxReachedWarnings(event, user):
     divisionsMaxReachedWarnings = []
     for availableDivision in event.availabledivision_set.prefetch_related('division').all():
         if availableDivision.maxDivisionRegistrationsForSchoolReached(user):
-            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max {event.registrationName()}s for school for this event division reached. Contact the organiser if you want to register more {event.registrationName()}s in this division.")
 
         if availableDivision.maxDivisionRegistrationsTotalReached():
-            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
+            divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max {event.registrationName()}s for this event division reached. Contact the organiser if you want to register more {event.registrationName()}s in this division.")
 
     return divisionsMaxReachedWarnings
 
