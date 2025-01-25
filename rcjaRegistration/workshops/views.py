@@ -11,7 +11,7 @@ from .forms import WorkshopAttendeeForm
 from .models import WorkshopAttendee
 from events.models import Event
 
-from events.views import CreateEditBaseEventAttendance
+from events.views import CreateEditBaseEventAttendance, getDivisionsMaxReachedWarnings
 
 import datetime
 
@@ -32,7 +32,7 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
         # Get form
         form = WorkshopAttendeeForm(instance=attendee, user=request.user, event=event)
 
-        return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})
+        return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
     def post(self, request, eventID=None, attendeeID=None):
         if attendeeID is not None:
@@ -56,10 +56,10 @@ class CreateEditWorkshopAttendee(CreateEditBaseEventAttendance):
             attendee.save()
 
             # Redirect if add another in response
-            if 'add_text' in request.POST and newAttendee:
+            if 'add_text' in request.POST and newAttendee and not (event.maxEventRegistrationsForSchoolReached(request.user) or event.maxEventRegistrationsTotalReached()):
                 return redirect(reverse('workshops:create', kwargs = {"eventID":event.id}))
 
             return redirect(reverse('events:details', kwargs = {'eventID':event.id}))
 
         # Default to displaying the form again if form not valid
-        return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee})
+        return render(request, 'workshops/createEditAttendee.html', {'form': form, 'event':event, 'attendee':attendee, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})

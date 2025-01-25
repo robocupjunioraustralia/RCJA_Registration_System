@@ -46,8 +46,8 @@
             {% endif %}
             {% if event.competition_specialRateNumber %}<br>A special price of ${{ event.competition_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.competition_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.{% endif %}
             {% if divisionPricing %}<br>Some divisions have different prices, please see below.{% endif %}
-            {% if event.event_maxTeamsPerSchool %}<br>There is a {{ event.event_maxTeamsPerSchool }} team per school limit for this event.{% endif %}
-            {% if event.event_maxTeamsForEvent %}<br>There is a {{ event.event_maxTeamsForEvent }} team overall limit for this event.{% endif %}
+            {% if event.event_maxRegistrationsPerSchool %}<br>There is a {{ event.event_maxRegistrationsPerSchool }} team per school limit for this event.{% endif %}
+            {% if event.event_maxRegistrationsForEvent %}<br>There is a {{ event.event_maxRegistrationsForEvent }} team overall limit for this event.{% endif %}
         </p>
         {% if event.paymentDueDate %}<p>Payment due is due on {{ event.paymentDueDate }}.</p>{% endif %}
         <h3>Available divisions</h3>
@@ -57,8 +57,8 @@
             <li><strong>{{ availableDivision.division.name }}</strong>
                 {% if availableDivision.division.description %}<br>{{ availableDivision.division.description }}{% endif %}
                 {% if availableDivision.division_billingType != 'event' %}<br>This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.{% endif %}
-                {% if availableDivision.division_maxTeamsPerSchool %}<br>There is a {{ availableDivision.division_maxTeamsPerSchool }} team per school limit for this division.{% endif %}
-                {% if availableDivision.division_maxTeamsForDivision %}<br>There is a {{ availableDivision.division_maxTeamsForDivision }} team overall limit for this division.{% endif %}
+                {% if availableDivision.division_maxRegistrationsPerSchool %}<br>There is a {{ availableDivision.division_maxRegistrationsPerSchool }} team per school limit for this division.{% endif %}
+                {% if availableDivision.division_maxRegistrationsForDivision %}<br>There is a {{ availableDivision.division_maxRegistrationsForDivision }} team overall limit for this division.{% endif %}
             </li>
             {% endfor %}
         </ul>
@@ -92,14 +92,14 @@
         {% elif event.registrationNotOpenYet %}
         <h1> Registration for this event hasn't opened yet. Please wait until registrations open{% if event.registrationOpenDate %} on {{ event.registrationsOpenDate }} to register{% endif %}. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
         {% elif event.registrationsOpen %}
-            {% if event.boolWorkshop %}
-            <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
-            {% else %} {# Competition #}
-                {% if maxEventTeamsForSchoolReached %}
-                <h1> You have registered the maximium number of allowed teams for your school for this event. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
-                {% elif maxEventTeamsTotalReached %}
-                <h1> Maximium number of teams for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
-                {% else %}
+            {% if maxEventRegistrationsForSchoolReached %}
+            <h1> You have registered the maximium number of {{event.registrationName}}s for your school for this event. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            {% elif maxEventRegistrationsTotalReached %}
+            <h1> Maximium number of {{event.registrationName}}s for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            {% else %}
+                {% if event.boolWorkshop %}
+                <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
+                {% else %} {# Competition #}
                 <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
                 {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
                 {% endif %}
