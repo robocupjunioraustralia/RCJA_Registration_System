@@ -178,10 +178,10 @@ def teamCreatePermissionForEvent(event):
 
 def checkEventLimitsReached(request, event):
     if event.maxEventRegistrationsForSchoolReached(request.user):
-        raise PermissionDenied(f"Max {event.registrationName}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName}s for this event.")
+        raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
 
     if event.maxEventRegistrationsTotalReached():
-        raise PermissionDenied(f"Max {event.registrationName}s for this event reached. Contact the organiser if you want to register more {event.registrationName}s for this event.")
+        raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
 
 @login_required
 def copyTeamsList(request, eventID):

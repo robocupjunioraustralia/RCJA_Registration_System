@@ -256,10 +256,10 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
 
         if not eventAttendance:
             if event.maxEventRegistrationsForSchoolReached(request.user):
-                raise PermissionDenied(f"Max {event.registrationName}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName}s for this event.")
+                raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
 
             if event.maxEventRegistrationsTotalReached():
-                raise PermissionDenied(f"Max {event.registrationName}s for this event reached. Contact the organiser if you want to register more {event.registrationName}s for this event.")
+                raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
 
     def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
         # This endpoint should never be called with eventID or sourceTeamID
