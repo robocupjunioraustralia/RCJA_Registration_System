@@ -16,7 +16,7 @@ class School(SaveDeleteMixin, models.Model):
         'Name',
         max_length=100,
         unique=True,
-        validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")]
+        validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")]
     )
     abbreviation = models.CharField(
         'Abbreviation',
@@ -24,7 +24,7 @@ class School(SaveDeleteMixin, models.Model):
         unique=True,
         help_text="Abbreviation is used in the schedule and scoring system",
         validators=[
-            RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."),
+            RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."),
             MinLengthValidator(3, message="Abbreviation must be at least three characters")
         ]
     )
@@ -37,7 +37,7 @@ class School(SaveDeleteMixin, models.Model):
         null=True,
         blank=True,
         validators=[
-            RegexValidator(regex="^[0-9]*$", message="Postcode must be numeric"),
+            RegexValidator(regex=r"^[0-9]*$", message="Postcode must be numeric"),
             MinLengthValidator(4, message="Postcode too short")
         ]
     )
@@ -119,14 +119,14 @@ class Campus(models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    name = models.CharField('Name', max_length=100, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    name = models.CharField('Name', max_length=100, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
     postcode = models.CharField(
         'Postcode',
         max_length=4,
         null=True,
         blank=True,
         validators=[
-            RegexValidator(regex="^[0-9]*$", message="Postcode must be numeric"),
+            RegexValidator(regex=r"^[0-9]*$", message="Postcode must be numeric"),
             MinLengthValidator(4, message="Postcode too short")
         ]
     )
