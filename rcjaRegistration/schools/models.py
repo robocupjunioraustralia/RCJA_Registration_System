@@ -18,16 +18,6 @@ class School(SaveDeleteMixin, models.Model):
         unique=True,
         validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")]
     )
-    abbreviation = models.CharField(
-        'Abbreviation',
-        max_length=5,
-        unique=True,
-        help_text="Abbreviation is used in the schedule and scoring system",
-        validators=[
-            RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."),
-            MinLengthValidator(3, message="Abbreviation must be at least three characters")
-        ]
-    )
     # Details
     state = models.ForeignKey('regions.State', verbose_name='State', on_delete=models.PROTECT, null=True, limit_choices_to={'typeUserRegistration': True}) # Needed because null on initial data import
     region = models.ForeignKey('regions.Region', verbose_name='Region', on_delete=models.PROTECT, null=True)
@@ -52,17 +42,11 @@ class School(SaveDeleteMixin, models.Model):
     def clean(self):
         errors = {}
 
-        # Case insenstive abbreviation and name unique check
+        # Case insenstive name unique check
         if School.objects.filter(name__iexact=self.name).exclude(pk=self.pk).exists():
             errors['name'] = 'School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'
 
-        if School.objects.filter(abbreviation__iexact=self.abbreviation).exclude(pk=self.pk).exists():
-            errors['abbreviation'] = 'School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'
-
-        # Validate school not using name or abbreviation reserved for independent entries
-        if self.abbreviation.upper() == 'IND':
-            errors['abbreviation'] = 'IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.'
-
+        # Validate school not using name reserved for independent entries
         # TODO: use regex to catch similar
         if self.name.upper() == 'INDEPENDENT':
             errors['name'] = 'Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.'
@@ -97,9 +81,6 @@ class School(SaveDeleteMixin, models.Model):
         return self.state
 
     # *****Save & Delete Methods*****
-
-    def preSave(self):
-        self.abbreviation = self.abbreviation.upper()
 
     # *****Methods*****
 

@@ -53,10 +53,10 @@ def createUsers(self):
     self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state2_viewcoordinator, state=self.state2, permissionLevel='viewall', position='Text')
 
 def createSchools(self):
-    self.school1_state1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-    self.school2_state1 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-    self.school3_state2 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region1)
-    self.school4_state2 = School.objects.create(name='School 4', abbreviation='sch4', state=self.state2, region=self.region1)
+    self.school1_state1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+    self.school2_state1 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+    self.school3_state2 = School.objects.create(name='School 3', state=self.state2, region=self.region1)
+    self.school4_state2 = School.objects.create(name='School 4', state=self.state2, region=self.region1)
 
     self.campus1_school1 = Campus.objects.create(school=self.school1_state1, name='Campus 1')
     self.campus2_school1 = Campus.objects.create(school=self.school1_state1, name='Campus 2')

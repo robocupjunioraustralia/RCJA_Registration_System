@@ -25,7 +25,7 @@ def schoolSetUp(self):
     self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
 
     self.region1 = Region.objects.create(name='Test Region', description='test desc')
-    self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
+    self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
 
 class TestSchoolClean(TestCase):
     email1 = 'user@user.com'
@@ -37,7 +37,6 @@ class TestSchoolClean(TestCase):
     def testValidNoPostcode(self):
         school2 = School(
             name='School 2',
-            abbreviation='sch2',
             state=self.state1,
             region=self.region1
         )
@@ -47,7 +46,6 @@ class TestSchoolClean(TestCase):
     def testValidPostcode(self):
         school2 = School(
             name='School 2',
-            abbreviation='sch2',
             state=self.state1,
             region=self.region1,
             postcode='1234',
@@ -58,43 +56,14 @@ class TestSchoolClean(TestCase):
     def testNameCaseInsensitive(self):
         school2 = School(
             name='SchoOl 1',
-            abbreviation='thi',
             state=self.state1,
             region=self.region1
         )
         self.assertRaises(ValidationError, school2.full_clean)
-
-    def testAbbreviationCaseInsensitive(self):
-        school2 = School(
-            name='Thing',
-            abbreviation='sCh1',
-            state=self.state1,
-            region=self.region1
-        )
-        self.assertRaises(ValidationError, school2.full_clean)
-
-    def testAbbreviationMinLength(self):
-        school2 = School(
-            name='Thing',
-            abbreviation='12',
-            state=self.state1,
-            region=self.region1
-        )
-        self.assertRaises(ValidationError, school2.full_clean)
-
-    def testAbbreviationNotIND(self):
-        school2 = School(
-            name='Thing',
-            abbreviation='ind',
-            state=self.state1,
-            region=self.region1
-        )
-        self.assertRaises(ValidationError, school2.clean)     
 
     def testNameNotIndependent(self):
         school2 = School(
             name='IndePendent',
-            abbreviation='thi',
             state=self.state1,
             region=self.region1
         )
@@ -103,7 +72,6 @@ class TestSchoolClean(TestCase):
     def testInvalidPostcode(self):
         school2 = School(
             name='School 2',
-            abbreviation='sch2',
             state=self.state1,
             region=self.region1,
             postcode='ab12',
@@ -113,7 +81,6 @@ class TestSchoolClean(TestCase):
     def testTooShortPostcode(self):
         school2 = School(
             name='School 2',
-            abbreviation='sch2',
             state=self.state1,
             region=self.region1,
             postcode='12',
@@ -133,22 +100,10 @@ class TestSchoolModelMethods(TestCase):
     def testStr(self):
         self.assertEqual(str(self.school1), 'School 1')
 
-    def testSave(self):
-        school2 = School(
-            name='School 2',
-            abbreviation='sch2',
-            state=self.state1,
-            region=self.region1
-        )
-
-        self.assertEqual(school2.abbreviation, 'sch2')
-        school2.save()
-        self.assertEqual(school2.abbreviation, 'SCH2')
-
 def setupCampusAndAdministrators(self):
     self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
     self.admin1 = SchoolAdministrator.objects.create(school=self.school1, campus=self.campus1, user=self.user1)
-    self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
+    self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
 
 class TestCampusClean(TestCase):
     email1 = 'user@user.com'
@@ -262,7 +217,6 @@ class TestSchoolForm(TestCase):
     def testValid(self):
         form = self.createForm({
             'name': 'School 2',
-            'abbreviation': 'sch2',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': '3000',
@@ -275,7 +229,6 @@ class TestSchoolForm(TestCase):
 
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.errors["name"], ["This field is required."])
-        self.assertEqual(form.errors["abbreviation"], ["This field is required."])
         self.assertEqual(form.errors["state"], ["This field is required."])
         self.assertEqual(form.errors["region"], ["This field is required."])
         self.assertEqual(form.errors["postcode"], ["This field is required."])
@@ -283,7 +236,6 @@ class TestSchoolForm(TestCase):
     def testTeamNameSameCase(self):
         form = self.createForm({
             'name': 'School 1',
-            'abbreviation': 'sch2',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': '3000',
@@ -295,7 +247,6 @@ class TestSchoolForm(TestCase):
     def testTeamNameDifferentCase(self):
         form = self.createForm({
             'name': 'school 1',
-            'abbreviation': 'sch2',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': '3000',
@@ -304,43 +255,15 @@ class TestSchoolForm(TestCase):
         self.assertEqual(form.is_valid(), False)
         self.assertEqual(form.errors['name'], ['School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
 
-    def testAbbreviationSameCase(self):
-        form = self.createForm({
-            'name': 'School 2',
-            'abbreviation': 'SCH1',
-            'state': self.state1.id,
-            'region': self.region1.id,
-            'postcode': '3000',
-        })
-
-        self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors['abbreviation'], ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
-
-    def testAbbreviationDifferentCase(self):
-        form = self.createForm({
-            'name': 'School 2',
-            'abbreviation': 'sch1',
-            'state': self.state1.id,
-            'region': self.region1.id,
-            'postcode': '3000',
-        })
-
-        self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors['abbreviation'], ['School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au'])
-
     def testIndependentClean(self):
         form = self.createForm({
             'name': 'Independent',
-            'abbreviation': 'ind',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': '3000',
         })
 
         self.assertEqual(form.is_valid(), False)
-        self.assertEqual(form.errors['abbreviation'], [
-            'IND is reserved for independent entries. If you are an independent entry, you do not need to create a school.',
-        ])
         self.assertEqual(form.errors['name'], [
             "Independent is reserved for independent entries. If you are an independent entry, you do not need to create a school.",
         ])
@@ -348,7 +271,6 @@ class TestSchoolForm(TestCase):
     def testPostcodeClean(self):
         form = self.createForm({
             'name': 'School 2',
-            'abbreviation': 'sch',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': 'a',
@@ -367,7 +289,6 @@ class TestSchoolEditForm(TestSchoolForm):
     def testValidWithEmail(self):
         form = self.createForm({
             'name': 'School 2',
-            'abbreviation': 'sch2',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': '3000',
@@ -379,7 +300,6 @@ class TestSchoolEditForm(TestSchoolForm):
     def testInValidEmail(self):
         form = self.createForm({
             'name': 'School 2',
-            'abbreviation': 'sch2',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode': '3000',
@@ -433,7 +353,7 @@ class TestSchoolAdministratorForm(TestCase):
 
     def setUp(self):
         schoolSetUp(self)
-        self.school2 = School.objects.create(name='School 2', abbreviation='SCH2', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
         self.campus1 = Campus.objects.create(school=self.school1, name="Campus 1")
         self.campus2 = Campus.objects.create(school=self.school2, name="Campus 2")
 
@@ -538,9 +458,9 @@ class TestCurrentlySelectedSchool(TestCase):
         self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state1, region=self.region1)
 
         self.admin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
 
@@ -634,9 +554,9 @@ def schoolViewSetup(self):
 
     self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
 
-    self.school1 = School.objects.create(name='School 1',abbreviation='SCH1', state=self.state1, region=self.region1)
-    self.school2 = School.objects.create(name='School 2',abbreviation='SCH2', state=self.state1, region=self.region1)
-    self.school3 = School.objects.create(name='School 3',abbreviation='SCH3', state=self.state1, region=self.region1)
+    self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+    self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+    self.school3 = School.objects.create(name='School 3', state=self.state1, region=self.region1)
 
     self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user1)
     self.schoolAdmin2 = SchoolAdministrator.objects.create(school=self.school2, user=self.user1)
@@ -763,7 +683,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
         self.user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.username, password=self.password)
         self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
-        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
+        self.newSchool = School.objects.create(name='Melbourne High',state=self.newState,region=self.newRegion)
         self.validPayload["school"] = self.newSchool.id
         # self.client.login(request=HttpRequest(), username=self.email, password=self.password)
 
@@ -774,7 +694,7 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
     
     def testValidSchoolCreation(self):
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
-        payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id, 'postcode':3000}
+        payload= {'name':'test','state':self.newState.id,'region':self.newRegion.id, 'postcode':3000}
         response = self.client.post(reverse(self.reverseString),data=payload)
         self.assertEqual(response.status_code,self.validSubmitCode)
         self.assertEqual(School.objects.all().count(), 2)
@@ -783,12 +703,11 @@ class TestSchoolCreate(TestCase): #TODO update to use new auth model
 
     def testInvalidSchoolCreation(self):
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
-        payload= {'name':'test','abbreviation':'TSST','state':self.newState.id,'region':self.newRegion.id, 'postcode':3000}
+        payload= {'name':'test','state':self.newState.id,'region':self.newRegion.id, 'postcode':3000}
         self.client.post(reverse(self.reverseString),data=payload)
         response = self.client.post(reverse(self.reverseString),data=payload)
 
         self.assertEqual(response.status_code,self.inValidCreateCode)
-        self.assertContains(response, 'School with this abbreviation exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au')
         self.assertContains(response, 'School with this name exists. Please ask your school administrator to add you. If your school administrator has left, please contact us at entersupport@robocupjunior.org.au')
 
 class TestEditSchoolDetails(TestCase):
@@ -803,9 +722,9 @@ class TestEditSchoolDetails(TestCase):
         self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state1, region=self.region1)
 
         self.year = Year.objects.create(year=2020)
         self.event = Event.objects.create(
@@ -840,7 +759,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"New name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -866,7 +784,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"New name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -885,7 +802,6 @@ class TestEditSchoolDetails(TestCase):
 
         payload = {
             "name":"New name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -902,7 +818,6 @@ class TestEditSchoolDetails(TestCase):
 
         payload = {
             "name":"New name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3,
@@ -927,7 +842,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"SchoOl 2",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -952,7 +866,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'region': self.region1.id,
             'postcode':3000,
         }
@@ -975,7 +888,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1008,7 +920,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1042,7 +953,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1084,7 +994,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1113,7 +1022,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1149,7 +1057,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1182,7 +1089,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1213,7 +1119,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1247,7 +1152,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1281,7 +1185,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,
@@ -1315,7 +1218,6 @@ class TestEditSchoolDetails(TestCase):
             "schooladministrator_set-MIN_NUM_FORMS":0,
             "schooladministrator_set-MAX_NUM_FORMS":1000,
             "name":"other name",
-            "abbreviation": 'sch1',
             'state': self.state1.id,
             'region': self.region1.id,
             'postcode':3000,

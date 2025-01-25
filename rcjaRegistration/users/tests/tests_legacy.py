@@ -32,7 +32,7 @@ class AuthViewTests(TestCase):
         self.user = user = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='admin@test.com', password='admin')
         self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
-        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
+        self.newSchool = School.objects.create(name='Melbourne High',state=self.newState,region=self.newRegion)
         self.validPayload["homeState"] = self.newState.id
         self.validPayload["homeRegion"] = self.newRegion.id
 
@@ -152,7 +152,7 @@ class TestEditDetails(TestCase):
 
         self.newState = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria',abbreviation='VIC')
         self.newRegion = Region.objects.create(name='Test Region',description='test desc')
-        self.newSchool = School.objects.create(name='Melbourne High',abbreviation='MHS',state=self.newState,region=self.newRegion)
+        self.newSchool = School.objects.create(name='Melbourne High',state=self.newState,region=self.newRegion)
         self.validPayload["homeState"] = self.newState.id
         self.validPayload["homeRegion"] = self.newRegion.id
 
@@ -274,8 +274,8 @@ class TestUserSave(TestCase):
         self.region1 = Region.objects.create(name='Region 1')
         self.region2 = Region.objects.create(name='Region 2')
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1')
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2')
+        self.school1 = School.objects.create(name='School 1')
+        self.school2 = School.objects.create(name='School 2')
 
     def testSaveNoSchools(self):
         self.user.save()
@@ -661,7 +661,7 @@ class TestUserAdminInlinesAndFields(TestCase):
         self.coord2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
 
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
         self.schoolAdmin1 = SchoolAdministrator.objects.create(school=self.school1, user=self.user3)
 
     def testCorrectInlines_change_superuser(self):

@@ -176,7 +176,6 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'team__school__state__abbreviation',
         'team__school__region__name',
         'team__school__name',
-        'team__school__abbreviation',
         'team__campus__name',
         'team__mentorUser__first_name',
         'team__mentorUser__last_name',
