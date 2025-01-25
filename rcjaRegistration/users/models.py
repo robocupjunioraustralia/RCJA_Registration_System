@@ -61,7 +61,7 @@ class User(SaveDeleteMixin, AbstractUser):
     objects = UserManager()
 
     # Additional fields
-    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_\(\)\+]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space.")])
+    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_\(\)\+]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space.")])
     homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeUserRegistration': True})
     homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True, blank=True)
 
@@ -93,10 +93,10 @@ class User(SaveDeleteMixin, AbstractUser):
         if self.homeRegion and self.homeRegion.state is not None and self.homeRegion.state != self.homeState:
             errors['homeRegion'] = "Region not valid for selected state"
 
-        if not re.match("^[0-9a-zA-Z \-\_]*$", self.first_name):
+        if not re.match(r"^[0-9a-zA-Z \-\_]*$", self.first_name):
             errors['first_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
 
-        if not re.match("^[0-9a-zA-Z \-\_]*$", self.last_name):
+        if not re.match(r"^[0-9a-zA-Z \-\_]*$", self.last_name):
             errors['last_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
 
         if errors:
