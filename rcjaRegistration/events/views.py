@@ -124,10 +124,10 @@ def getDivisionsMaxReachedWarnings(event, user):
     # Get list of divisions that reached max number of teams
     divisionsMaxReachedWarnings = []
     for availableDivision in event.availabledivision_set.prefetch_related('division').all():
-        if availableDivision.maxDivisionTeamsForSchoolReached(user):
+        if availableDivision.maxDivisionRegistrationsForSchoolReached(user):
             divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.")
 
-        if availableDivision.maxDivisionTeamsTotalReached():
+        if availableDivision.maxDivisionRegistrationsTotalReached():
             divisionsMaxReachedWarnings.append(f"{availableDivision.division}: Max teams for this event division reached. Contact the organiser if you want to register more teams in this division.")
 
     return divisionsMaxReachedWarnings
@@ -190,8 +190,8 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
-        'maxEventTeamsForSchoolReached': event.maxEventTeamsForSchoolReached(request.user),
-        'maxEventTeamsTotalReached': event.maxEventTeamsTotalReached(),
+        'maxEventRegistrationsForSchoolReached': event.maxEventRegistrationsForSchoolReached(request.user),
+        'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
     }
@@ -253,6 +253,13 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         # Check administrator of this eventAttendance
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
+
+        if not eventAttendance:
+            if event.maxEventRegistrationsForSchoolReached(request.user):
+                raise PermissionDenied(f"Max {event.registrationName}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName}s for this event.")
+
+            if event.maxEventRegistrationsTotalReached():
+                raise PermissionDenied(f"Max {event.registrationName}s for this event reached. Contact the organiser if you want to register more {event.registrationName}s for this event.")
 
     def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
         # This endpoint should never be called with eventID or sourceTeamID

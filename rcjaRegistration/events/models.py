@@ -522,10 +522,10 @@ class Event(SaveDeleteMixin, models.Model):
                 'mentorUser': user
             }
 
-    def maxEventTeamsForSchoolReached(self, user):
+    def maxEventRegistrationsForSchoolReached(self, user):
         return self.event_maxTeamsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxTeamsPerSchool
 
-    def maxEventTeamsTotalReached(self):
+    def maxEventRegistrationsTotalReached(self):
         return self.event_maxTeamsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxTeamsForEvent
 
     def directEnquiriesToName(self):
@@ -546,6 +546,9 @@ class Event(SaveDeleteMixin, models.Model):
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    def registrationName(self):
+        return 'workshop attendee' if self.boolWorkshop() else 'team'
 
     def bleachedEventDetails(self):
         return mark_safe(bleach.clean(self.eventDetails))
@@ -659,10 +662,10 @@ class AvailableDivision(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
-    def maxDivisionTeamsForSchoolReached(self, user):
+    def maxDivisionRegistrationsForSchoolReached(self, user):
         return self.division_maxTeamsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxTeamsPerSchool
 
-    def maxDivisionTeamsTotalReached(self):
+    def maxDivisionRegistrationsTotalReached(self):
         return self.division_maxTeamsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxTeamsForDivision
 
     def __str__(self):

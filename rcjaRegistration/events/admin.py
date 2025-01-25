@@ -175,8 +175,6 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
         if obj:
             if obj.eventType == 'workshop':
                 return [
-                    'division_maxTeamsPerSchool',
-                    'division_maxTeamsForDivision',
                     'division_billingType',
                     'division_entryFee',
                 ]
@@ -244,6 +242,9 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Capacity limits', {
+            'fields': ('event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
         }),
         ('Billing settings', {
             'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')

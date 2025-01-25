@@ -277,8 +277,8 @@ class AdditionalEventTestsMixin:
 
     def test_workshop_correct_availableDivisionInline_correct_fields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openWorkshop.id,)))
-        self.assertNotContains(response, 'division_maxTeamsPerSchool')
-        self.assertNotContains(response, 'division_maxTeamsForDivision')
+        self.assertContains(response, 'division_maxTeamsPerSchool')
+        self.assertContains(response, 'division_maxTeamsForDivision')
         self.assertNotContains(response, 'division_billingType')
         self.assertNotContains(response, 'division_entryFee')
 
@@ -286,12 +286,12 @@ class AdditionalEventTestsMixin:
     def test_competition_correct_fieldsets(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)))
         self.assertContains(response, 'Team settings')
-        self.assertNotContains(response, 'workshopTeacherEntryFee')
+        self.assertNotContains(response, 'Capacity limits')
 
     def test_workshop_correct_fieldsets(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openWorkshop.id,)))
         self.assertNotContains(response, 'Team settings')
-        self.assertContains(response, 'workshopTeacherEntryFee')
+        self.assertContains(response, 'Capacity limits')
     
     def test_add_correct_fieldsets(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
