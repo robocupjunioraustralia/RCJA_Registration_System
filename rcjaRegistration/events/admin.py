@@ -218,7 +218,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Team settings', {
-            'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
+            'fields': ('maxMembersPerTeam', 'event_maxRegistrationsPerSchool', 'event_maxRegistrationsForEvent',)
         }),
         ('Billing settings', {
             'fields': ('entryFeeIncludesGST', 'competition_billingType', 'competition_defaultEntryFee', ('competition_specialRateNumber', 'competition_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
@@ -244,7 +244,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Capacity limits', {
-            'fields': ('event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
+            'fields': ('event_maxRegistrationsPerSchool', 'event_maxRegistrationsForEvent',)
         }),
         ('Billing settings', {
             'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
@@ -360,8 +360,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'directEnquiriesToName',
         'directEnquiriesToEmail',
         'maxMembersPerTeam',
-        'event_maxTeamsPerSchool',
-        'event_maxTeamsForEvent',
+        'event_maxRegistrationsPerSchool',
+        'event_maxRegistrationsForEvent',
         'entryFeeIncludesGST',
         'competition_billingType',
         'competition_defaultEntryFee',

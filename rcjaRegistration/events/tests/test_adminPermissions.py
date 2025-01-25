@@ -270,15 +270,15 @@ class AdditionalEventTestsMixin:
     # Test available division inline correct fields
     def test_competition_correct_availableDivisionInline_correct_fields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)))
-        self.assertContains(response, 'division_maxTeamsPerSchool')
-        self.assertContains(response, 'division_maxTeamsForDivision')
+        self.assertContains(response, 'division_maxRegistrationsPerSchool')
+        self.assertContains(response, 'division_maxRegistrationsForDivision')
         self.assertContains(response, 'division_billingType')
         self.assertContains(response, 'division_entryFee')
 
     def test_workshop_correct_availableDivisionInline_correct_fields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openWorkshop.id,)))
-        self.assertContains(response, 'division_maxTeamsPerSchool')
-        self.assertContains(response, 'division_maxTeamsForDivision')
+        self.assertContains(response, 'division_maxRegistrationsPerSchool')
+        self.assertContains(response, 'division_maxRegistrationsForDivision')
         self.assertNotContains(response, 'division_billingType')
         self.assertNotContains(response, 'division_entryFee')
 
