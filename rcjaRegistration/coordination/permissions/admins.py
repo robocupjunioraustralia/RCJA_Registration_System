@@ -125,6 +125,13 @@ class AdminPermissions(BaseAdminPermissions):
 
         return super().get_search_results(request, queryset, search_term)
 
+    # Add whether state and year filtering applied to admin change list context
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        if getattr(self, 'filterQuerysetOnSelected', False):
+            extra_context['filterQuerysetOnSelected'] = True
+        return super().changelist_view(request, extra_context=extra_context)
+
 class InlineAdminPermissions(BaseAdminPermissions):
     # Set parent obj on class so available to inline
     def get_formset(self, request, obj=None, **kwargs):
