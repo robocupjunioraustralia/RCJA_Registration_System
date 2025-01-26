@@ -21,8 +21,8 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     lifeMemberAwardedDate = models.DateField('Life membership awarded date', null=True, blank=True)
     approvalStatusChoices = (('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected'))
     approvalStatus = models.CharField('Approval status', max_length=8, choices=approvalStatusChoices, default='pending')
-    approvalDate = models.DateField('Approval date', null=True, blank=True, editable=False)
-    approvedBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Approved by', on_delete=models.PROTECT, null=True, blank=True, related_name='approvedBy', editable=False)
+    approvalRejectionDate = models.DateField('Approval/ rejection date', null=True, blank=True, editable=False)
+    approvalRejectionBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Approved/ rejected by', on_delete=models.PROTECT, null=True, blank=True, related_name='approvalRejectionBy', editable=False)
     rulesAcceptedDate = models.DateField('Rules accepted date', null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
