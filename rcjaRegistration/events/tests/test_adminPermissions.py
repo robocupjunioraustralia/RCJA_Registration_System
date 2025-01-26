@@ -367,7 +367,7 @@ class AdditionalEventTestsMixin:
         self.assertNotContains(response, "You haven&#x27;t filled in all details yet, people won&#x27;t be able to register.")
 
     # Test filtering message
-    def test_changelist_has_filterer_message(self):
+    def test_changelist_has_filter_message(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
         self.assertContains(response, "Filtered to: ")
 
@@ -478,6 +478,6 @@ class Test_Event_ViewCoordinator(Event_Coordinators_Base, Base_Test_ViewCoordina
         self.checkReadonly(response, [('cmsLink', 'View CMS'),])
 
     # Test filtering message
-    def test_changelist_has_filterer_message(self):
+    def test_changelist_has_filter_message(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
         self.assertContains(response, "Filtered to: ")
