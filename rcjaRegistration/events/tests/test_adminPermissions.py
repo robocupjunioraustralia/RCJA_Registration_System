@@ -137,7 +137,14 @@ class Venue_Base:
 class Test_Venue_NotStaff(Venue_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class Test_Venue_SuperUser(Venue_Base, Base_Test_SuperUser, TestCase):
+class AdditionalVenueTestsMixin:
+
+    # Test filtering message
+    def test_changelist_has_no_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, "Filtered to: ")
+
+class Test_Venue_SuperUser(AdditionalVenueTestsMixin, Venue_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 3
     expectedStrings = [
         'Venue 1',
@@ -164,7 +171,7 @@ class Venue_Coordinators_Base(Venue_Base):
         'Venue 3',
     ]
 
-class Test_Venue_FullCoordinator(Venue_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+class Test_Venue_FullCoordinator(AdditionalVenueTestsMixin, Venue_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
     def testPostAddBlankState(self):
         payload = self.validPayload.copy()
         del payload['state']
@@ -182,7 +189,10 @@ class Test_Venue_FullCoordinator(Venue_Coordinators_Base, Base_Test_FullCoordina
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Venue_ViewCoordinator(Venue_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    # Test filtering message
+    def test_changelist_has_no_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, "Filtered to: ")
 
 # Event
 
@@ -356,6 +366,11 @@ class AdditionalEventTestsMixin:
         response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
         self.assertNotContains(response, "You haven&#x27;t filled in all details yet, people won&#x27;t be able to register.")
 
+    # Test filtering message
+    def test_changelist_has_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, "Filtered to: ")
+
 class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 7
     expectedStrings = [
@@ -461,3 +476,8 @@ class Test_Event_ViewCoordinator(Event_Coordinators_Base, Base_Test_ViewCoordina
         getattr(self, self.state1Obj).save()
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.checkReadonly(response, [('cmsLink', 'View CMS'),])
+
+    # Test filtering message
+    def test_changelist_has_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, "Filtered to: ")
