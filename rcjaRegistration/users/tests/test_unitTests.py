@@ -41,7 +41,10 @@ class TestUserModelMethods(TestCase):
 
     def test_clean_differentEmail(self):
         user2 = User(email='not@test.com')
-        user2.clean()
+        try:
+            user2.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def test_clean_sameEmail(self):
         user2 = User(email='test@test.com')
@@ -339,7 +342,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=None,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateNoRegionValid(self):
         user = User(
@@ -348,7 +354,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=None,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testNoStateGlobalRegionValid(self):
         user = User(
@@ -357,7 +366,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=self.region1,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateGlobalRegionValid(self):
         user = User(
@@ -366,7 +378,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=self.region1,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCorrectStateRegionValid(self):
         user = User(
@@ -375,7 +390,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=self.region2_state1,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testIncorrectStateRegionInvalid(self):
         user = User(

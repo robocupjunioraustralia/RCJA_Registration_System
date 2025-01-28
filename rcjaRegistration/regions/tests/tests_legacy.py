@@ -37,7 +37,11 @@ class TestStateClean(TestCase):
             abbreviation='NSW',
         )
 
-        self.assertEqual(state2.clean(), None)
+        try:
+            state2.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
+
 
     def testNameCaseInsensitive(self):
         state2 = State(

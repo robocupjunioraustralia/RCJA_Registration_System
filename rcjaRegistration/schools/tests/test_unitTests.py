@@ -17,7 +17,10 @@ class TestSchoolRegionFieldClean(TestCase):
             region=None,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateNoRegionValid(self):
         # State and region are required fields but not handled by clean
@@ -27,7 +30,10 @@ class TestSchoolRegionFieldClean(TestCase):
             region=None,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testNoStateGlobalRegionValid(self):
         # State and region are required fields but not handled by clean
@@ -37,7 +43,10 @@ class TestSchoolRegionFieldClean(TestCase):
             region=self.region1,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateGlobalRegionValid(self):
         school = School(
@@ -46,7 +55,10 @@ class TestSchoolRegionFieldClean(TestCase):
             region=self.region1,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCorrectStateRegionValid(self):
         school = School(
@@ -55,7 +67,10 @@ class TestSchoolRegionFieldClean(TestCase):
             region=self.region2_state1,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testIncorrectStateRegionInvalid(self):
         school = School(
