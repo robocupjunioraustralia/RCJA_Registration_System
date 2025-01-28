@@ -1544,7 +1544,6 @@ class TestAdminSummaryContext(TestCase):
 
         self.school2 = School.objects.create(
             name='School 2',
-            abbreviation='sch2',
             state=self.newState,
             region=self.newRegion
         )
