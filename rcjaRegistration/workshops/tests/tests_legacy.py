@@ -154,11 +154,17 @@ class TestWorkshopAttendeeClean(TestCase):
         self.assertRaises(ValidationError, self.attendee1.clean)
 
     def testNoCampus(self):
-        self.assertEqual(self.attendee1.clean(), None)
+        try:
+            self.attendee1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCampusValid(self):
         self.attendee1.campus = self.campus1
-        self.assertEqual(self.attendee1.clean(), None)
+        try:
+            self.attendee1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCampusWrongSchool(self):
         self.attendee2.campus = self.campus1
@@ -180,7 +186,10 @@ class TestWorkshopAttendeeClean(TestCase):
             gender='male',
             email='test@test.com'
         )
-        self.assertEqual(self.attendee3.clean(), None)
+        try:
+            self.attendee3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool(self):
         self.attendee3 = WorkshopAttendee(
@@ -195,7 +204,10 @@ class TestWorkshopAttendeeClean(TestCase):
             gender='male',
             email='test@test.com'
         )
-        self.assertEqual(self.attendee3.clean(), None)
+        try:
+            self.attendee3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool_existing(self):
         self.schoolAdmin1.delete()
@@ -211,7 +223,10 @@ class TestWorkshopAttendeeClean(TestCase):
             gender='male',
             email='test@test.com'
         )
-        self.assertEqual(self.attendee3.clean(), None)
+        try:
+            self.attendee3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool_notAdmin(self):
         self.schoolAdmin1.delete()
@@ -258,7 +273,10 @@ class TestWorkshopAttendeeClean(TestCase):
             gender='male',
             email='test@test.com'
         )
-        self.assertEqual(self.attendee3.clean(), None)
+        try:
+            self.attendee3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testTeacherInvalidYearLevel(self):
         self.attendee3 = WorkshopAttendee(
@@ -287,7 +305,10 @@ class TestWorkshopAttendeeClean(TestCase):
             yearLevel='9',
             gender='male',
         )
-        self.assertEqual(self.attendee3.clean(), None)
+        try:
+            self.attendee3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStudentInvalidYearLevel(self):
         self.attendee3 = WorkshopAttendee(

@@ -114,7 +114,10 @@ class TestEventCMSEventIdValidation(TestCase):
         event = self.state1_openCompetition
         event.eventType = "competition"
         event.cmsEventId = "SHOULD_PASS"
-        event.clean()
+        try:
+            event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
 class TestEventAdminCMSLink(TestCase):
     @classmethod
