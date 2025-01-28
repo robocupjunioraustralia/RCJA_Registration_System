@@ -94,6 +94,7 @@ class TestAssociationMemberPage(TestCase):
         self.assertEqual(AssociationMember.objects.first().birthday, (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date())
         self.assertEqual(AssociationMember.objects.first().address, 'Test address')
         self.assertEqual(AssociationMember.objects.first().membershipStartDate, datetime.datetime.now().date())
+        self.assertEqual(AssociationMember.objects.first().rulesAcceptedDate, datetime.datetime.now().date())
 
     def test_postSuccess_inactiveExistingMembership(self):
         self.assertIsNone(self.associationMember1.membershipStartDate)
@@ -106,9 +107,11 @@ class TestAssociationMemberPage(TestCase):
         self.assertEqual(AssociationMember.objects.count(), 1)
         self.associationMember1.refresh_from_db()
         self.assertEqual(self.associationMember1.membershipStartDate, datetime.datetime.now().date())
+        self.assertEqual(self.associationMember1.rulesAcceptedDate, datetime.datetime.now().date())
 
     def test_postSuccess_pendingExistingMembership(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
+        self.associationMember1.rulesAcceptedDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
         self.associationMember1.save()
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
@@ -119,6 +122,7 @@ class TestAssociationMemberPage(TestCase):
         self.assertEqual(AssociationMember.objects.count(), 1)
         self.associationMember1.refresh_from_db()
         self.assertEqual(self.associationMember1.membershipStartDate, (datetime.datetime.now() + datetime.timedelta(days=-5)).date())
+        self.assertEqual(self.associationMember1.rulesAcceptedDate, (datetime.datetime.now() + datetime.timedelta(days=-5)).date())
         self.assertEqual(self.associationMember1.birthday, (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date())
 
     def test_postFail_noBirthday(self):
