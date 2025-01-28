@@ -27,6 +27,9 @@ def membership(request):
             if not associationMember.membershipStartDate:
                 associationMember.membershipStartDate = datetime.date.today()
             
+            if not associationMember.rulesAcceptedDate:
+                associationMember.rulesAcceptedDate = datetime.date.today()
+
             associationMember.save()
 
             return redirect(reverse('association:membership'))

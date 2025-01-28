@@ -33,12 +33,22 @@ class TestAssociationMemberPage(TestCase):
         self.assertContains(response, 'To become a member of the Association please fill out the details below and click Join.')
 
     def test_pageLoads_activeExistingMembership(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.associationMember1.save()
         response = self.client.get(reverse('association:membership'))
         self.assertEqual(200, response.status_code)
         self.assertContains(response, 'Membership status: Active')
         self.assertContains(response, 'You are currently a member.')
+        self.assertContains(response, 'Update')
+
+    def test_pageLoads_pendingExistingMembership(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.associationMember1.save()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Membership status: Pending approval')
+        self.assertContains(response, 'Your membership is pending approval.')
         self.assertContains(response, 'Update')
 
     def test_pageLoads_noExistingMembership(self):
@@ -51,6 +61,7 @@ class TestAssociationMemberPage(TestCase):
     def test_pageLoads_expiredMembership(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.save()
         response = self.client.get(reverse('association:membership'))
         self.assertEqual(200, response.status_code)
@@ -63,6 +74,7 @@ class TestAssociationMemberPage(TestCase):
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
             'address': 'Test address',
+            'rulesAccepted': True,
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(AssociationMember.objects.count(), 1)
@@ -76,18 +88,20 @@ class TestAssociationMemberPage(TestCase):
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
             'address': 'Test address',
+            'rulesAccepted': True,
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(AssociationMember.objects.count(), 1)
         self.associationMember1.refresh_from_db()
         self.assertEqual(self.associationMember1.membershipStartDate, datetime.datetime.now().date())
 
-    def test_postSuccess_activeExistingMembership(self):
+    def test_postSuccess_pendingExistingMembership(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
         self.associationMember1.save()
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
             'address': 'Test address',
+            'rulesAccepted': True,
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(AssociationMember.objects.count(), 1)

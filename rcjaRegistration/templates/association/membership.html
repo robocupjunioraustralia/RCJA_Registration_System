@@ -29,11 +29,14 @@
             {% if associationMember and associationMember.membershipExpired %}
                 <h3>Your membership is expired. Please speak to the relevant Committee member to resume your membership.</h3>
             {% else %}
-                {% if associationMember and associationMember.membershipActive %}
+                {% if associationMember and associationMember.membershipActive and associationMember.approvalStatus == "approved" %}
                     <h3>Membership details</h3>
                     <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary.</p>
                     <p>Membership start date: {{ associationMember.membershipStartDate }}</p>
                     <p><b>Membership type: {{associationMember.membershipType }}</b></p>
+                {% elif associationMember and associationMember.membershipActive and associationMember.approvalStatus == "pending" %}
+                    <p>Your membership is pending approval.</p>
+                    <p>Please check that your details below are up to date.</p>
                 {% else %}
                     <p>To become a member of the Association please fill out the details below and click Join.</p>
                 {% endif %}
@@ -72,6 +75,16 @@
                                 </div>
                                 {% if form.address.errors %}
                                 {% for error in form.address.errors %}
+                                <p style="color: red">{{ error }}</p>
+                                {% endfor %}
+                                {% endif %}
+
+                                <div class="field">
+                                    <label>I accept the rules of the association:</label>
+                                    {{form.rulesAccepted}}
+                                </div>
+                                {% if form.rulesAccepted.errors %}
+                                {% for error in form.rulesAccepted.errors %}
                                 <p style="color: red">{{ error }}</p>
                                 {% endfor %}
                                 {% endif %}
