@@ -69,6 +69,18 @@ class TestAssociationMemberPage(TestCase):
         self.assertContains(response, 'Your membership is expired.')
         self.assertNotContains(response, 'Update')
 
+    def test_rulesAccepted_prefilled_notAccepted(self):
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, '<input type="checkbox" name="rulesAccepted" required id="id_rulesAccepted">')
+
+    def test_rulesAccepted_prefilled_accepted(self):
+        self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
+        self.associationMember1.save()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, '<input type="checkbox" name="rulesAccepted" required id="id_rulesAccepted" checked>')
+
     def test_postSuccess_noExistingMembership(self):
         self.associationMember1.delete()
         response = self.client.post(reverse('association:membership'), {
