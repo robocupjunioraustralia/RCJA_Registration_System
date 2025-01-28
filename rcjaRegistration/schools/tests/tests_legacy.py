@@ -169,12 +169,19 @@ class TestSchoolAdministratorClean(TestCase):
         setupCampusAndAdministrators(self)
 
     def testValid(self):
-        self.assertEqual(self.admin1.clean(), None)
+        try:
+            self.admin1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testNoCampusValid(self):
         self.admin1.campus = None
-        self.assertEqual(self.admin1.clean(), None)
-    
+         
+        try:
+            self.admin1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
+
     def testWrongSchool(self):
         self.admin1.school = self.school2
         self.assertRaises(ValidationError, self.admin1.clean)

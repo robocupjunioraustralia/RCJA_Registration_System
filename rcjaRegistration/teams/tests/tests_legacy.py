@@ -1362,11 +1362,17 @@ class TestTeamClean(TestCase):
         self.assertRaises(ValidationError, self.team1.clean)
 
     def testNoCampus(self):
-        self.assertEqual(self.team1.clean(), None)
+        try:
+            self.team1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCampusValid(self):
         self.team1.campus = self.campus1
-        self.assertEqual(self.team1.clean(), None)
+        try:
+            self.team1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCampusWrongSchool(self):
         self.team2.campus = self.campus1
@@ -1378,16 +1384,25 @@ class TestTeamClean(TestCase):
 
     def testCheckMentorIsAdminOfSchool_noSchool(self):
         self.team3 = Team(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1)
-        self.assertEqual(self.team3.clean(), None)
+        try:
+            self.team3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool(self):
         self.team3 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
-        self.assertEqual(self.team3.clean(), None)
+        try:
+            self.team3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool_existing(self):
         self.schoolAdmin1.delete()
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
-        self.assertEqual(self.team3.clean(), None)
+        try:
+            self.team3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool_notAdmin(self):
         self.schoolAdmin1.delete()
