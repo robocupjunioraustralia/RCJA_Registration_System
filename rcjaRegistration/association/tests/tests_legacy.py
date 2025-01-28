@@ -168,7 +168,31 @@ class TestAssociationMemberClean(TestCase):
         self.associationMember1.address = ''
         self.assertRaises(ValidationError, self.associationMember1.clean)
 
-class TestTeamMethods(TestCase):
+    def test_approval_rulesAcceptedDate_blank(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = None
+        self.associationMember1.membershipStartDate = datetime.datetime.now().date()
+        self.assertRaisesMessage(ValidationError, "Rules must be accepted before approval.", self.associationMember1.clean)
+
+    def test_approval_membershipStartDate_blank(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
+        self.associationMember1.membershipStartDate = None
+        self.assertRaisesMessage(ValidationError, "Membership start date must be set before approval.", self.associationMember1.clean)
+    
+    def test_approval_both_blank(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = None
+        self.associationMember1.membershipStartDate = None
+        self.assertRaisesMessage(ValidationError, "Membership start date must be set before approval. Rules must be accepted before approval.", self.associationMember1.clean)
+
+    def test_approval_both_set(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
+        self.associationMember1.membershipStartDate = datetime.datetime.now().date()
+        self.assertIsNone(self.associationMember1.clean())
+
+class TestAssociationMemberMethods(TestCase):
     email1 = 'user1@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
@@ -238,16 +262,19 @@ class TestTeamMethods(TestCase):
         self.assertEqual(self.associationMember1.membershipType(), 'Ordinary')
 
     def test_membershipStatus_active_futureEndDate(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         self.assertEqual(self.associationMember1.membershipStatus(), 'Active')
 
     def test_membershipStatus_active_noEndDate(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertIsNone(self.associationMember1.membershipEndDate)
         self.assertEqual(self.associationMember1.membershipStatus(), 'Active')
     
     def test_membershipStatus_expired(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertEqual(self.associationMember1.membershipStatus(), 'Expired')
@@ -256,3 +283,7 @@ class TestTeamMethods(TestCase):
         self.assertIsNone(self.associationMember1.membershipStartDate)
         self.assertIsNone(self.associationMember1.membershipEndDate)
         self.assertEqual(self.associationMember1.membershipStatus(), 'Not a member')
+
+    def test_membershipStatus_pending(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.assertEqual(self.associationMember1.membershipStatus(), 'Pending approval')

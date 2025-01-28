@@ -46,6 +46,16 @@ class AssociationMember(SaveDeleteMixin, models.Model):
         if not self.under18() and not self.address:
             errors['address'] = 'Address must not be blank for members 18 and over.'
 
+        # Prevent setting approvalStatus to approved if membershipStartDate or rulesAcceptedDate are blank
+        if not self.membershipStartDate and self.approvalStatus == 'approved':
+            errors['approvalStatus'] = 'Membership start date must be set before approval.'
+
+        if not self.rulesAcceptedDate and self.approvalStatus == 'approved':
+            if errors.get('approvalStatus'):
+                errors['approvalStatus'] += ' Rules must be accepted before approval.'
+            else:
+                errors['approvalStatus'] = 'Rules must be accepted before approval.'
+
         # Raise any errors
         if errors:
             raise ValidationError(errors)
@@ -120,8 +130,10 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     membershipType.short_description = 'Membership type'
 
     def membershipStatus(self):
-        if self.membershipActive():
+        if self.membershipActive() and self.approvalStatus == 'approved':
             return "Active"
+        elif self.membershipActive() and self.approvalStatus == 'pending':
+            return "Pending approval"
         elif self.membershipExpired():
             return 'Expired'
         else:
