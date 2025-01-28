@@ -94,11 +94,11 @@ class EventAvailableFileType(models.Model):
         checkRequiredFieldsNotNone(self, ['event', 'uploadDeadline'])
 
         # Validate upload deadline
-        if self.uploadDeadline < self.event.registrationsCloseDate:
+        if self.event.registrationsCloseDate is not None and self.uploadDeadline < self.event.registrationsCloseDate:
             errors.append(ValidationError("Upload date must be on or after registrations close date"))
 
         # Validate upload deadline
-        if self.uploadDeadline > self.event.startDate:
+        if self.event.startDate is not None and self.uploadDeadline > self.event.startDate:
             errors.append(ValidationError("Upload date must be on or before event state date"))
 
         # Raise any errors

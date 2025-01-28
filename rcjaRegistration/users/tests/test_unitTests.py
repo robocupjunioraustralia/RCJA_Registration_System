@@ -30,7 +30,7 @@ def unitTestsSetup(self):
 
     # Use create (instead of create_user) here beause not setting password and testing the user object and manager
     self.user1 = User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com', first_name="First", last_name="Last", homeState=self.state1)
-    self.school1 = School.objects.create(name='School 1', abbreviation='SCH1', state=self.state1, region=self.region1)
+    self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
 
 class TestUserModelMethods(TestCase):
     def setUp(self):
@@ -41,7 +41,10 @@ class TestUserModelMethods(TestCase):
 
     def test_clean_differentEmail(self):
         user2 = User(email='not@test.com')
-        user2.clean()
+        try:
+            user2.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def test_clean_sameEmail(self):
         user2 = User(email='test@test.com')
@@ -94,7 +97,7 @@ class TestUserModelMethods(TestCase):
 
         qs = self.user1.adminViewableStates()
         self.assertTrue(qs.exists())
-        self.assertQuerysetEqual(qs, State.objects.all(), ordered=False)
+        self.assertQuerySetEqual(qs, State.objects.all(), ordered=False)
 
     def test_adminViewableStates_coordinator(self):
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='State 2', abbreviation='ST2', typeWebsite=True)
@@ -102,7 +105,7 @@ class TestUserModelMethods(TestCase):
 
         qs = self.user1.adminViewableStates()
         self.assertTrue(qs.exists())
-        self.assertQuerysetEqual(qs, State.objects.filter(id=self.state1.id), ordered=False)
+        self.assertQuerySetEqual(qs, State.objects.filter(id=self.state1.id), ordered=False)
 
 class TestUpdateUserPermissions(TestCase):
     def setUp(self):
@@ -339,7 +342,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=None,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateNoRegionValid(self):
         user = User(
@@ -348,7 +354,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=None,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testNoStateGlobalRegionValid(self):
         user = User(
@@ -357,7 +366,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=self.region1,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateGlobalRegionValid(self):
         user = User(
@@ -366,7 +378,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=self.region1,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCorrectStateRegionValid(self):
         user = User(
@@ -375,7 +390,10 @@ class TestUserRegionFieldClean(TestCase):
             homeRegion=self.region2_state1,
         )
 
-        self.assertEqual(user.clean(), None)
+        try:
+            user.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testIncorrectStateRegionInvalid(self):
         user = User(

@@ -13,59 +13,68 @@ class TestSchoolRegionFieldClean(TestCase):
         # State and region are required fields but not handled by clean
         school = School(
             name='New School',
-            abbreviation='new',
             state=None,
             region=None,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateNoRegionValid(self):
         # State and region are required fields but not handled by clean
         school = School(
             name='New School',
-            abbreviation='new',
             state=self.state1,
             region=None,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testNoStateGlobalRegionValid(self):
         # State and region are required fields but not handled by clean
         school = School(
             name='New School',
-            abbreviation='new',
             state=None,
             region=self.region1,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStateGlobalRegionValid(self):
         school = School(
             name='New School',
-            abbreviation='new',
             state=self.state1,
             region=self.region1,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCorrectStateRegionValid(self):
         school = School(
             name='New School',
-            abbreviation='new',
             state=self.state1,
             region=self.region2_state1,
         )
 
-        self.assertEqual(school.clean(), None)
+        try:
+            school.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testIncorrectStateRegionInvalid(self):
         school = School(
             name='New School',
-            abbreviation='new',
             state=self.state2,
             region=self.region2_state1,
         )
@@ -76,7 +85,6 @@ class TestSchoolRegionFieldClean(TestCase):
         # State and region are required fields but not handled by clean
         school = School(
             name='New School',
-            abbreviation='new',
             state=None,
             region=self.region2_state1,
         )

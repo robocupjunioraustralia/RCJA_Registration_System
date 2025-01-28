@@ -87,6 +87,7 @@ class Division(models.Model):
     name = models.CharField('Name', max_length=60, unique=True)
     description = models.CharField('Description', max_length=200, blank=True)
     category = models.ForeignKey(DivisionCategory, verbose_name='Category', on_delete=models.SET_NULL, null=True, blank=True)
+    active = models.BooleanField('Active', default=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -249,32 +250,33 @@ class Event(SaveDeleteMixin, models.Model):
     eventType = models.CharField('Event type', max_length=15, choices=eventTypeChoices, help_text='Competition is standard event with teams and students. Workshop has no teams or students, just workshop attendees.')
     statusChoices = (('draft', 'Draft'), ('published', 'Published'))
     status = models.CharField('Status', max_length=15, choices=statusChoices, default='draft', help_text="Event must be published to be visible and for people to register. Can't unpublish once people have registered.")
+    cmsEventId = models.CharField('CMS Event ID', max_length=15, blank=False, null=True, editable=False, help_text='The ID of this event in the RCJ CMS')
 
     # Banner image
     eventBannerImage = UUIDImageField('Banner image', storage=PublicMediaStorage(), upload_prefix='EventBannerImage', original_filename_field='eventBannerImageOriginalFilename', null=True, blank=True)
     eventBannerImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
 
     # Dates
-    startDate = models.DateField('Event start date')
-    endDate = models.DateField('Event end date')
-    registrationsOpenDate = models.DateField('Registrations open date')
-    registrationsCloseDate = models.DateField('Registration close date')
+    startDate = models.DateField('Event start date', blank=True, null=True)
+    endDate = models.DateField('Event end date', blank=True, null=True)
+    registrationsOpenDate = models.DateField('Registrations open date', blank=True, null=True)
+    registrationsCloseDate = models.DateField('Registration close date', blank=True, null=True)
 
     # Team details
     maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=4)
-    event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
-    event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+    event_maxRegistrationsPerSchool = models.PositiveIntegerField('Max registrations per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+    event_maxRegistrationsForEvent = models.PositiveIntegerField('Max registrations for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
-    event_defaultEntryFee = models.PositiveIntegerField('Default entry fee', default=0)
     paymentDueDate = models.DateField('Payment due date', null=True, blank=True)
 
     # Competition billing settings
     billingTypeChoices = (('team', 'By team'), ('student', 'By student'))
-    event_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
-    event_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
-    event_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
+    competition_defaultEntryFee = models.PositiveIntegerField('Default entry fee', blank=True, null=True)
+    competition_billingType = models.CharField('Billing type', max_length=15, choices=billingTypeChoices, default='team')
+    competition_specialRateNumber = models.PositiveIntegerField('Special rate number', null=True, blank=True, help_text="The number of teams specified will be billed at this rate. Subsequent teams will be billed at the default rate. Leave blank for no special rate.")
+    competition_specialRateFee = models.PositiveIntegerField('Special rate fee', null=True, blank=True)
 
     # Workshop billing settings
     workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
@@ -296,35 +298,58 @@ class Event(SaveDeleteMixin, models.Model):
     class Meta:
         verbose_name = 'Event'
         unique_together = ('year', 'state', 'name')
+        constraints = [
+            models.CheckConstraint(check=models.Q(eventType='workshop') | models.Q(eventType='competition'), name='eventType_check'),
+        ]
         ordering = ['-startDate']
 
     def clean(self):
         errors = []
         # Check required fields are not None
-        checkRequiredFieldsNotNone(self, ['state', 'startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate'])
+        checkRequiredFieldsNotNone(self, ['state'])
 
         # Validate status
         if self.pk and self.status != 'published' and (self.baseeventattendance_set.exists() or self.invoice_set.exists()):
             errors.append(ValidationError("Can't unpublish once teams or invoices created"))
 
         # Check close and end date after start dates
-        if self.startDate > self.endDate:
+        if self.startDate is not None and self.endDate is not None and self.startDate > self.endDate:
             errors.append(ValidationError('Start date must not be after end date'))
 
-        if self.registrationsOpenDate > self.registrationsCloseDate:
+        if self.registrationsOpenDate is not None and self.registrationsCloseDate is not None and self.registrationsOpenDate > self.registrationsCloseDate:
             errors.append(ValidationError('Registration open date must not be after registration close date'))
 
-        if self.registrationsCloseDate > self.startDate:
+        if self.registrationsCloseDate is not None and self.startDate is not None and self.registrationsCloseDate > self.startDate:
             errors.append(ValidationError('Registration close date must be before or on event start date'))
 
+        # Check either both start and end date or neither
+        if (self.startDate is None) != (self.endDate is None):
+            errors.append(ValidationError('Event start and end date must either both be set or both be blank'))
+        
+        # Check start and end date set if registrations close date set
+        if self.registrationsCloseDate is not None and (self.startDate is None or self.endDate is None):
+            errors.append(ValidationError('Event start and end date must be set if registrations close date is set'))
+        
+        # Check all dates set if registration open date set
+        if self.registrationsOpenDate is not None and (self.startDate is None or self.endDate is None or self.registrationsCloseDate is None):
+            errors.append(ValidationError('Event start date, event end date, and registrations close date must be set if registrations open date is set'))
+        
+        # Check default payment amount set if registration open date set for competitions
+        if self.eventType == 'competition' and self.registrationsOpenDate is not None and self.competition_defaultEntryFee is None:
+            errors.append(ValidationError('Default entry fee must be set if registrations open date is set'))
+
+        # Check all details set if registrations exist - because registrationsOpenDate can only be set if all other dates set per above checks
+        if self.pk and self.baseeventattendance_set.exists() and self.registrationsOpenDate is None:
+            errors.append(ValidationError('All dates must be set once event registrations exist'))
+
         # Validate billing settings
-        if (self.event_specialRateNumber is None) != (self.event_specialRateFee is None):
+        if (self.competition_specialRateNumber is None) != (self.competition_specialRateFee is None):
             errors.append(ValidationError('Both special rate number and fee must either be blank or not blank'))
 
-        if self.pk and (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
+        if self.pk and (self.competition_specialRateNumber is not None or self.competition_specialRateFee is not None) and self.availabledivision_set.exclude(division_billingType='event').exists():
             errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
 
-        if (self.event_specialRateNumber is not None or self.event_specialRateFee is not None) and self.event_billingType != 'team':
+        if (self.competition_specialRateNumber is not None or self.competition_specialRateFee is not None) and self.competition_billingType != 'team':
             errors.append(ValidationError('Special billing rate only available for team billing'))
 
         # Validate division states
@@ -337,10 +362,10 @@ class Event(SaveDeleteMixin, models.Model):
             errors.append(ValidationError('Venue must be from same state as event'))
 
         # Validate file upload deadline if start date or registrations clsoe date changed
-        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
+        if self.pk and self.startDate is not None and self.eventavailablefiletype_set.filter(uploadDeadline__gt=self.startDate).exists():
             errors.append(ValidationError("Event start date must on or after file upload deadlines"))
 
-        if self.pk and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
+        if self.pk and self.registrationsCloseDate is not None and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
             errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
 
         # Raise any errors
@@ -361,17 +386,17 @@ class Event(SaveDeleteMixin, models.Model):
     def preSave(self):
         # Set workshop prices
         if self.workshopTeacherEntryFee is None:
-            self.workshopTeacherEntryFee = self.event_defaultEntryFee
+            self.workshopTeacherEntryFee = self.competition_defaultEntryFee
 
         if self.workshopStudentEntryFee is None:
-            self.workshopStudentEntryFee = self.event_defaultEntryFee
+            self.workshopStudentEntryFee = self.competition_defaultEntryFee
 
         if self.eventType == 'workshop':
             # Set maxMembersPerTeam to 0 if eventType is workshop
             self.maxMembersPerTeam = 0
 
             # Set billing type to team or event if eventType is workshop
-            self.event_billingType = 'team'
+            self.competition_billingType = 'team'
             if self.pk:
                 self.availabledivision_set.filter(division_billingType='student').update(division_entryFee=None)
                 self.availabledivision_set.filter(division_billingType='student').update(division_billingType='event')
@@ -396,10 +421,10 @@ class Event(SaveDeleteMixin, models.Model):
 
         return (
             self.entryFeeIncludesGST != previousEvent.entryFeeIncludesGST or
-            self.event_defaultEntryFee != previousEvent.event_defaultEntryFee or
-            self.event_billingType != previousEvent.event_billingType or
-            self.event_specialRateNumber != previousEvent.event_specialRateNumber or
-            self.event_specialRateFee != previousEvent.event_specialRateFee or
+            self.competition_defaultEntryFee != previousEvent.competition_defaultEntryFee or
+            self.competition_billingType != previousEvent.competition_billingType or
+            self.competition_specialRateNumber != previousEvent.competition_specialRateNumber or
+            self.competition_specialRateFee != previousEvent.competition_specialRateFee or
             self.workshopTeacherEntryFee != previousEvent.workshopTeacherEntryFee or
             self.workshopStudentEntryFee != previousEvent.workshopStudentEntryFee
         )
@@ -439,27 +464,48 @@ class Event(SaveDeleteMixin, models.Model):
             return InvoiceGlobalSettings.objects.get().surchargeEventDescription
         except InvoiceGlobalSettings.DoesNotExist:
             return ''
+        
+    def hasAllDates(self):
+        return (
+            self.registrationsOpenDate is not None and
+            self.registrationsCloseDate is not None and
+            self.startDate  is not None and
+            self.endDate  is not None
+        )
+    
+    def hasAllDetails(self):
+        return self.hasAllDates() and (self.eventType == 'workshop' or self.competition_defaultEntryFee is not None)
 
     def registrationsOpen(self):
-        return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
+        if self.hasAllDetails():
+            return self.registrationsCloseDate >= datetime.datetime.today().date() and self.registrationsOpenDate <= datetime.datetime.today().date()
+        else:
+            return False # Registration is not open until all details are added
 
     def registrationNotOpenYet(self):
-        return self.registrationsOpenDate > datetime.datetime.today().date()
+        if self.hasAllDetails():
+            return self.registrationsOpenDate > datetime.datetime.today().date()
+        elif self.startDate is not None:
+            return self.startDate > datetime.datetime.today().date() # This check stops events that are created but not updated from displaying indefinitely
+        else:
+            return True
 
     def published(self):
         return self.status == 'published'
 
     def paidEvent(self):
-        if self.event_defaultEntryFee > 0 or (self.event_specialRateFee and self.event_specialRateFee > 0):
-            return True
-        # Workshops don't rely on the default entry fee
-        if self.eventType == 'workshop':
-            if self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0:
-                return True
-            if self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0:
+        # Competition
+        if self.eventType == 'competition':
+            if self.competition_defaultEntryFee is None:
+                return False
+            if self.competition_defaultEntryFee > 0 or (self.competition_specialRateFee and self.competition_specialRateFee > 0):
                 return True
 
-        return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
+            return self.availabledivision_set.filter(division_entryFee__gt=0).exists()
+        
+        # Workshop
+        if self.eventType == 'workshop':
+            return bool((self.workshopTeacherEntryFee and self.workshopTeacherEntryFee > 0) or (self.workshopStudentEntryFee and self.workshopStudentEntryFee > 0))
 
     def getBaseEventAttendanceFilterDict(self, user):
         # Create dict of attributes to filter teams/ workshop attendees by
@@ -476,11 +522,11 @@ class Event(SaveDeleteMixin, models.Model):
                 'mentorUser': user
             }
 
-    def maxEventTeamsForSchoolReached(self, user):
-        return self.event_maxTeamsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxTeamsPerSchool
+    def maxEventRegistrationsForSchoolReached(self, user):
+        return self.event_maxRegistrationsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxRegistrationsPerSchool
 
-    def maxEventTeamsTotalReached(self):
-        return self.event_maxTeamsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxTeamsForEvent
+    def maxEventRegistrationsTotalReached(self):
+        return self.event_maxRegistrationsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxRegistrationsForEvent
 
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
@@ -493,11 +539,16 @@ class Event(SaveDeleteMixin, models.Model):
     directEnquiriesToEmail.admin_order_field = 'directEnquiriesTo__email'
 
     def get_absolute_url(self):
-        from django.urls import reverse
         return reverse('events:details', kwargs = {"eventID": self.id})
+
+    def get_cms_url(self):
+        return reverse('events:cms', kwargs = {"eventID": self.id})
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    def registrationName(self):
+        return 'workshop attendee' if self.boolWorkshop() else 'team'
 
     def bleachedEventDetails(self):
         return mark_safe(bleach.clean(self.eventDetails))
@@ -540,15 +591,15 @@ class Event(SaveDeleteMixin, models.Model):
 class AvailableDivision(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT)
+    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.CASCADE, limit_choices_to={'active': True})
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Team details
-    division_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
-    division_maxTeamsForDivision = models.PositiveIntegerField('Max teams for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxRegistrationsPerSchool = models.PositiveIntegerField('Max registrations per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxRegistrationsForDivision = models.PositiveIntegerField('Max registrations for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
 
     # Billing details
     billingTypeChoices = (('event', 'Event settings'), ('team', 'By team'), ('student', 'By student'))
@@ -574,7 +625,7 @@ class AvailableDivision(SaveDeleteMixin, models.Model):
             errors.append(ValidationError('Division entry fee must not be blank if event billing settings not selected'))
 
         # Validate division_billingType
-        if self.division_billingType != 'event' and (self.event.event_specialRateNumber is not None or self.event.event_specialRateFee is not None):
+        if self.division_billingType != 'event' and (self.event.competition_specialRateNumber is not None or self.event.competition_specialRateFee is not None):
             errors.append(ValidationError('Special rate billing on event is incompatible with division based billing settings'))
 
         if self.division_billingType == 'student' and self.event.eventType == 'workshop':
@@ -611,11 +662,11 @@ class AvailableDivision(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
-    def maxDivisionTeamsForSchoolReached(self, user):
-        return self.division_maxTeamsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxTeamsPerSchool
+    def maxDivisionRegistrationsForSchoolReached(self, user):
+        return self.division_maxRegistrationsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxRegistrationsPerSchool
 
-    def maxDivisionTeamsTotalReached(self):
-        return self.division_maxTeamsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxTeamsForDivision
+    def maxDivisionRegistrationsTotalReached(self):
+        return self.division_maxRegistrationsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxRegistrationsForDivision
 
     def __str__(self):
         return str(self.division)
@@ -633,6 +684,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     mentorUser = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Mentor', on_delete=models.PROTECT)
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
+
+    # Advanced billing
+    invoiceOverride =models.ForeignKey('invoices.Invoice', verbose_name='Invoice override', on_delete=models.PROTECT, null=True, blank=True, help_text='Select an invoice to bill this team/ attendee to instead of the default behaviour.')
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
@@ -727,6 +781,12 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         self.createUpdateInvoices()
         if self.schoolValuesChanged:
             self.previousObject.createUpdateInvoices()
+            
+            if self.previousObject.invoiceOverride:
+                self.previousObject.invoiceOverride.calculateAndSaveAllTotals()
+
+        if self.invoiceOverride:
+            self.invoiceOverride.calculateAndSaveAllTotals()
 
     def postDelete(self):
         self.createUpdateInvoices()
@@ -738,7 +798,8 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
         return (
             self.school != self.previousObject.school or
             self.mentorUser != self.previousObject.mentorUser or
-            self.campus != self.previousObject.campus
+            self.campus != self.previousObject.campus or
+            self.invoiceOverride != self.previousObject.invoiceOverride
         )
 
     # Get previous school, mentorUser and campus if changed and set fields on object with old values
@@ -764,6 +825,9 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
     def childObject(self):
         # Get team or workshop attendance object for this eventAttendee
         return getattr(self, self.eventAttendanceType())
+
+    def strNameAndSchool(self):
+        return self.childObject().strNameAndSchool()
 
     def __str__(self):
         return str(self.childObject())

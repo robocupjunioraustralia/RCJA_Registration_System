@@ -122,10 +122,11 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
 
     # Filter autocompletes to valid options
     def get_search_results(self, request, queryset, search_term):
-        # Filter by state for objects that should have full permission level only
-        for url in ['users/user/', 'coordination/coordinator/', 'regions/region/']:
-            if url in request.META.get('HTTP_REFERER', ''):
-                queryset = self.filterQueryset(queryset, request, ['full'], ['full'])
+        if 'autocomplete' in request.path_info:
+            # Filter by state for objects that should have full permission level only
+            for url in ['users/user/', 'coordination/coordinator/', 'regions/region/']:
+                if url in request.META.get('HTTP_REFERER', ''):
+                    queryset = self.filterQueryset(queryset, request, ['full'], ['full'])
 
         return super().get_search_results(request, queryset, search_term)
 

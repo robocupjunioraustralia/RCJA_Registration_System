@@ -7,6 +7,7 @@ from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 from userquestions.models import Question, QuestionResponse
 from association.models import AssociationMember
+from workshops.models import WorkshopAttendee
 
 import datetime
 
@@ -52,10 +53,10 @@ def createUsers(self):
     self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state2_viewcoordinator, state=self.state2, permissionLevel='viewall', position='Text')
 
 def createSchools(self):
-    self.school1_state1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-    self.school2_state1 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-    self.school3_state2 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region1)
-    self.school4_state2 = School.objects.create(name='School 4', abbreviation='sch4', state=self.state2, region=self.region1)
+    self.school1_state1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+    self.school2_state1 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+    self.school3_state2 = School.objects.create(name='School 3', state=self.state2, region=self.region1)
+    self.school4_state2 = School.objects.create(name='School 4', state=self.state2, region=self.region1)
 
     self.campus1_school1 = Campus.objects.create(school=self.school1_state1, name='Campus 1')
     self.campus2_school1 = Campus.objects.create(school=self.school1_state1, name='Campus 2')
@@ -90,7 +91,7 @@ def createEvents(self):
         name = 'State 1 Open Competition',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=15)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -105,7 +106,7 @@ def createEvents(self):
         name = 'State 1 Open Workshop',
         eventType = 'workshop',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -120,7 +121,7 @@ def createEvents(self):
         name = 'State 1 Closed Competition 1',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -135,7 +136,7 @@ def createEvents(self):
         name = 'State 1 Closed Competition 2',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=6)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -150,7 +151,7 @@ def createEvents(self):
         name = 'State 1 Past Competition',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -165,12 +166,27 @@ def createEvents(self):
         name = 'State 2 Open Competition',
         eventType = 'competition',
         status = 'published',
-        event_defaultEntryFee = 50,
+        competition_defaultEntryFee = 50,
         startDate = (datetime.datetime.now() + datetime.timedelta(days=20)).date(),
         endDate = (datetime.datetime.now() + datetime.timedelta(days=20)).date(),
         registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
         registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=10)).date(),
         directEnquiriesTo = self.user_state2_super2,
+        venue=self.venue3_state2,
+    )
+
+    self.state2_openWorkshop = Event.objects.create(
+        year = self.year,
+        state = self.state2,
+        name = 'State 2 Open Workshop',
+        eventType = 'workshop',
+        status = 'published',
+        competition_defaultEntryFee = 50,
+        startDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+        endDate = (datetime.datetime.now() + datetime.timedelta(days=3)).date(),
+        registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date(),
+        directEnquiriesTo = self.user_state1_super1,
         venue=self.venue3_state2,
     )
 
@@ -180,10 +196,11 @@ def createEvents(self):
     self.division2_state2 = Division.objects.create(name='Division 2', state=self.state2)
     self.division3 = Division.objects.create(name='Division 3')
     self.division4 = Division.objects.create(name='Division 4')
+    self.division5 = Division.objects.create(name='Division 5', active=False)
 
     # Available Divisions
 
-    for event in ['state1_openCompetition', 'state1_openWorkshop', 'state1_closedCompetition1', 'state1_closedCompetition2', 'state1_pastCompetition', 'state2_openCompetition']:
+    for event in ['state1_openCompetition', 'state1_openWorkshop', 'state1_closedCompetition1', 'state1_closedCompetition2', 'state1_pastCompetition', 'state2_openCompetition', 'state2_openWorkshop']:
         setattr(self, f'availableDivision3_{event}', AvailableDivision.objects.create(event=getattr(self, event), division=self.division3))
         setattr(self, f'availableDivision4_{event}', AvailableDivision.objects.create(event=getattr(self, event), division=self.division4))
 
@@ -219,6 +236,41 @@ def createTeams(self):
         softwarePlatform=self.softwarePlatform,
     )
 
+def createWorkshopAttendees(self):
+    self.state1_event1_workshopAttendee1 = WorkshopAttendee.objects.create(
+        event=self.state1_openWorkshop,
+        mentorUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        division=self.division3,
+        firstName='First 1',
+        lastName='Last 1',
+        yearLevel=10,
+        attendeeType='student',
+        gender='male,'
+    )
+    self.state1_event1_workshopAttendee2 = WorkshopAttendee.objects.create(
+        event=self.state1_openWorkshop,
+        mentorUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        division=self.division3,
+        firstName='First 2',
+        lastName='Last 2',
+        yearLevel=11,
+        attendeeType='student',
+        gender='male',
+    )
+    self.state2_event1_workshopAttendee3 = WorkshopAttendee.objects.create(
+        event=self.state2_openWorkshop,
+        mentorUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        division=self.division3,
+        firstName='First 3',
+        lastName='Last 3',
+        yearLevel=11,
+        attendeeType='student',
+        gender='male',
+    )
+
 def createInvoices(self):
     self.state1_event1_invoice1 = Invoice.objects.create(
         invoiceToUser=self.user_state1_school1_mentor1,
@@ -229,6 +281,17 @@ def createInvoices(self):
         invoiceToUser=self.user_state1_school1_mentor1,
         school=self.school1_state1,
         event=self.state2_openCompetition
+    )
+
+    self.state1_workshopEvent1_invoice1 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state1_openWorkshop
+    )
+    self.state2_workshopEvent1_invoice2 = Invoice.objects.create(
+        invoiceToUser=self.user_state1_school1_mentor1,
+        school=self.school1_state1,
+        event=self.state2_openWorkshop
     )
 
 def createQuestionsAndResponses(self):

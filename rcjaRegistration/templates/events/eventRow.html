@@ -9,7 +9,7 @@
             <div class="content">
                 <span class="header">{{event}}</span>
                 <div class="meta">
-                    <span class="date">{{event.startDate}}{% if event.startDate != event.endDate %} - {{event.endDate}}{% endif %}<br>Registrations close: {{event.registrationsCloseDate}}</span>
+                    <span class="date">{{event.startDate|default_if_none:"TBC"}}{% if event.startDate != event.endDate %} - {{event.endDate|default_if_none:"TBC"}}{% endif %}<br>Registrations close: {{event.registrationsCloseDate|default_if_none:"TBC"}}</span>
                 </div>
                 <div class="cardcontent">
                 </div>
