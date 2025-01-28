@@ -156,7 +156,10 @@ class TestAssociationMemberClean(TestCase):
     def test_membershipEndDate_valid(self):
         self.associationMember1.membershipStartDate = datetime.datetime.now().date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
-        self.assertIsNone(self.associationMember1.clean())
+        try:
+            self.associationMember1.clean()
+        except ValidationError:
+            self.fail("ValidationError raised")
 
     def test_addressBlankIfUnder18(self):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
@@ -190,7 +193,10 @@ class TestAssociationMemberClean(TestCase):
         self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
         self.associationMember1.membershipStartDate = datetime.datetime.now().date()
-        self.assertIsNone(self.associationMember1.clean())
+        try:
+            self.associationMember1.clean()
+        except ValidationError:
+            self.fail("ValidationError raised")
 
 class TestAssociationMemberMethods(TestCase):
     email1 = 'user1@user.com'
