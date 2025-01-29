@@ -16,14 +16,21 @@ class TestRegionClean(TestCase):
         createStates(cls)
 
     def testValidNoState(self):
-        School.objects.create(name='New School', abbreviation='new', state=self.state2, region=self.region2_state1)
+        School.objects.create(name='New School', state=self.state2, region=self.region2_state1)
         User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
 
-        self.assertEqual(self.region1.clean(), None)
+        try:
+            self.region1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testValidState(self):
         self.assertEqual(self.region2_state1.state, self.state1)
-        self.assertEqual(self.region2_state1.clean(), None)
+
+        try:
+            self.region2_state1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testInvalidStateUser(self):
         User.objects.create(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email='test@test.com', homeState=self.state2, homeRegion=self.region2_state1)
@@ -32,7 +39,7 @@ class TestRegionClean(TestCase):
         self.assertRaises(ValidationError, self.region2_state1.clean)
 
     def testInvalidStateSchool(self):
-        School.objects.create(name='New School', abbreviation='new', state=self.state2, region=self.region2_state1)
+        School.objects.create(name='New School', state=self.state2, region=self.region2_state1)
 
         self.assertEqual(self.region2_state1.state, self.state1)
         self.assertRaises(ValidationError, self.region2_state1.clean)

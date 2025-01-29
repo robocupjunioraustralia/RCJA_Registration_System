@@ -62,13 +62,6 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             if sourceTeam.event.year.year < event.year.year - 1 or sourceTeam.event.year.year > event.year.year:
                 raise PermissionDenied("Team source event year must be current or previous year.")
 
-        if not team:
-            if event.maxEventTeamsForSchoolReached(request.user):
-                raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
-
-            if event.maxEventTeamsTotalReached():
-                raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
-
         self.StudentInLineFormSet = inlineformset_factory(
             Team,
             Student,
@@ -158,7 +151,7 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             formset.save()
 
             # Redirect if add another in response
-            if 'add_text' in request.POST and newTeam and not (event.maxEventTeamsForSchoolReached(request.user) or event.maxEventTeamsTotalReached()):
+            if 'add_text' in request.POST and newTeam and not (event.maxEventRegistrationsForSchoolReached(request.user) or event.maxEventRegistrationsTotalReached()):
                 return redirect(reverse('teams:create', kwargs = {"eventID":event.id}))
 
             if sourceTeam:
@@ -184,11 +177,11 @@ def teamCreatePermissionForEvent(event):
         raise PermissionDenied("Can only copy teams for competitions")
 
 def checkEventLimitsReached(request, event):
-    if event.maxEventTeamsForSchoolReached(request.user):
-        raise PermissionDenied("Max teams for school for this event reached. Contact the organiser if you want to register more teams for this event.")
+    if event.maxEventRegistrationsForSchoolReached(request.user):
+        raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
 
-    if event.maxEventTeamsTotalReached():
-        raise PermissionDenied("Max teams for this event reached. Contact the organiser if you want to register more teams for this event.")
+    if event.maxEventRegistrationsTotalReached():
+        raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
 
 @login_required
 def copyTeamsList(request, eventID):

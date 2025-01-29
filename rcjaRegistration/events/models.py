@@ -264,8 +264,8 @@ class Event(SaveDeleteMixin, models.Model):
 
     # Team details
     maxMembersPerTeam = models.PositiveIntegerField('Max members per team', default=4)
-    event_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
-    event_maxTeamsForEvent = models.PositiveIntegerField('Max teams for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+    event_maxRegistrationsPerSchool = models.PositiveIntegerField('Max registrations per school', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
+    event_maxRegistrationsForEvent = models.PositiveIntegerField('Max registrations for event', null=True, blank=True, help_text='Leave blank for no limit. Only enforced on the mentor signup page, can be overridden in the admin portal.')
 
     # Billing details
     entryFeeIncludesGST = models.BooleanField('Includes GST', default=True, help_text='Whether the prices specified on this page are GST inclusive or exclusive.')
@@ -522,11 +522,11 @@ class Event(SaveDeleteMixin, models.Model):
                 'mentorUser': user
             }
 
-    def maxEventTeamsForSchoolReached(self, user):
-        return self.event_maxTeamsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxTeamsPerSchool
+    def maxEventRegistrationsForSchoolReached(self, user):
+        return self.event_maxRegistrationsPerSchool is not None and self.baseeventattendance_set.filter(**self.getBaseEventAttendanceFilterDict(user)).count() >= self.event_maxRegistrationsPerSchool
 
-    def maxEventTeamsTotalReached(self):
-        return self.event_maxTeamsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxTeamsForEvent
+    def maxEventRegistrationsTotalReached(self):
+        return self.event_maxRegistrationsForEvent is not None and self.baseeventattendance_set.count() >= self.event_maxRegistrationsForEvent
 
     def directEnquiriesToName(self):
         return self.directEnquiriesTo.fullname_or_email()
@@ -546,6 +546,9 @@ class Event(SaveDeleteMixin, models.Model):
 
     def boolWorkshop(self):
         return self.eventType == 'workshop'
+
+    def registrationName(self):
+        return 'workshop attendee' if self.boolWorkshop() else 'team'
 
     def bleachedEventDetails(self):
         return mark_safe(bleach.clean(self.eventDetails))
@@ -588,15 +591,15 @@ class Event(SaveDeleteMixin, models.Model):
 class AvailableDivision(SaveDeleteMixin, models.Model):
     # Foreign keys
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.PROTECT, limit_choices_to={'active': True})
+    division = models.ForeignKey(Division, verbose_name='Division', on_delete=models.CASCADE, limit_choices_to={'active': True})
 
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
 
     # Team details
-    division_maxTeamsPerSchool = models.PositiveIntegerField('Max teams per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
-    division_maxTeamsForDivision = models.PositiveIntegerField('Max teams for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxRegistrationsPerSchool = models.PositiveIntegerField('Max registrations per school', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
+    division_maxRegistrationsForDivision = models.PositiveIntegerField('Max registrations for division', null=True, blank=True, help_text='Leave blank for no limit. Will override limit on event.')
 
     # Billing details
     billingTypeChoices = (('event', 'Event settings'), ('team', 'By team'), ('student', 'By student'))
@@ -659,11 +662,11 @@ class AvailableDivision(SaveDeleteMixin, models.Model):
 
     # *****Get Methods*****
 
-    def maxDivisionTeamsForSchoolReached(self, user):
-        return self.division_maxTeamsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxTeamsPerSchool
+    def maxDivisionRegistrationsForSchoolReached(self, user):
+        return self.division_maxRegistrationsPerSchool is not None and self.division.baseeventattendance_set.filter(**self.event.getBaseEventAttendanceFilterDict(user)).count() >= self.division_maxRegistrationsPerSchool
 
-    def maxDivisionTeamsTotalReached(self):
-        return self.division_maxTeamsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxTeamsForDivision
+    def maxDivisionRegistrationsTotalReached(self):
+        return self.division_maxRegistrationsForDivision is not None and self.division.baseeventattendance_set.filter(event=self.event).count() >= self.division_maxRegistrationsForDivision
 
     def __str__(self):
         return str(self.division)

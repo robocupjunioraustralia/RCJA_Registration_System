@@ -137,7 +137,14 @@ class Venue_Base:
 class Test_Venue_NotStaff(Venue_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class Test_Venue_SuperUser(Venue_Base, Base_Test_SuperUser, TestCase):
+class AdditionalVenueTestsMixin:
+
+    # Test filtering message
+    def test_changelist_has_no_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, "Filtered to: ")
+
+class Test_Venue_SuperUser(AdditionalVenueTestsMixin, Venue_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 3
     expectedStrings = [
         'Venue 1',
@@ -164,7 +171,7 @@ class Venue_Coordinators_Base(Venue_Base):
         'Venue 3',
     ]
 
-class Test_Venue_FullCoordinator(Venue_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+class Test_Venue_FullCoordinator(AdditionalVenueTestsMixin, Venue_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
     def testPostAddBlankState(self):
         payload = self.validPayload.copy()
         del payload['state']
@@ -182,7 +189,10 @@ class Test_Venue_FullCoordinator(Venue_Coordinators_Base, Base_Test_FullCoordina
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
 class Test_Venue_ViewCoordinator(Venue_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    # Test filtering message
+    def test_changelist_has_no_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, "Filtered to: ")
 
 # Event
 
@@ -267,8 +277,102 @@ class AdditionalEventTestsMixin:
             ('status', 'Status'),
         ])
 
+    # Test available division inline correct fields
+    def test_competition_correct_availableDivisionInline_correct_fields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)))
+        self.assertContains(response, 'division_maxRegistrationsPerSchool')
+        self.assertContains(response, 'division_maxRegistrationsForDivision')
+        self.assertContains(response, 'division_billingType')
+        self.assertContains(response, 'division_entryFee')
+
+    def test_workshop_correct_availableDivisionInline_correct_fields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openWorkshop.id,)))
+        self.assertContains(response, 'division_maxRegistrationsPerSchool')
+        self.assertContains(response, 'division_maxRegistrationsForDivision')
+        self.assertNotContains(response, 'division_billingType')
+        self.assertNotContains(response, 'division_entryFee')
+
+    # Test correct fieldsets
+    def test_competition_correct_fieldsets(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)))
+        self.assertContains(response, 'Team settings')
+        self.assertNotContains(response, 'Capacity limits')
+
+    def test_workshop_correct_fieldsets(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openWorkshop.id,)))
+        self.assertNotContains(response, 'Team settings')
+        self.assertContains(response, 'Capacity limits')
+    
+    def test_add_correct_fieldsets(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
+        self.assertContains(response, "Please choose carefully, this can't be changed after the event is created")
+        self.assertNotContains(response, 'Team settings')
+        self.assertNotContains(response, 'workshopTeacherEntryFee')
+
+    # Test correct inlines
+    def test_competition_correct_inlines(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)))
+        self.assertContains(response, 'Available Divisions')
+        self.assertContains(response, 'Event Available File Types')
+    
+    def test_workshop_correct_inlines(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openWorkshop.id,)))
+        self.assertContains(response, 'Available Divisions')
+        self.assertNotContains(response, 'Event Available File Types')
+
+    # Test messaging
+    def test_save_message_no_venue(self):
+        payload = self.validPayload.copy()
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertContains(response, "You haven&#x27;t added a venue yet, we recommend adding a venue.")
+    
+    def test_save_no_message_yes_venue(self):
+        payload = self.validPayload.copy()
+        payload['venue'] = self.venue1_state1.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertNotContains(response, "You haven&#x27;t added a venue yet, we recommend adding a venue.")
+
+    def test_save_message_no_divisions(self):
+        payload = self.validPayload.copy()
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertContains(response, "You haven&#x27;t added any divisions yet, people won&#x27;t be able to register.")
+
+    def test_save_no_message_yes_divisions(self):
+        payload = self.validPayload.copy()
+        payload['availabledivision_set-TOTAL_FORMS'] = 1
+        payload['availabledivision_set-0-division'] = self.division3.id
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertNotContains(response, "You haven&#x27;t added any divisions yet, people won&#x27;t be able to register.")
+
+    def test_save_message_draft(self):
+        payload = self.validPayload.copy()
+        payload['status'] = 'draft'
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertContains(response, "Event is not published, publish event to make visible.")
+
+    def test_save_no_message_published(self):
+        payload = self.validPayload.copy()
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertNotContains(response, "Event is not published, publish event to make visible.")
+
+    def test_save_message_missing_details(self):
+        payload = self.validPayload.copy()
+        payload['registrationsOpenDate'] = ""
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertContains(response, "You haven&#x27;t filled in all details yet, people won&#x27;t be able to register.")
+
+    def test_save_no_message_all_details(self):
+        payload = self.validPayload.copy()
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_openCompetition.id,)), data=payload, follow=True)
+        self.assertNotContains(response, "You haven&#x27;t filled in all details yet, people won&#x27;t be able to register.")
+
+    # Test filtering message
+    def test_changelist_has_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, "Filtered to: ")
+
 class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_SuperUser, TestCase):
-    expectedListItems = 6
+    expectedListItems = 7
     expectedStrings = [
         'State 1 Open Competition',
         'State 1 Open Workshop',
@@ -372,3 +476,8 @@ class Test_Event_ViewCoordinator(Event_Coordinators_Base, Base_Test_ViewCoordina
         getattr(self, self.state1Obj).save()
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.checkReadonly(response, [('cmsLink', 'View CMS'),])
+
+    # Test filtering message
+    def test_changelist_has_filter_message(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, "Filtered to: ")

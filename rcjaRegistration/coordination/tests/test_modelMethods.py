@@ -53,7 +53,10 @@ class TestCoordinatorMethods(TestCase):
 
     def testCleanNotDuplicate(self):
         self.coord2 = Coordinator(user=self.user1, state=self.state1, permissionLevel='viewall', position='Thing')
-        self.coord2.clean()
+        try:
+            self.coord2.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCleanDuplicate(self):
         self.coord2 = Coordinator(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')

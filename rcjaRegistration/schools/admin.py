@@ -17,7 +17,6 @@ class CampusInline(InlineAdminPermissions, admin.TabularInline):
 class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',
-        'abbreviation',
         'state',
         'region',
         'postcode',
@@ -31,7 +30,6 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'state__abbreviation',
         'region__name',
         'name',
-        'abbreviation',
         'postcode',
     ]
     autocomplete_fields = [
@@ -48,7 +46,6 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
     exportFields = [
         'pk',
         'name',
-        'abbreviation',
         'state',
         'region',
         'postcode',
@@ -122,7 +119,6 @@ class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'school__state__abbreviation',
         'school__region__name',
         'school__name',
-        'school__abbreviation',
         'postcode',
     ]
     autocomplete_fields = [
@@ -189,7 +185,6 @@ class SchoolAdministratorAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPe
         'school__state__abbreviation',
         'school__region__name',
         'school__name',
-        'school__abbreviation',
         'campus__name',
     ]
     autocomplete_fields = [

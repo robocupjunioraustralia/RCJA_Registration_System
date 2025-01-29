@@ -1,53 +1,48 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams, createInvoices, POST_VALIDATION_FAILURE, POST_SUCCESS
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createWorkshopAttendees, createInvoices, POST_VALIDATION_FAILURE, POST_SUCCESS
 
 from django.test import TestCase
 from django.urls import reverse
 
 import datetime
 
-from teams.models import Team
 from schools.models import SchoolAdministrator
 
-# Team
+# WorkshopAttendee
 
-class Team_Base:
-    modelName = 'Team'
-    modelURLName = 'teams_team'
-    state1Obj = 'state1_event1_team1'
-    state2Obj = 'state2_event1_team3'
+class WorkshopAttendee_Base:
+    modelName = 'Workshop attendee'
+    modelURLName = 'workshops_workshopattendee'
+    state1Obj = 'state1_event1_workshopAttendee1'
+    state2Obj = 'state2_event1_workshopAttendee3'
     validPayload = {
         'event': 0,
         'division': 0,
         'mentorUser': 0,
         'school': 0,
-        'name': 'New Team',
-        'hardwarePlatform': 0,
-        'softwarePlatform': 0,
-        'student_set-TOTAL_FORMS': 0,
-        'student_set-INITIAL_FORMS': 0,
-        'student_set-MIN_NUM_FORMS': 0,
-        'student_set-MAX_NUM_FORMS': 1000,
+        'firstName': 'New First',
+        'lastName': 'New Last',
+        'yearLevel': '5',
+        'attendeeType': 'student',
+        'gender': 'male',
     }
 
     @classmethod
     def additionalSetup(cls):
         createEvents(cls)
         createInvoices(cls)
-        createTeams(cls)
+        createWorkshopAttendees(cls)
 
     @classmethod
     def updatePayload(cls):
-        cls.validPayload['event'] = cls.state1_openCompetition.id
+        cls.validPayload['event'] = cls.state1_openWorkshop.id
         cls.validPayload['division'] = cls.division3.id
         cls.validPayload['mentorUser'] = cls.user_state1_school1_mentor1.id
         cls.validPayload['school'] = cls.school1_state1.id
-        cls.validPayload['hardwarePlatform'] = cls.hardwarePlatform.id
-        cls.validPayload['softwarePlatform'] = cls.softwarePlatform.id
 
-class Test_Team_NotStaff(Team_Base, Base_Test_NotStaff, TestCase):
+class Test_WorkshopAttendee_NotStaff(WorkshopAttendee_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class AdditionalTeamPostTestsMixin:
+class AdditionalWorkshopAttendeePostTestsMixin:
 
     def testPostAddBlankEvent(self):
         payload = self.validPayload.copy()
@@ -66,16 +61,16 @@ class AdditionalTeamPostTestsMixin:
         self.assertContains(response, 'You can select campus after you have clicked save.')
 
     def testChangeCampusField(self):
-        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_event1_team1.id,)))
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_event1_workshopAttendee1.id,)))
 
         self.assertContains(response, 'Campus:')
         self.assertNotContains(response, 'You can select campus after you have clicked save.')
 
     # Test admin validation
 
-    def testPostWorkshopEvent(self):
+    def testPostCompetitionEvent(self):
         payload = self.validPayload.copy()
-        payload['event'] = self.state1_openWorkshop.id
+        payload['event'] = self.state1_openCompetition.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
@@ -112,7 +107,7 @@ class AdditionalTeamPostTestsMixin:
     def testRemoveSchoolDenied(self):
         payload = self.validPayload.copy()
         del payload['school']
-        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_event1_team1.id,)), data=payload)
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1_event1_workshopAttendee1.id,)), data=payload)
 
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
@@ -125,19 +120,19 @@ class AdditionalTeamPostTestsMixin:
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload, follow=True)
 
         self.assertContains(response, 'was added successfully. You may edit it again below.')
-        self.assertContains(response, f'({self.school1_state1}) automatically added to New Team')
+        self.assertContains(response, f'({self.school1_state1}) automatically added to New First New Last')
 
     # Test invoice override
     def testPostInvoiceOverride_success(self):
         payload = self.validPayload.copy()
-        payload['invoiceOverride'] = self.state1_event1_invoice1.id
+        payload['invoiceOverride'] = self.state1_workshopEvent1_invoice1.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
 
         self.assertEqual(response.status_code, POST_SUCCESS)
 
     def testPostInvoiceOverride_wrong_event(self):
         payload = self.validPayload.copy()
-        payload['invoiceOverride'] = self.state2_event1_invoice2.id
+        payload['invoiceOverride'] = self.state2_workshopEvent1_invoice2.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
 
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
@@ -145,59 +140,59 @@ class AdditionalTeamPostTestsMixin:
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
     # Test autocomplete filtering
-    def test_event_autocomplete_contains_no_workshops(self):
-        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+    def test_event_autocomplete_contains_no_competitions(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=workshops&model_name=workshopattendee&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
 
-        self.assertNotContains(response, self.state1_openWorkshop.name)
+        self.assertNotContains(response, self.state1_openCompetition.name)
 
-class Test_Team_SuperUser(AdditionalTeamPostTestsMixin, Team_Base, Base_Test_SuperUser, TestCase):
+class Test_WorkshopAttendee_SuperUser(AdditionalWorkshopAttendeePostTestsMixin, WorkshopAttendee_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 3
     expectedStrings = [
-        'Team 1',
-        'Team 2',
-        'Team 3',
+        'First 1 Last 1',
+        'First 2 Last 2',
+        'First 3 Last 3',
     ]
     expectedMissingStrings = []
 
-    def test_event_autocomplete_contains_correct_competitions(self):
-        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+    def test_event_autocomplete_contains_correct_workshops(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=workshops&model_name=workshopattendee&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
 
-        self.assertContains(response, self.state1_openCompetition.name)
-        self.assertContains(response, self.state2_openCompetition.name)
+        self.assertContains(response, self.state1_openWorkshop.name)
+        self.assertContains(response, self.state2_openWorkshop.name)
 
-class Team_Coordinators_Base(Team_Base):
+class WorkshopAttendee_Coordinators_Base(WorkshopAttendee_Base):
     expectedListItems = 2
     expectedStrings = [
-        'Team 1',
-        'Team 2',
+        'First 1 Last 1',
+        'First 2 Last 2',
     ]
     expectedMissingStrings = [
-        'Team 3',
+        'First 3 Last 3',
     ]
 
-class Test_Team_FullCoordinator(AdditionalTeamPostTestsMixin, Team_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+class Test_WorkshopAttendee_FullCoordinator(AdditionalWorkshopAttendeePostTestsMixin, WorkshopAttendee_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
 
     # Additional tests
 
     def testPostAddWrongEvent(self):
         payload = self.validPayload.copy()
-        payload['event'] = self.state2_openCompetition.id
+        payload['event'] = self.state2_openWorkshop.id
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the errors below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
 
-    def test_event_autocomplete_contains_correct_competitions(self):
+    def test_event_autocomplete_contains_correct_workshops(self):
         from coordination.models import Coordinator
         self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state2, permissionLevel='viewall', position='Text')
-        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=workshops&model_name=workshopattendee&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
 
-        self.assertContains(response, self.state1_openCompetition.name)
-        self.assertNotContains(response, self.state2_openCompetition.name)
+        self.assertContains(response, self.state1_openWorkshop.name)
+        self.assertNotContains(response, self.state2_openWorkshop.name)
 
-class Test_Team_ViewCoordinator(Team_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    def test_event_autocomplete_contains_correct_competitions(self):
-        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=teams&model_name=team&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+class Test_WorkshopAttendee_ViewCoordinator(WorkshopAttendee_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
+    def test_event_autocomplete_contains_correct_workshops(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=workshops&model_name=workshopattendee&field_name=event", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
 
-        self.assertNotContains(response, self.state1_openCompetition.name)
-        self.assertNotContains(response, self.state2_openCompetition.name)
+        self.assertNotContains(response, self.state1_openWorkshop.name)
+        self.assertNotContains(response, self.state2_openWorkshop.name)

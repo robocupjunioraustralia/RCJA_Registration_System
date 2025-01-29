@@ -31,7 +31,6 @@ def commonSetUp(obj): #copied from events, todo refactor
     )
     obj.newSchool = School.objects.create(
         name='Melbourne High',
-        abbreviation='MHS',
         state=obj.newState,
         region=obj.newRegion
     )
@@ -346,35 +345,35 @@ class TestTeamEdit(TestCase):
         self.assertContains(response, 'Registration has closed for this event', status_code=403)
 
     def testLoadsSchoolEventMaximumReached(self):
-        self.newEvent.event_maxTeamsPerSchool = 1
+        self.newEvent.event_maxRegistrationsPerSchool = 1
         self.newEvent.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
 
     def testLoadsOverallEventMaximumReached(self):
-        self.newEvent.event_maxTeamsForEvent = 1
+        self.newEvent.event_maxRegistrationsForEvent = 1
         self.newEvent.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
 
     def testLoadsSchoolDivisionMaximumReached(self):
-        self.newEventAvailableDivision.division_maxTeamsPerSchool = 1
+        self.newEventAvailableDivision.division_maxRegistrationsPerSchool = 1
         self.newEventAvailableDivision.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
 
     def testLoadsOverallDivisionMaximumReached(self):
-        self.newEventAvailableDivision.division_maxTeamsForDivision = 1
+        self.newEventAvailableDivision.division_maxRegistrationsForDivision = 1
         self.newEventAvailableDivision.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
         self.assertEqual(200, response.status_code)
 
     def testDivisionQSValidSchoolDivisionMaximumReached(self):
-        self.newEventAvailableDivision.division_maxTeamsPerSchool = 1
+        self.newEventAvailableDivision.division_maxRegistrationsPerSchool = 1
         self.newEventAvailableDivision.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
@@ -382,7 +381,7 @@ class TestTeamEdit(TestCase):
         self.assertNotContains(response, 'Division 1 Name: Max teams for school for this event division reached. Contact the organiser if you want to register more teams in this division.')
 
     def testDivisionQSValidOverallDivisionMaximumReached(self):
-        self.newEventAvailableDivision.division_maxTeamsForDivision = 1
+        self.newEventAvailableDivision.division_maxRegistrationsForDivision = 1
         self.newEventAvailableDivision.save()
 
         response = self.client.get(reverse('teams:edit',kwargs={'teamID':self.newEventTeam.id}))
@@ -428,11 +427,11 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+1)
-        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEqual(Student.objects.get(firstName="First 1").firstName, "First 1")
 
     def testAdd2StudentsSucceeds(self):
         existingStudents = self.newEventTeam.student_set.count()
@@ -456,12 +455,12 @@ class TestTeamEdit(TestCase):
             "student_set-1-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents+2)
-        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
-        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertEqual(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEqual(Student.objects.get(firstName="First 2").firstName, "First 2")
 
     def testAdd3StudentsFails(self):
         existingStudents = self.newEventTeam.student_set.count()
@@ -489,7 +488,7 @@ class TestTeamEdit(TestCase):
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
@@ -520,12 +519,12 @@ class TestTeamEdit(TestCase):
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/teams/{self.newEventTeam.id}")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
-        self.assertEquals(Student.objects.get(firstName="New 1").firstName, "New 1")
-        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertEqual(Student.objects.get(firstName="New 1").firstName, "New 1")
+        self.assertEqual(Student.objects.get(firstName="First 2").firstName, "First 2")
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 1"))
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
 
@@ -554,12 +553,12 @@ class TestTeamEdit(TestCase):
             "student_set-2-gender":"male",
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Please submit at most 2 forms.")
 
         self.assertEqual(self.newEventTeam.student_set.count(), existingStudents)
-        self.assertEquals(Student.objects.get(firstName="First 1").firstName, "First 1")
-        self.assertEquals(Student.objects.get(firstName="First 2").firstName, "First 2")
+        self.assertEqual(Student.objects.get(firstName="First 1").firstName, "First 1")
+        self.assertEqual(Student.objects.get(firstName="First 2").firstName, "First 2")
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="New 1"))
         self.assertRaises(Student.DoesNotExist, lambda: Student.objects.get(firstName="First 3"))
 
@@ -579,7 +578,7 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testMissingManagementFormData_invalidForm(self):
@@ -598,7 +597,7 @@ class TestTeamEdit(TestCase):
             "student_set-0-gender":"male"
         }
         response = self.client.post(reverse('teams:edit', kwargs={'teamID':self.newEventTeam.id}),data=payload)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ManagementForm data is missing or has been tampered with')
 
     def testEditStudentWithInvalidFails(self):
@@ -632,9 +631,9 @@ def newCommonSetUp(self):
         self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password)
         self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True)
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region2, postcode="1234")
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state2, region=self.region2, postcode="1234")
 
         self.campus1 = Campus.objects.create(school=self.school1, name='Campus 1')
         self.campus2 = Campus.objects.create(school=self.school1, name='Campus 2')
@@ -925,7 +924,7 @@ class TestCopyTeamsList(TestCase):
         self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
 
     def testRedirect_eventSchoolMaxReached(self):
-        self.newEvent.event_maxTeamsPerSchool = 1
+        self.newEvent.event_maxRegistrationsPerSchool = 1
         self.newEvent.save()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -935,7 +934,7 @@ class TestCopyTeamsList(TestCase):
         self.assertEqual(response.url, f"/events/{self.newEvent.id}")
 
     def testRedirect_eventOverallMaxReached(self):
-        self.newEvent.event_maxTeamsForEvent = 1
+        self.newEvent.event_maxRegistrationsForEvent = 1
         self.newEvent.save()
         url = reverse('teams:copyTeamsList', kwargs={'eventID': self.newEvent.id})
         login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
@@ -1363,11 +1362,17 @@ class TestTeamClean(TestCase):
         self.assertRaises(ValidationError, self.team1.clean)
 
     def testNoCampus(self):
-        self.assertEqual(self.team1.clean(), None)
+        try:
+            self.team1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCampusValid(self):
         self.team1.campus = self.campus1
-        self.assertEqual(self.team1.clean(), None)
+        try:
+            self.team1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCampusWrongSchool(self):
         self.team2.campus = self.campus1
@@ -1379,16 +1384,25 @@ class TestTeamClean(TestCase):
 
     def testCheckMentorIsAdminOfSchool_noSchool(self):
         self.team3 = Team(event=self.event, mentorUser=self.user1, name='Team 3', division=self.division1)
-        self.assertEqual(self.team3.clean(), None)
+        try:
+            self.team3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool(self):
         self.team3 = Team(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
-        self.assertEqual(self.team3.clean(), None)
+        try:
+            self.team3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool_existing(self):
         self.schoolAdmin1.delete()
         self.team3 = Team.objects.create(event=self.event, mentorUser=self.user1, school=self.school1, name='Team 3', division=self.division1)
-        self.assertEqual(self.team3.clean(), None)
+        try:
+            self.team3.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testCheckMentorIsAdminOfSchool_notAdmin(self):
         self.schoolAdmin1.delete()
@@ -1582,7 +1596,7 @@ class TestTeamCreationFormValidation_School(TestCase):
 
     def testInValidCreate_schoolEventMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
-        self.event.event_maxTeamsPerSchool = 1
+        self.event.event_maxRegistrationsPerSchool = 1
         self.event.save()
 
         payload = {
@@ -1607,7 +1621,7 @@ class TestTeamCreationFormValidation_School(TestCase):
 
     def testValidCreate_schoolEventMaxReached_redirectAddAnotherIgnored(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
-        self.event.event_maxTeamsPerSchool = 2
+        self.event.event_maxRegistrationsPerSchool = 2
         self.event.save()
 
         payload = {
@@ -1631,7 +1645,7 @@ class TestTeamCreationFormValidation_School(TestCase):
 
     def testValidCreate_overallEventMaxReached_redirectAddAnotherIgnored(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
-        self.event.event_maxTeamsForEvent = 3
+        self.event.event_maxRegistrationsForEvent = 3
         self.event.save()
 
         payload = {
@@ -1655,7 +1669,7 @@ class TestTeamCreationFormValidation_School(TestCase):
 
     def testInValidCreate_overallEventMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
-        self.event.event_maxTeamsForEvent = 2
+        self.event.event_maxRegistrationsForEvent = 2
         self.event.save()
 
         payload = {
@@ -1680,7 +1694,7 @@ class TestTeamCreationFormValidation_School(TestCase):
 
     def testInValidCreate_schoolDivisionMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
-        self.availableDivision.division_maxTeamsPerSchool = 1
+        self.availableDivision.division_maxRegistrationsPerSchool = 1
         self.availableDivision.save()
 
         payload = {
@@ -1705,7 +1719,7 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
     def testGet_schoolDivisionMax(self):
-        self.availableDivision.division_maxTeamsPerSchool = 1
+        self.availableDivision.division_maxRegistrationsPerSchool = 1
         self.availableDivision.save()
 
         response = self.client.get(reverse('teams:create', kwargs={'eventID':self.event.id}), follow=False)
@@ -1714,7 +1728,7 @@ class TestTeamCreationFormValidation_School(TestCase):
 
     def testInValidCreate_overallDivisionMax(self):
         self.assertEqual(self.user1.currentlySelectedSchool, self.schoolAssertValue)
-        self.availableDivision.division_maxTeamsForDivision = 2
+        self.availableDivision.division_maxRegistrationsForDivision = 2
         self.availableDivision.save()
 
         payload = {
@@ -1739,7 +1753,7 @@ class TestTeamCreationFormValidation_School(TestCase):
         self.assertEqual(Team.objects.filter(event=self.event).count(), 2)
 
     def testGet_overallDivisionMax(self):
-        self.availableDivision.division_maxTeamsForDivision = 2
+        self.availableDivision.division_maxRegistrationsForDivision = 2
         self.availableDivision.save()
 
         response = self.client.get(reverse('teams:create', kwargs={'eventID':self.event.id}), follow=False)
@@ -1850,7 +1864,7 @@ class TestTeamForm(TestCase):
         self.assertEqual(form.errors["division"], ["Select a valid choice. That choice is not one of the available choices."])
 
     def testInvalidForm_divisionMaxReached(self):
-        self.availableDivision.division_maxTeamsForDivision = 0
+        self.availableDivision.division_maxRegistrationsForDivision = 0
         self.availableDivision.save()
 
         form = self.createForm({

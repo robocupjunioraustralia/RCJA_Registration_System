@@ -27,8 +27,8 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
             'name',
             'description',
             # Team details
-            'division_maxTeamsPerSchool',
-            'division_maxTeamsForDivision',
+            'division_maxRegistrationsPerSchool',
+            'division_maxRegistrationsForDivision',
             # Billing details
             'division_billingType',
             'division_entryFee',
@@ -75,8 +75,8 @@ class EventSerializer(serializers.ModelSerializer):
             'registrationsCloseDate',
             # Team details
             'maxMembersPerTeam',
-            'event_maxTeamsPerSchool',
-            'event_maxTeamsForEvent',
+            'event_maxRegistrationsPerSchool',
+            'event_maxRegistrationsForEvent',
             # Billing
             'entryFeeIncludesGST',
             'competition_defaultEntryFee',

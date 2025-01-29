@@ -175,8 +175,6 @@ class AvailableDivisionInline(FKActionsRemove, InlineAdminPermissions, admin.Tab
         if obj:
             if obj.eventType == 'workshop':
                 return [
-                    'division_maxTeamsPerSchool',
-                    'division_maxTeamsForDivision',
                     'division_billingType',
                     'division_entryFee',
                 ]
@@ -220,7 +218,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
         }),
         ('Team settings', {
-            'fields': ('maxMembersPerTeam', 'event_maxTeamsPerSchool', 'event_maxTeamsForEvent',)
+            'fields': ('maxMembersPerTeam', 'event_maxRegistrationsPerSchool', 'event_maxRegistrationsForEvent',)
         }),
         ('Billing settings', {
             'fields': ('entryFeeIncludesGST', 'competition_billingType', 'competition_defaultEntryFee', ('competition_specialRateNumber', 'competition_specialRateFee'), 'paymentDueDate', 'eventSurchargeAmount')
@@ -244,6 +242,9 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         }),
         ('Dates', {
             'fields': ('startDate', 'endDate', 'registrationsOpenDate', 'registrationsCloseDate')
+        }),
+        ('Capacity limits', {
+            'fields': ('event_maxRegistrationsPerSchool', 'event_maxRegistrationsForEvent',)
         }),
         ('Billing settings', {
             'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
@@ -359,8 +360,8 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'directEnquiriesToName',
         'directEnquiriesToEmail',
         'maxMembersPerTeam',
-        'event_maxTeamsPerSchool',
-        'event_maxTeamsForEvent',
+        'event_maxRegistrationsPerSchool',
+        'event_maxRegistrationsForEvent',
         'entryFeeIncludesGST',
         'competition_billingType',
         'competition_defaultEntryFee',
@@ -438,11 +439,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
 
     # Filter in team and workshop autocompletes
     def get_search_results(self, request, queryset, search_term):
-        if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
-            queryset = queryset.filter(eventType='competition', status='published', registrationsOpenDate__isnull=False)
+        if 'autocomplete' in request.path_info:
+            if 'teams/team/' in request.META.get('HTTP_REFERER', ''):
+                queryset = queryset.filter(eventType='competition', status='published', registrationsOpenDate__isnull=False)
 
-        if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
-            queryset = queryset.filter(eventType='workshop', status='published', registrationsOpenDate__isnull=False)
+            if 'workshops/workshopattendee/' in request.META.get('HTTP_REFERER', ''):
+                queryset = queryset.filter(eventType='workshop', status='published', registrationsOpenDate__isnull=False)
 
         return super().get_search_results(request, queryset, search_term)
 
@@ -514,7 +516,6 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'school__state__abbreviation',
         'school__region__name',
         'school__name',
-        'school__abbreviation',
         'campus__name',
         'mentorUser__first_name',
         'mentorUser__last_name',

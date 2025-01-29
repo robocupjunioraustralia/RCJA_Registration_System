@@ -28,9 +28,9 @@ def newCommonSetUp(self):
         self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password, homeState=self.state2)
         self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True, homeState=self.state1)
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state2, region=self.region1)
 
         self.year = Year.objects.create(year=2020)
         self.event = Event.objects.create(
@@ -379,7 +379,10 @@ class Test_MentorEventFileUpload_Clean(TestCase):
     def testValidNoExtensionRestrictions(self):
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-        uploadedFile.clean()
+        try:
+            uploadedFile.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testValidExtensionRestrictions(self):
         self.fileType1.allowedFileTypes = "doc,pdf"
@@ -387,7 +390,10 @@ class Test_MentorEventFileUpload_Clean(TestCase):
 
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-        uploadedFile.clean()
+        try:
+            uploadedFile.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testValidExtensionRestrictions_differentCase(self):
         self.fileType1.allowedFileTypes = "DOC,PDF"
@@ -395,7 +401,10 @@ class Test_MentorEventFileUpload_Clean(TestCase):
 
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-        uploadedFile.clean()
+        try:
+            uploadedFile.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testInvalidExtension(self):
         self.fileType1.allowedFileTypes = "png,jpeg"
@@ -476,7 +485,10 @@ class Test_EventAvailableFileType_Clean(TestCase):
         newCommonSetUp(self)
     
     def testSuccessClean(self):
-        self.assertEqual(self.availableFileType1.clean(), None)
+        try:
+            self.availableFileType1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testUploadDeadlineBeforeRegistrationClose(self):
         self.availableFileType1.uploadDeadline = self.event.registrationsCloseDate + datetime.timedelta(days=-1)
@@ -490,13 +502,19 @@ class Test_EventAvailableFileType_Clean(TestCase):
         self.event.registrationsCloseDate = None
         self.event.save()
 
-        self.assertEqual(self.availableFileType1.clean(), None)
+        try:
+            self.availableFileType1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testUploadDeadlineNoStartDate(self):
         self.event.startDate = None
         self.event.save()
 
-        self.assertEqual(self.availableFileType1.clean(), None)
+        try:
+            self.availableFileType1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
 class Test_MentorEventFileType_Methods(TestCase):
     email1 = 'user1@user.com'
@@ -519,8 +537,12 @@ class Test_MentorEventFileType_Methods(TestCase):
 
     def testCleanValidFilesize(self):
         fileType2 = MentorEventFileType(name="File Type 2", maxFilesizeMB=500)
+ 
+        try:
+            fileType2.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
-        fileType2.clean()
 
     def testCleanInvalidFilesize(self):
         fileType2 = MentorEventFileType(name="File Type 2", maxFilesizeMB=5000)

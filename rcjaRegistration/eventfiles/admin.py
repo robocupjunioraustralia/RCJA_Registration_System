@@ -56,7 +56,6 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         'eventAttendance__school__state__abbreviation',
         'eventAttendance__school__region__name',
         'eventAttendance__school__name',
-        'eventAttendance__school__abbreviation',
         'eventAttendance__campus__name',
         'eventAttendance__mentorUser__first_name',
         'eventAttendance__mentorUser__last_name',

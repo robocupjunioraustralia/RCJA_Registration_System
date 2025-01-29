@@ -258,6 +258,12 @@ class Test_Region_SuperUser(Region_Base, Base_Test_SuperUser, TestCase):
         response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=payload)
         self.assertEqual(response.status_code, POST_SUCCESS)
 
+    def test_state_autocomplete_filtered_to_full_permissions(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=regions&model_name=region&field_name=state", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertContains(response, 'State 1')
+        self.assertContains(response, 'State 2')
+
 class Region_Coordinators_Base(Region_Base):
     globalChangeLoadsCode = GET_SUCCESS
     expectedListItems = 2
@@ -285,6 +291,14 @@ class Test_Region_FullCoordinator(Region_Coordinators_Base, Base_Test_FullCoordi
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def test_state_autocomplete_filtered_to_full_permissions(self):
+        from coordination.models import Coordinator
+        self.coord_state2_viewcoordinator = Coordinator.objects.create(user=self.user_state1_fullcoordinator, state=self.state2, permissionLevel='viewall', position='Text')
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=regions&model_name=region&field_name=state", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertContains(response, 'State 1')
+        self.assertNotContains(response, 'State 2')
 
 class Test_Region_GlobalFullCoordinator(Test_Region_FullCoordinator):
     wrongStateCode = GET_SUCCESS
@@ -319,5 +333,16 @@ class Test_Region_GlobalFullCoordinator(Test_Region_FullCoordinator):
             response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.globalObjID,)))
             self.assertContains(response, 'Save and continue editing')
 
+    def test_state_autocomplete_filtered_to_full_permissions(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=regions&model_name=region&field_name=state", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertContains(response, 'State 1')
+        self.assertContains(response, 'State 2')
+
 class Test_Region_ViewCoordinator(Region_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
-    pass
+    def test_state_autocomplete_filtered_to_full_permissions(self):
+        response = self.client.get(reverse('admin:autocomplete')+f"?app_label=regions&model_name=region&field_name=state", HTTP_REFERER=reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.assertNotContains(response, 'State 1')
+        self.assertNotContains(response, 'State 2')
+

@@ -6,4 +6,4 @@ manage.py collectstatic --noinput
 
 echo "Lift off!"
 
-exec "$@"
+gunicorn --bind 0.0.0.0:8000 --workers 3 rcjaRegistration.wsgi:application

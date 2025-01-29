@@ -42,7 +42,6 @@ def commonSetUp(obj):
     )
     obj.newSchool = School.objects.create(
         name='Melbourne High',
-        abbreviation='MHS',
         state=obj.newState,
         region=obj.newRegion
     )
@@ -327,7 +326,6 @@ class TestEventDetailsPage_school(TestCase):
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
             name='School 2',
-            abbreviation='sch2',
             state=self.newState,
             region=self.newRegion
         )
@@ -404,7 +402,6 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
     def testCorrectTeams(self):
         self.school2 = School.objects.create(
             name='School 2',
-            abbreviation='sch2',
             state=self.newState,
             region=self.newRegion
         )
@@ -493,15 +490,24 @@ class TestEventClean(TestCase):
     # Status validation
     def testStatusPublished(self):
         self.event.status = 'published'
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStatusDraft(self):
         self.event.status = 'draft'
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStatusDraftTeamExists(self):
         self.event.status = 'draft'
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
         self.event.save()
         Team.objects.create(event=self.event, division=self.division, mentorUser=self.user, name='New Test Team')
         self.assertRaises(ValidationError, self.event.clean)
@@ -518,7 +524,10 @@ class TestEventClean(TestCase):
 
     def testRegistrationsOpenDateNoneValid(self):
         self.event.registrationsOpenDate = None
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testRegistrationsCloseDateNoneInvalid(self):
         self.event.registrationsCloseDate = None
@@ -530,13 +539,19 @@ class TestEventClean(TestCase):
         self.event.startDate = None
         self.event.endDate = None
         self.event.competition_defaultEntryFee = None
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testJustStartAndEndDateValid(self):
         self.event.registrationsOpenDate = None
         self.event.registrationsCloseDate = None
         self.event.competition_defaultEntryFee = None
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
     
     def testJustStartDateInvalid(self):
         self.event.registrationsOpenDate = None
@@ -565,18 +580,27 @@ class TestEventClean(TestCase):
     def testDefaultEntryFeeNone_WorkshopValid(self):
         self.event.competition_defaultEntryFee = None
         self.event.eventType = 'workshop'
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testAllDetailsRequiredIfRegistrations(self):
         self.oldEventWithTeams.registrationsOpenDate = None
         self.assertRaisesMessage(ValidationError, 'All dates must be set once event registrations exist', self.oldEventWithTeams.clean)
 
     def testMultidayEventOK(self):
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testSingleDayEventOK(self):
         self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testStartBeforeEnd(self):
         self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+4)).date()
@@ -592,14 +616,20 @@ class TestEventClean(TestCase):
     def testOneDayRegistration(self):
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testRegistrationCloseOnEventStartDate(self):
         self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
         self.event.endDate = (datetime.datetime.now() + datetime.timedelta(days=+6)).date()
         self.event.registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-3)).date()
         self.event.registrationsCloseDate = (datetime.datetime.now() + datetime.timedelta(days=+5)).date()
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testRegistrationCloseAfterEventStartDate(self):
         self.event.startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date()
@@ -613,7 +643,10 @@ class TestEventClean(TestCase):
     def testSpecialRateValidComplete(self):
         self.event.competition_specialRateFee = 50
         self.event.competition_specialRateNumber = 5
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testSpecialRateInvalid(self):
         self.event.competition_specialRateFee = 50
@@ -622,7 +655,10 @@ class TestEventClean(TestCase):
     def testSpecialRateStudentInvalid(self):
         self.event.competition_specialRateFee = 50
         self.event.competition_specialRateNumber = 5
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
         self.event.competition_billingType = 'student'
         self.assertRaises(ValidationError, self.event.clean)
@@ -632,14 +668,20 @@ class TestEventClean(TestCase):
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
         self.event.competition_specialRateFee = 50
         self.event.competition_specialRateNumber = 5
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testSpecialRateBillingAvailableDivisionInValid(self):
         self.event.save()
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division1)
         self.event.competition_specialRateFee = 50
         self.event.competition_specialRateNumber = 5
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
         self.availableDivision.division_billingType = 'team'
         self.availableDivision.division_entryFee = 50
@@ -651,7 +693,10 @@ class TestEventClean(TestCase):
 
     def testVenueStateSuccess(self):
         self.event.venue = self.venue1
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testVenueFailureWrongVenueState(self):
         self.event.venue = self.venue2
@@ -659,21 +704,30 @@ class TestEventClean(TestCase):
 
     def testAvailableDivisionSuccessNoPk(self):
         self.assertEqual(self.event.pk, None)
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testAvailableDivisionSuccessExistingEvent(self):
         self.event.save()
         self.assertNotEqual(self.event.pk, None)
 
         self.availableDivision = AvailableDivision.objects.create(event=self.event, division=self.division2)
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testAvailableDivision_StateChangeSuccess(self):
         self.event.save()
         self.assertNotEqual(self.event.pk, None)
 
         self.event.state = self.state2
-        self.event.clean()
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testAvailableDivision_StateChangeFailure(self):
         self.event.save()
@@ -690,7 +744,10 @@ class TestEventClean(TestCase):
         self.event.save()
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
         self.availableFileType1.save()
-        self.assertEqual(self.event.clean(), None)
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testUploadDeadlineBeforeRegistrationClose(self):
         self.fileType1 = MentorEventFileType.objects.create(name="File Type 1")
@@ -716,7 +773,10 @@ class TestEventClean(TestCase):
         self.event.save()
         self.availableFileType1 = EventAvailableFileType.objects.create(event=self.event, fileType=self.fileType1, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=4)).date())
         self.availableFileType1.save()
-        self.assertEqual(self.event.clean(), None)
+        try:
+            self.event.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
 class TestEventMethods(TestCase):
     def setUp(self):
@@ -1179,12 +1239,18 @@ class TestAvailableDivisionClean(TestCase):
         newSetupEvent(self)
 
     def testBillingEntryFeeAndTypeValidBlank(self):
-        self.availableDivision.clean()
+        try:
+            self.availableDivision.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testBillingEntryFeeAndTypeValidFilled(self):
         self.availableDivision.division_billingType = 'team'
         self.availableDivision.division_entryFee = 50
-        self.availableDivision.clean()
+        try:
+            self.availableDivision.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testBillingEntryFeeAndTypeInValid1(self):
         self.availableDivision.division_billingType = 'team'
@@ -1199,7 +1265,10 @@ class TestAvailableDivisionClean(TestCase):
         self.event.competition_specialRateNumber = 5
         self.event.save()
 
-        self.availableDivision.clean()
+        try:
+            self.availableDivision.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testSpecialRateInValid(self):
         self.event.competition_specialRateFee = 50
@@ -1216,11 +1285,17 @@ class TestAvailableDivisionClean(TestCase):
         self.event.eventType = 'workshop'
         self.event.save()
 
-        self.availableDivision.clean()
+        try:
+            self.availableDivision.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
         self.availableDivision.division_billingType = 'team'
         self.availableDivision.division_entryFee = 50
-        self.availableDivision.clean()
+        try:
+            self.availableDivision.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testWorkshopInValid(self):
         self.event.eventType = 'workshop'
@@ -1251,17 +1326,26 @@ class TestDivisionClean(TestCase):
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name="State 2", abbreviation='ST2')
 
     def testSuccessValidation_noState(self):
-        self.division1.clean()
+        try:
+            self.division1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testSuccessValidation_state(self):
         self.availableDivision.delete()
         self.division1.state = self.state2
-        self.division1.clean()
+        try:
+            self.division1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testTeamDivisionValidation(self):
         self.availableDivision.delete()
         self.division1.state = self.state2
-        self.division1.clean()
+        try:
+            self.division1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
         Team.objects.create(event=self.event, division=self.division1, mentorUser=self.user, name='New Team 1')
         self.assertRaises(ValidationError, self.division1.clean)
@@ -1302,12 +1386,18 @@ class TestVenueClean(TestCase):
         createVenues(self)
 
     def testSuccess(self):
-        self.venue1.clean()
+        try:
+            self.venue1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
     
     def testIncompatibleEvent(self):
         self.event.venue = self.venue1
         self.event.save()
-        self.venue1.clean()
+        try:
+            self.venue1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
         self.venue1.state = self.state2
         self.assertRaises(ValidationError, self.venue1.clean)

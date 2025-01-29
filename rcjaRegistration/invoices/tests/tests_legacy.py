@@ -41,9 +41,9 @@ def commonSetUp(self):
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state1, region=self.region1)
 
         self.year = Year.objects.create(year=2020)
         self.event = Event.objects.create(
@@ -1781,7 +1781,7 @@ class TestInvoiceSummaryView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['user'], self.user1)
-        self.assertQuerysetEqual(response.context['invoices'], Invoice.objects.none())
+        self.assertQuerySetEqual(response.context['invoices'], Invoice.objects.none())
 
     def testPageLoads_invoices(self):
         self.invoice3 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2)

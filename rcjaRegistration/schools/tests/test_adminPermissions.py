@@ -12,7 +12,6 @@ class School_Base:
     state2Obj = 'school3_state2'
     validPayload = {
         'name': 'School 5',
-        'abbreviation': 'SCH5',
         'state': 0,
         'region': 0,
         'campus_set-TOTAL_FORMS': 0,
