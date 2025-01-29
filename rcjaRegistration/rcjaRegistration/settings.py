@@ -311,7 +311,7 @@ AWS_STATIC_LOCATION = ''
 
 if STATIC_BUCKET != 'STATIC_BUCKET' and AWS_ACCESS_KEY_ID != 'AWS_ACCESS_KEY_ID':
     STATICFILES_STORAGE = 'rcjaRegistration.storageBackends.StaticStorage'
-    STATIC_URL = f"https://{STATIC_DOMAIN}/"
+    STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_BUCKET}/"
 else:
     STATIC_URL = '/static/'
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
