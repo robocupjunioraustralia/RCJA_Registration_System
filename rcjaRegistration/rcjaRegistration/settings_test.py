@@ -245,7 +245,7 @@ STATIC_DOMAIN = f'{STATIC_BUCKET}.s3.amazonaws.com'
 AWS_STATIC_LOCATION = ''
 
 STATIC_URL = '/static/'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STORAGES["staticfiles"] = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Public
 PUBLIC_BUCKET = "testing"
@@ -257,7 +257,7 @@ PRIVATE_BUCKET = "testing"
 PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
-DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+STORAGES["default"] = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
 
 # Environment
 ENVIRONMENT = env('ENVIRONMENT')
