@@ -310,11 +310,25 @@ STATIC_DOMAIN = f'{STATIC_BUCKET}.s3.amazonaws.com'
 AWS_STATIC_LOCATION = ''
 
 if STATIC_BUCKET != 'STATIC_BUCKET' and AWS_ACCESS_KEY_ID != 'AWS_ACCESS_KEY_ID':
-    STORAGES["staticfiles"] = 'rcjaRegistration.storageBackends.StaticStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage',
+        },
+        "staticfiles": {
+            "BACKEND": 'rcjaRegistration.storageBackends.StaticStorage',
+        },
+    }
     STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_BUCKET}/"
 else:
+    STORAGES = {
+        "default": {
+            "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage',
+        },
+        "staticfiles": {
+            "BACKEND": 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
     STATIC_URL = '/static/'
-    STORAGES["staticfiles"] = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Public
 PUBLIC_BUCKET = env('PUBLIC_BUCKET')
@@ -325,9 +339,6 @@ AWS_PUBLIC_MEDIA_LOCATION = ''
 PRIVATE_BUCKET = env('PRIVATE_BUCKET')
 PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
-
-STORAGES["default"] = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
-
 
 SENTRY_DSN = env('SENTRY_DSN')
 if SENTRY_DSN != 'SENTRY_DSN':
