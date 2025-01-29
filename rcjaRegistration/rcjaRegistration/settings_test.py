@@ -248,7 +248,7 @@ STATIC_URL = '/static/'
 
 STORAGES = {
     "default": {
-        "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage'',
+        "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage',
     },
     "staticfiles": {
         "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
