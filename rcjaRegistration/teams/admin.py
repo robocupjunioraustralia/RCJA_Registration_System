@@ -150,6 +150,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
 
     def uploadFileURL(self, obj):
         return format_html('<a href="{}" target="_blank">Upload file -></a>', reverse('eventfiles:uploadFile', args=(obj.id, )))
+    uploadFileURL.short_description = 'Upload file'
 
     eventTypeMapping = 'competition'
 
