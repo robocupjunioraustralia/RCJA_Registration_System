@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.forms import Textarea
 from django.db import models
 from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.utils.html import format_html
+from django.urls import reverse
 
 from .models import PlatformCategory, HardwarePlatform, SoftwarePlatform, Team, Student
 
@@ -53,6 +55,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'campus',
         'homeState',
         'withdrawn',
+        'uploadFileURL',
     ]
     fieldsets = (
         (None, {
@@ -144,6 +147,9 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     autocompleteFilters = {
         'teams/student/': Student,
     }
+
+    def uploadFileURL(self, obj):
+        return format_html('<a href="{}" target="_blank">Upload file -></a>', reverse('eventfiles:uploadFile', args=(obj.id, )))
 
     eventTypeMapping = 'competition'
 

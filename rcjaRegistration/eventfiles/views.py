@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequ
 from django.urls import reverse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from coordination.permissions import checkCoordinatorPermission
 
 # from .forms import 
 
@@ -22,13 +23,16 @@ def fileUploadCommonPermissions(request, eventAttendance):
     if not eventAttendance.event.published():
         raise PermissionDenied("Event is not published")
 
-    # Check administrator of this eventAttendance
-    if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
-        raise PermissionDenied("You are not an administrator of this team/ attendee")
-
     # Check team - file upload currently not implemented for workshop attendees
     if not eventAttendance.eventAttendanceType() == 'team':
         raise PermissionDenied("File upload is only supported for teams") 
+
+    if checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change'):
+        return True
+
+    # Check administrator of this eventAttendance
+    if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
+        raise PermissionDenied("You are not an administrator of this team/ attendee")
 
 def fileUploadEditPermissions(request, uploadedFile):
     fileUploadCommonPermissions(request, uploadedFile.eventAttendance)
