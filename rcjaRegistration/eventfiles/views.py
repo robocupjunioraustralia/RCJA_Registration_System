@@ -108,8 +108,11 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             # Save uploadedFile
             uploadedFile.save()
 
-            # Redirect to team details view
-            return redirect(reverse('teams:details', kwargs = {"teamID": eventAttendance.id}))
+            # Redirect to team details view if admistrator of team, otherwise team admin changelist page
+            if mentorEventAttendanceAccessPermissions(request, eventAttendance):
+                return redirect(reverse('teams:details', kwargs = {"teamID": eventAttendance.id}))
+
+            return redirect(reverse('admin:teams_team_changelist') + f"?event__id__exact={str(eventAttendance.event.id)}")
 
         # Default to displaying the form again if form not valid
         context = {

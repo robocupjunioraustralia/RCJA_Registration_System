@@ -295,6 +295,26 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
         self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user1)
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testSuccessSuperUser(self, mock_save, mock_size):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        data = {
+            'fileUpload': self.docFile,
+            'fileType': self.fileType1.id,
+        }
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        response = self.client.post(self.url(), data=data)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.superUser)
+        self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
 class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFileUploadView, TestCase):
     def setUp(self):
@@ -320,6 +340,26 @@ class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFile
         self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user2)
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testSuccessSuperUser(self, mock_save, mock_size):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        data = {
+            'fileUpload': self.jpegFile,
+            'fileType': self.fileType1.id,
+        }
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        response = self.client.post(self.url(), data=data)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user2)
+        self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
 # File upload delete
 
