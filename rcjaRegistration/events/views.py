@@ -181,6 +181,12 @@ def details(request, eventID):
 
     _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
+    # Total registrations count for admins, excluding withdrawn teams
+    if event.boolWorkshop():
+        totalRegistrations = event.baseeventattendance_set.count()
+    else:
+        totalRegistrations = event.baseeventattendance_set.exclude(team__withdrawn=True).count()
+
     context = {
         'event': event,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
@@ -194,6 +200,7 @@ def details(request, eventID):
         'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
+        'totalRegistrations': totalRegistrations,
     }
     return render(request, 'events/details.html', context)
 
