@@ -28,7 +28,7 @@ def fileUploadCommonPermissions(request, eventAttendance):
         raise PermissionDenied("File upload is only supported for teams") 
 
     if checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change'):
-        return True
+        return
 
     # Check administrator of this eventAttendance
     if not mentorEventAttendanceAccessPermissions(request, eventAttendance):

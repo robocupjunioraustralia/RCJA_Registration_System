@@ -136,6 +136,13 @@ class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileU
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You are not an administrator of this team/ attendee", status_code=403)
 
+    def testAllowedSuperUser(self):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 200)
+
     def testDeniedEventNotPublished(self):
         self.event.status = 'draft'
         self.event.save()
@@ -194,6 +201,12 @@ class Patched_Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEv
     def testUsesCorrectTemplate(self, mock_save, mock_size, mock_delete):
         return super().testUsesCorrectTemplate()
 
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testAllowedSuperUser(self, mock_save, mock_size, mock_delete):
+        return super().testAllowedSuperUser()
+
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
@@ -237,6 +250,16 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Bas
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testAllowedSuperUser(self, mock_save, mock_size, mock_delete):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 204)
 
 # File upload post
 
