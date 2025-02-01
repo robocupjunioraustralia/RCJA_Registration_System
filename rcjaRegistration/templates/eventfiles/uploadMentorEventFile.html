@@ -43,7 +43,7 @@
             <div class="twelve wide mobile eight wide computer column ui">
                 <div class="form form-group left-aligned-text">
                     <div>
-                        <h1>{{eventAttendance.event}}: Viewing team {{eventAttendance}}</h1>
+                        <h1>{{eventAttendance.event}}: {{eventAttendance}}</h1>
 
                         {% if not uploadedFile %}
                         <h2>Upload a new file</h2>
@@ -115,7 +115,7 @@
                             {% endif %}
 
                             <input class="primary ui button" type="submit" value="Save" />
-                            <a href="{% url 'teams:details' eventAttendance.id %}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
+                            <a href="{{ cancelURL }}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
 
                         </form>
 
