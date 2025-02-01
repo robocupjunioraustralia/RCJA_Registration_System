@@ -71,24 +71,30 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             # No existing file so set to None
             uploadedFile = None
 
-        return eventAttendance, uploadedFile
+        if mentorEventAttendanceAccessPermissions(request, eventAttendance):
+            cancelURL = reverse('teams:details', kwargs = {"teamID": eventAttendance.id})
+        else:
+            cancelURL = reverse('admin:teams_team_changelist') + f"?event__id__exact={str(eventAttendance.event.id)}"
+
+        return eventAttendance, uploadedFile, cancelURL
 
     def get(self, request, eventAttendanceID=None, uploadedFileID=None):
         # Get file and eventAttendance
-        eventAttendance, uploadedFile = self.get_post_common(request, eventAttendanceID, uploadedFileID)
+        eventAttendance, uploadedFile, cancelURL = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
         context = {
             "eventAttendance": eventAttendance,
             "uploadedFile": uploadedFile,
             "availableFileUploadTypes": eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()),
             "form": MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance), # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
+            "cancelURL": cancelURL,
         }
 
         return render(request, 'eventfiles/uploadMentorEventFile.html', context)
 
     def post(self, request, eventAttendanceID=None, uploadedFileID=None):
         # Get file and eventAttendance
-        eventAttendance, uploadedFile = self.get_post_common(request, eventAttendanceID, uploadedFileID)
+        eventAttendance, uploadedFile, cancelURL = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
         # Get the form here so it can be used in the saving of valid data and also returning errors
         # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
@@ -120,6 +126,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             "uploadedFile": uploadedFile,
             "availableFileUploadTypes": eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()),
             "form": form,
+            "cancelURL": cancelURL,
         }
 
         return render(request, 'eventfiles/uploadMentorEventFile.html', context)

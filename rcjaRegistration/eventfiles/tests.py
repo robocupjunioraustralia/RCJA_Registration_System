@@ -165,6 +165,17 @@ class Test_MentorEventFileUploadView_Permissions_NewFile_Get(Base_Test_MentorEve
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "File upload not available", status_code=403)
 
+    def test_mentor_correct_cancel_url(self):
+        response = self.getResponse()
+        self.assertContains(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+    
+    def test_superUser_correct_cancel_url(self):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertContains(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
+
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Get(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
@@ -176,6 +187,17 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Get(Base_Test_Ment
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
+
+    def test_mentor_correct_cancel_url(self):
+        response = self.getResponse()
+        self.assertContains(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+    
+    def test_superUser_correct_cancel_url(self):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertContains(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
 class Test_MentorEventFileUploadView_Permissions_NewFile_Post(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def url(self):
