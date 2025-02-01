@@ -86,7 +86,7 @@
                 
               <h2>Attendee details</h2>
 
-              <div class="three fields">
+              <div class="two fields">
                 <div class = "field">
                   <label>Type:</label>
                     {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
@@ -95,11 +95,13 @@
                   <label>Division:</label>
                     {{ form.division|attr:"class:ui dropdown"}} 
                 </div>
-                <div class = "field">
-                  <label>Campus:</label>
-                    {{ form.campus|attr:"class:ui dropdown"}} 
-                </div>
               </div>
+              {% if form.campus.field.queryset %}
+              <div class = "field">
+                <label>Campus:</label>
+                  {{ form.campus|attr:"class:ui dropdown"}} 
+              </div>
+              {% endif %}
 
               <!-- Name -->
               <div class="two fields">
