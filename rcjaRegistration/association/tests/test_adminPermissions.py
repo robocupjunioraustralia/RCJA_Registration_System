@@ -113,7 +113,7 @@ class AdditionalAssociationMemberTestsMixin:
         self.assertIsNone(self.state1_associationMember1.approvalRejectionDate)
 
 class Test_AssociationMember_SuperUser(AdditionalAssociationMemberTestsMixin, AssociationMember_Base, Base_Test_SuperUser, TestCase):
-    expectedListItems = 3
+    expectedListItems = 7
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
@@ -128,7 +128,7 @@ class AssociationMember_Coordinators_Base(AssociationMember_Base):
     addPostCode = POST_DENIED
     changePostCode = POST_DENIED
 
-    expectedListItems = 2
+    expectedListItems = 5
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
@@ -152,7 +152,7 @@ class Test_AssociationMember_GlobalFullCoordinator(AdditionalAssociationMemberTe
     changePostCode = POST_SUCCESS
 
     wrongStateCode = GET_SUCCESS
-    expectedListItems = 3
+    expectedListItems = 7
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
