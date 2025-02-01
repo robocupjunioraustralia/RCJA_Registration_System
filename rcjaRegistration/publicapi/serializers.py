@@ -27,8 +27,8 @@ class AvailableDivisionSerializer(serializers.ModelSerializer):
             'name',
             'description',
             # Team details
-            'division_maxTeamsPerSchool',
-            'division_maxTeamsForDivision',
+            'division_maxRegistrationsPerSchool',
+            'division_maxRegistrationsForDivision',
             # Billing details
             'division_billingType',
             'division_entryFee',
@@ -67,6 +67,7 @@ class EventSerializer(serializers.ModelSerializer):
             'state',
             'name',
             'eventType',
+            'cmsEventId',
             # Dates
             'startDate',
             'endDate',
@@ -74,16 +75,16 @@ class EventSerializer(serializers.ModelSerializer):
             'registrationsCloseDate',
             # Team details
             'maxMembersPerTeam',
-            'event_maxTeamsPerSchool',
-            'event_maxTeamsForEvent',
+            'event_maxRegistrationsPerSchool',
+            'event_maxRegistrationsForEvent',
             # Billing
             'entryFeeIncludesGST',
-            'event_defaultEntryFee',
+            'competition_defaultEntryFee',
             'paymentDueDate',
             # Competition billing
-            'event_billingType',
-            'event_specialRateNumber',
-            'event_specialRateFee',
+            'competition_billingType',
+            'competition_specialRateNumber',
+            'competition_specialRateFee',
             # Workshop billing
             'workshopTeacherEntryFee',
             'workshopStudentEntryFee',

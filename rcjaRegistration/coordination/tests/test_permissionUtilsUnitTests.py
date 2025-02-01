@@ -615,14 +615,14 @@ class Test_coordinatorFilterQueryset(TestCase):
         
         qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], False, False)
 
-        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+        self.assertQuerySetEqual(self.baseQS, qs, ordered=False)
 
     def testNoStateLookups(self):
         self.request.user = self.user_state1_fullcoordinator
         
         qs = coordinatorFilterQueryset(self.baseQS, self.request.user, ['full'], ['full'], False, 'homeState')
 
-        self.assertQuerysetEqual(self.baseQS.filter(homeState=None), qs, ordered=False)
+        self.assertQuerySetEqual(self.baseQS.filter(homeState=None), qs, ordered=False)
 
     def testCoordinatorNoGlobals(self):
         self.request.user = self.user_state1_fullcoordinator
@@ -680,7 +680,7 @@ class Test_selectedFilterQueryset(TestCase):
 
         qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
 
-        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+        self.assertQuerySetEqual(self.baseQS, qs, ordered=False)
 
     def testNoSelection(self):
         ModelAdminTest.stateSelectedFilterLookup = 'state'
@@ -688,7 +688,7 @@ class Test_selectedFilterQueryset(TestCase):
 
         qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
 
-        self.assertQuerysetEqual(self.baseQS, qs, ordered=False)
+        self.assertQuerySetEqual(self.baseQS, qs, ordered=False)
 
     def testStateLookup(self):
         self.user_state1_super1.currentlySelectedAdminState = self.state1
@@ -696,7 +696,7 @@ class Test_selectedFilterQueryset(TestCase):
 
         qs = selectedFilterQueryset(ModelAdminTest, self.baseQS, self.user_state1_super1)
 
-        self.assertQuerysetEqual(Event.objects.filter(state=self.state1), qs, ordered=False)
+        self.assertQuerySetEqual(Event.objects.filter(state=self.state1), qs, ordered=False)
 
     def testYearLookup(self):
         self.user_state1_super1.currentlySelectedAdminYear = self.year2

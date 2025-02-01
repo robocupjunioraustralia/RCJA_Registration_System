@@ -46,7 +46,9 @@
         <div class = "form form-group left-aligned-text">
           <div>
             <h1>{{event}}</h1>
-            {% if team %}
+            {% if sourceTeam %}
+            <h2>Copying {{sourceTeam.name}} from {{sourceTeam.event}}</h2>
+            {% elif team %}
             <h2> Editing: Team {{team.name}} </h2>
             {% else %}
             <h2>Add a new team</h2> 
@@ -87,7 +89,7 @@
                 
               <h2>Team details</h2>
                
-              <div class="three fields">
+              <div class="two fields">
                 <div class = "field">
                   <label>Team name:</label>
                     {{form.name|attr:"placeholder:Team name"}}
@@ -96,11 +98,13 @@
                   <label>Division:</label>
                     {{ form.division|attr:"class:ui dropdown"}} 
                 </div>
-                <div class = "field">
-                  <label>Campus:</label>
-                    {{ form.campus|attr:"class:ui dropdown"}} 
-                </div>
               </div>
+              {% if form.campus.field.queryset %}
+              <div class = "field">
+                <label>Campus:</label>
+                  {{ form.campus|attr:"class:ui dropdown"}} 
+              </div>
+              {% endif %}
 
               <h2>Platform</h2>
 

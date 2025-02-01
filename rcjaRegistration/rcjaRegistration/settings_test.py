@@ -20,6 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     USE_SQLLITE_DB=(bool, False),
+    ENVIRONMENT=(str, "testing")
 )
 
 assert (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should only be used to run tests"
@@ -96,7 +97,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'rcjaRegistration.defaultContexts.yearsContext',
+                'common.globalContexts.yearsContext',
+                'common.globalContexts.environmentContext',
             ],
         },
     },
@@ -226,6 +228,13 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
+# CMS SETTINGS
+
+CMS_JWT_SECRET = "TESTONLY_slfgdjheaklfgjb34wuhgb35789gbne97urgblskdg"
+CMS_JWT_EXPIRY_MINUTES = 5
+CMS_EVENT_URL_VIEW = "https://localhost/rcj_cms?comp={EVENT_ID}"
+CMS_EVENT_URL_CREATE = "https://localhost/rcj_cms/event/create?token={TOKEN}"
+
 # Static
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
@@ -236,7 +245,15 @@ STATIC_DOMAIN = f'{STATIC_BUCKET}.s3.amazonaws.com'
 AWS_STATIC_LOCATION = ''
 
 STATIC_URL = '/static/'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+STORAGES = {
+    "default": {
+        "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage',
+    },
+    "staticfiles": {
+        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 # Public
 PUBLIC_BUCKET = "testing"
@@ -248,4 +265,5 @@ PRIVATE_BUCKET = "testing"
 PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
 
-DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
+# Environment
+ENVIRONMENT = env('ENVIRONMENT')

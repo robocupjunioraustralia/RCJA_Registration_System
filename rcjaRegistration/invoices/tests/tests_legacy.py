@@ -13,6 +13,7 @@ from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
 from teams.models import Team, Student
 from workshops.models import WorkshopAttendee
+from association.models import AssociationMember
 
 import datetime
 
@@ -33,17 +34,23 @@ class TestInvoiceGlobalSettings(TestCase):
 
 def commonSetUp(self):
         self.user1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email1, password=self.password)
+        self.user1_association_member = AssociationMember.objects.create(user=self.user1, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
         self.user2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email2, password=self.password)
+        self.user2_association_member = AssociationMember.objects.create(user=self.user2, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
         self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password)
+        self.user3_association_member = AssociationMember.objects.create(user=self.user3, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
         self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True)
 
         self.state1 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='Victoria', abbreviation='VIC')
         self.state2 = State.objects.create(typeCompetition=True, typeUserRegistration=True, name='NSW', abbreviation='NSW')
         self.region1 = Region.objects.create(name='Test Region', description='test desc')
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state1, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state1, region=self.region1)
 
         self.year = Year.objects.create(year=2020)
         self.event = Event.objects.create(
@@ -54,8 +61,8 @@ def commonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -995,6 +1002,8 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         createTeams(cls, cls.school1)
         createStudents(cls)
         cls.invoice = Invoice.objects.get(event=cls.event, school=cls.school1)
+        cls.invoice2 = Invoice.objects.create(event=cls.event, school=cls.school2, invoiceToUser=cls.user2)
+        cls.invoice3 = Invoice.objects.create(event=cls.event, school=cls.school3, invoiceToUser=cls.user3)
     
     def testDefaultRateTeamInclGST(self):
         self.invoice.refresh_from_db()
@@ -1081,14 +1090,14 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.amountDueInclGST(), 0)
 
     def testDefaultRateStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
     def testAddStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1106,7 +1115,7 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(37 * 50, 2))
 
     def testDeleteStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1118,8 +1127,8 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(35 * 50, 2))
 
     def testSpecialRateInclGST(self):
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1128,8 +1137,8 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     def testSpecialRateExclGST(self):
         self.event.entryFeeIncludesGST = False
 
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1178,11 +1187,65 @@ class TestInvoiceCalculations_NoCampuses(TestCase):
     def testChangeTeamSchool(self):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 50, 2))
 
         self.teams[0].school = self.school2
         self.teams[0].save()
+
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 50, 2))
+
+    def testAddInvoiceOverride(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 50, 2))
+
+        self.teams[0].invoiceOverride = self.invoice2
+        self.teams[0].save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 50, 2))
+
+    def testChangeInvoiceOverride(self):
+        self.teams[0].invoiceOverride = self.invoice2
+        self.teams[0].save()
+
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 50, 2))
+        self.invoice3.refresh_from_db()
+        self.assertEqual(self.invoice3.invoiceAmountInclGST(), round(0 * 50, 2))
+
+        self.teams[0].invoiceOverride = self.invoice3
+        self.teams[0].save()
+
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 50, 2))
+        self.invoice3.refresh_from_db()
+        self.assertEqual(self.invoice3.invoiceAmountInclGST(), round(1 * 50, 2))
+
+
+    def testRemoveInvoiceOverride(self):
+        self.teams[0].invoiceOverride = self.invoice2
+        self.teams[0].save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(11 * 50, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 50, 2))
+
+        self.teams[0].invoiceOverride = None
+        self.teams[0].save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 50, 2))
 
 class TestInvoiceCalculations_Campuses(TestCase):
     email1 = 'user1@user.com'
@@ -1213,14 +1276,14 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(6 * 50 + 6 * 11, 2))
 
     def testDefaultRateStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(18 * 50, 2))
 
     def testChangeStudentTeam(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1233,8 +1296,8 @@ class TestInvoiceCalculations_Campuses(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(17 * 50, 2))
 
     def testSpecialRate(self):
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1298,15 +1361,15 @@ class TestInvoiceCalculations_Independent(TestCase):
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(12 * 50 + 12 * 11, 2))
 
     def testDefaultRateStudent(self):
-        self.event.event_billingType = 'student'
+        self.event.competition_billingType = 'student'
         self.event.save()
         self.invoice.refresh_from_db()
 
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(36 * 50, 2))
 
     def testSpecialRate(self):
-        self.event.event_specialRateNumber = 4
-        self.event.event_specialRateFee = 30
+        self.event.competition_specialRateNumber = 4
+        self.event.competition_specialRateFee = 30
         self.event.save()
         self.invoice.refresh_from_db()
 
@@ -1361,8 +1424,8 @@ class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 35,
+            competition_billingType='team',
+            competition_defaultEntryFee = 35,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -1394,7 +1457,9 @@ class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
             email='test@test.com'
         )
         cls.invoice = Invoice.objects.get(event=cls.event, school=cls.school1)
-    
+        cls.invoice2 = Invoice.objects.create(event=cls.event, school=cls.school2, invoiceToUser=cls.user2)
+        cls.invoice3 = Invoice.objects.create(event=cls.event, school=cls.school3, invoiceToUser=cls.user3)
+
     def testDefaultRateAttendeeInclGST(self):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
@@ -1480,11 +1545,65 @@ class TestInvoiceCalculations_NoCampuses_Workshop(TestCase):
     def testChangeWorkshopSchool(self):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 35, 2))
 
         self.attendee1.school = self.school2
         self.attendee1.save()
+
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.invoiceAmountInclGST(), round(1 * 35, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 35, 2))
+
+    def testAddInvoiceOverride(self):
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 35, 2))
+
+        self.attendee1.invoiceOverride = self.invoice2
+        self.attendee1.save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(1 * 35, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 35, 2))
+
+    def testChangeInvoiceOverride(self):
+        self.attendee1.invoiceOverride = self.invoice2
+        self.attendee1.save()
+
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 35, 2))
+        self.invoice3.refresh_from_db()
+        self.assertEqual(self.invoice3.invoiceAmountInclGST(), round(0 * 35, 2))
+
+        self.attendee1.invoiceOverride = self.invoice3
+        self.attendee1.save()
+
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 35, 2))
+        self.invoice3.refresh_from_db()
+        self.assertEqual(self.invoice3.invoiceAmountInclGST(), round(1 * 35, 2))
+
+
+    def testRemoveInvoiceOverride(self):
+        self.attendee1.invoiceOverride = self.invoice2
+        self.attendee1.save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(1 * 35, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(1 * 35, 2))
+
+        self.attendee1.invoiceOverride = None
+        self.attendee1.save()
+
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoiceAmountInclGST(), round(2 * 35, 2))
+        self.invoice2.refresh_from_db()
+        self.assertEqual(self.invoice2.invoiceAmountInclGST(), round(0 * 35, 2))
 
 class TestInvoiceMethods(TestCase):
     email1 = 'user1@user.com'
@@ -1506,15 +1625,15 @@ class TestInvoiceMethods(TestCase):
 
     def testStr_campus(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1, campus=self.campuses[0])
-        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): School 1, Campus 0")
+        self.assertEqual(str(self.invoice), "Invoice 1: School 1, Campus 0")
 
     def testStr_schoolNoCampus(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1, school=self.school1)
-        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): School 1")
+        self.assertEqual(str(self.invoice), "Invoice 1: School 1")
 
     def testStr_independent(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
-        self.assertEqual(str(self.invoice), "Test event 1 2020 (VIC): First Last")
+        self.assertEqual(str(self.invoice), "Invoice 1: First Last")
 
     def testInvoiceToUserName(self):
         self.invoice = Invoice.objects.create(event=self.event, invoiceToUser=self.user1)
@@ -1624,8 +1743,8 @@ class TestInvoiceCreation(TestCase):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 0,
+            competition_billingType='team',
+            competition_defaultEntryFee = 0,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -1636,7 +1755,7 @@ class TestInvoiceCreation(TestCase):
 
     def testFreeEventToPaidCreatesInvoices(self):
         self.assertEqual(Invoice.objects.count(), 0)
-        self.freeEvent.event_defaultEntryFee = 50
+        self.freeEvent.competition_defaultEntryFee = 50
         self.freeEvent.save()
 
         self.assertEqual(Invoice.objects.count(), 1)
@@ -1669,7 +1788,7 @@ class TestInvoiceSummaryView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['user'], self.user1)
-        self.assertQuerysetEqual(response.context['invoices'], Invoice.objects.none())
+        self.assertQuerySetEqual(response.context['invoices'], Invoice.objects.none())
 
     def testPageLoads_invoices(self):
         self.invoice3 = Invoice.objects.create(event=self.event, invoiceToUser=self.user2)

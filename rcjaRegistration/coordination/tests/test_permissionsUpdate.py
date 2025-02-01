@@ -48,8 +48,6 @@ class TestCoordinatorChangeUpdatesUserPermissions(TestCase):
 
     def testDelete(self):
         # Setup
-        self.client.login(request=HttpRequest(), username=self.emailsuper, password=self.password)
-
         self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
         self.assertTrue(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
@@ -64,6 +62,40 @@ class TestCoordinatorChangeUpdatesUserPermissions(TestCase):
         # Check permissions update
         self.assertFalse(self.user1.is_staff)
         self.assertFalse(self.user1.is_superuser)
+
+    def testDeleteRemovesAdminStateFilter(self):
+        # Setup
+        self.coordinator1 = Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Thing')
+        self.coordinator2 = Coordinator.objects.create(user=self.user2, state=self.state2, permissionLevel='full', position='Thing')
+        self.user1.currentlySelectedAdminState = self.state1
+        self.user1.save()
+
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedAdminState, self.state1)
+
+        # Delete
+        self.coordinator1.delete()
+        self.user1.refresh_from_db()
+
+        # Check state filter cleared
+        self.assertIsNone(self.user1.currentlySelectedAdminState)
+
+    def testRemoveSuperuserRemovesAdminStateFilter(self):
+        # Setup
+        self.user1.is_superuser = True
+        self.user1.currentlySelectedAdminState = self.state1
+        self.user1.save()
+
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.currentlySelectedAdminState, self.state1)
+
+        # Remove superuser
+        self.user1.is_superuser = False
+        self.user1.save()
+        self.user1.refresh_from_db()
+
+        # Check state filter cleared
+        self.assertIsNone(self.user1.currentlySelectedAdminState)
 
     def testAdminBulkDeleteFails(self):
         # Setup

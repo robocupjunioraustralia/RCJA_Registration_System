@@ -34,6 +34,7 @@
                     <h3>Copied teams</h3>
                     <p>This list doesn't include teams that have been created in this event directly.</p>
                     <p>This list also shows the team details that were copied and doesn't include any changes you've made - see the events page for the details of your current teams.</p>
+                    <p>Click the Back to event button to adjust details for these teams for this event.</p>
 
                     <table id="teamTable" class="ui celled table">
                         <thead>
@@ -64,8 +65,7 @@
 
                     {% if availableToCopyTeams %}
                     <h3>Select team to copy</h3>
-                    <p>You can edit a team after you have copied it from the event page.</p>
-                    <p>Incompatible teams (including those with an incompatible division) are not shown.</p>
+                    <p>When you click copy you will be prompted to confirm and update team details. You can continue to make changes until registration closes.</p>
 
                     <table id="teamTable" class="ui celled table">
                         <thead>
@@ -90,10 +90,7 @@
                                     {% endfor %}
                                 </td>
                                 <td>
-                                    <form method="post" action="{% url 'teams:copyTeam' event.id team.id %}" class="button-form">
-                                        {% csrf_token %}
-                                        <input class="ui primary button" type="submit" value="Copy"/>
-                                    </form>
+                                    <a href = "{% url 'teams:copyTeam' event.id team.id %}" class = "ui button primary">Copy</a>
                                 </td>
                             </tr>
                             {% endfor %}

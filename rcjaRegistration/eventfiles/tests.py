@@ -28,9 +28,9 @@ def newCommonSetUp(self):
         self.user3 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email3, password=self.password, homeState=self.state2)
         self.superUser = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_superUser, password=self.password, is_superuser=True, is_staff=True, homeState=self.state1)
 
-        self.school1 = School.objects.create(name='School 1', abbreviation='sch1', state=self.state1, region=self.region1)
-        self.school2 = School.objects.create(name='School 2', abbreviation='sch2', state=self.state1, region=self.region1)
-        self.school3 = School.objects.create(name='School 3', abbreviation='sch3', state=self.state2, region=self.region1)
+        self.school1 = School.objects.create(name='School 1', state=self.state1, region=self.region1)
+        self.school2 = School.objects.create(name='School 2', state=self.state1, region=self.region1)
+        self.school3 = School.objects.create(name='School 3', state=self.state2, region=self.region1)
 
         self.year = Year.objects.create(year=2020)
         self.event = Event.objects.create(
@@ -41,8 +41,8 @@ def newCommonSetUp(self):
             status='published',
             maxMembersPerTeam=5,
             entryFeeIncludesGST=True,
-            event_billingType='team',
-            event_defaultEntryFee = 50,
+            competition_billingType='team',
+            competition_defaultEntryFee = 50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             endDate = (datetime.datetime.now() + datetime.timedelta(days=5)).date(),
             registrationsOpenDate = (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
@@ -136,6 +136,13 @@ class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileU
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "You are not an administrator of this team/ attendee", status_code=403)
 
+    def testAllowedSuperUser(self):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 200)
+
     def testDeniedEventNotPublished(self):
         self.event.status = 'draft'
         self.event.save()
@@ -158,6 +165,17 @@ class Test_MentorEventFileUploadView_Permissions_NewFile_Get(Base_Test_MentorEve
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "File upload not available", status_code=403)
 
+    def test_mentor_correct_cancel_url(self):
+        response = self.getResponse()
+        self.assertContains(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+    
+    def test_superUser_correct_cancel_url(self):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertContains(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
+
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Get(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
@@ -169,6 +187,17 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Get(Base_Test_Ment
     def testDeniedUploadDeadlinePassed(self):
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
+
+    def test_mentor_correct_cancel_url(self):
+        response = self.getResponse()
+        self.assertContains(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+    
+    def test_superUser_correct_cancel_url(self):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertContains(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
 class Test_MentorEventFileUploadView_Permissions_NewFile_Post(Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def url(self):
@@ -193,6 +222,12 @@ class Patched_Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEv
     @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testUsesCorrectTemplate(self, mock_save, mock_size, mock_delete):
         return super().testUsesCorrectTemplate()
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testAllowedSuperUser(self, mock_save, mock_size, mock_delete):
+        return super().testAllowedSuperUser()
 
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
@@ -238,6 +273,16 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Bas
         response = super().testDeniedUploadDeadlinePassed()
         self.assertContains(response, "The upload deadline has passed for this file type for this event", status_code=403)
 
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testAllowedSuperUser(self, mock_save, mock_size, mock_delete):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 204)
+
 # File upload post
 
 class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFileUploadView, TestCase):
@@ -272,6 +317,26 @@ class Test_MentorEventFileUploadView_NewFileUpload_Post(Base_Test_MentorEventFil
         self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user1)
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testSuccessSuperUser(self, mock_save, mock_size):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        data = {
+            'fileUpload': self.docFile,
+            'fileType': self.fileType1.id,
+        }
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        response = self.client.post(self.url(), data=data)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.superUser)
+        self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
 class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFileUploadView, TestCase):
     def setUp(self):
@@ -297,6 +362,26 @@ class Test_MentorEventFileUploadView_ExistingFile_Post(Base_Test_MentorEventFile
         self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user2)
         self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
         self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('teams:details', kwargs = {"teamID": self.team1.id}))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testSuccessSuperUser(self, mock_save, mock_size):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+        data = {
+            'fileUpload': self.jpegFile,
+            'fileType': self.fileType1.id,
+        }
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        response = self.client.post(self.url(), data=data)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(MentorEventFileUpload.objects.count(), 1)
+        self.assertEqual(MentorEventFileUpload.objects.first().uploadedBy, self.user2)
+        self.assertEqual(MentorEventFileUpload.objects.first().eventAttendance.childObject(), self.team1)
+        self.assertEqual(MentorEventFileUpload.objects.first().originalFilename, "doc.doc")
+        self.assertRedirects(response, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
 # File upload delete
 
@@ -379,7 +464,10 @@ class Test_MentorEventFileUpload_Clean(TestCase):
     def testValidNoExtensionRestrictions(self):
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-        uploadedFile.clean()
+        try:
+            uploadedFile.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testValidExtensionRestrictions(self):
         self.fileType1.allowedFileTypes = "doc,pdf"
@@ -387,7 +475,10 @@ class Test_MentorEventFileUpload_Clean(TestCase):
 
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-        uploadedFile.clean()
+        try:
+            uploadedFile.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testValidExtensionRestrictions_differentCase(self):
         self.fileType1.allowedFileTypes = "DOC,PDF"
@@ -395,7 +486,10 @@ class Test_MentorEventFileUpload_Clean(TestCase):
 
         uploadedFile = MentorEventFileUpload(eventAttendance=self.team1, fileType=self.fileType1, fileUpload=self.docFile, originalFilename="doc.doc", uploadedBy=self.user2)
 
-        uploadedFile.clean()
+        try:
+            uploadedFile.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testInvalidExtension(self):
         self.fileType1.allowedFileTypes = "png,jpeg"
@@ -476,7 +570,10 @@ class Test_EventAvailableFileType_Clean(TestCase):
         newCommonSetUp(self)
     
     def testSuccessClean(self):
-        self.assertEqual(self.availableFileType1.clean(), None)
+        try:
+            self.availableFileType1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
     def testUploadDeadlineBeforeRegistrationClose(self):
         self.availableFileType1.uploadDeadline = self.event.registrationsCloseDate + datetime.timedelta(days=-1)
@@ -485,6 +582,24 @@ class Test_EventAvailableFileType_Clean(TestCase):
     def testUploadDeadlineAfterStartDate(self):
         self.availableFileType1.uploadDeadline = self.event.startDate + datetime.timedelta(days=1)
         self.assertRaises(ValidationError, self.availableFileType1.clean)
+
+    def testUploadDeadlineNoRegistrationsCloseDate(self):
+        self.event.registrationsCloseDate = None
+        self.event.save()
+
+        try:
+            self.availableFileType1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
+
+    def testUploadDeadlineNoStartDate(self):
+        self.event.startDate = None
+        self.event.save()
+
+        try:
+            self.availableFileType1.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
 class Test_MentorEventFileType_Methods(TestCase):
     email1 = 'user1@user.com'
@@ -507,8 +622,12 @@ class Test_MentorEventFileType_Methods(TestCase):
 
     def testCleanValidFilesize(self):
         fileType2 = MentorEventFileType(name="File Type 2", maxFilesizeMB=500)
+ 
+        try:
+            fileType2.clean()
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
-        fileType2.clean()
 
     def testCleanInvalidFilesize(self):
         fileType2 = MentorEventFileType(name="File Type 2", maxFilesizeMB=5000)

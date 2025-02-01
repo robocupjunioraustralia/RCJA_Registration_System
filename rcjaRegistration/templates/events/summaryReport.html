@@ -1,0 +1,101 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> Events Summary </title>
+
+<style>
+    .cardcontent {
+        margin-top: 10px;
+    }
+
+    .cardimage {
+        max-height: 150px;
+    }
+
+    @media print {
+        #inputForm {
+            visibility: hidden !important;
+        }
+        div {
+            visibility: hidden !important;
+            height: 0px;
+        }
+        div.pusher {
+            visibility: visible !important;
+            height: auto;
+        }
+        div.row {
+            visibility: visible !important;
+            height: auto;
+        }
+        a.item {
+            visibility: hidden !important;
+        }
+        footer {
+            visibility: hidden !important;
+        }
+    }
+    </style>
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container" >
+    <div class="row">
+        {% if state and year %}
+        <h1>{{state.name}} Activity Summary Report {{year.year}}</h1>
+        {% else %}
+        <h1>Select State and Year for Activity Summary Report</h1>
+        {% endif %}
+    </div>
+    <div class="row" id="inputForm">
+        <form action="" method="get" class = "ui form">
+            <div class="two fields">
+                <div class = "field">
+                  <label>State: </label>
+                    {{form.state}}
+                    {% if form.state.errors %}
+                    <div class="ui pointing red basic label">
+                        {{ form.state.errors|striptags }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class = "field">
+                  <label> Year: </label>
+                    {{form.year}}
+                </div>
+              </div>
+            <input type="submit" value="Get Events">
+        </form>
+    </div>
+    {% if state and year %}
+    <div class="row">
+        <table class="ui celled table">
+            <thead>
+              <tr><th>Event</th>
+              <th>Date</th>
+              <th>Number of Participants</th>
+              <th>Location</th>
+            </tr></thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td data-label="Event">{{event.name}}</td>
+                    <td data-label="Date">{{event.date}}</td>
+                    <td data-label="Number of Participants">
+                        {{event.participants_one}} <br>
+                        {{event.participants_two}} <br>
+                        {{event.participants_three}}
+                    </td>
+                    <td data-label="Location">{{event.location}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <br>
+</div>
+{% endblock %}

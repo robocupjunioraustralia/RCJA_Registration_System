@@ -2,6 +2,8 @@
 *.sqlite3
 **/__pycache__/
 .vscode/
+.env
+.env*
 env/
 venv/
 rcjaRegistration/static

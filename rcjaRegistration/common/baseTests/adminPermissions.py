@@ -141,7 +141,7 @@ class DoesLoadBase(Base):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
 
         for expectedInline in self.expectedAddInlines:
-            self.assertContains(response, f'<h2>{expectedInline}</h2>')
+            self.assertContains(response, f'class="inline-heading">\n  \n    {expectedInline}\n  \n  </h2>')
 
     def testCorrectMissingAddInlines(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
@@ -153,7 +153,7 @@ class DoesLoadBase(Base):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
 
         for expectedInline in self.expectedChangeInlines:
-            self.assertContains(response, f'<h2>{expectedInline}</h2>')
+            self.assertContains(response, f'class="inline-heading">\n  \n    {expectedInline}\n  \n  </h2>')
 
     def testCorrectMissingChangeInlines(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
@@ -166,6 +166,7 @@ class DoesLoadBase(Base):
     expectedAddReadonlyFields = []
     expectedChangeEditableFields = []
     expectedChangeReadonlyFields = []
+    expectedChangeMissingFields = []
 
     def checkReadonly(self, response, fields):
         for expectedField in fields:
@@ -177,6 +178,14 @@ class DoesLoadBase(Base):
         for expectedField in fields:
             self.assertContains(response, f'id="id_{expectedField[0]}"')
             self.assertContains(response, f'name="{expectedField[0]}"')
+    
+    def checkMissingFields(self, response, fields):
+        for expectedField in fields:
+            self.assertNotContains(response, f'id="id_{expectedField[0]}"')
+            self.assertNotContains(response, f'name="{expectedField[0]}"')
+            self.assertNotContains(response, f'<label>{expectedField[1]}:</label>')
+            self.assertNotContains(response, f'id="id_{expectedField[0]}"')
+            self.assertNotContains(response, f'name="{expectedField[0]}"')
 
     def testCorrectAddEditableFields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_add'))
@@ -193,6 +202,10 @@ class DoesLoadBase(Base):
     def testCorrectChangeReadonlyFields(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
         self.checkReadonly(response, self.expectedChangeReadonlyFields)
+
+    def testCorrectChangeMissingFields(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+        self.checkMissingFields(response, self.expectedChangeMissingFields)
 
     # Post tests
     def testPostAdd(self):
@@ -218,6 +231,7 @@ class Base_Test_SuperUser(DoesLoadBase):
     def setUp(self):
         super().setUp()
         self.client.login(request=HttpRequest(), username=self.email_user_state1_super1, password=self.password)
+        self.loggedInUser = self.user_state1_super1
 
 class CoordinatorBase(DoesLoadBase):
     """Provides additional tests for coordinators"""
@@ -249,6 +263,7 @@ class Base_Test_FullCoordinator(CoordinatorBase):
     def setUp(self):
         super().setUp()
         self.client.login(request=HttpRequest(), username=self.email_user_state1_fullcoordinator, password=self.password)
+        self.loggedInUser = self.user_state1_fullcoordinator
 
     def testChangeEditable(self):
         if self.changePostCode == POST_SUCCESS:
@@ -270,6 +285,7 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
     def setUp(self):
         super().setUp()
         self.client.login(request=HttpRequest(), username=self.email_user_state1_viewcoordinator, password=self.password)
+        self.loggedInUser = self.user_state1_viewcoordinator
 
     def testChangeReadOnly(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))

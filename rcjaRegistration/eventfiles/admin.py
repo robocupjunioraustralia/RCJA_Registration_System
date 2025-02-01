@@ -56,7 +56,6 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
         'eventAttendance__school__state__abbreviation',
         'eventAttendance__school__region__name',
         'eventAttendance__school__name',
-        'eventAttendance__school__abbreviation',
         'eventAttendance__campus__name',
         'eventAttendance__mentorUser__first_name',
         'eventAttendance__mentorUser__last_name',
@@ -68,13 +67,6 @@ class MentorEventFileUploadAdmin(FKActionsRemove, AdminPermissions, admin.ModelA
     def fileLinkNewTab(self, obj):
         return format_html('<a href="{}" target="_blank">{}</a>', obj.fileUpload.url, obj.originalFilename)
     fileLinkNewTab.short_description = 'File'
-
-    # Add uploadedBy in save
-    def save_model(self, request, obj, form, change):
-        if not obj.pk:
-            obj.uploadedBy = request.user
-
-        super().save_model(request, obj, form, change)
 
     def has_add_permission(self, request, obj=None):
         return False

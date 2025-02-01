@@ -61,7 +61,7 @@ class User(SaveDeleteMixin, AbstractUser):
     objects = UserManager()
 
     # Additional fields
-    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True, validators=[RegexValidator(regex="^[0-9a-zA-Z \-\_\(\)\+]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space.")])
+    mobileNumber = models.CharField('Mobile number', max_length=12, null=True, blank=True, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_\(\)\+]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_()+ and space.")])
     homeState = models.ForeignKey('regions.State', verbose_name='Home state', on_delete=models.PROTECT, null=True, blank=True, limit_choices_to={'typeUserRegistration': True})
     homeRegion = models.ForeignKey('regions.Region', verbose_name='Home region', on_delete=models.PROTECT, null=True, blank=True)
 
@@ -70,7 +70,7 @@ class User(SaveDeleteMixin, AbstractUser):
     currentlySelectedAdminYear = models.ForeignKey('events.Year', verbose_name='Currently selected admin year', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
     currentlySelectedAdminState = models.ForeignKey('regions.State', verbose_name='Currently selected admin state', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
     adminChangelogVersionShown = models.PositiveIntegerField('Changelog version shown', editable=False, default=0)
-    ADMIN_CHANGELOG_CURRENT_VERSION = 5
+    ADMIN_CHANGELOG_CURRENT_VERSION = 7
 
     # Flags
     forcePasswordChange = models.BooleanField('Force password change', default=False)
@@ -93,10 +93,10 @@ class User(SaveDeleteMixin, AbstractUser):
         if self.homeRegion and self.homeRegion.state is not None and self.homeRegion.state != self.homeState:
             errors['homeRegion'] = "Region not valid for selected state"
 
-        if not re.match("^[0-9a-zA-Z \-\_]*$", self.first_name):
+        if not re.match(r"^[0-9a-zA-Z \-\_]*$", self.first_name):
             errors['first_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
 
-        if not re.match("^[0-9a-zA-Z \-\_]*$", self.last_name):
+        if not re.match(r"^[0-9a-zA-Z \-\_]*$", self.last_name):
             errors['last_name'] = "Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space."
 
         if errors:
@@ -163,6 +163,11 @@ class User(SaveDeleteMixin, AbstractUser):
         permissionObjects = Permission.objects.filter(codename__in=permissionsToAdd)
         self.user_permissions.clear()
         self.user_permissions.add(*permissionObjects)
+
+        # Set state filtering to None if no longer a coordinator of that state
+        if self.currentlySelectedAdminState and not (self.is_superuser or coordinators.filter(state=self.currentlySelectedAdminState).exists()):
+            self.currentlySelectedAdminState = None
+            self.save(update_fields=['currentlySelectedAdminState'], skipPrePostSave=True)
 
     # Reset forcePasswordChange
     def set_password(self, password):

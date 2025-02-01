@@ -26,6 +26,10 @@ env = environ.Env(
     USE_SQLLITE_DB=(bool, False),
     AWS_ACCESS_KEY_ID=(str, 'AWS_ACCESS_KEY_ID'),
     AWS_SECRET_ACCESS_KEY=(str, 'AWS_SECRET_ACCESS_KEY'),
+    CMS_JWT_SECRET=(str, 'CMS_JWT_SECRET'),
+    CMS_JWT_EXPIRY_MINUTES=(int, 'CMS_JWT_EXPIRY_MINUTES'),
+    CMS_EVENT_URL_VIEW=(str, 'CMS_EVENT_URL'), # {EVENT_ID} will be replaced
+    CMS_EVENT_URL_CREATE=(str, 'CMS_EVENT_URL'), # {TOKEN} will be replaced
     STATIC_BUCKET=(str, 'STATIC_BUCKET'),
     PUBLIC_BUCKET=(str, 'PUBLIC_BUCKET'),
     PRIVATE_BUCKET=(str, 'PRIVATE_BUCKET'),
@@ -33,7 +37,8 @@ env = environ.Env(
     SENTRY_ENV = (str, 'production'),
     DEV_SETTINGS=(bool, False),
     DEFAULT_FROM_EMAIL=(str, 'entersupport@robocupjunior.org.au'),
-    USE_PROXY=(bool, False)
+    USE_PROXY=(bool, False),
+    ENVIRONMENT=(str, 'development')
 )
 
 assert not (len(sys.argv) > 1 and sys.argv[1] == 'test'), "These settings should never be used to run tests"
@@ -133,7 +138,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'rcjaRegistration.defaultContexts.yearsContext',
+                'common.globalContexts.yearsContext',
+                'common.globalContexts.environmentContext',
             ],
         },
     },
@@ -203,7 +209,6 @@ else:
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.UnsaltedSHA1PasswordHasher',
 ]
 
 # HIBP settings
@@ -288,6 +293,13 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
+# CMS SETTINGS
+
+CMS_JWT_SECRET = env('CMS_JWT_SECRET')
+CMS_JWT_EXPIRY_MINUTES = env('CMS_JWT_EXPIRY_MINUTES')
+CMS_EVENT_URL_VIEW = env('CMS_EVENT_URL_VIEW')
+CMS_EVENT_URL_CREATE = env('CMS_EVENT_URL_CREATE')
+
 # Static
 STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
@@ -298,11 +310,25 @@ STATIC_DOMAIN = f'{STATIC_BUCKET}.s3.amazonaws.com'
 AWS_STATIC_LOCATION = ''
 
 if STATIC_BUCKET != 'STATIC_BUCKET' and AWS_ACCESS_KEY_ID != 'AWS_ACCESS_KEY_ID':
-    STATICFILES_STORAGE = 'rcjaRegistration.storageBackends.StaticStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage',
+        },
+        "staticfiles": {
+            "BACKEND": 'rcjaRegistration.storageBackends.StaticStorage',
+        },
+    }
     STATIC_URL = f"https://{STATIC_DOMAIN}/{STATIC_BUCKET}/"
 else:
+    STORAGES = {
+        "default": {
+            "BACKEND": 'rcjaRegistration.storageBackends.PrivateMediaStorage',
+        },
+        "staticfiles": {
+            "BACKEND": 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
     STATIC_URL = '/static/'
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Public
 PUBLIC_BUCKET = env('PUBLIC_BUCKET')
@@ -313,9 +339,6 @@ AWS_PUBLIC_MEDIA_LOCATION = ''
 PRIVATE_BUCKET = env('PRIVATE_BUCKET')
 PRIVATE_DOMAIN = f'{PRIVATE_BUCKET}.s3.amazonaws.com'
 AWS_PRIVATE_MEDIA_LOCATION = ''
-
-DEFAULT_FILE_STORAGE = 'rcjaRegistration.storageBackends.PrivateMediaStorage'
-
 
 SENTRY_DSN = env('SENTRY_DSN')
 if SENTRY_DSN != 'SENTRY_DSN':
@@ -335,3 +358,5 @@ if SENTRY_DSN != 'SENTRY_DSN':
         ]
     )
 
+# Environment
+ENVIRONMENT = env('ENVIRONMENT')

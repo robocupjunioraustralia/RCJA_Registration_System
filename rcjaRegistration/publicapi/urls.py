@@ -21,7 +21,7 @@ Router.register(r'states', views.StateViewSet)
 
 # # **********URL patterns**********
 
-app_name = 'apiv1'
+app_name = 'publicapiv1'
 urlpatterns = [
     re_path(r'', include(Router.urls)),
 ]

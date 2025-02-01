@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.forms import Textarea
 from django.db import models
 from common.filters import FilteredRelatedOnlyFieldListFilter
+from django.utils.html import format_html
+from django.urls import reverse
 
 from .models import PlatformCategory, HardwarePlatform, SoftwarePlatform, Team, Student
 
@@ -39,6 +41,7 @@ class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
 class StudentInline(InlineAdminPermissions, admin.TabularInline):
     model = Student
     extra = 0
+    min_num = 1
 
 @admin.register(Team)
 class TeamAdmin(BaseWorkshopAttendanceAdmin):
@@ -51,6 +54,8 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'withdrawn',
+        'uploadFileURL',
     ]
     fieldsets = (
         (None, {
@@ -70,6 +75,10 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
                 'updatedDateTime',
                 'withdrawn',
             )
+        }),
+        ('Advanced billing settings', {
+            'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this team from that invoice and add it to a different invoice, which can be for a different school or mentor.",
+            'fields': ('invoiceOverride', )
         }),
     )
     add_fieldsets = (
@@ -116,6 +125,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'updatedDateTime',
         'pk',
         'name',
+        'withdrawn',
         'event',
         'division',
         'mentorUserName',
@@ -128,6 +138,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
+        'invoiceOverride',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',
@@ -136,6 +147,10 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     autocompleteFilters = {
         'teams/student/': Student,
     }
+
+    def uploadFileURL(self, obj):
+        return format_html('<a href="{}" target="_blank">Upload file -></a>', reverse('eventfiles:uploadFile', args=(obj.id, )))
+    uploadFileURL.short_description = 'Upload file'
 
     eventTypeMapping = 'competition'
 
@@ -168,7 +183,6 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'team__school__state__abbreviation',
         'team__school__region__name',
         'team__school__name',
-        'team__school__abbreviation',
         'team__campus__name',
         'team__mentorUser__first_name',
         'team__mentorUser__last_name',
