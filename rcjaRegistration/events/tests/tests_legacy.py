@@ -261,7 +261,7 @@ class TestDashboard_independent(TestDashboard_school):
     # Need to test events are sorted
     # Need to test invoices are properly filtered
 
-class TestEventDetailsPage_school(TestCase):
+class TestEventDetailsPage_Competition_school(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
@@ -359,7 +359,7 @@ class TestEventDetailsPage_school(TestCase):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.registrationNotOpenYetEvent.id}))
         self.assertContains(response, "Registration for this event hasn't opened yet.")
 
-class TestEventDetailsPage_independent(TestEventDetailsPage_school):
+class TestEventDetailsPage_Competition_independent(TestEventDetailsPage_Competition_school):
     def setUp(self):
         commonSetUp(self)
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
@@ -427,7 +427,7 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         for team in response.context['teams']:
             assert team.school is None and team.mentorUser == self.user, 'No permission to view this team'
 
-class TestEventDetailsPage_superuser(TestCase):
+class TestEventDetailsPage_Competition_superuser(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.user.is_superuser = True
@@ -463,6 +463,36 @@ class TestEventDetailsPage_superuser(TestCase):
     def testOldEventLoad(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 200)
+
+class TestEventDetailsPage_Workshop_superuser(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.user.is_superuser = True
+        self.user.save()
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.newEvent.eventType = 'workshop'
+        self.newEvent.save()
+
+    def testPageLoad(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/details.html')
+
+    def testEventTitlePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new yes reg')
+
+    def testNotPublishedLoad(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Event is not published.')
 
 class TestEventClean(TestCase):
     def setUp(self):
