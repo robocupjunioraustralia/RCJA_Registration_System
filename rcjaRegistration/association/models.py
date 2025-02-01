@@ -39,9 +39,6 @@ class AssociationMember(SaveDeleteMixin, models.Model):
             
             elif self.membershipStartDate >= self.membershipEndDate:
                 errors['membershipStartDate'] = 'Membership start date must be before membership end date.'
-
-        if self.under18() and self.address:
-            errors['address'] = 'Address must be blank for members under 18.'
         
         if not self.under18() and not self.address:
             errors['address'] = 'Address must not be blank for members 18 and over.'
@@ -93,6 +90,10 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     getState.short_description = 'State'
 
     # *****Save & Delete Methods*****
+
+    def preSave(self):
+        if self.under18():
+            self.address = ""
 
     # *****Methods*****
 
