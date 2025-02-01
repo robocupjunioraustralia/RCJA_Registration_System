@@ -24,7 +24,10 @@
             <p>Phone: {{ request.user.mobileNumber }}</p>
             <p>State: {{ request.user.homeState }}</p>
 
-            <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.</p>
+            <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.
+            <br>
+            If you have any questions please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.
+            </p>
 
             <h3>Membership status: {% if associationMember %}{{ associationMember.membershipStatus }}{% else %}Not a member{% endif %}</h3>
             {% if associationMember and associationMember.membershipExpired %}
@@ -32,7 +35,7 @@
             {% else %}
                 {% if associationMember and associationMember.membershipActive and associationMember.approvalStatus == "approved" %}
                     <h3>Membership details</h3>
-                    <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary.</p>
+                    <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.</p>
                     <p>Membership start date: {{ associationMember.membershipStartDate }}</p>
                     <p><b>Membership type: {{associationMember.membershipType }}</b></p>
                 {% elif associationMember and associationMember.membershipActive and associationMember.approvalStatus == "pending" %}
