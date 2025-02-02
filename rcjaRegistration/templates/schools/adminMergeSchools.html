@@ -21,7 +21,7 @@
                 <div class="form form-group left-aligned-text">
                 
                     <h1> Merge Schools </h1>
-                    <h3>{% if school1 == school2 %} Merging campuses for {{ school1 }} {% else %}Merging {{ school2}} into {{ school1 }}{% endif %}</h3>
+                    <h3>{% if school1 == school2 %} Merging campuses for {{ school1 }} {% else %}Merging {{ school2 }} into {{ school1 }}{% endif %}</h3>
                     {% if school1 != school2 %}<a href = "{% url 'schools:adminMergeSchools' school2.id school1.id %}" class = "primary ui button" style="margin-top:1rem;">Swap merge order</a>{% endif %}
                     <br><br>
 
