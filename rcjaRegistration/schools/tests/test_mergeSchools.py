@@ -105,3 +105,199 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
         self.assertNotIn(self.school3_workshopAttendee1, response.context['eventAttendeeChanges'])
         for eventAttendee in response.context['eventAttendeeChanges']:
             self.assertEqual(eventAttendee.school, self.school1_state1)
+            self.assertTrue(hasattr(eventAttendee, 'oldSchool'))
+            self.assertTrue(hasattr(eventAttendee, 'school'))
+
+    def test_validate_loads_different_schools_keep_campuses(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': True,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+        })
+        self.assertEqual(response.status_code, 200)
+
+    def test_validate_context_different_schools_keep_campuses(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': True,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+        })
+        self.assertIn(self.campus1_school1, response.context['campusChanges'])
+        self.assertIn(self.campus2_school1, response.context['campusChanges'])
+        self.assertIn(self.campus3_school2, response.context['campusChanges'])
+        self.assertIn(self.campus4_school2, response.context['campusChanges'])
+        self.assertNotIn(self.campus5_school3, response.context['campusChanges'])
+
+        self.assertEqual(len(response.context['campusChanges']), 4)
+
+        for campus in response.context['campusChanges']:
+            self.assertTrue(hasattr(campus, 'school'))
+            self.assertTrue(hasattr(campus, 'oldSchool'))
+        
+    def test_validate_loads_different_schools_new_campuses(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': 'New Campus 1',
+            'school2NewCampusName': 'New Campus 2',
+        })
+        self.assertEqual(response.status_code, 200)
+    
+    def test_validate_context_different_schools_new_campuses(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': 'New Campus 1',
+            'school2NewCampusName': 'New Campus 2',
+        })
+        self.assertIn(self.campus1_school1, response.context['campusChanges'])
+        self.assertIn(self.campus2_school1, response.context['campusChanges'])
+        self.assertIn(self.campus3_school2, response.context['campusChanges'])
+        self.assertIn(self.campus4_school2, response.context['campusChanges'])
+        self.assertNotIn(self.campus5_school3, response.context['campusChanges'])
+
+        self.assertEqual(len(response.context['campusChanges']), 6)
+
+        for campus in response.context['campusChanges']:
+            self.assertTrue(hasattr(campus, 'oldSchool'))
+
+        for eventAttendee in response.context['eventAttendeeChanges']:
+            self.assertEqual(eventAttendee.school, self.school1_state1)
+            self.assertTrue(hasattr(eventAttendee, 'oldSchool'))
+
+    def test_validate_loads_different_schools_campus_reused(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': 'Campus 1',
+            'school2NewCampusName': 'Campus 3',
+        })
+        self.assertEqual(response.status_code, 200)
+    
+    def test_validate_context_different_schools_campus_reused(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': 'Campus 1',
+            'school2NewCampusName': 'Campus 3',
+        })
+        self.assertIn(self.campus1_school1, response.context['campusChanges'])
+        self.assertIn(self.campus2_school1, response.context['campusChanges'])
+        self.assertIn(self.campus3_school2, response.context['campusChanges'])
+        self.assertIn(self.campus4_school2, response.context['campusChanges'])
+        self.assertNotIn(self.campus5_school3, response.context['campusChanges'])
+
+        self.assertEqual(len(response.context['campusChanges']), 4)
+
+    def test_validate_loads_same_school(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school1_state1.id]), {})
+        self.assertEqual(response.status_code, 200)
+
+    def test_validate_context_same_school(self):
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school1_state1.id]), {})
+        self.assertIn(self.campus1_school1, response.context['campusChanges'])
+        self.assertIn(self.campus2_school1, response.context['campusChanges'])
+        self.assertNotIn(self.campus3_school2, response.context['campusChanges'])
+        self.assertNotIn(self.campus4_school2, response.context['campusChanges'])
+        self.assertNotIn(self.campus5_school3, response.context['campusChanges'])
+
+        self.assertEqual(len(response.context['campusChanges']), 2)
+    
+    def test_merge_different_schools_no_new_campuses(self):
+        self.assertTrue(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertTrue(Campus.objects.filter(school=self.school1_state1).exists())
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
+        self.assertFalse(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 0)
+
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)
+
+    def test_merge_different_schools_keep_campuses(self):
+        self.assertTrue(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertTrue(Campus.objects.filter(school=self.school1_state1).exists())
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': True,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
+        self.assertFalse(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 4)
+
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)
+
+    def test_merge_different_schools_new_campuses(self):
+        self.assertTrue(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertTrue(Campus.objects.filter(school=self.school1_state1).exists())
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': 'New Campus 1',
+            'school2NewCampusName': 'New Campus 2',
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
+        self.assertFalse(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 6)
+
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)
+
+    def test_merge_different_schools_campus_reused(self):
+        self.assertTrue(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertTrue(Campus.objects.filter(school=self.school1_state1).exists())
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': 'Campus 1',
+            'school2NewCampusName': 'Campus 3',
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
+        self.assertFalse(School.objects.filter(id=self.school2_state1.id).exists())
+        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 2)
+
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)
+
+    def test_merge_same_school(self):
+        self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
+        self.assertTrue(Campus.objects.filter(school=self.school1_state1).exists())
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school1_state1.id]), {
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
+        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 0)
+
+        self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
+        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 2)
+    
+    
