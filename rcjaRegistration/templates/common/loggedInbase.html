@@ -39,6 +39,11 @@
         .header-button:hover {
             background-color: rgba(0,0,0,.03) !important;
         }
+        @media (max-width: 767px) {
+            .hide-on-mobile {
+                display: none !important;
+            }
+        }
     </style>
 
     {% block head %}
@@ -86,17 +91,13 @@
         </div>
         <div class = "right menu">
             {% if environment is not None %}
-            <span class="item" style="color:red; max-width:48%" >
+            <span class="item hide-on-mobile" style="color:red; max-width:48%" >
                 <i class="important"></i>
                 <b>{{environment}}</b>
             </span>
             {% endif %}
             {% if user.is_staff %}
-            <a class="item" href="{% url 'events:summaryReport' %}">
-                <i class="eye icon"></i>
-                Summary Report
-            </a>
-            <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
+            <a class="item hide-on-mobile" href="{% url 'admin:index' %}" style="max-width:48%" >
                 <i class="id badge icon"></i>
                 Admin
             </a>
