@@ -4,9 +4,12 @@ from django.test import TestCase
 from django.urls import reverse
 from django.http import HttpRequest
 
+import datetime
+
 from schools.models import School, Campus
 from teams.models import Team
 from workshops.models import WorkshopAttendee
+from invoices.models import Invoice
 
 def createAdditionalTeamsAndWorkshopAttendees(obj):
     obj.school2_team1 = Team.objects.create(school=obj.school2_state1, event=obj.state1_closedCompetition1, division=obj.division1_state1, mentorUser=obj.user_state1_school2_mentor3, name='School 2 Team 1')
@@ -299,3 +302,64 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
 
         self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
         self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)
+
+    def test_non_zero_invoices_not_deleted(self):
+        self.assertEqual(Invoice.objects.filter(school=self.school1_state1).count(), 4)
+        self.assertEqual(Invoice.objects.filter(school=self.school2_state1).count(), 1)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+            'merge': "",
+        })
+
+        self.assertEqual(Invoice.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(Invoice.objects.filter(school=self.school2_state1).count(), 0)
+
+    def test_zero_invoices_deleted(self):
+        Invoice.objects.create(school=self.school1_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school1_mentor1, campus=self.campus1_school1)
+        Invoice.objects.create(school=self.school2_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school2_mentor3, campus=self.campus3_school2)
+
+        self.assertEqual(Invoice.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(Invoice.objects.filter(school=self.school2_state1).count(), 2)
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+            'merge': "",
+        })
+
+        self.assertEqual(Invoice.objects.filter(school=self.school1_state1).count(), 5)
+        self.assertEqual(Invoice.objects.filter(school=self.school2_state1).count(), 0)
+
+    def test_invoice_clash_school1_exception_raised(self):
+        self.newInvoice = Invoice.objects.create(school=self.school1_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school1_mentor1, campus=self.campus1_school1)
+
+        self.newInvoice.invoicepayment_set.create(amountPaid=100, datePaid=datetime.datetime.today())
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "because already a conflicting invoice")
+
+    def test_invoice_clash_school2_exception_raised(self):
+        self.newInvoice = Invoice.objects.create(school=self.school2_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school1_mentor1, campus=self.campus3_school2)
+
+        self.newInvoice.invoicepayment_set.create(amountPaid=100, datePaid=datetime.datetime.today())
+
+        response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
+            'keepExistingCampuses': False,
+            'school1NewCampusName': '',
+            'school2NewCampusName': '',
+            'merge': "",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "because already a conflicting invoice")
