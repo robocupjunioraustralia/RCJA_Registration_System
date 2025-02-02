@@ -53,41 +53,54 @@
 
 <body>
 
-    <div class="ui labeled icon left inline vertical sidebar menu">
-        <div class="item">
+    <div class="ui labeled icon left inline vertical sidebar menu"">
+        <div class="item" style="height: 52.57px; display: grid; place-items: center;">
             <img src="{% static 'favicon-32x32.png' %}">
         </div>
         <a class="item" href="{% url 'events:dashboard' %}">
-            <i class="home icon"></i>
+            <i class="home icon"> </i>
             Dashboard
         </a>
         <a class="item" href="{% url 'invoices:summary' %}">
             <i class="credit card icon"></i>
             My Invoices
-        </a>   
+        </a>
         <a class="item" href="{% url 'association:membership' %}">
             <i class="briefcase icon"></i>
             Association Membership
-        </a> 
+        </a>
+        {% if user.is_staff %}
+        <a class="item" href="{% url 'events:summaryReport' %}">
+            <i class="eye icon"></i>
+            Summary Report
+        </a>
+        <a class="item" href="{% url 'admin:index' %}">
+            <i class="id badge icon"></i>
+            Admin
+        </a>
+
+        {% endif %}
+        {% if environment is not None %}
+        <span class="item" style="color:red;">
+            <i class="important"></i>
+            <b>{{environment}}</b>
+        </span>
+        {% endif %}
     </div>
     <div class="ui top massive fixed menu">
         <a class="item" style="margin-right:1rem;" onclick = "toggleSidebar()">
             <i class="sidebar icon"></i>
-            
+
         </a>
         <div class = "ui tablet only computer only grid menu-set">
             <a class="item" href="{% url 'events:dashboard' %}">
                 <i class="home icon"></i>
                 Dashboard
-            </a>  
+            </a>
             <a class="item" href="{% url 'invoices:summary' %}">
                 <i class="credit card icon"></i>
                 My Invoices
-            </a>            
-            <a class="item" href="{% url 'association:membership' %}">
-                <i class="briefcase icon"></i>
-                Association Membership
-            </a>     
+            </a>
         </div>
         <div class = "right menu">
             {% if environment is not None %}
