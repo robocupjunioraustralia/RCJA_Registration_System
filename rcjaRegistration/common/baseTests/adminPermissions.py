@@ -231,6 +231,7 @@ class Base_Test_SuperUser(DoesLoadBase):
     def setUp(self):
         super().setUp()
         self.client.login(request=HttpRequest(), username=self.email_user_state1_super1, password=self.password)
+        self.loggedInUser = self.user_state1_super1
 
 class CoordinatorBase(DoesLoadBase):
     """Provides additional tests for coordinators"""
@@ -262,6 +263,7 @@ class Base_Test_FullCoordinator(CoordinatorBase):
     def setUp(self):
         super().setUp()
         self.client.login(request=HttpRequest(), username=self.email_user_state1_fullcoordinator, password=self.password)
+        self.loggedInUser = self.user_state1_fullcoordinator
 
     def testChangeEditable(self):
         if self.changePostCode == POST_SUCCESS:
@@ -283,6 +285,7 @@ class Base_Test_ViewCoordinator(CoordinatorBase):
     def setUp(self):
         super().setUp()
         self.client.login(request=HttpRequest(), username=self.email_user_state1_viewcoordinator, password=self.password)
+        self.loggedInUser = self.user_state1_viewcoordinator
 
     def testChangeReadOnly(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))

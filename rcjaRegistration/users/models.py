@@ -70,7 +70,7 @@ class User(SaveDeleteMixin, AbstractUser):
     currentlySelectedAdminYear = models.ForeignKey('events.Year', verbose_name='Currently selected admin year', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
     currentlySelectedAdminState = models.ForeignKey('regions.State', verbose_name='Currently selected admin state', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
     adminChangelogVersionShown = models.PositiveIntegerField('Changelog version shown', editable=False, default=0)
-    ADMIN_CHANGELOG_CURRENT_VERSION = 6
+    ADMIN_CHANGELOG_CURRENT_VERSION = 7
 
     # Flags
     forcePasswordChange = models.BooleanField('Force password change', default=False)
