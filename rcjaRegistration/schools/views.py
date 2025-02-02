@@ -230,7 +230,11 @@ def adminMergeSchools(request, school1ID, school2ID):
                                     invoice.delete()
                                 else:
                                     invoice.full_clean()
-                                    invoice.save()
+                                    invoice.cache_amountGST_unrounded = None
+                                    invoice.cache_totalQuantity = None
+                                    invoice.cache_invoiceAmountExclGST_unrounded = None
+                                    invoice.cache_invoiceAmountInclGST_unrounded = None
+                                    invoice.save(skipPrePostSave=True)
                             except ValidationError as e:
                                 raise ValidationError(f"Couldn't save invoice {invoice.invoiceNumber} because already a conflicting invoice, couldn't delete because invoice amount is not 0. Remove any invoice payments and set invoice override for anything connected to this invoice, then try again. ({e.args[0]})")
 
@@ -300,7 +304,11 @@ def adminMergeSchools(request, school1ID, school2ID):
                                         invoice.delete()
                                     else:
                                         invoice.full_clean()
-                                        invoice.save()
+                                        invoice.cache_amountGST_unrounded = None
+                                        invoice.cache_totalQuantity = None
+                                        invoice.cache_invoiceAmountExclGST_unrounded = None
+                                        invoice.cache_invoiceAmountInclGST_unrounded = None
+                                        invoice.save(skipPrePostSave=True)
                                 except ValidationError as e:
                                     raise ValidationError(f"Couldn't save invoice {invoice.invoiceNumber} because already a conflicting invoice, couldn't delete because invoice amount is not 0. Remove any invoice payments and set invoice override for anything connected to this invoice, then try again. ({e.args[0]})")
 
@@ -336,8 +344,6 @@ def adminMergeSchools(request, school1ID, school2ID):
                         # Delete school 2
                         if "merge" in request.POST:
                             school2.delete()
-                            for invoice in school1.invoice_set.all():
-                                invoice.calculateAndSaveAllTotals()
 
                     validated = True
                     if "merge" in request.POST:
