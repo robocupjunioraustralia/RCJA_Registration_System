@@ -67,7 +67,7 @@
                             {{form.school2NewCampusName}}
                         </div>
                         {% else %}
-                        All campuses for {{ school1 }} will be deleted and removed from all teams, workshop attendees, school administrators, and invoices.
+                        All campuses for {{ school1 }} will be deleted and removed from all teams, workshop attendees, school administrators, and invoices.<br>
                         {% endif %}
 
                         <input class="primary ui button" type="submit" value="Validate" />
@@ -92,7 +92,7 @@
                         {% if school1 != school2 %}
                         <input class="negative ui button" type="submit" name="merge" value="Merge {{ school2 }} into {{ school1 }} and delete {{ school2 }}" />
                         {% else %}
-                        <input class="negative ui button" type="submit" name="merge" value="Delete all campuses for {{ school1 }}" />\
+                        <input class="negative ui button" type="submit" name="merge" value="Delete all campuses for {{ school1 }}" />
                         {% endif %}
                         {% endif %}
                     </form>
