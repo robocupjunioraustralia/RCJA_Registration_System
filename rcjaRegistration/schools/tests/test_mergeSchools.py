@@ -335,9 +335,11 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
         self.assertEqual(Invoice.objects.filter(school=self.school2_state1).count(), 0)
 
     def test_invoice_clash_school1_exception_raised(self):
-        self.newInvoice = Invoice.objects.create(school=self.school1_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school1_mentor1, campus=self.campus1_school1)
+        self.newInvoice1 = Invoice.objects.create(school=self.school1_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school1_mentor1)
+        self.newInvoice2 = Invoice.objects.create(school=self.school1_state1, event=self.state1_closedCompetition1, invoiceToUser=self.user_state1_school1_mentor1, campus=self.campus1_school1)
 
-        self.newInvoice.invoicepayment_set.create(amountPaid=100, datePaid=datetime.datetime.today())
+        self.newInvoice1.invoicepayment_set.create(amountPaid=100, datePaid=datetime.datetime.today())
+        self.newInvoice2.invoicepayment_set.create(amountPaid=100, datePaid=datetime.datetime.today())
 
         response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
             'keepExistingCampuses': False,
