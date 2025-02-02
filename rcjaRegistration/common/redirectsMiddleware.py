@@ -32,8 +32,6 @@ class RedirectMiddleware:
                             redirectTo = reverse('association:membership')
                     except AssociationMember.DoesNotExist:
                         redirectTo = reverse('association:membership')
-                elif not request.user.associationPageShown:
-                    redirectTo = reverse('association:membership')
 
             except School.DoesNotExist:
                 pass # If school just deleted don't attempt redirection

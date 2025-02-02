@@ -17,12 +17,7 @@ def membership(request):
     form = AssociationMemberForm(instance=associationMember)
 
     # The page is forced to show by the redirect middle ware if the user is staff and the rules have not been accepted
-    pageForcedAdmin = request.user.is_staff and not request.user.is_superuser and not (associationMember and associationMember.rulesAcceptedDate)
-
-    pageForcedUser = not request.user.associationPageShown
-    if pageForcedUser:
-        request.user.associationPageShown = True
-        request.user.save(update_fields=['associationPageShown'], skipPrePostSave=True)
+    pageForced = request.user.is_staff and not request.user.is_superuser and not (associationMember and associationMember.rulesAcceptedDate)
 
     if request.method == 'POST':
         # Create Post versions of forms
@@ -42,4 +37,4 @@ def membership(request):
 
             return redirect(reverse('association:membership'))
 
-    return render(request, 'association/membership.html', {'form': form, 'associationMember': associationMember, 'pageForcedAdmin': pageForcedAdmin, 'pageForcedUser': pageForcedUser})
+    return render(request, 'association/membership.html', {'form': form, 'associationMember': associationMember, 'pageForced': pageForced})
