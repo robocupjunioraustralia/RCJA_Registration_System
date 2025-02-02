@@ -7,12 +7,12 @@ from django.http import HttpRequest
 class Base_Test_MergeSchools(TestCase):
     @classmethod
     def setUpTestData(cls):
-        createStates()
-        createUsers()
-        createSchools()
-        createEvents()
-        createTeams()
-        createWorkshopAttendees()
+        createStates(cls)
+        createUsers(cls)
+        createSchools(cls)
+        createEvents(cls)
+        createTeams(cls)
+        createWorkshopAttendees(cls)
     
 class Test_MergeSchools_notstaff(Base_Test_MergeSchools, TestCase):
     def setUp(self):
