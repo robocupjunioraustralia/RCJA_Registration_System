@@ -257,7 +257,7 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
 
         self.assertTrue(School.objects.filter(id=self.school1_state1.id).exists())
         self.assertFalse(School.objects.filter(id=self.school2_state1.id).exists())
-        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 6)
+        self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 2)
 
         self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 5)
         self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)
@@ -298,6 +298,4 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
         self.assertEqual(Campus.objects.filter(school=self.school1_state1).count(), 0)
 
         self.assertEqual(Team.objects.filter(school=self.school1_state1).count(), 3)
-        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 2)
-    
-    
+        self.assertEqual(WorkshopAttendee.objects.filter(school=self.school1_state1).count(), 3)

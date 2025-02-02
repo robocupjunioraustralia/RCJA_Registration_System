@@ -251,7 +251,7 @@ def adminMergeSchools(request, school1ID, school2ID):
 
                     # If not keeping campuses existing campuses will be deleted, add them to changes list and delete
                     for campus in school1.campus_set.all():
-                        if campus != school1NewCampus:
+                        if campus != school1NewCampus and campus != school2NewCampus:
                             campus.oldSchool = campus.school
                             campus.school = school1 if keepExistingCampuses else None
 
