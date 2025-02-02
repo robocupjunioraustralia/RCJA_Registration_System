@@ -31,7 +31,7 @@ class Test_MergeSchools_staff_otherstate(Base_Test_MergeSchools, TestCase):
         self.assertEqual(response.status_code, 403)
 
 class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):    
-    def setup(self):
+    def setUp(self):
         self.client.login(request=HttpRequest(), username=self.email_user_state1_super1, password=self.password)
 
     def test_page_loads(self):
