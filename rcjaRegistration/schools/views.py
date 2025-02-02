@@ -251,16 +251,17 @@ def adminMergeSchools(request, school1ID, school2ID):
 
                     # If not keeping campuses existing campuses will be deleted, add them to changes list and delete
                     for campus in school1.campus_set.all():
-                        campus.oldSchool = campus.school
-                        campus.school = school1 if keepExistingCampuses else None
+                        if campus != school1NewCampus:
+                            campus.oldSchool = campus.school
+                            campus.school = school1 if keepExistingCampuses else None
 
-                        campusChanges.append(campus)
+                            campusChanges.append(campus)
 
-                        if "merge" in request.POST:
-                            if keepExistingCampuses:
-                                campus.save()
-                            else:
-                                campus.delete()
+                            if "merge" in request.POST:
+                                if keepExistingCampuses:
+                                    campus.save()
+                                else:
+                                    campus.delete()
 
                     # School 2
                     if school1 != school2:
@@ -321,15 +322,16 @@ def adminMergeSchools(request, school1ID, school2ID):
 
                         # If not keeping campuses existing campuses will be deleted, add them to changes list and delete
                         for campus in school2.campus_set.all():
-                            campus.oldSchool = campus.school
-                            campus.school = school1 if keepExistingCampuses else None
+                            if campus != school2NewCampus:
+                                campus.oldSchool = campus.school
+                                campus.school = school1 if keepExistingCampuses else None
 
-                            campusChanges.append(campus)
-                            if "merge" in request.POST:
-                                if keepExistingCampuses:
-                                    campus.save()
-                                else:
-                                    campus.delete()
+                                campusChanges.append(campus)
+                                if "merge" in request.POST:
+                                    if keepExistingCampuses:
+                                        campus.save()
+                                    else:
+                                        campus.delete()
                         
                         # Delete school 2
                         if "merge" in request.POST:

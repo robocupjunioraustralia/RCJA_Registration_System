@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.http import HttpRequest
 
-from schools.models import School
+from schools.models import School, Campus
 from teams.models import Team
 from workshops.models import WorkshopAttendee
 
@@ -71,7 +71,7 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
 
     def test_validate_loads_different_schools_no_new_campuses(self):
         response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
-            'keepExistingCampuses': 'False',
+            'keepExistingCampuses': False,
             'school1NewCampusName': '',
             'school2NewCampusName': '',
         })
@@ -79,7 +79,7 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
 
     def test_validate_context_different_schools_no_new_campuses(self):
         response = self.client.post(reverse('schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]), {
-            'keepExistingCampuses': 'False',
+            'keepExistingCampuses': False,
             'school1NewCampusName': '',
             'school2NewCampusName': '',
         })
@@ -88,8 +88,10 @@ class Test_MergeSchools_superuser(Base_Test_MergeSchools, TestCase):
         self.assertIn(self.campus3_school2, response.context['campusChanges'])
         self.assertIn(self.campus4_school2, response.context['campusChanges'])
         self.assertNotIn(self.campus5_school3, response.context['campusChanges'])
+
+        self.assertEqual(len(response.context['campusChanges']), 4)
+
         for campus in response.context['campusChanges']:
-            self.assertFalse(hasattr(campus, 'school'))
             self.assertTrue(hasattr(campus, 'oldSchool'))
         
         self.assertIn(self.state1_event1_team1, response.context['eventAttendeeChanges'])
