@@ -50,11 +50,14 @@
                         
                         {% if school1 != school2 %}
                         <h3>Campus names</h3>
+                        <p>Do you want to keep the existing campuses for both schools? If yes the existing campuses for both schools will be maintained and any associations unchanged. If no they will be deleted.</p>
                         <div class="field">
                             <label>Keep existing campuses?</label>
                             {{form.keepExistingCampuses}}
                         </div>
-                        <p>If existing campus name is entered that campus will be used, if new name is entered new campus will be created. Leave blank to merge into the no campus.</p>
+                        <p>If name of an existing campus is entered that campus will be used and all objects that don't have a campus will be connected to it.<br>
+                            If new name is entered new campus will be createdand all objects that don't have a campus will be connected to it.<br>
+                            If blank no campus will be created and objects without a campus will have no campus, and objects with a campus will only keep their campus if keep existing campuses (above) is ticked.</p>
                         <div class="field">
                             <label>Name of new campus for {{ school1 }}: </label>
                             {{form.school1NewCampusName}}
@@ -63,6 +66,8 @@
                             <label>Name of new campus for {{ school2 }}: </label>
                             {{form.school2NewCampusName}}
                         </div>
+                        {% else %}
+                        All campuses for {{ school1 }} will be deleted and removed from all teams, workshop attendees, school administrators, and invoices.
                         {% endif %}
 
                         <input class="primary ui button" type="submit" value="Validate" />
@@ -84,7 +89,11 @@
                         {% include "schools/adminMergeSchools_changesTable.html" with items=invoiceChanges firstColumnHeader="Invoice" showCampusColumn=True userField=False invoiceField=True %}
 
                         <br>
-                        <input class="negative ui button" type="submit" name="merge" value="Merge and delete {{ school2 }}" />
+                        {% if school1 != school2 %}
+                        <input class="negative ui button" type="submit" name="merge" value="Merge {{ school2 }} into {{ school1 }} and delete {{ school2 }}" />
+                        {% else %}
+                        <input class="negative ui button" type="submit" name="merge" value="Delete all campuses for {{ school1 }}" />\
+                        {% endif %}
                         {% endif %}
                     </form>
 
