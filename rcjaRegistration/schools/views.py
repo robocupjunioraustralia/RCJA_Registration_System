@@ -247,7 +247,7 @@ def adminMergeSchools(request, school1ID, school2ID):
                         eventAttendeeChanges.append(eventAttendance)
 
                         if "merge" in request.POST:
-                            eventAttendance.save()
+                            eventAttendance.save(skipPrePostSave=True)
 
                     # If not keeping campuses existing campuses will be deleted, add them to changes list and delete
                     for campus in school1.campus_set.all():
@@ -317,7 +317,7 @@ def adminMergeSchools(request, school1ID, school2ID):
                             eventAttendeeChanges.append(eventAttendance)
 
                             if "merge" in request.POST:
-                                eventAttendance.save()
+                                eventAttendance.save(skipPrePostSave=True)
 
                         # If not keeping campuses existing campuses will be deleted, add them to changes list and delete
                         for campus in school2.campus_set.all():
@@ -334,10 +334,14 @@ def adminMergeSchools(request, school1ID, school2ID):
                         # Delete school 2
                         if "merge" in request.POST:
                             school2.delete()
+                            for invoice in school1.invoice_set.all():
+                                invoice.calculateAndSaveAllTotals()
 
                     validated = True
-                    # if "merge" in request.POST:
-                    #     raise ValidationError('To stop execution to DB')
+                    if "merge" in request.POST:
+                        # raise ValidationError('To stop execution to DB')
+                        return redirect(reverse('admin:schools_school_changelist'))
+                        
 
             except ValidationError as e:
                 form.add_error(None, e.args[0])
