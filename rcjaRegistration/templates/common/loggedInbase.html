@@ -104,7 +104,7 @@
             {% endif %}
             {% if user.schooladministrator_set.count > 1 %}
                 <div class="ui dropdown simple item" >
-                    <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
+                    <span style="width:6em; overflow: hidden; text-wrap: nowrap; text-overflow: ellipsis;">
                     {% if user.currentlySelectedSchool %}
                     {{ user.currentlySelectedSchool.name }}
                     {% else %}
@@ -124,7 +124,7 @@
             {% endif %}
             <div class="ui dropdown simple item" >
                 <i class="user circle icon"></i>
-                <span style="max-width:15vw; overflow: hidden; text-overflow: ellipsis;">
+                <span style="max-width:15vw; overflow: hidden; text-wrap: nowrap; text-overflow: ellipsis;">
                 {{ user.fullname_or_email }}
                 </span>
                     <i class="dropdown icon"></i>
@@ -140,12 +140,12 @@
                         {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
                     </div>
             </div>
-        </div>             
+        </div>
     </div>
     <div class="pusher" style="padding-bottom:3rem;">
         <div style="margin-bottom:6rem;"> </div>
         {% block content %}
-        {% endblock %} 
+        {% endblock %}
     </div>
     <footer>
         <a href="https://robocupjunior.org.au">RoboCup Junior Australia</a>
@@ -192,7 +192,7 @@ footer i {
     text-decoration: none;
 }
 </style>
-    
+
 <script>
 function toggleSidebar() {
 $('.ui.labeled.icon.sidebar')
