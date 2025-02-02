@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='user',
-            name='associationPageShown',
-            field=models.BooleanField(default=False, editable=False, verbose_name='Association page shown'),
+            name='associationPromptShown',
+            field=models.BooleanField(default=False, editable=False, verbose_name='Association prompt shown'),
         ),
     ]
