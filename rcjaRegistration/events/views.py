@@ -86,6 +86,12 @@ def dashboard(request):
 
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0.05]) # Rounded because consistent with what user sees and not used in subsequent calculations
 
+    # Association join prompt
+    showAssociationPrompt = not request.user.associationPageShown
+    if showAssociationPrompt:
+        request.user.associationPageShown = True
+        request.user.save(update_fields=['associationPageShown'], skipPrePostSave=True)
+
     context = {
         'futureEvents': futureEvents,
         'openForRegistrationCompetitions': openForRegistrationCompetitions,
@@ -96,6 +102,7 @@ def dashboard(request):
         'invoices': invoices,
         'currentState': currentState,
         'eventsAvailable': eventsAvailable,
+        'showAssociationPrompt': showAssociationPrompt
     }
     return render(request, 'events/dashboard.html', context)
 

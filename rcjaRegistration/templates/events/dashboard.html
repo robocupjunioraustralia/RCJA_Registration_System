@@ -123,4 +123,40 @@
     </div>
 
 </div>
+
+<div class="ui modal firstTimePopup">
+    <div class="header">
+        Would you like to sign up for Association membership?
+    </div>
+    <div class="image content">
+        <div class="description" id="">
+            Association members can attend and vote at the AGM and hold Committee positons. Membership is optional.
+        </div>
+    </div>
+    <div class="actions">
+        <button id="confirm" class="ui positive right button">
+            Yes please
+        </button>
+        <button id="deny" class="ui negative right button">
+            No thanks
+    </div>
+</div>
+
+<script>
+    $(document).ready(() => {
+        if ("True" === "{{showAssociationPrompt}}") {
+            $('.ui.modal.firstTimePopup').modal({
+                closable: false,
+                onDeny: () => {
+                    $('.ui.modal').modal('hide');
+                },
+                onApprove: () => {
+                    $('.ui.modal').modal('hide');
+                    window.location.href = "{% url 'association:membership' %}";
+                }
+            })
+                .modal('show');
+        }
+    });
+</script>
 {% endblock %}
