@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404,redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
@@ -12,6 +12,8 @@ from django.db.models import ProtectedError
 from django.urls import reverse
 from django.db import IntegrityError, transaction
 from coordination.permissions import checkCoordinatorPermission
+from django.contrib.admin.models import LogEntry, DELETION
+from django.contrib.contenttypes.models import ContentType
 
 from users.models import User
 from .models import School, Campus, SchoolAdministrator
@@ -343,6 +345,13 @@ def adminMergeSchools(request, school1ID, school2ID):
                         
                         # Delete school 2
                         if "merge" in request.POST:
+                            LogEntry.objects.log_action(
+                                user_id = request.user.id,
+                                content_type_id = ContentType.objects.get_for_model(School).pk,
+                                object_id = school2.id,
+                                object_repr = str(school2),
+                                action_flag = DELETION,
+                            )
                             school2.delete()
 
                     validated = True
