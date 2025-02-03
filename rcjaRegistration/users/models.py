@@ -71,7 +71,7 @@ class User(SaveDeleteMixin, AbstractUser):
     currentlySelectedAdminState = models.ForeignKey('regions.State', verbose_name='Currently selected admin state', on_delete=models.SET_NULL, related_name='+', null=True, blank=True, editable=False)
     associationPromptShown = models.BooleanField('Association prompt shown', default=False, editable=False)
     adminChangelogVersionShown = models.PositiveIntegerField('Changelog version shown', editable=False, default=0)
-    ADMIN_CHANGELOG_CURRENT_VERSION = 7
+    ADMIN_CHANGELOG_CURRENT_VERSION = 8
 
     # Flags
     forcePasswordChange = models.BooleanField('Force password change', default=False)
