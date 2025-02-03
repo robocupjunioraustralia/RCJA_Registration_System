@@ -222,6 +222,19 @@ class TestDashboard_school(TestCase): #TODO more comprehensive tests
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/dashboard.html')
 
+    def test_load_sets_associationPromptShown(self):
+        self.assertFalse(self.user.associationPromptShown)
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertTrue(response.context['showAssociationPrompt'])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.associationPromptShown)
+    
+    def test_subsequent_load_does_not_set_associationPromptShown(self):
+        self.user.associationPromptShown = True
+        self.user.save()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertFalse(response.context['showAssociationPrompt'])
+
 class TestDashboard_independent(TestDashboard_school):
     def setUp(self):
         commonSetUp(self)
