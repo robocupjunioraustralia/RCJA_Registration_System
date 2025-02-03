@@ -32,7 +32,16 @@ class School_Base:
 class Test_School_NotStaff(School_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class Test_School_SuperUser(School_Base, Base_Test_SuperUser, TestCase):
+class AdditionalSchoolTestsMixin:
+    def test_megerSchools_action_one_school(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_changelist'), data={'action': 'mergeSchools', '_selected_action': [self.school1_state1.id]})
+        self.assertRedirects(response, reverse(f'schools:adminMergeSchools', args=[self.school1_state1.id, self.school1_state1.id]))
+
+    def test_megerSchools_action_two_schools(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_changelist'), data={'action': 'mergeSchools', '_selected_action': [self.school1_state1.id, self.school2_state1.id]})
+        self.assertRedirects(response, reverse(f'schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]))
+
+class Test_School_SuperUser(AdditionalSchoolTestsMixin, School_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 4
     expectedStrings = [
         'School 1',
@@ -50,6 +59,10 @@ class Test_School_SuperUser(School_Base, Base_Test_SuperUser, TestCase):
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
 
+    def test_megerSchools_action_three_schools(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_changelist'), data={'action': 'mergeSchools', '_selected_action': [self.school1_state1.id, self.school2_state1.id, self.school3_state2.id]}, follow=True)
+        self.assertContains(response, 'Select no more than two schools to merge')
+
 class School_Coordinators_Base(School_Base):
     expectedListItems = 2
     expectedStrings = [
@@ -61,7 +74,7 @@ class School_Coordinators_Base(School_Base):
         'School 4',
     ]
 
-class Test_School_FullCoordinator(School_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+class Test_School_FullCoordinator(AdditionalSchoolTestsMixin, School_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
     def testPostAddBlankState(self):
         payload = self.validPayload.copy()
         del payload['state']

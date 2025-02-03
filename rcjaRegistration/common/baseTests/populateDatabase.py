@@ -49,6 +49,8 @@ def createUsers(self):
     self.user_state1_viewcoordinator_association_member = AssociationMember.objects.create(user=self.user_state1_viewcoordinator, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
     
     self.user_state2_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_fullcoordinator, password=self.password, homeState=self.state2)
+    self.user_state2_fullcoordinator_association_member = AssociationMember.objects.create(user=self.user_state2_fullcoordinator, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
     self.user_state2_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_viewcoordinator, password=self.password, homeState=self.state2)
     self.user_state1_school1_mentor1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor1, password=self.password, homeState=self.state1)
     self.user_state1_school1_mentor2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor2, password=self.password, homeState=self.state1)
