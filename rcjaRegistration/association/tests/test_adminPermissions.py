@@ -113,7 +113,7 @@ class AdditionalAssociationMemberTestsMixin:
         self.assertIsNone(self.state1_associationMember1.approvalRejectionDate)
 
 class Test_AssociationMember_SuperUser(AdditionalAssociationMemberTestsMixin, AssociationMember_Base, Base_Test_SuperUser, TestCase):
-    expectedListItems = 7
+    expectedListItems = 8
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
@@ -152,7 +152,7 @@ class Test_AssociationMember_GlobalFullCoordinator(AdditionalAssociationMemberTe
     changePostCode = POST_SUCCESS
 
     wrongStateCode = GET_SUCCESS
-    expectedListItems = 7
+    expectedListItems = 8
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
