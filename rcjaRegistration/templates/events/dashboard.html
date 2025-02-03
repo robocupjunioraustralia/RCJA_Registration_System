@@ -21,7 +21,7 @@
         <h3>You are currently interacting as {{ request.user.currentlySelectedSchool.name|default:"independent" }}.</h3><br>
     </div>
     <div class="row">
-        <h1>Invoices:</h1> 
+        <h1>Invoices:</h1>
         {% if outstandingInvoices %}
             <div class="ui icon message">
             <i class="ui dollar icon"></i>
@@ -37,7 +37,7 @@
                    {% endif %}
                 </span></a>
             </div>
-        </div>  
+        </div>
         {% else %}
 
         <div class="ui icon message">
@@ -48,7 +48,7 @@
               </div>
               <p>All payments are up to date, no action required.</p>
             </div>
-        </div>   
+        </div>
         {% endif %}
          </div>
     <br>
@@ -56,8 +56,8 @@
         <h1>Your Events:</h1>
     </div>
     <br>
-   
-    <div class="row">  
+
+    <div class="row">
         {% if currentEvents or openForRegistrationWorkshops or openForRegistrationCompetitions or pastEvents or futureEvents%}
             {% if currentEvents %}
             {% include "events/eventRow.html" with comps=currentEvents rowHeading="Currently registered events:" %}
@@ -126,11 +126,12 @@
 
 <div class="ui modal firstTimePopup">
     <div class="header">
-        Would you like to sign up for Association membership?
+        Would you like to sign up as a member of RoboCup Junior (Australia) Inc.?
     </div>
     <div class="image content">
         <div class="description" id="">
-            Association members can attend and vote at the AGM and hold Committee positons. Membership is optional.
+            Membership is optional, however can affor you the right to vote at the Annual General Meeting and is required to be a Committee Member.<br>
+            You can read more about membership in the <a href="https://www.robocupjunior.org.au/our-organisation/">Rules of Association on our website</a>.
         </div>
     </div>
     <div class="actions">
