@@ -143,12 +143,7 @@ def adminMergeSchools(request, school1ID, school2ID):
     school1 = get_object_or_404(School, pk=school1ID)
     school2 = get_object_or_404(School, pk=school2ID)
 
-    if not (
-        checkCoordinatorPermission(request, School, school1, 'change') and
-        checkCoordinatorPermission(request, School, school1, 'delete') and
-        checkCoordinatorPermission(request, School, school2, 'change') and
-        checkCoordinatorPermission(request, School, school2, 'delete')
-    ):
+    if not request.user.is_superuser:
         raise PermissionDenied("No permission on selected schools")
 
     eventAttendeeChanges = []

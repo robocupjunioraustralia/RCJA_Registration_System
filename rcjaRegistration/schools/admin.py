@@ -116,7 +116,10 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
 
         return redirect(reverse('schools:adminMergeSchools', args=[queryset[0].pk, queryset[1].pk]))
     mergeSchools.short_description = "Merge schools"
-    mergeSchools.allowed_permissions = ('change',)
+    mergeSchools.allowed_permissions = ('mergeSchools',)
+
+    def has_mergeSchools_permission(self, request):
+        return request.user.is_superuser
 
 @admin.register(Campus)
 class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
