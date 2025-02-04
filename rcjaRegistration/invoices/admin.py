@@ -216,7 +216,7 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     # Reconsider in conjuction with signals
     def has_delete_permission(self, request, obj=None):
         if obj:
-            if obj.invoicepayment_set.exists():
+            if obj.invoicepayment_set.exists() or obj.invoiceAmountInclGST_unrounded() > 0.05:
                 return False
         
         return super().has_delete_permission(request, obj=obj)
