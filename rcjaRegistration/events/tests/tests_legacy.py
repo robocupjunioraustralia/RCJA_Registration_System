@@ -222,6 +222,19 @@ class TestDashboard_school(TestCase): #TODO more comprehensive tests
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/dashboard.html')
 
+    def test_load_sets_associationPromptShown(self):
+        self.assertFalse(self.user.associationPromptShown)
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertTrue(response.context['showAssociationPrompt'])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.associationPromptShown)
+    
+    def test_subsequent_load_does_not_set_associationPromptShown(self):
+        self.user.associationPromptShown = True
+        self.user.save()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertFalse(response.context['showAssociationPrompt'])
+
 class TestDashboard_independent(TestDashboard_school):
     def setUp(self):
         commonSetUp(self)
@@ -1478,8 +1491,8 @@ class TestSummaryPage(TestCase):
 
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
-        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student2', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
-        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student3', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
 
     def createGetQuery(self, state: str, year: int):
         return f"?state={State.objects.get(name=state).id}&year={year}"
