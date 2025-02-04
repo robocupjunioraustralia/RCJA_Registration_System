@@ -1,4 +1,4 @@
-from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams, createInvoices, POST_VALIDATION_FAILURE, POST_SUCCESS
+from common.baseTests import Base_Test_NotStaff, Base_Test_SuperUser, Base_Test_FullCoordinator, Base_Test_ViewCoordinator, createEvents, createTeams, createInvoices, POST_VALIDATION_FAILURE, POST_SUCCESS, ADDDELETE_PAGE_DENIED_VIEWONLY, POST_DENIED, GET_SUCCESS
 
 from django.test import TestCase
 from django.urls import reverse
@@ -31,8 +31,9 @@ class Test_Invoice_NotStaff(Invoice_Base, Base_Test_NotStaff, TestCase):
     pass
 
 class Test_Invoice_SuperUser(Invoice_Base, Base_Test_SuperUser, TestCase):
-    addLoadsCode = 403
-    addPostCode = 403
+    addLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+    addPostCode = POST_DENIED
+    deleteLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
 
     expectedListItems = 2
     expectedStrings = [
@@ -41,9 +42,13 @@ class Test_Invoice_SuperUser(Invoice_Base, Base_Test_SuperUser, TestCase):
     ]
     expectedMissingStrings = []
 
+    def test_delete_loads_zero_dollar_invoice(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_delete', args=[self.state1_workshopEvent1_invoice1.id]))
+        self.assertEqual(response.status_code, GET_SUCCESS)
+
 class Invoice_Coordinators_Base(Invoice_Base):
-    addLoadsCode = 403
-    addPostCode = 403
+    addLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+    addPostCode = POST_DENIED
 
     expectedListItems = 1
     expectedStrings = [
@@ -54,7 +59,11 @@ class Invoice_Coordinators_Base(Invoice_Base):
     ]
 
 class Test_Invoice_FullCoordinator(Invoice_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
-    pass
+    deleteLoadsCode = ADDDELETE_PAGE_DENIED_VIEWONLY
+
+    def test_delete_denied_zero_dollar_invoice(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_delete', args=[self.state1_workshopEvent1_invoice1.id]))
+        self.assertEqual(response.status_code, ADDDELETE_PAGE_DENIED_VIEWONLY)
 
 class Test_Invoice_ViewCoordinator(Invoice_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass
