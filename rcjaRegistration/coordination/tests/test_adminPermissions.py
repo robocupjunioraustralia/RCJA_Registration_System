@@ -4,11 +4,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.http import HttpRequest
 
-import datetime
-
 from regions.models import State
 from coordination.models import Coordinator
-from association.models import AssociationMember
 
 # Coordinator
 
@@ -29,37 +26,10 @@ class Coordinator_Base:
         cls.validPayload['state'] = cls.state1.id
         cls.validPayload['user'] = cls.user_state1_school1_mentor1.id
 
-    @classmethod
-    def additionalSetup(cls):
-        cls.user_state1_school1_mentor1_association_member = AssociationMember.objects.create(user=cls.user_state1_school1_mentor1, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
-
 class Test_Coordinator_NotStaff(Coordinator_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class AdditionalCoordinatorTestsMixin:
-    def test_add_denied_no_association_membership(self):
-        self.user_state1_school1_mentor1_association_member.delete()
-        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=self.validPayload)
-        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
-
-    def test_change_allowed_no_association_membership(self):
-        self.user_state1_school1_mentor1_association_member.delete()
-        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=self.validPayload)
-        self.assertEqual(response.status_code, POST_SUCCESS)
-
-    def test_add_denied_association_membership_rules_not_accepted(self):
-        self.user_state1_school1_mentor1_association_member.rulesAcceptedDate = None
-        self.user_state1_school1_mentor1_association_member.save()
-        response = self.client.post(reverse(f'admin:{self.modelURLName}_add'), data=self.validPayload)
-        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
-
-    def test_change_allowed_association_membership_rules_not_accepted(self):
-        self.user_state1_school1_mentor1_association_member.rulesAcceptedDate = None
-        self.user_state1_school1_mentor1_association_member.save()
-        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=self.validPayload)
-        self.assertEqual(response.status_code, POST_SUCCESS)
-
-class Test_Coordinator_SuperUser(AdditionalCoordinatorTestsMixin, Coordinator_Base, Base_Test_SuperUser, TestCase):
+class Test_Coordinator_SuperUser(Coordinator_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 4
     expectedStrings = [
         'user2@user.com',
@@ -86,7 +56,7 @@ class Coordinator_Coordinators_Base(Coordinator_Base):
         'user5@user.com',
     ]
 
-class Test_Coordinator_FullCoordinator(AdditionalCoordinatorTestsMixin, Coordinator_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
+class Test_Coordinator_FullCoordinator(Coordinator_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
     def testPostAddBlankState(self):
         payload = self.validPayload.copy()
         del payload['state']
@@ -116,7 +86,6 @@ class Test_Coordinator_GlobalFullCoordinator(Test_Coordinator_FullCoordinator):
 
     @classmethod
     def additionalSetup(cls):
-        super().additionalSetup()
         cls.coord_state1_fullcoordinator.state = None
         cls.coord_state1_fullcoordinator.save()
 

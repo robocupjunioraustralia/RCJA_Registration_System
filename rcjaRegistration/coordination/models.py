@@ -43,15 +43,6 @@ class Coordinator(SaveDeleteMixin, models.Model):
         if Coordinator.objects.filter(user=self.user, permissionLevel=self.permissionLevel, state=self.state).exclude(pk=self.pk).exists():
             errors.append(ValidationError('Already coordinator for this user, permission level and state'))
 
-        # Check user is member of association if new coordinator permission
-        if not self.pk:
-            from association.models import AssociationMember
-            try:
-                if not self.user.associationmember.rulesAcceptedDate:
-                    errors.append(ValidationError('User must accept Association rules before being a coordinator'))
-            except AssociationMember.DoesNotExist:
-                errors.append(ValidationError('User must be a member of the Association to be a coordinator'))
-
         # Raise any errors
         if errors:
             raise ValidationError(errors)
