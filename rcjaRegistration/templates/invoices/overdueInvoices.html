@@ -1,0 +1,44 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> Send Overdue Invoice Reminders </title>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Events For Overdue Emails</h1>
+    </div>
+    <br>
+    <div class="row">
+        <div class="form form-group left-aligned-text"></div>
+        {% if form.non_field_errors %}
+
+        <!-- Error messaging -->
+        <div class="ui message left-aligned-text">
+            <div class="">
+                <p class="header">There were some errors in the information you entered. Please correct
+                    the following:</p>
+                {{ form.non_field_errors }}
+            </div>
+        </div>
+        <!-- /Error messaging -->
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <h2>{{form.events.label_tag}}</h2>
+                <p>{{form.events}}</p>
+            </div>
+            
+            <input type="submit" value="Submit"> 
+        </form>
+    </div>
+    <div class="row">
+        <h1>{{output}}</h1>
+    </div>
+</div>
+{% endblock %}

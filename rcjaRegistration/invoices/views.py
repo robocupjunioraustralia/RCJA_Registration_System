@@ -8,7 +8,11 @@ from coordination.permissions import checkCoordinatorPermission
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
+from django.core import mail
+from django.conf import settings
+from django.urls import reverse
 
+from .forms import OverdueInvoicesForm
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
 from schools.models import Campus
@@ -167,3 +171,31 @@ def editInvoicePOAJAX(request, invoiceID):
         """
     else:
         return HttpResponseForbidden()
+
+@login_required
+def sendOverdueEmails(request):
+    output = ''
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+    
+    if request.method == "POST":
+        form = OverdueInvoicesForm(request.POST)
+        if form.is_valid():
+            output = form.cleaned_data['events']
+            for eventID in form.cleaned_data['events']:
+                event = get_object_or_404(Event, pk=eventID)
+                invoices = Invoice.objects.filter(event=event)
+                for invoice in invoices:
+                    if invoice.amountDueInclGST_unrounded()>0.05:
+                        if event.paymentDueDate < datetime.datetime.today().date():
+                            mail.send_mail(
+                                f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
+                                f"{event.name}",
+                                settings.DEFAULT_FROM_EMAIL,
+                                [invoice.invoiceToUserEmail()],
+                                fail_silently=False,
+                            )
+    else:
+        form = OverdueInvoicesForm()
+
+    return render(request, "invoices/overdueInvoices.html", {"form": form, 'output':output})
