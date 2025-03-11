@@ -12,7 +12,7 @@ from django.core import mail
 from django.conf import settings
 from django.urls import reverse
 
-from .forms import OverdueInvoicesForm
+from .forms import getOverdueInvoicesForm
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
 from schools.models import Campus
@@ -179,10 +179,9 @@ def sendOverdueEmails(request):
         raise PermissionDenied("You do not have permission to view this page")
     
     if request.method == "POST":
-        form = OverdueInvoicesForm(request.POST)
+        form = getOverdueInvoicesForm(request)
         if form.is_valid():
             for eventID in form.cleaned_data['events']:
-                print(type(eventID))
                 event = get_object_or_404(Event, pk=int(eventID))
                 invoices = Invoice.objects.filter(event=int(eventID))
                 output.append(invoices)
@@ -216,7 +215,7 @@ def sendOverdueEmails(request):
                                 fail_silently=False,
                             )
     else:
-        form = OverdueInvoicesForm()
+        form = getOverdueInvoicesForm(request)
 
     return render(request, "invoices/overdueInvoices.html", {"form": form, 'output':output})
 
