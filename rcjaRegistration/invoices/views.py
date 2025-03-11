@@ -174,23 +174,43 @@ def editInvoicePOAJAX(request, invoiceID):
 
 @login_required
 def sendOverdueEmails(request):
-    output = ''
+    output = []
     if not request.user.is_staff:
         raise PermissionDenied("You do not have permission to view this page")
     
     if request.method == "POST":
         form = OverdueInvoicesForm(request.POST)
         if form.is_valid():
-            output = form.cleaned_data['events']
             for eventID in form.cleaned_data['events']:
-                event = get_object_or_404(Event, pk=eventID)
-                invoices = Invoice.objects.filter(event=event)
+                print(type(eventID))
+                event = get_object_or_404(Event, pk=int(eventID))
+                invoices = Invoice.objects.filter(event=int(eventID))
+                output.append(invoices)
                 for invoice in invoices:
                     if invoice.amountDueInclGST_unrounded()>0.05:
-                        if event.paymentDueDate < datetime.datetime.today().date():
+                        if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
+                            # Beyond Overdue
                             mail.send_mail(
+                                f"{event.name} Beyond Overdue",
                                 f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
-                                f"{event.name}",
+                                settings.DEFAULT_FROM_EMAIL,
+                                [invoice.invoiceToUserEmail()],
+                                fail_silently=False,
+                            )
+                        elif event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(21,0,0,0,0,0,0):
+                            # Well Overdue
+                            mail.send_mail(
+                                f"{event.name} Well Overdue",
+                                f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
+                                settings.DEFAULT_FROM_EMAIL,
+                                [invoice.invoiceToUserEmail()],
+                                fail_silently=False,
+                            )
+                        elif event.paymentDueDate < datetime.datetime.today().date():
+                            # Overdue
+                            mail.send_mail(
+                                f"{event.name} Overdue",
+                                f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
                                 settings.DEFAULT_FROM_EMAIL,
                                 [invoice.invoiceToUserEmail()],
                                 fail_silently=False,
@@ -199,3 +219,5 @@ def sendOverdueEmails(request):
         form = OverdueInvoicesForm()
 
     return render(request, "invoices/overdueInvoices.html", {"form": form, 'output':output})
+
+
