@@ -8,9 +8,10 @@ from coordination.permissions import checkCoordinatorPermission
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
-from django.core import mail
 from django.conf import settings
 from django.urls import reverse
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 from .forms import getOverdueInvoicesForm
 from .models import InvoiceGlobalSettings, Invoice
@@ -187,33 +188,37 @@ def sendOverdueEmails(request):
                 output.append(invoices)
                 for invoice in invoices:
                     if invoice.amountDueInclGST_unrounded()>0.05:
-                        if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
-                            # Beyond Overdue
-                            mail.send_mail(
-                                f"{event.name} Beyond Overdue",
-                                f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
+                        if event.paymentDueDate < datetime.datetime.today().date():
+                            context = {"invoice": invoice, "event":event}
+                            if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
+                                # Beyond Overdue
+                                text_content = render_to_string(
+                                    "emails/overdue_invoice/beyond_overdue.txt",
+                                    context=context,
+                                )
+                                subject = "BEYOND OVERDUE"
+                            elif event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(21,0,0,0,0,0,0):
+                                # Well Overdue
+                                text_content = render_to_string(
+                                    "emails/overdue_invoice/well_overdue.txt",
+                                    context=context,
+                                )
+                                subject = "WELL OVERDUE"
+                            else:
+                                # Overdue
+                                text_content = render_to_string(
+                                    "emails/overdue_invoice/overdue.txt",
+                                    context=context,
+                                )
+                                subject = "OVERDUE"
+
+                            msg = EmailMultiAlternatives(
+                                subject,
+                                text_content,
                                 settings.DEFAULT_FROM_EMAIL,
                                 [invoice.invoiceToUserEmail()],
-                                fail_silently=False,
                             )
-                        elif event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(21,0,0,0,0,0,0):
-                            # Well Overdue
-                            mail.send_mail(
-                                f"{event.name} Well Overdue",
-                                f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
-                                settings.DEFAULT_FROM_EMAIL,
-                                [invoice.invoiceToUserEmail()],
-                                fail_silently=False,
-                            )
-                        elif event.paymentDueDate < datetime.datetime.today().date():
-                            # Overdue
-                            mail.send_mail(
-                                f"{event.name} Overdue",
-                                f"Invoice Link: \n Amount Due {invoice.invoiceAmountInclGST()} \n Event {event.name}",
-                                settings.DEFAULT_FROM_EMAIL,
-                                [invoice.invoiceToUserEmail()],
-                                fail_silently=False,
-                            )
+                            msg.send()
     else:
         form = getOverdueInvoicesForm(request)
 
