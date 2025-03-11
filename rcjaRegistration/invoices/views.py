@@ -175,7 +175,6 @@ def editInvoicePOAJAX(request, invoiceID):
 
 @login_required
 def sendOverdueEmails(request):
-    output = []
     if not request.user.is_staff:
         raise PermissionDenied("You do not have permission to view this page")
     
@@ -185,7 +184,6 @@ def sendOverdueEmails(request):
             for eventID in form.cleaned_data['events']:
                 event = get_object_or_404(Event, pk=int(eventID))
                 invoices = Invoice.objects.filter(event=int(eventID))
-                output.append(invoices)
                 for invoice in invoices:
                     if invoice.amountDueInclGST_unrounded()>0.05:
                         if event.paymentDueDate < datetime.datetime.today().date():
@@ -222,6 +220,6 @@ def sendOverdueEmails(request):
     else:
         form = getOverdueInvoicesForm(request)
 
-    return render(request, "invoices/overdueInvoices.html", {"form": form, 'output':output})
+    return render(request, "invoices/overdueInvoices.html", {"form": form})
 
 
