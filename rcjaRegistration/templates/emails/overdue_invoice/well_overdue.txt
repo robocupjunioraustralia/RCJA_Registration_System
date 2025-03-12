@@ -1,4 +1,4 @@
 Dear {{invoice.invoiceToUser.fullname_or_email}},
 Your invoice for {{event.name}} is well overdue. It was due on {{event.paymentDueDate}}.
 From,
-The Robocup Team
+{{user.first_name}} {{user.last_name}}

@@ -187,7 +187,7 @@ def sendOverdueEmails(request):
                 for invoice in invoices:
                     if invoice.amountDueInclGST_unrounded()>0.05:
                         if event.paymentDueDate < datetime.datetime.today().date():
-                            context = {"invoice": invoice, "event":event}
+                            context = {"invoice": invoice, "event":event, "user":request.user}
                             if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
                                 # Beyond Overdue
                                 text_content = render_to_string(
@@ -213,7 +213,7 @@ def sendOverdueEmails(request):
                             msg = EmailMultiAlternatives(
                                 subject,
                                 text_content,
-                                settings.DEFAULT_FROM_EMAIL,
+                                request.user.email,
                                 [invoice.invoiceToUserEmail()],
                             )
                             msg.send()
