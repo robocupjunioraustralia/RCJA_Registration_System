@@ -1,0 +1,4 @@
+Dear {{invoice.invoiceToUser.fullname_or_email}},
+Your invoice for {{event.name}} is beyond overdue. It was due on {{event.paymentDueDate}}. Please pay now.
+From,
+{{user.first_name}} {{user.last_name}}
