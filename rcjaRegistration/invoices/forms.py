@@ -8,7 +8,8 @@ from events.models import Event
 from coordination.permissions import checkCoordinatorPermission
 
 def EVENTS_CHOICES(request):
-    for event in Event.objects.filter(invoice__cache_invoiceAmountInclGST_unrounded__gte=0.05):
+    today = datetime.datetime.today().date()
+    for event in Event.objects.filter(invoice__cache_invoiceAmountInclGST_unrounded__gte=0.05,paymentDueDate__lt=today):
         if checkCoordinatorPermission(request, Event, event, 'edit'):
             yield (event.pk, event.name)
         else:

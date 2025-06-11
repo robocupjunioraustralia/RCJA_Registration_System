@@ -173,6 +173,38 @@ def editInvoicePOAJAX(request, invoiceID):
     else:
         return HttpResponseForbidden()
 
+def sendOverdueEmail(invoice, event, user):
+    context = {"invoice": invoice, "event":event, "user":user}
+    if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
+        # Beyond Overdue
+        text_content = render_to_string(
+            "emails/overdue_invoice/beyond_overdue.txt",
+            context=context,
+        )
+        subject = "BEYOND OVERDUE"
+    elif event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(21,0,0,0,0,0,0):
+        # Well Overdue
+        text_content = render_to_string(
+            "emails/overdue_invoice/well_overdue.txt",
+            context=context,
+        )
+        subject = "WELL OVERDUE"
+    else:
+        # Overdue
+        text_content = render_to_string(
+            "emails/overdue_invoice/overdue.txt",
+            context=context,
+        )
+        subject = "OVERDUE"
+
+    msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        user.email,
+        [invoice.invoiceToUserEmail()],
+    )
+    msg.send()
+
 @login_required
 def sendOverdueEmails(request):
     if not request.user.is_staff:
@@ -185,38 +217,10 @@ def sendOverdueEmails(request):
                 event = get_object_or_404(Event, pk=int(eventID))
                 invoices = Invoice.objects.filter(event=int(eventID))
                 for invoice in invoices:
-                    if invoice.amountDueInclGST_unrounded()>0.05:
-                        if event.paymentDueDate < datetime.datetime.today().date():
-                            context = {"invoice": invoice, "event":event, "user":request.user}
-                            if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
-                                # Beyond Overdue
-                                text_content = render_to_string(
-                                    "emails/overdue_invoice/beyond_overdue.txt",
-                                    context=context,
-                                )
-                                subject = "BEYOND OVERDUE"
-                            elif event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(21,0,0,0,0,0,0):
-                                # Well Overdue
-                                text_content = render_to_string(
-                                    "emails/overdue_invoice/well_overdue.txt",
-                                    context=context,
-                                )
-                                subject = "WELL OVERDUE"
-                            else:
-                                # Overdue
-                                text_content = render_to_string(
-                                    "emails/overdue_invoice/overdue.txt",
-                                    context=context,
-                                )
-                                subject = "OVERDUE"
-
-                            msg = EmailMultiAlternatives(
-                                subject,
-                                text_content,
-                                request.user.email,
-                                [invoice.invoiceToUserEmail()],
-                            )
-                            msg.send()
+                    if invoice.amountDueInclGST_unrounded()>0.05 and \
+                        event.paymentDueDate < datetime.datetime.today().date():
+                        sendOverdueEmail(invoice, event, request.user)
+                        pass
     else:
         form = getOverdueInvoicesForm(request)
 
