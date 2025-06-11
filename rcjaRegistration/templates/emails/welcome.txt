@@ -1,0 +1,5 @@
+Dear {{name}},
+Welcome to Robocup Junior Austrailia. 
+Looking forward to seeing you at our next competition.
+Warmest regards,
+RCJA

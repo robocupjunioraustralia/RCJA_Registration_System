@@ -13,6 +13,8 @@ from django.views.decorators.debug import sensitive_post_parameters, sensitive_v
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.encoding import iri_to_uri
 from urllib.parse import urlparse
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
@@ -90,6 +92,8 @@ def signup(request):
             user.forceDetailsUpdate = True # Force redirect to details page so user can submit question responses and create a school
             user.save()
 
+            # Send email
+            send_signup_email(user)
             # Login and redirect
             login(request, user)
             return redirect(reverse('users:details'))
@@ -97,6 +101,24 @@ def signup(request):
         form = UserSignupForm()
 
     return render(request, 'registration/signup.html', {'form': form, 'regionsLookup': getRegionsLookup()})
+
+def send_signup_email(user):
+    context = {"name": user.fullname_or_email()}
+    
+    # Overdue
+    text_content = loader.render_to_string(
+        "emails/welcome.txt",
+        context=context,
+    )
+    subject = "Welcome to Robocup"
+
+    msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+    )
+    msg.send()
 
 def termsAndConditions(request):
     if request.user.is_authenticated:
