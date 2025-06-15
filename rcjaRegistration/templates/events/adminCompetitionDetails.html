@@ -11,7 +11,7 @@
     <div class="row">
         <h1>{{name}} Registrations</h1>
     </div>
-    <br> 
+    <br>
     <div class="row">
         <h2>Divisions</h2>
     </div>
@@ -28,13 +28,13 @@
                     <tr>
                         <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
                     {% for division in division_cat.divisions %}
-                        <td>{{division.name}}</td>
+                        <td style="border-left: 1px solid rgba(34,36,38,.1);">{{division.name}}</td>
                         <td>{{division.teams}}</td>
                         <td>{{division.students}}</td>
                     </tr>
                     <tr>
                     {% endfor %}
-                        <td>Subtotal</td>
+                        <td style="border-left: 1px solid rgba(34,36,38,.1);">Subtotal</td>
                         <td>{{division_cat.teams}}</td>
                         <td>{{division_cat.students}}</td>
                     </tr>
@@ -48,7 +48,7 @@
             </tfoot>
         </table>
     </div>
-    <br> 
+    <br>
     <div class="row">
         <h2>Schools</h2>
     </div>
