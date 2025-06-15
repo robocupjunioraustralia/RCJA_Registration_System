@@ -19,6 +19,7 @@
     <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui primary button">Edit Event</button></a>
     <a href="{{ event.registrationsAdminURL }}"><button class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</button></a>
     <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}"><button class="ui primary button">View Invoices</button></a>
+     <a href="{% url 'invoices:overdueEmails' %}"><button class="ui primary button">Send Overdue Invoice Reminders</button></a>
     {% if event.cmsEventId %}<a href="{% url 'events:cms' event.id %}"><button class="ui primary button">View Results</button></a>{% endif %}
 
     <br>
