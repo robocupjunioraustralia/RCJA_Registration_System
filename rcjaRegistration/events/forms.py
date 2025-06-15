@@ -57,11 +57,12 @@ def getSummaryForm(request):
 
 def COMPETITIONS_CHOICES():
     for event in Event.objects.filter(status='published', eventType='competition'):
-        yield (event.pk, event.name)
+        label = f"{event.year} - {event.state} - {event.name}"
+        yield (event.pk, label)
 
 def WORKSHOPS_CHOICES():
-    for event in Event.objects.filter(status='published', eventType='workshop'):
-        yield (event.pk, event.name)
+        label = f"{event.year} - {event.state} - {event.name}"
+        yield (event.pk, label)
 
 class AdminEventsForm(forms.Form):
     competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))

@@ -590,6 +590,7 @@ def getAdminCompSummary(event):
     
     context = {
         "name": event.name,
+        "year": event.year,
         "division_categories": division_categories,
         'division_teams': division_teams,
         'division_students': division_students,

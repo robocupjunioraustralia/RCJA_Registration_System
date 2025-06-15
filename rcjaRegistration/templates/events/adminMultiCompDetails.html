@@ -21,7 +21,7 @@
                 <th>Category</th>
                 <th>Division</th>
                 {% for event in events %}
-                <th>{{event.name}}</th>
+                <th>{{event.name}} {{event.year}}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
@@ -62,7 +62,7 @@
                 <th>Category</th>
                 <th>Division</th>
                 {% for event in events %}
-                <th>{{event.name}}</th>
+                <th>{{event.name}} {{event.year}}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
@@ -103,7 +103,7 @@
             <thead><tr>
                 <th>School</th>
                 {% for event in events %}
-                <th>{{event.name}}</th>
+                <th>{{event.name}} {{event.year}}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
@@ -134,7 +134,7 @@
             <thead><tr>
                 <th>School</th>
                 {% for event in events %}
-                <th>{{event.name}}</th>
+                <th>{{event.name}} {{event.year}}</th>
                 {% endfor %}
             </tr></thead>
             <tbody>
