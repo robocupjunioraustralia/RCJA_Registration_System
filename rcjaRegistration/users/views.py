@@ -16,10 +16,13 @@ from urllib.parse import urlparse
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 
+from datetime import date
+
 from .models import User
 from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm
 from schools.models import School
+from events.models import Event
 
 from regions.utils import getRegionsLookup
 from coordination.permissions import checkCoordinatorPermission
@@ -103,15 +106,26 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form, 'regionsLookup': getRegionsLookup()})
 
 def send_signup_email(user):
-    context = {"name": user.fullname_or_email()}
-    
-    # Overdue
-    text_content = loader.render_to_string(
-        "emails/welcome.txt",
-        context=context,
+    today = date.today()
+    events = {"competitions":Event.objects.filter(state=user.homeState,registrationsCloseDate__gte=today,year__year=today.year,status="published",eventType="competition"),
+              "workshops":Event.objects.filter(state=user.homeState,registrationsCloseDate__gte=today,year__year=today.year,status="published",eventType="workshop"),
+              "state":user.homeState}
+    events_text = loader.render_to_string(
+        "events/to_string.txt",
+        context=events,
     )
-    subject = "Welcome to Robocup"
+    context = {"name": user.fullname_or_email(),
+               "events": events_text.strip()}
 
+    state_message_template = user.homeState.introductionEmailTemplate
+    if state_message_template:
+        message_template = state_message_template
+    else:
+        with open("templates/emails/welcome.txt","rt") as file:
+            message_template = file.read()
+    
+    text_content = message_template.replace("{{name}}",context["name"]).replace("{{events}}",context["events"])
+    subject = "Welcome to Robocup"
     msg = EmailMultiAlternatives(
         subject,
         text_content,
