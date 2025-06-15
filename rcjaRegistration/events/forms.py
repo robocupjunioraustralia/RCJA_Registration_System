@@ -61,6 +61,7 @@ def COMPETITIONS_CHOICES():
         yield (event.pk, label)
 
 def WORKSHOPS_CHOICES():
+    for event in Event.objects.filter(status='published', eventType='workshop'):
         label = f"{event.year} - {event.state} - {event.name}"
         yield (event.pk, label)
 
