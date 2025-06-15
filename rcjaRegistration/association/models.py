@@ -19,6 +19,11 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     membershipStartDate = models.DateField('Membership start date', null=True, blank=True)
     membershipEndDate = models.DateField('Membership end date', null=True, blank=True)
     lifeMemberAwardedDate = models.DateField('Life membership awarded date', null=True, blank=True)
+    approvalStatusChoices = (('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected'))
+    approvalStatus = models.CharField('Approval status', max_length=8, choices=approvalStatusChoices, default='pending')
+    approvalRejectionDate = models.DateField('Approval/ rejection date', null=True, blank=True, editable=False)
+    approvalRejectionBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Approved/ rejected by', on_delete=models.PROTECT, null=True, blank=True, related_name='associationMemberApprovalRejections', editable=False)
+    rulesAcceptedDate = models.DateField('Rules accepted date', null=True, blank=True, editable=False)
 
     # *****Meta and clean*****
     class Meta:
@@ -34,12 +39,19 @@ class AssociationMember(SaveDeleteMixin, models.Model):
             
             elif self.membershipStartDate >= self.membershipEndDate:
                 errors['membershipStartDate'] = 'Membership start date must be before membership end date.'
-
-        if self.under18() and self.address:
-            errors['address'] = 'Address must be blank for members under 18.'
         
         if not self.under18() and not self.address:
             errors['address'] = 'Address must not be blank for members 18 and over.'
+
+        # Prevent setting approvalStatus to approved if membershipStartDate or rulesAcceptedDate are blank
+        if not self.membershipStartDate and self.approvalStatus == 'approved':
+            errors['approvalStatus'] = 'Membership start date must be set before approval.'
+
+        if not self.rulesAcceptedDate and self.approvalStatus == 'approved':
+            if errors.get('approvalStatus'):
+                errors['approvalStatus'] += ' Rules must be accepted before approval.'
+            else:
+                errors['approvalStatus'] = 'Rules must be accepted before approval.'
 
         # Raise any errors
         if errors:
@@ -79,6 +91,10 @@ class AssociationMember(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self.under18():
+            self.address = ""
+
     # *****Methods*****
 
     # *****Get Methods*****
@@ -115,8 +131,10 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     membershipType.short_description = 'Membership type'
 
     def membershipStatus(self):
-        if self.membershipActive():
+        if self.membershipActive() and self.approvalStatus == 'approved':
             return "Active"
+        elif self.membershipActive() and self.approvalStatus == 'pending':
+            return "Pending approval"
         elif self.membershipExpired():
             return 'Expired'
         else:

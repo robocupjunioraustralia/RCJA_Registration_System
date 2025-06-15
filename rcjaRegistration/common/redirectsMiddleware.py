@@ -14,6 +14,7 @@ class RedirectMiddleware:
             # Check redirect conditions in this order
             redirectTo = None
             from schools.models import School
+            from association.models import AssociationMember
             try:
                 if request.user.forcePasswordChange:
                     redirectTo = reverse('password_change')
@@ -25,6 +26,12 @@ class RedirectMiddleware:
                     redirectTo = reverse('users:adminChangelog')
                     request.user.adminChangelogVersionShown = request.user.ADMIN_CHANGELOG_CURRENT_VERSION
                     request.user.save(update_fields=['adminChangelogVersionShown'])
+                elif not request.user.is_superuser and request.user.is_staff:
+                    try:
+                        if not request.user.associationmember.rulesAcceptedDate:
+                            redirectTo = reverse('association:membership')
+                    except AssociationMember.DoesNotExist:
+                        redirectTo = reverse('association:membership')
 
             except School.DoesNotExist:
                 pass # If school just deleted don't attempt redirection
