@@ -224,6 +224,19 @@ class TestDashboard_school(TestCase): #TODO more comprehensive tests
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'events/dashboard.html')
 
+    def test_load_sets_associationPromptShown(self):
+        self.assertFalse(self.user.associationPromptShown)
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertTrue(response.context['showAssociationPrompt'])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.associationPromptShown)
+    
+    def test_subsequent_load_does_not_set_associationPromptShown(self):
+        self.user.associationPromptShown = True
+        self.user.save()
+        response = self.client.get(reverse('events:dashboard'))
+        self.assertFalse(response.context['showAssociationPrompt'])
+
 class TestDashboard_independent(TestDashboard_school):
     def setUp(self):
         commonSetUp(self)
@@ -263,7 +276,7 @@ class TestDashboard_independent(TestDashboard_school):
     # Need to test events are sorted
     # Need to test invoices are properly filtered
 
-class TestEventDetailsPage_school(TestCase):
+class TestEventDetailsPage_Competition_school(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
@@ -361,7 +374,7 @@ class TestEventDetailsPage_school(TestCase):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.registrationNotOpenYetEvent.id}))
         self.assertContains(response, "Registration for this event hasn't opened yet.")
 
-class TestEventDetailsPage_independent(TestEventDetailsPage_school):
+class TestEventDetailsPage_Competition_independent(TestEventDetailsPage_Competition_school):
     def setUp(self):
         commonSetUp(self)
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
@@ -429,7 +442,7 @@ class TestEventDetailsPage_independent(TestEventDetailsPage_school):
         for team in response.context['teams']:
             assert team.school is None and team.mentorUser == self.user, 'No permission to view this team'
 
-class TestEventDetailsPage_superuser(TestCase):
+class TestEventDetailsPage_Competition_superuser(TestCase):
     def setUp(self):
         commonSetUp(self)
         self.user.is_superuser = True
@@ -465,6 +478,36 @@ class TestEventDetailsPage_superuser(TestCase):
     def testOldEventLoad(self):
         response = self.client.get(reverse('events:details', kwargs= {'eventID':self.oldEvent.id}))
         self.assertEqual(response.status_code, 200)
+
+class TestEventDetailsPage_Workshop_superuser(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+        self.user.is_superuser = True
+        self.user.save()
+        self.client.login(request=HttpRequest(), username=self.username, password=self.password)
+        self.newEvent.eventType = 'workshop'
+        self.newEvent.save()
+
+    def testPageLoad(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+
+    def testUsesCorrectTemplate(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'events/details.html')
+
+    def testEventTitlePresent(self):
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertContains(response, 'test new yes reg')
+
+    def testNotPublishedLoad(self):
+        self.newEvent.status = "draft"
+        self.newEvent.save()
+
+        response = self.client.get(reverse('events:details', kwargs= {'eventID':self.newEvent.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Event is not published.')
 
 class TestEventClean(TestCase):
     def setUp(self):
@@ -1450,8 +1493,8 @@ class TestSummaryPage(TestCase):
 
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
-        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student2', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
-        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student3', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student2',lastName='Student2',yearLevel=1,gender='other')
+        WorkshopAttendee.objects.create(event = self.workshop, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student3',lastName='Student2',yearLevel=1,gender='other')
 
     def createGetQuery(self, state: str, year: int):
         return f"?state={State.objects.get(name=state).id}&year={year}"

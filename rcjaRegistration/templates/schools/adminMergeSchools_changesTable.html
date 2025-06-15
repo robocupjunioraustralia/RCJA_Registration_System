@@ -1,0 +1,22 @@
+<table id="school1Table" class="ui celled table">
+    <thead>
+        <th>{{ firstColumnHeader }}</th>
+        <th>Current School</th>
+        <th>New School</th>
+        {% if showCampusColumn %}<th>Current Campus</th>
+        <th>New Campus</th>{% endif %}
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr {% if not item.school %}style="background-color: #ffcccc;"{% endif %}>
+            <td>{% if userField %}{{ item.user }}{% elif invoiceField %}<a href="{% url 'admin:invoices_invoice_change' item.pk %}" target="_blank">Invoice {{ item.invoiceNumber }} ({{ item.event }})</a>{% else %}{{ item }}{% endif %}</td>
+            <td>{{ item.oldSchool|default_if_none:"-" }}</td>
+            <td>{% if item.school == item.oldSchool %}No change{% elif not item.school %} <span style="color:red">Delete</span> {% else %}{{ item.school}}{% endif %}</td>
+            {% if showCampusColumn %}
+            <td>{{ item.oldCampus|default_if_none:"-" }}</td>
+            <td>{% if not item.campus %}-{% elif item.campus == item.oldCampus %}No change{% else %}{{ item.campus }}{% endif %}</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -15,6 +15,8 @@ class AssociationMember_Base:
     validPayload = {
         'birthday': (datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
         'user': 0,
+        'approvalStatus':'pending',
+        'membershipStartDate': datetime.date.today(),
     }
 
     @classmethod
@@ -28,8 +30,90 @@ class AssociationMember_Base:
 class Test_AssociationMember_NotStaff(AssociationMember_Base, Base_Test_NotStaff, TestCase):
     pass
 
-class Test_AssociationMember_SuperUser(AssociationMember_Base, Base_Test_SuperUser, TestCase):
-    expectedListItems = 3
+class AdditionalAssociationMemberTestsMixin:
+    expectedAddEditableFields = [
+        ('approvalStatus', 'Approval status'),
+    ]
+    expectedAddReadonlyFields = [
+        ('approvalRejectionBy', 'Approved/ rejected by'),
+        ('approvalRejectionDate', 'Approval/ rejection date'),
+        ('rulesAcceptedDate', 'Rules accepted date'),
+    ]
+    expectedChangeEditableFields = [
+        ('approvalStatus', 'Approval status'),
+    ]
+    expectedChangeReadonlyFields = [
+        ('approvalRejectionBy', 'Approved/ rejected by'),
+        ('approvalRejectionDate', 'Approval/ rejection date'),
+        ('rulesAcceptedDate', 'Rules accepted date'),
+    ]
+
+    def test_approvalStatus_approved_readonly(self):
+        self.state1_associationMember1.approvalStatus = 'approved'
+        self.state1_associationMember1.approvalRejectionDate = datetime.date.today()
+        self.state1_associationMember1.save()
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
+
+        self.checkReadonly(response, [('approvalStatus', 'Approval status'),])
+
+    def test_save_sets_approvalRejectionBy_not_already_set(self):
+        payload = self.validPayload.copy()
+        payload['approvalStatus'] = 'approved'
+
+        self.assertIsNone(self.state1_associationMember1.approvalRejectionBy)
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalRejectionBy, self.loggedInUser)
+
+    def test_save_does_not_set_approvalRejectionBy_already_set(self):
+        payload = self.validPayload.copy()
+        payload['approvalStatus'] = 'approved'
+        self.state1_associationMember1.approvalRejectionBy = self.user_state2_super2
+        self.state1_associationMember1.save()
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalRejectionBy, self.user_state2_super2)
+
+    def test_save_does_not_set_approvalRejectionBy_not_approved(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=self.validPayload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertIsNone(self.state1_associationMember1.approvalRejectionBy)
+    
+    def test_save_sets_approvalRejectionDate_not_already_set(self):
+        payload = self.validPayload.copy()
+        payload['approvalStatus'] = 'approved'
+
+        self.assertIsNone(self.state1_associationMember1.approvalRejectionDate)
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalRejectionDate, datetime.date.today())
+
+    def test_save_does_not_set_approvalRejectionDate_already_set(self):
+        payload = self.validPayload.copy()
+        payload['approvalStatus'] = 'approved'
+        self.state1_associationMember1.approvalRejectionDate = datetime.date.today() + datetime.timedelta(days=-1)
+        self.state1_associationMember1.save()
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalRejectionDate, datetime.date.today() + datetime.timedelta(days=-1))
+
+    def test_save_does_not_set_approvalRejectionDate_not_approved(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=self.validPayload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertIsNone(self.state1_associationMember1.approvalRejectionDate)
+
+class Test_AssociationMember_SuperUser(AdditionalAssociationMemberTestsMixin, AssociationMember_Base, Base_Test_SuperUser, TestCase):
+    expectedListItems = 8
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
@@ -44,7 +128,7 @@ class AssociationMember_Coordinators_Base(AssociationMember_Base):
     addPostCode = POST_DENIED
     changePostCode = POST_DENIED
 
-    expectedListItems = 2
+    expectedListItems = 5
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',
@@ -60,7 +144,7 @@ class Test_AssociationMember_FullCoordinator(AssociationMember_Coordinators_Base
         self.assertNotContains(response, 'Save and continue editing')
         self.assertContains(response, 'Close')
 
-class Test_AssociationMember_GlobalFullCoordinator(Test_AssociationMember_FullCoordinator):
+class Test_AssociationMember_GlobalFullCoordinator(AdditionalAssociationMemberTestsMixin, Test_AssociationMember_FullCoordinator):
     addLoadsCode = GET_SUCCESS
     deleteLoadsCode = GET_SUCCESS
 
@@ -68,7 +152,7 @@ class Test_AssociationMember_GlobalFullCoordinator(Test_AssociationMember_FullCo
     changePostCode = POST_SUCCESS
 
     wrongStateCode = GET_SUCCESS
-    expectedListItems = 3
+    expectedListItems = 8
     expectedStrings = [
         'user6@user.com',
         'user7@user.com',

@@ -35,11 +35,22 @@ def createUsers(self):
     self.password = 'chdj48958DJFHJGKDFNM' # Complex random password so passes validation tests
 
     self.user_state1_super1 = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_super1, password=self.password, homeState=self.state1)
+    self.user_state1_super1_association_member = AssociationMember.objects.create(user=self.user_state1_super1, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+    
     self.user_state2_super2 = User.objects.create_superuser(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_super2, password=self.password, homeState=self.state2)
+    
     self.user_notstaff = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_notstaff, password=self.password)
+    self.user_notstaff_association_member = AssociationMember.objects.create(user=self.user_notstaff, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+    
     self.user_state1_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_fullcoordinator, password=self.password, homeState=self.state1)
+    self.user_state1_fullcoordinator_association_member = AssociationMember.objects.create(user=self.user_state1_fullcoordinator, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+    
     self.user_state1_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_viewcoordinator, password=self.password, homeState=self.state1)
+    self.user_state1_viewcoordinator_association_member = AssociationMember.objects.create(user=self.user_state1_viewcoordinator, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+    
     self.user_state2_fullcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_fullcoordinator, password=self.password, homeState=self.state2)
+    self.user_state2_fullcoordinator_association_member = AssociationMember.objects.create(user=self.user_state2_fullcoordinator, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
     self.user_state2_viewcoordinator = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state2_viewcoordinator, password=self.password, homeState=self.state2)
     self.user_state1_school1_mentor1 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor1, password=self.password, homeState=self.state1)
     self.user_state1_school1_mentor2 = User.objects.create_user(adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION, email=self.email_user_state1_school1_mentor2, password=self.password, homeState=self.state1)
@@ -321,14 +332,20 @@ def createAssociationMemberships(self):
     self.state1_associationMember1 = AssociationMember.objects.create(
         user=self.user_state1_school1_mentor1,
         birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        rulesAcceptedDate=datetime.datetime.now(),
+        membershipStartDate=datetime.datetime.now(),
     )
 
     self.state1_associationMember2 = AssociationMember.objects.create(
         user=self.user_state1_school1_mentor2,
         birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        rulesAcceptedDate=datetime.datetime.now(),
+        membershipStartDate=datetime.datetime.now(),
     )
 
     self.state2_associationMember3 = AssociationMember.objects.create(
         user=self.user_state2_school3_mentor4,
         birthday=(datetime.datetime.now() + datetime.timedelta(days=-10)).date(),
+        rulesAcceptedDate=datetime.datetime.now(),
+        membershipStartDate=datetime.datetime.now(),
     )

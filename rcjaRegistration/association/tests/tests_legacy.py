@@ -33,12 +33,22 @@ class TestAssociationMemberPage(TestCase):
         self.assertContains(response, 'To become a member of the Association please fill out the details below and click Join.')
 
     def test_pageLoads_activeExistingMembership(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.associationMember1.save()
         response = self.client.get(reverse('association:membership'))
         self.assertEqual(200, response.status_code)
         self.assertContains(response, 'Membership status: Active')
         self.assertContains(response, 'You are currently a member.')
+        self.assertContains(response, 'Update')
+
+    def test_pageLoads_pendingExistingMembership(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.associationMember1.save()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, 'Membership status: Pending approval')
+        self.assertContains(response, 'Your membership is pending approval.')
         self.assertContains(response, 'Update')
 
     def test_pageLoads_noExistingMembership(self):
@@ -51,6 +61,7 @@ class TestAssociationMemberPage(TestCase):
     def test_pageLoads_expiredMembership(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.save()
         response = self.client.get(reverse('association:membership'))
         self.assertEqual(200, response.status_code)
@@ -58,11 +69,24 @@ class TestAssociationMemberPage(TestCase):
         self.assertContains(response, 'Your membership is expired.')
         self.assertNotContains(response, 'Update')
 
+    def test_rulesAccepted_prefilled_notAccepted(self):
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, '<input type="checkbox" name="rulesAccepted" required id="id_rulesAccepted">')
+
+    def test_rulesAccepted_prefilled_accepted(self):
+        self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
+        self.associationMember1.save()
+        response = self.client.get(reverse('association:membership'))
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, '<input type="checkbox" name="rulesAccepted" required id="id_rulesAccepted" checked>')
+
     def test_postSuccess_noExistingMembership(self):
         self.associationMember1.delete()
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
             'address': 'Test address',
+            'rulesAccepted': True,
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(AssociationMember.objects.count(), 1)
@@ -70,29 +94,35 @@ class TestAssociationMemberPage(TestCase):
         self.assertEqual(AssociationMember.objects.first().birthday, (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date())
         self.assertEqual(AssociationMember.objects.first().address, 'Test address')
         self.assertEqual(AssociationMember.objects.first().membershipStartDate, datetime.datetime.now().date())
+        self.assertEqual(AssociationMember.objects.first().rulesAcceptedDate, datetime.datetime.now().date())
 
     def test_postSuccess_inactiveExistingMembership(self):
         self.assertIsNone(self.associationMember1.membershipStartDate)
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
             'address': 'Test address',
+            'rulesAccepted': True,
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(AssociationMember.objects.count(), 1)
         self.associationMember1.refresh_from_db()
         self.assertEqual(self.associationMember1.membershipStartDate, datetime.datetime.now().date())
+        self.assertEqual(self.associationMember1.rulesAcceptedDate, datetime.datetime.now().date())
 
-    def test_postSuccess_activeExistingMembership(self):
+    def test_postSuccess_pendingExistingMembership(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
+        self.associationMember1.rulesAcceptedDate = (datetime.datetime.now() + datetime.timedelta(days=-5)).date()
         self.associationMember1.save()
         response = self.client.post(reverse('association:membership'), {
             'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date(),
             'address': 'Test address',
+            'rulesAccepted': True,
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(AssociationMember.objects.count(), 1)
         self.associationMember1.refresh_from_db()
         self.assertEqual(self.associationMember1.membershipStartDate, (datetime.datetime.now() + datetime.timedelta(days=-5)).date())
+        self.assertEqual(self.associationMember1.rulesAcceptedDate, (datetime.datetime.now() + datetime.timedelta(days=-5)).date())
         self.assertEqual(self.associationMember1.birthday, (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date())
 
     def test_postFail_noBirthday(self):
@@ -108,14 +138,6 @@ class TestAssociationMemberPage(TestCase):
         })
         self.assertEqual(200, response.status_code)
         self.assertContains(response, 'Address must not be blank for members 18 and over.')
-
-    def test_postFail_under18Address(self):
-        response = self.client.post(reverse('association:membership'), {
-            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date(),
-            'address': 'Test address',
-        })
-        self.assertEqual(200, response.status_code)
-        self.assertContains(response, 'Address must be blank for members under 18.')
 
 class TestAssociationMemberClean(TestCase):
     email1 = 'user1@user.com'
@@ -142,19 +164,44 @@ class TestAssociationMemberClean(TestCase):
     def test_membershipEndDate_valid(self):
         self.associationMember1.membershipStartDate = datetime.datetime.now().date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
-        self.assertIsNone(self.associationMember1.clean())
-
-    def test_addressBlankIfUnder18(self):
-        self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
-        self.associationMember1.address = 'Test address'
-        self.assertRaises(ValidationError, self.associationMember1.clean)
+        try:
+            self.associationMember1.clean()
+        except ValidationError:
+            self.fail("ValidationError raised")
 
     def test_addressNotBlankIfOver18(self):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date()
         self.associationMember1.address = ''
         self.assertRaises(ValidationError, self.associationMember1.clean)
 
-class TestTeamMethods(TestCase):
+    def test_approval_rulesAcceptedDate_blank(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = None
+        self.associationMember1.membershipStartDate = datetime.datetime.now().date()
+        self.assertRaisesMessage(ValidationError, "Rules must be accepted before approval.", self.associationMember1.clean)
+
+    def test_approval_membershipStartDate_blank(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
+        self.associationMember1.membershipStartDate = None
+        self.assertRaisesMessage(ValidationError, "Membership start date must be set before approval.", self.associationMember1.clean)
+    
+    def test_approval_both_blank(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = None
+        self.associationMember1.membershipStartDate = None
+        self.assertRaisesMessage(ValidationError, "Membership start date must be set before approval. Rules must be accepted before approval.", self.associationMember1.clean)
+
+    def test_approval_both_set(self):
+        self.associationMember1.approvalStatus = 'approved'
+        self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
+        self.associationMember1.membershipStartDate = datetime.datetime.now().date()
+        try:
+            self.associationMember1.clean()
+        except ValidationError:
+            self.fail("ValidationError raised")
+
+class TestAssociationMemberMethods(TestCase):
     email1 = 'user1@user.com'
     password = 'chdj48958DJFHJGKDFNM'
 
@@ -175,6 +222,16 @@ class TestTeamMethods(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.associationMember1), str(self.user1))
+
+    def test_preSave_clears_address_under18(self):
+        self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
+        self.associationMember1.address = 'Test address'
+        self.assertEqual(self.associationMember1.address, 'Test address')
+        
+        self.associationMember1.save()
+
+        self.associationMember1.refresh_from_db()
+        self.assertEqual(self.associationMember1.address, '')
 
     def test_membershipExpired_endToday(self):
         self.associationMember1.membershipEndDate = datetime.datetime.now().date()
@@ -224,16 +281,19 @@ class TestTeamMethods(TestCase):
         self.assertEqual(self.associationMember1.membershipType(), 'Ordinary')
 
     def test_membershipStatus_active_futureEndDate(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         self.assertEqual(self.associationMember1.membershipStatus(), 'Active')
 
     def test_membershipStatus_active_noEndDate(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertIsNone(self.associationMember1.membershipEndDate)
         self.assertEqual(self.associationMember1.membershipStatus(), 'Active')
     
     def test_membershipStatus_expired(self):
+        self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date()
         self.associationMember1.membershipEndDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertEqual(self.associationMember1.membershipStatus(), 'Expired')
@@ -242,3 +302,7 @@ class TestTeamMethods(TestCase):
         self.assertIsNone(self.associationMember1.membershipStartDate)
         self.assertIsNone(self.associationMember1.membershipEndDate)
         self.assertEqual(self.associationMember1.membershipStatus(), 'Not a member')
+
+    def test_membershipStatus_pending(self):
+        self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
+        self.assertEqual(self.associationMember1.membershipStatus(), 'Pending approval')

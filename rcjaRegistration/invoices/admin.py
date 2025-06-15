@@ -215,8 +215,11 @@ class InvoiceAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     # Prevent add because always created by signal
     # Reconsider in conjuction with signals
     def has_delete_permission(self, request, obj=None):
+        if not request.user.is_superuser:
+            return False
+        
         if obj:
-            if obj.invoicepayment_set.exists():
+            if obj.invoicepayment_set.exists() or obj.invoiceAmountInclGST_unrounded() > 0.05:
                 return False
         
         return super().has_delete_permission(request, obj=obj)
