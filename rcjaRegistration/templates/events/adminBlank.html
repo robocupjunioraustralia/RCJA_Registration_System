@@ -13,7 +13,7 @@
     </div>
     <br>
     <div class="row">
-        <div class="form form-group left-aligned-text"></div>
+        <div class="form form-group left-aligned-text">
             {% if form.non_field_errors %}
 
             <!-- Error messaging -->
@@ -39,9 +39,14 @@
                 </div>
                 <br>
                 <input class="ui primary button" type="submit" value="Compare Selected Events">
-
             </form>
+        </div>
     </div>
+
+    <br>
+    <div class="row">
+        <a href="{% url 'events:adminCompetitionCsv' %}"><button class="ui primary button">Download Competition CSV</button></a>
+        <a href="{% url 'events:adminWorkshopCsv' %}"><button class="ui primary button">Download Workshop CSV</button></a>
     </div>
 
 </div>

@@ -10,7 +10,7 @@ from django.conf import settings
 from coordination.permissions import checkCoordinatorPermission
 from django.forms import formset_factory
 
-import datetime
+import datetime, csv
 import jwt
 
 from .models import Event, BaseEventAttendance, Year, DivisionCategory
@@ -443,7 +443,8 @@ def eventAdminSummary(request):
                     return render(request, 'events/adminWorkshopDetails.html', context)
                 else:
                     events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
-                    return mergeMultipleWorkshopsAdminSummary(request, events)
+                    context =  mergeMultipleWorkshopsAdminSummary(events)
+                    return render(request, 'events/adminMultiWorkDetails.html', context)
             else:
                 events_list = form.cleaned_data['competitions']
                 if len(events_list)==1:
@@ -452,12 +453,13 @@ def eventAdminSummary(request):
                     return render(request, 'events/adminCompetitionDetails.html', context)
                 else:
                     events = [getAdminCompSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
-                    return mergeMultipleCompsAdminSummary(request, events)
+                    context = mergeMultipleCompsAdminSummary(events)
+                    return render(request, 'events/adminMultiCompDetails.html', context)
     else:
         form = AdminEventsForm()
     return render(request, "events/adminBlank.html", {"form": form, 'output':output})
 
-def mergeMultipleCompsAdminSummary(request, events):
+def mergeMultipleCompsAdminSummary(events):
     comps_number = len(events)
 
     # Divisions
@@ -494,9 +496,9 @@ def mergeMultipleCompsAdminSummary(request, events):
     context = {'divisions':divisions,
                'schools':schools,
                'events':events,}
-    return render(request, 'events/adminMultiCompDetails.html', context)
+    return context
 
-def mergeMultipleWorkshopsAdminSummary(request, events):
+def mergeMultipleWorkshopsAdminSummary(events):
     workshop_number = len(events)
 
     # Divisions
@@ -533,7 +535,7 @@ def mergeMultipleWorkshopsAdminSummary(request, events):
     context = {'divisions':divisions,
                'schools':schools,
                'events':events,}
-    return render(request, 'events/adminMultiWorkDetails.html', context)
+    return context
 
 def getAdminCompSummary(event):
     # Divisions
@@ -671,3 +673,34 @@ def getAdminWorkSummary(event):
         'school_students': school_students,
     }
     return context
+
+@login_required
+def comp_summary_csv(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Competition Attendance Summary.csv"'
+    t = loader.get_template("events/adminCompCsv.txt")
+    events = [event for event in Event.objects.filter(eventType='competition') 
+              if BaseEventAttendance.objects.filter(event=event).count()
+              and checkCoordinatorPermission(request, Event, event, 'view')]
+    events = [getAdminCompSummary(event) for event in events]
+    context =  mergeMultipleCompsAdminSummary(events)
+    response.write(t.render(context))
+    return response
+
+@login_required
+def workshop_summary_csv(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Workshop Attendance Summary.csv"'
+
+    t = loader.get_template("events/adminWorkshopCsv.txt")
+    events = [event for event in Event.objects.filter(eventType='workshop') 
+              if BaseEventAttendance.objects.filter(event=event).count() 
+              and checkCoordinatorPermission(request, Event, event, 'view')]
+    events = [getAdminWorkSummary(event) for event in events]
+    context =  mergeMultipleWorkshopsAdminSummary(events)
+    response.write(t.render(context))
+    return response

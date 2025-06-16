@@ -1,0 +1,19 @@
+Teams Per Division
+Division,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
+{% for division_cat in divisions.categories.values %}{% for division in division_cat.divisions.values %}{{division_cat.name}} - {{division.name}}, {% for event in division.results %}{{event.teams}},{% endfor %}
+{% endfor %}{% endfor %}
+
+Students Per Division
+Division,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
+{% for division_cat in divisions.categories.values %}{% for division in division_cat.divisions.values %}{{division_cat.name}} - {{division.name}}, {% for event in division.results %}{{event.students}},{% endfor %}
+{% endfor %}{% endfor %}
+
+Teams Per School
+School,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
+{% for school in schools.schools.values %}{{school.name}}, {% for event in school.teams %}{{event}},{% endfor %}
+{% endfor %}
+
+Students Per School
+School,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
+{% for school in schools.schools.values %}{{school.name}}, {% for event in school.students %}{{event}},{% endfor %}
+{% endfor %}
