@@ -1,19 +1,19 @@
 Student Per Division
-Division,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
-{% for division_cat in divisions.categories.values %}{% for division in division_cat.divisions.values %}{{division_cat.name}} - {{division.name}}, {% for event in division.results %}{{event.students}},{% endfor %}
+Division,{% for event in events %}"{{event.name|addslashes}} {{event.year|addslashes}}",{% endfor %}
+{% for division_cat in divisions.categories.values %}{% for division in division_cat.divisions.values %}"{{division_cat.name|addslashes}} - {{division.name|addslashes}}", {% for event in division.results %}{{event.students|addslashes}},{% endfor %}
 {% endfor %}{% endfor %}
 
 Teachers Per Division
-Division,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
-{% for division_cat in divisions.categories.values %}{% for division in division_cat.divisions.values %}{{division_cat.name}} - {{division.name}}, {% for event in division.results %}{{event.teachers}},{% endfor %}
+Division,{% for event in events %}"{{event.name|addslashes}} {{event.year|addslashes}}",{% endfor %}
+{% for division_cat in divisions.categories.values %}{% for division in division_cat.divisions.values %}"{{division_cat.name|addslashes}} - {{division.name|addslashes}}", {% for event in division.results %}{{event.teachers|addslashes}},{% endfor %}
 {% endfor %}{% endfor %}
 
 Students Per School
-School,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
-{% for school in schools.schools.values %}{{school.name}}, {% for event in school.students %}{{event}},{% endfor %}
+School,{% for event in events %}"{{event.name|addslashes}} {{event.year|addslashes}}",{% endfor %}
+{% for school in schools.schools.values %}"{{school.name|addslashes}}", {% for event in school.students %}{{event|addslashes}},{% endfor %}
 {% endfor %}
 
 Teachers Per School
-School,{% for event in events %}{{event.name}} {{event.year}},{% endfor %}
-{% for school in schools.schools.values %}{{school.name}}, {% for event in school.teachers %}{{event}},{% endfor %}
+School,{% for event in events %}"{{event.name|addslashes}} {{event.year|addslashes}}",{% endfor %}
+{% for school in schools.schools.values %}"{{school.name|addslashes}}", {% for event in school.teachers %}{{event|addslashes}},{% endfor %}
 {% endfor %}
