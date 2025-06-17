@@ -68,9 +68,12 @@ def WORKSHOPS_CHOICES():
 class AdminEventsForm(forms.Form):
     competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))
     workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(WORKSHOPS_CHOICES, tuple))
+    csv = forms.BooleanField(required=False,label="Produce CSV",)
 
     def clean(self):
         workshops = len(self.cleaned_data['workshops'])>0
         competitions = len(self.cleaned_data['competitions'])>0
         if workshops and competitions:
             raise ValidationError("Cannot directly compare workshops and competitions")
+        if not (workshops or competitions):
+            raise ValidationError("Choose at least one event")

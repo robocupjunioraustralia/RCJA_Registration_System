@@ -433,11 +433,12 @@ def eventAdminSummary(request):
         form = AdminEventsForm(request.POST)
         if form.is_valid():
             output = form.cleaned_data
-            workshops = len(form.cleaned_data['workshops'])>0
 
-            if workshops:
+            if len(form.cleaned_data['workshops']):
                 events_list = form.cleaned_data['workshops']
-                if len(events_list)==1:
+                if form.cleaned_data['csv']:
+                    return workshop_summary_csv(events_list)
+                elif len(events_list)==1:
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminWorkSummary(event)
                     return render(request, 'events/adminWorkshopDetails.html', context)
@@ -447,7 +448,9 @@ def eventAdminSummary(request):
                     return render(request, 'events/adminMultiWorkDetails.html', context)
             else:
                 events_list = form.cleaned_data['competitions']
-                if len(events_list)==1:
+                if form.cleaned_data['csv']:
+                    return comp_summary_csv(events_list)
+                elif len(events_list)==1:
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminCompSummary(event)
                     return render(request, 'events/adminCompetitionDetails.html', context)
@@ -687,33 +690,20 @@ def getAdminWorkSummary(event: Event):
     }
     return context
 
-@login_required
-def comp_summary_csv(request):
-    if not request.user.is_staff:
-        raise PermissionDenied("You do not have permission to view this page")
+def comp_summary_csv(events_list):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="Competition Attendance Summary.csv"'
     t = loader.get_template("events/adminCompCsv.txt")
-    events = [event for event in Event.objects.filter(eventType='competition') 
-              if BaseEventAttendance.objects.filter(event=event).count()
-              and checkCoordinatorPermission(request, Event, event, 'view')]
-    events = [getAdminCompSummary(event) for event in events]
+    events = [getAdminCompSummary(get_object_or_404(Event, pk=event)) for event in events_list]
     context =  mergeMultipleCompsAdminSummary(events)
     response.write(t.render(context))
     return response
 
-@login_required
-def workshop_summary_csv(request):
-    if not request.user.is_staff:
-        raise PermissionDenied("You do not have permission to view this page")
+def workshop_summary_csv(events_list):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="Workshop Attendance Summary.csv"'
-
     t = loader.get_template("events/adminWorkshopCsv.txt")
-    events = [event for event in Event.objects.filter(eventType='workshop') 
-              if BaseEventAttendance.objects.filter(event=event).count() 
-              and checkCoordinatorPermission(request, Event, event, 'view')]
-    events = [getAdminWorkSummary(event) for event in events]
-    context =  mergeMultipleWorkshopsAdminSummary(events)
+    events = [getAdminWorkSummary(get_object_or_404(Event, pk=event)) for event in events_list]
+    context = mergeMultipleWorkshopsAdminSummary(events)
     response.write(t.render(context))
     return response

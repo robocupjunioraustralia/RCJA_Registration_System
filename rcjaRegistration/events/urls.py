@@ -26,7 +26,5 @@ urlpatterns = [
     path('events/adminSummary/', views.eventAdminSummary, name='eventAdminSummary'),
     path('events/adminSummary/<int:eventID>', views.singlePageAdminSummary, name='eventAdminSummarySpecific'),
     path('error/underConstruction',views.loggedInUnderConstruction,name='loggedInConstruction'),
-    path('events/summaryReport', views.summaryReport, name='summaryReport'),
-    path('events/adminWorkshopCsv', views.workshop_summary_csv, name='adminWorkshopCsv'),
-    path('events/adminCompetitionCsv', views.comp_summary_csv, name='adminCompetitionCsv'),
+    path('events/summaryReport', views.summaryReport, name='summaryReport')
 ]
