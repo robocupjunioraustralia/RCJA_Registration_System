@@ -561,6 +561,12 @@ def getAdminCompSummary(event):
            division_categories[division['category_id']]['rows'] += 1
            division_categories[division['category_id']]['students'] += students
            division_categories[division['category_id']]['teams'] += teams.count()
+        elif division['category_id'] is None:
+            division_categories[division['category_id']]={'name':"None",
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 2,
+                                                          'students': students,
+                                                          'teams': teams.count()}
         else:
             division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
                                                           'divisions':[divisionDict], 
@@ -602,7 +608,7 @@ def getAdminCompSummary(event):
     }
     return context
 
-def getAdminWorkSummary(event):
+def getAdminWorkSummary(event: Event):
     # Divisions
     divisionList = event.divisions.values()
     division_categories = {}
@@ -624,6 +630,12 @@ def getAdminWorkSummary(event):
            division_categories[division['category_id']]['rows'] += 1
            division_categories[division['category_id']]['teachers'] += teachers
            division_categories[division['category_id']]['students'] += students
+        elif division['category_id'] is None:
+            division_categories[division['category_id']]={'name':"None",
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 2,
+                                                          'teachers': teachers,
+                                                          'students': students}
         else:
             division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
                                                           'divisions':[divisionDict], 
