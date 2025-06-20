@@ -39,11 +39,6 @@
         .header-button:hover {
             background-color: rgba(0,0,0,.03) !important;
         }
-        @media (max-width: 1050px) {
-            .hide-on-mobile {
-                display: none !important;
-            }
-        }
     </style>
 
     {% block head %}
@@ -68,24 +63,7 @@
         <a class="item" href="{% url 'association:membership' %}">
             <i class="briefcase icon"></i>
             Association Membership
-        </a>
-        {% if user.is_staff %}
-        <a class="item" href="{% url 'events:summaryReport' %}">
-            <i class="eye icon"></i>
-            Summary Report
-        </a>
-        <a class="item" href="{% url 'admin:index' %}">
-            <i class="id badge icon"></i>
-            Admin
-        </a>
-
-        {% endif %}
-        {% if environment is not None %}
-        <span class="item" style="color:red;">
-            <i class="important"></i>
-            <b>{{environment}}</b>
-        </span>
-        {% endif %}
+        </a> 
     </div>
     <div class="ui top massive fixed menu">
         <a class="item" style="margin-right:1rem;" onclick = "toggleSidebar()">
@@ -100,11 +78,15 @@
             <a class="item" href="{% url 'invoices:summary' %}">
                 <i class="credit card icon"></i>
                 My Invoices
-            </a>
+            </a>            
+            <a class="item" href="{% url 'association:membership' %}">
+                <i class="briefcase icon"></i>
+                Association Membership
+            </a>     
         </div>
         <div class = "right menu">
             {% if environment is not None %}
-            <span class="item hide-on-mobile" style="color:red; max-width:48%" >
+            <span class="item" style="color:red; max-width:48%" >
                 <i class="important"></i>
                 <b>{{environment}}</b>
             </span>

@@ -73,9 +73,9 @@
             {% else %}
             <p>No students yet.</p>
             {% endif %}
-            <a href = "{% url 'events:details' team.event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+            <a href = "{% url 'events:details' team.event.id %}" class = "ui button primary" >Back to event</a>
             {% if team.event.registrationsOpen %}
-            <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
+            <a href = "{% url 'teams:edit' team.id %}" class = "ui button primary" >Edit</a>
             {% endif %}
 
             {% if uploadedFiles.exists or team.availableFileUploadTypes %}
@@ -111,7 +111,7 @@
             </table>
             {% endif %}
             {% if team.availableFileUploadTypes %}
-            <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
+            <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" >Upload a new file</a>
 
             <h3>File upload categories:</h3>
             <ul>

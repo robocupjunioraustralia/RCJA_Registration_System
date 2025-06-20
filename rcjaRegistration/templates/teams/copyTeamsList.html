@@ -27,7 +27,7 @@
                 <div class="form form-group left-aligned-text">
                     <h1>Copy existing team</h1>
                     <h1>{{event}}</h1>
-                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary">Back to event</a>
 
                     {% if copiedTeams %}
 
@@ -100,7 +100,7 @@
                     <h3>No teams available to copy. Create new teams from the events page.</h3>
                     {% endif %}
 
-                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
+                    <a href = "{% url 'events:details' event.id %}" class = "ui button primary" >Back to event</a>
                 </div>
             </div>
         </div>
