@@ -148,9 +148,9 @@
               <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
               {% endif %}
               {% if 'fromEvent' in request.GET or not team %}
-              <a href = "{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              <a href = "{% url 'events:details' event.id %}" class = "ui button negative">Cancel</a>
               {% else %}
-              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative">Cancel</a>
               {% endif %}
             </form>
           </div>
