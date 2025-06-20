@@ -75,11 +75,19 @@ def dashboard(request):
         status="published",
     ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct()
 
-    pastEvents = Event.objects.filter(
-        endDate__lt=datetime.datetime.today(),
-        baseeventattendance__in=usersEventAttendances,
-        status="published",
-    ).prefetch_related('state', 'year').order_by('-startDate').distinct()
+    if request.user.is_staff:
+        pastEvents = Event.objects.filter(
+                endDate__lt=datetime.datetime.today(),
+                status="published",
+            ).prefetch_related('state', 'year').order_by('-startDate').distinct()
+        if request.method == 'GET' and not 'viewAll' in request.GET:
+            pastEvents = pastEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
+    else:
+        pastEvents = Event.objects.filter(
+            endDate__lt=datetime.datetime.today(),
+            baseeventattendance__in=usersEventAttendances,
+            status="published",
+        ).prefetch_related('state', 'year').order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
