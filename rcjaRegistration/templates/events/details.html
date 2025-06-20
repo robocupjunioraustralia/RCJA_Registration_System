@@ -99,10 +99,10 @@
             <h1> Maximium number of {{event.registrationName}}s for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
             {% else %}
                 {% if event.boolWorkshop %}
-                <a href="{% url 'workshops:create' event.id %}"><button class="ui primary button">Add attendee</button></a>
+                <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
                 {% else %} {# Competition #}
-                <a href="{% url 'teams:create' event.id %}"><button class="ui primary button">Add team</button></a>
-                {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui primary button">Copy existing team from previous event</button></a>{% endif %}
+                <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
+                {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
                 {% endif %}
             {% endif %}
         {% else %}
@@ -172,7 +172,7 @@
                     {% endif %}
 
                     {% if team.availableFileUploadTypes %}
-                    <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary">Upload file</a>
+                    <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload file</a>
                     {% endif %}
 
                     {% if event.registrationsOpen %}
