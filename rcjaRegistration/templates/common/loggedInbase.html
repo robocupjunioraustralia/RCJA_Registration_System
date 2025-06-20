@@ -76,13 +76,12 @@
         </a>
         <a class="item" href="{% url 'events:eventAdminSummary' %}">
             <i class="columns icon"></i>
-            Compare Events
+            Event Attendance Summaries
         </a>
         <a class="item" href="{% url 'admin:index' %}">
             <i class="id badge icon"></i>
             Admin
         </a>
-
         {% endif %}
         {% if environment is not None %}
         <span class="item" style="color:red;">

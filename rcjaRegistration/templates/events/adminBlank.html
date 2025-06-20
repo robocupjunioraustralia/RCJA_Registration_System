@@ -9,7 +9,13 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>Event Comparisons</h1>
+        <h1>Attendance Summaries</h1>
+    </div>
+    <br>
+    <div class="row">
+        <p>Choose one or more events to view the attendance summaries. </p>
+        <p>Competitions and workshops cannot be directly compared because competitions have teams whilst workshops have students and teachers.</p>
+        <p>Select the <em>Produce CSV</em> button if you wish to export a CSV file instead of viewing the data through a web page.</p>
     </div>
     <br>
     <div class="row">
@@ -30,7 +36,7 @@
                 {% csrf_token %}
                 <div class="row">
                     <h2>{{form.competitions.label_tag}}</h2>
-                    <p>{{form.competitions}}</p>
+                    {{form.competitions}}
                 </div>
                 <br>
                 <div class="row">
