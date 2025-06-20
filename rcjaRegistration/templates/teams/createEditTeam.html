@@ -89,7 +89,7 @@
                 
               <h2>Team details</h2>
                
-              <div class="two fields">
+              <div class="three fields">
                 <div class = "field">
                   <label>Team name:</label>
                     {{form.name|attr:"placeholder:Team name"}}
@@ -98,13 +98,11 @@
                   <label>Division:</label>
                     {{ form.division|attr:"class:ui dropdown"}} 
                 </div>
+                <div class = "field">
+                  <label>Campus:</label>
+                    {{ form.campus|attr:"class:ui dropdown"}} 
+                </div>
               </div>
-              {% if form.campus.field.queryset %}
-              <div class = "field">
-                <label>Campus:</label>
-                  {{ form.campus|attr:"class:ui dropdown"}} 
-              </div>
-              {% endif %}
 
               <h2>Platform</h2>
 
@@ -150,9 +148,9 @@
               <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
               {% endif %}
               {% if 'fromEvent' in request.GET or not team %}
-              <a href = "{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              <a href = "{% url 'events:details' event.id %}" class = "ui button negative">Cancel</a>
               {% else %}
-              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative">Cancel</a>
               {% endif %}
             </form>
           </div>

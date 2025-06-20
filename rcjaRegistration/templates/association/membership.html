@@ -11,18 +11,12 @@
 <div class="ui aligned container">
     <div class="bg">
         <div class="">
-            <h1>Association Membership</h1>
-
-            {% if pageForced %}
-            <div class="ui message" style="color: red;">
-                <div class="header">Association Membership Required</div>
-                <p>All Committee members must be members of the Association. You must complete this page before accessing the rest of the site.</p>
+            <div class="row">
+                <h1>Association Membership</h1>
+                <p><b>RoboCup Junior (Australia) Inc.</b></p>
+                <p>Registration Number: A0040826L<br>Australian Business Number: 72 592 462 493</p>
+                <p><a href="https://www.robocupjunior.org.au/wp-content/uploads/2020/10/RCJA-Association-Rules.pdf" target="_blank">Rules of Association</a></p>
             </div>
-            {% endif %}
-
-            <p><b>RoboCup Junior (Australia) Inc.</b></p>
-            <p>Registration Number: A0040826L<br>Australian Business Number: 72 592 462 493</p>
-            <p><a href="https://www.robocupjunior.org.au/wp-content/uploads/2020/10/RCJA-Association-Rules.pdf" target="_blank">Rules of Association</a></p>
 
             <h3>Your details</h3>
             <p>Name: {{ request.user.get_full_name }}</p>
@@ -30,10 +24,7 @@
             <p>Phone: {{ request.user.mobileNumber }}</p>
             <p>State: {{ request.user.homeState }}</p>
 
-            <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.
-            <br>
-            If you have any questions please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.
-            </p>
+            <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.</p>
 
             <h3>Membership status: {% if associationMember %}{{ associationMember.membershipStatus }}{% else %}Not a member{% endif %}</h3>
             {% if associationMember and associationMember.membershipExpired %}
@@ -41,7 +32,7 @@
             {% else %}
                 {% if associationMember and associationMember.membershipActive and associationMember.approvalStatus == "approved" %}
                     <h3>Membership details</h3>
-                    <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.</p>
+                    <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary.</p>
                     <p>Membership start date: {{ associationMember.membershipStartDate }}</p>
                     <p><b>Membership type: {{associationMember.membershipType }}</b></p>
                 {% elif associationMember and associationMember.membershipActive and associationMember.approvalStatus == "pending" %}

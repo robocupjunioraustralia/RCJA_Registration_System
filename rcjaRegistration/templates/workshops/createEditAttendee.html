@@ -86,7 +86,7 @@
                 
               <h2>Attendee details</h2>
 
-              <div class="two fields">
+              <div class="three fields">
                 <div class = "field">
                   <label>Type:</label>
                     {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
@@ -95,13 +95,11 @@
                   <label>Division:</label>
                     {{ form.division|attr:"class:ui dropdown"}} 
                 </div>
+                <div class = "field">
+                  <label>Campus:</label>
+                    {{ form.campus|attr:"class:ui dropdown"}} 
+                </div>
               </div>
-              {% if form.campus.field.queryset %}
-              <div class = "field">
-                <label>Campus:</label>
-                  {{ form.campus|attr:"class:ui dropdown"}} 
-              </div>
-              {% endif %}
 
               <!-- Name -->
               <div class="two fields">
@@ -139,7 +137,7 @@
               {% if not attendee %}
               <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
               {% endif %}    
-              <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+              <a href ="{% url 'events:details' event.id %}" class = "ui button negative">Cancel</a>
             </form>
           </div>
         </div>
