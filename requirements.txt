@@ -24,7 +24,7 @@ PyJWT==2.9.0
 pyparsing==2.4.7
 python-dateutil==2.8.1
 pytz==2020.1
-requests==2.32.3
+requests==2.32.4
 s3transfer==0.11.1
 sentry-sdk==2.8.0
 six==1.17.0
