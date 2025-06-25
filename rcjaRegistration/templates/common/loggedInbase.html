@@ -74,11 +74,14 @@
             <i class="eye icon"></i>
             Summary Report
         </a>
+        <a class="item" href="{% url 'events:eventAdminSummary' %}">
+            <i class="columns icon"></i>
+            Event Attendance Summaries
+        </a>
         <a class="item" href="{% url 'admin:index' %}">
             <i class="id badge icon"></i>
             Admin
         </a>
-
         {% endif %}
         {% if environment is not None %}
         <span class="item" style="color:red;">
@@ -155,7 +158,7 @@
             </div>
         </div>
     </div>
-    <div class="pusher" style="padding-bottom:3rem;">
+    <div class="pusher" style="padding-bottom:6rem;">
         <div style="margin-bottom:6rem;"> </div>
         {% block content %}
         {% endblock %}

@@ -8,16 +8,17 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
 from django.conf import settings
 from coordination.permissions import checkCoordinatorPermission
+from django.forms import formset_factory
 
-import datetime
+import datetime, csv
 import jwt
 
-from .models import Event, BaseEventAttendance, Year
+from .models import Event, BaseEventAttendance, Year, DivisionCategory
 from regions.models import State
 from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
-from .forms import getSummaryForm
+from .forms import getSummaryForm, AdminEventsForm
 
 # Need to check if schooladministrator is None
 
@@ -74,11 +75,19 @@ def dashboard(request):
         status="published",
     ).distinct().prefetch_related('state', 'year').order_by('startDate').distinct()
 
-    pastEvents = Event.objects.filter(
-        endDate__lt=datetime.datetime.today(),
-        baseeventattendance__in=usersEventAttendances,
-        status="published",
-    ).prefetch_related('state', 'year').order_by('-startDate').distinct()
+    if request.user.is_staff:
+        pastEvents = Event.objects.filter(
+                endDate__lt=datetime.datetime.today(),
+                status="published",
+            ).prefetch_related('state', 'year').order_by('-startDate').distinct()
+        if request.method == 'GET' and not 'viewAll' in request.GET:
+            pastEvents = pastEvents.filter(Q(state=currentState) | Q(globalEvent=True) | Q(state__typeGlobal=True))
+    else:
+        pastEvents = Event.objects.filter(
+            endDate__lt=datetime.datetime.today(),
+            baseeventattendance__in=usersEventAttendances,
+            status="published",
+        ).prefetch_related('state', 'year').order_by('-startDate').distinct()
 
     # Invoices
     from invoices.models import Invoice
@@ -414,3 +423,295 @@ def summaryReport(request):
         'year': selected_year,
     }
     return render(request, 'events/summaryReport.html', context)
+
+@login_required
+def singlePageAdminSummary(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+    if event.boolWorkshop():
+        context = getAdminWorkSummary(event)
+        return render(request, 'events/adminWorkshopDetails.html', context)
+    else:
+        context = getAdminCompSummary(event)
+        return render(request, 'events/adminCompetitionDetails.html', context)
+
+@login_required
+def eventAdminSummary(request):
+    output = ""
+    if request.method == "POST":
+        form = AdminEventsForm(request.POST)
+        if form.is_valid():
+            output = form.cleaned_data
+
+            if len(form.cleaned_data['workshops']):
+                events_list = form.cleaned_data['workshops']
+                if form.cleaned_data['csv']:
+                    return workshop_summary_csv(events_list)
+                elif len(events_list)==1:
+                    event = get_object_or_404(Event, pk=events_list[0])
+                    context = getAdminWorkSummary(event)
+                    return render(request, 'events/adminWorkshopDetails.html', context)
+                else:
+                    events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                    context =  mergeMultipleWorkshopsAdminSummary(events)
+                    return render(request, 'events/adminMultiWorkDetails.html', context)
+            else:
+                events_list = form.cleaned_data['competitions']
+                if form.cleaned_data['csv']:
+                    return comp_summary_csv(events_list)
+                elif len(events_list)==1:
+                    event = get_object_or_404(Event, pk=events_list[0])
+                    context = getAdminCompSummary(event)
+                    return render(request, 'events/adminCompetitionDetails.html', context)
+                else:
+                    events = [getAdminCompSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                    context = mergeMultipleCompsAdminSummary(events)
+                    return render(request, 'events/adminMultiCompDetails.html', context)
+    else:
+        form = AdminEventsForm()
+    return render(request, "events/adminBlank.html", {"form": form, 'output':output})
+
+def mergeMultipleCompsAdminSummary(events):
+    comps_number = len(events)
+
+    # Divisions
+    divisions = {'teams':[0]*comps_number,'students':[0]*comps_number,'categories':{}}
+    for event_no, event in enumerate(events):
+        for division_cat in event['division_categories'].values():
+            division_cat_dict = divisions['categories'].get(division_cat['name'], {'name':division_cat['name'], 'divisions':{},'teams':[0]*comps_number,'students':[0]*comps_number})
+            for division in division_cat['divisions']:
+                division_dict = division_cat_dict['divisions'].get(division['name'], {'name':division['name'],'results':['Division not included']*comps_number})
+                division_dict['results'][event_no] = {'teams':division['teams'],'students':division['students']}
+                division_cat_dict['teams'][event_no] += division['teams']
+                division_cat_dict['students'][event_no] += division['students']
+                division_cat_dict['divisions'][division['name']] = division_dict
+            divisions['categories'][division_cat['name']] = division_cat_dict
+            divisions['students'][event_no] += division_cat_dict['students'][event_no]
+            divisions['teams'][event_no] += division_cat_dict['teams'][event_no]
+
+
+    for division_cat in divisions['categories']:
+        rows = len(divisions['categories'][division_cat]['divisions'].keys())
+        divisions['categories'][division_cat]['rows']=rows+1
+    
+    # Schools
+    schools = {'teams':[0]*comps_number,'students':[0]*comps_number,'schools':{}}
+    for event_no, event in enumerate(events):
+        for school in event['schools']:
+            school_dict = schools['schools'].get(school['name'], {'name':school['name'],'teams':[0]*comps_number,'students':[0]*comps_number})
+            school_dict['teams'][event_no] += school['teams']
+            school_dict['students'][event_no] += school['students']
+            schools['schools'][school['name']] = school_dict
+            schools['students'][event_no] += school_dict['students'][event_no]
+            schools['teams'][event_no] += school_dict['teams'][event_no]
+
+    context = {'divisions':divisions,
+               'schools':schools,
+               'events':events,}
+    return context
+
+def mergeMultipleWorkshopsAdminSummary(events):
+    workshop_number = len(events)
+
+    # Divisions
+    divisions = {'students':[0]*workshop_number,'teachers':[0]*workshop_number,'categories':{}}
+    for event_no, event in enumerate(events):
+        for division_cat in event['division_categories'].values():
+            division_cat_dict = divisions['categories'].get(division_cat['name'], {'name':division_cat['name'], 'divisions':{},'teachers':[0]*workshop_number,'students':[0]*workshop_number})
+            for division in division_cat['divisions']:
+                division_dict = division_cat_dict['divisions'].get(division['name'], {'name':division['name'],'results':['Division not included']*workshop_number})
+                division_dict['results'][event_no] = {'teachers':division['teachers'],'students':division['students']}
+                division_cat_dict['teachers'][event_no] += division['teachers']
+                division_cat_dict['students'][event_no] += division['students']
+                division_cat_dict['divisions'][division['name']] = division_dict
+            divisions['categories'][division_cat['name']] = division_cat_dict
+            divisions['students'][event_no] += division_cat_dict['students'][event_no]
+            divisions['teachers'][event_no] += division_cat_dict['teachers'][event_no]
+
+
+    for division_cat in divisions['categories']:
+        rows = len(divisions['categories'][division_cat]['divisions'].keys())
+        divisions['categories'][division_cat]['rows']=rows+1
+    
+    # Schools
+    schools = {'teachers':[0]*workshop_number,'students':[0]*workshop_number,'schools':{}}
+    for event_no, event in enumerate(events):
+        for school in event['schools']:
+            school_dict = schools['schools'].get(school['name'], {'name':school['name'],'teachers':[0]*workshop_number,'students':[0]*workshop_number})
+            school_dict['teachers'][event_no] += school['teachers']
+            school_dict['students'][event_no] += school['students']
+            schools['schools'][school['name']] = school_dict
+            schools['students'][event_no] += school_dict['students'][event_no]
+            schools['teachers'][event_no] += school_dict['teachers'][event_no]
+
+    context = {'divisions':divisions,
+               'schools':schools,
+               'events':events,}
+    return context
+
+def getAdminCompSummary(event):
+    # Divisions
+    divisionList = event.divisions.values()
+    division_categories = {}
+    division_teams = 0
+    division_students = 0
+    for division in divisionList.all():
+        teams = Team.objects.filter(event = event).filter(division = division["id"])
+        students = 0
+        for team in teams:
+            students += Student.objects.filter(team=team).count()  
+        division_students += students
+        division_teams += teams.count()
+        divisionDict = {
+            'name': division["name"],
+            'teams': teams.count(),
+            'students': students,
+        }
+
+        if division['category_id'] in division_categories:
+           division_categories[division['category_id']]['divisions'].append(divisionDict)
+           division_categories[division['category_id']]['rows'] += 1
+           division_categories[division['category_id']]['students'] += students
+           division_categories[division['category_id']]['teams'] += teams.count()
+        elif division['category_id'] is None:
+            division_categories[division['category_id']]={'name':"None",
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 2,
+                                                          'students': students,
+                                                          'teams': teams.count()}
+        else:
+            division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 2,
+                                                          'students': students,
+                                                          'teams': teams.count()}
+
+    # Schools
+    teams = Team.objects.filter(event = event)
+    schools = {}
+    school_teams = 0
+    school_students = 0
+    for team in teams:
+        school = team.school
+        students = Student.objects.filter(team=team).count()
+        school_teams += 1
+        school_students += students
+        if school in schools:
+            schools[school]['teams'] += 1
+            schools[school]['students'] += students
+        else:
+            name = school.name if school is not None else 'Independent'
+            schools[school] = {'name': name, 'teams': 1, 'students': students}
+    
+    independent = schools.pop(None, {'name': 'Independent', 'teams': 0, 'students': 0})
+    school_list = list(schools.values())
+    school_list.sort(key=lambda x: x['name'])
+    school_list.append(independent)
+    
+    context = {
+        "name": event.name,
+        "year": str(event.year),
+        "division_categories": division_categories,
+        'division_teams': division_teams,
+        'division_students': division_students,
+        "schools": school_list,
+        'school_teams': school_teams,
+        'school_students': school_students,
+    }
+    return context
+
+def getAdminWorkSummary(event: Event):
+    # Divisions
+    divisionList = event.divisions.values()
+    division_categories = {}
+    division_teachers = 0
+    division_students = 0
+    for division in divisionList.all():
+        students = WorkshopAttendee.objects.filter(event=event, division=division['id'], attendeeType='student').count()
+        teachers = WorkshopAttendee.objects.filter(event=event, division=division['id'], attendeeType='teacher').count()
+        division_students += students
+        division_teachers += teachers
+        divisionDict = {
+            'name': division["name"],
+            'students': students,
+            'teachers': teachers,
+        }
+
+        if division['category_id'] in division_categories:
+           division_categories[division['category_id']]['divisions'].append(divisionDict)
+           division_categories[division['category_id']]['rows'] += 1
+           division_categories[division['category_id']]['teachers'] += teachers
+           division_categories[division['category_id']]['students'] += students
+        elif division['category_id'] is None:
+            division_categories[division['category_id']]={'name':"None",
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 2,
+                                                          'teachers': teachers,
+                                                          'students': students}
+        else:
+            division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
+                                                          'divisions':[divisionDict], 
+                                                          'rows': 2,
+                                                          'teachers': teachers,
+                                                          'students': students}
+
+    # Change rows to strings
+    for division_cat in division_categories.values():
+        division_cat["rows"] = division_cat["rows"]
+
+    # Schools
+    schools = {}
+    school_teachers = 0
+    school_students = 0
+    attendees = WorkshopAttendee.objects.filter(event=event)
+    for attendee in attendees:
+        school = attendee.school
+        students = 0
+        teachers = 0
+        if attendee.attendeeType=='student':
+            school_students+= 1
+            students += 1
+        else:
+            school_teachers += 1
+            teachers += 1
+
+        if school in schools:
+            schools[school]['students'] += students
+            schools[school]['teachers'] += teachers
+        else:
+            name = school.name if school is not None else 'Independent'
+            schools[school] = {'name': name, 'students': students, 'teachers': teachers}
+    
+    independent = schools.pop(None, {'name': 'Independent', 'students': 0, 'teachers': 0})
+    school_list = list(schools.values())
+    school_list.sort(key=lambda x: x['name'])
+    school_list.append(independent)
+    
+    context = {
+        "name": event.name,
+        "year": str(event.year),
+        "division_categories": division_categories,
+        'division_teachers': division_teachers,
+        'division_students': division_students,
+        "schools": school_list,
+        'school_teachers': school_teachers,
+        'school_students': school_students,
+    }
+    return context
+
+def comp_summary_csv(events_list):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Competition Attendance Summary.csv"'
+    t = loader.get_template("events/adminCompCsv.txt")
+    events = [getAdminCompSummary(get_object_or_404(Event, pk=event)) for event in events_list]
+    context =  mergeMultipleCompsAdminSummary(events)
+    response.write(t.render(context))
+    return response
+
+def workshop_summary_csv(events_list):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Workshop Attendance Summary.csv"'
+    t = loader.get_template("events/adminWorkshopCsv.txt")
+    events = [getAdminWorkSummary(get_object_or_404(Event, pk=event)) for event in events_list]
+    context = mergeMultipleWorkshopsAdminSummary(events)
+    response.write(t.render(context))
+    return response
