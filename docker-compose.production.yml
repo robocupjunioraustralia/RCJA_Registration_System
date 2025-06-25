@@ -1,10 +1,10 @@
 services:
   web:
-    restart: unless-stopped
+    restart: unless_stopped
     image: rcja-registration:production
     build: .
     ports:
       - 8000:8000
 
   db:
-    restart: unless-stopped
+    restart: unless_stopped
