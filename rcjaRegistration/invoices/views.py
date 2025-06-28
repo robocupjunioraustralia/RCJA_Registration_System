@@ -8,7 +8,12 @@ from coordination.permissions import checkCoordinatorPermission
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 import datetime
+from django.conf import settings
+from django.urls import reverse
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
+from .forms import getOverdueInvoicesForm
 from .models import InvoiceGlobalSettings, Invoice
 from events.models import Division, Event
 from schools.models import Campus
@@ -167,3 +172,58 @@ def editInvoicePOAJAX(request, invoiceID):
         """
     else:
         return HttpResponseForbidden()
+
+def sendOverdueEmail(invoice, event, user):
+    context = {"invoice": invoice, "event":event, "user":user}
+    if event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(42,0,0,0,0,0,0):
+        # Beyond Overdue
+        text_content = render_to_string(
+            "emails/overdue_invoice/beyond_overdue.txt",
+            context=context,
+        )
+        subject = "BEYOND OVERDUE"
+    elif event.paymentDueDate < datetime.datetime.today().date()-datetime.timedelta(21,0,0,0,0,0,0):
+        # Well Overdue
+        text_content = render_to_string(
+            "emails/overdue_invoice/well_overdue.txt",
+            context=context,
+        )
+        subject = "WELL OVERDUE"
+    else:
+        # Overdue
+        text_content = render_to_string(
+            "emails/overdue_invoice/overdue.txt",
+            context=context,
+        )
+        subject = "OVERDUE"
+
+    msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        user.email,
+        [invoice.invoiceToUserEmail()],
+    )
+    msg.send()
+
+@login_required
+def sendOverdueEmails(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+    
+    if request.method == "POST":
+        form = getOverdueInvoicesForm(request)
+        if form.is_valid():
+            for eventID in form.cleaned_data['events']:
+                event = get_object_or_404(Event, pk=int(eventID))
+                invoices = Invoice.objects.filter(event=int(eventID))
+                for invoice in invoices:
+                    if invoice.amountDueInclGST_unrounded()>0.05 and \
+                        event.paymentDueDate < datetime.datetime.today().date():
+                        sendOverdueEmail(invoice, event, request.user)
+                        pass
+    else:
+        form = getOverdueInvoicesForm(request)
+
+    return render(request, "invoices/overdueInvoices.html", {"form": form})
+
+
