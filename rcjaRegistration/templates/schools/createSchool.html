@@ -7,64 +7,54 @@
 
 <style>
  .left-aligned-text {
-  text-align: left;
+    text-align: left;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="bg">
-  <div class = "">
-    <div class="ui center aligned grid ">
-      <div class = "twelve wide mobile six wide computer column ui">
+<div class="ui aligned container">
+    <div class = "row">
         <div class = "form form-group left-aligned-text">
-        <h1> Create school </h1>
+            <h1> Create school </h1>
             {% if form.errors or form.non_field_errors %}
-            
-            <!-- Error messaging -->
-            <div class="ui message left-aligned-text">
-              <div class="">
-                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                {{ form.non_field_errors }}
-                
-                <ul>
-                  {% for field in form %}
-                    {% if field.errors %}
-                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                  {% endfor %}
-                
-                </ul>
-              </div>
-            </div>
-            <!-- /Error messaging -->
+                <!-- Error messaging -->
+                <div class="ui message left-aligned-text">
+                    <div class="">
+                        <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ form.non_field_errors }}
+                        <ul>
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <!-- /Error messaging -->
             {% endif %}
-          
+        
             <form method="post" class = "ui form">
-              {% csrf_token %}
-
-              {% for field in form %}
-              <p>
-                {{ field.label_tag }}<br>
-                {{ field }}
-                {% if field.help_text %}
-                  <small style="color: grey">{{ field.help_text }}</small>
-                {% endif %}
-                {% for error in field.errors %}
-                  <p style="color: red">{{ error }}</p>
+                {% csrf_token %}
+                {% for field in form %}
+                    <p>
+                        {{ field.label_tag }}<br>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small style="color: grey">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p style="color: red">{{ error }}</p>
+                        {% endfor %}
+                    </p>
                 {% endfor %}
-              </p>
-              {% endfor %}
-
-              <input class="primary ui button" type="submit" value="Save" />
+                <input class="primary ui button" type="submit" value="Save" />
             </form>
             <a href ="{% url 'users:details' %}"><button class = "ui button negative">Cancel</button></a>
-
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
 {% include "common/regionsFieldJS.html" with stateFieldID="id_state" regionFieldID="id_region" %}

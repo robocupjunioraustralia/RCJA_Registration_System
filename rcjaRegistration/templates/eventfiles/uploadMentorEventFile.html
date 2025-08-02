@@ -37,91 +37,84 @@
 
 {% block content %}
 
-<div class="bg">
-    <div class="">
-        <div class="ui center aligned grid ">
-            <div class="twelve wide mobile eight wide computer column ui">
-                <div class="form form-group left-aligned-text">
-                    <div>
-                        <h1>Upload file: {{eventAttendance}}</h1>
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Upload file: {{eventAttendance}}</h1>
+        {% if not uploadedFile %}
+            <h2>Upload a new file</h2>
+            <h3 style="color: red">Due to an issue files larger than approximately 10MB currently cannot be uploaded. For larger files please instead submit a sharing link.<br/><br/>If you wish to submit a sharing link, please upload a Word or Notepad file with the sharing link inside. Ensure the sharing is set to public.</h3>
+        {% else %}
+            <h2>Edit existing file: <a href="{{uploadedFile.fileURL}}" target="_blank">{{uploadedFile.originalFilename}}</a></h2>
+        {% endif %}
 
-                        {% if not uploadedFile %}
-                        <h2>Upload a new file</h2>
-                        <h3 style="color: red">Due to an issue files larger than approximately 10MB currently cannot be uploaded. For larger files please instead submit a sharing link.<br/><br/>If you wish to submit a sharing link, please upload a Word or Notepad file with the sharing link inside. Ensure the sharing is set to public.</h3>
+        <h3>File upload categories</h3>
 
-                        {% else %}
-                        <h2>Edit existing file: <a href="{{uploadedFile.fileURL}}" target="_blank">{{uploadedFile.originalFilename}}</a></h2>
-                        {% endif %}
-
-                        <h3>File upload categories</h3>
-
-                        <table id="categoriesTable" class="ui celled table">
-                            <thead>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Max file size</th>
-                                <th>Allowed file types</th>
-                                <th>Upload deadline</th>
-                            </thead>
-                            <tbody>
-                                {% for availableFileUploadType in availableFileUploadTypes %}
-                                <tr id="fileRow{{uploadedFile.id}}">
-                                    <td>{{availableFileUploadType.fileType.name}}</td>
-                                    <td>{{availableFileUploadType.fileType.description}}</td>
-                                    <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
-                                    <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}</td>
-                                    <td>{{availableFileUploadType.uploadDeadline}}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-
-                        <!-- Error messaging -->
-                        {% if form.errors %}
-                        <div class="ui message left-aligned-text">
-                            <div class="">
-                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                                {{ form.non_field_errors }}
-                                <ul>
-                                    {% for field in form %}
-                                    {% if field.errors %}
-                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                        {% endif %}
-                        <!-- /Error messaging -->
-
-                        <form enctype="multipart/form-data" method="post" class="ui form">
-                            {% csrf_token %}
-
-                            {% if not uploadedFile %}
-                            <div class="two fields">
-                                <div class="field">
-                                    <label>File:</label>
-                                    {{form.fileUpload}}
-                                </div>
-                                <div class="field">
-                                    <label>Category:</label>
-                                    {{ form.fileType|attr:"class:ui dropdown"}}
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="field">
-                                <label>Type:</label>
-                                {{ form.fileType|attr:"class:ui dropdown"}}
-                            </div>
-                            {% endif %}
-
-                            <input class="primary ui button" type="submit" value="Save" />
-                            <a href="{{ cancelURL }}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
-
-                        </form>
-
+        <table id="categoriesTable" class="ui celled table">
+            <thead>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Max file size</th>
+                <th>Allowed file types</th>
+                <th>Upload deadline</th>
+            </thead>
+            <tbody>
+                {% for availableFileUploadType in availableFileUploadTypes %}
+                <tr id="fileRow{{uploadedFile.id}}">
+                    <td>{{availableFileUploadType.fileType.name}}</td>
+                    <td>{{availableFileUploadType.fileType.description}}</td>
+                    <td>{{availableFileUploadType.fileType.maxFileSizeStr}}</td>
+                    <td>{{availableFileUploadType.fileType.allowedFileTypes|default:"No restriction"}}</td>
+                    <td>{{availableFileUploadType.uploadDeadline}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <div class="form form-group left-aligned-text">
+            <!-- Error messaging -->
+            {% if form.errors %}
+                <div class="ui message left-aligned-text">
+                    <div class="">
+                        <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ form.non_field_errors }}
+                        <ul>
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
                     </div>
                 </div>
-            </div>
+            {% endif %}
+            <!-- /Error messaging -->
+
+            <form enctype="multipart/form-data" method="post" class="ui form">
+                {% csrf_token %}
+
+                {% if not uploadedFile %}
+                    <div class="two fields">
+                        <div class="field">
+                            <label>File:</label>
+                            {{form.fileUpload}}
+                        </div>
+                        <div class="field">
+                            <label>Category:</label>
+                            {{ form.fileType|attr:"class:ui dropdown"}}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="field">
+                        <label>Type:</label>
+                        {{ form.fileType|attr:"class:ui dropdown"}}
+                    </div>
+                {% endif %}
+
+                <input class="primary ui button" type="submit" value="Save" />
+                <a href="{{ cancelURL }}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
+
+            </form>
         </div>
     </div>
 </div>

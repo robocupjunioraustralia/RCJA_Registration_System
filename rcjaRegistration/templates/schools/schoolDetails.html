@@ -14,150 +14,141 @@
 
 {% block content %}
 
-<div class="bg">
-    <div class="">
-        <div class="ui center aligned grid ">
-            <div class="twelve wide mobile six wide computer column ui">
-                    {% if request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
-                    <div class="ui warning message">
-                        <div class="Warning">
-                            <b>Please confirm your details</b>
-                        </div>
-                        <p>You have been redirected to this page because an administrator has asked you to confirm your details.</p>
-                        <p>Please review the information below carefully, you must do this before you can use the rest of the site.</p>
-                    </div>
-                    {% endif %}
-                <div class="form form-group left-aligned-text">
-                
-                    <h1> School details </h1>
-                    {% if form.errors or form.non_field_errors %}
-                    
-                    <!-- Error messaging -->
-                    <div class="ui message left-aligned-text">
-                        <div class="">
-                            <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                            {{ form.non_field_errors }}
-
-                            <ul>
-                                {% for field in form %}
-                                {% if field.errors %}
-                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                                {% endfor %}
-
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- /Error messaging -->
-                    {% endif %}
-
-                    <form method="post" class="ui form">
-                        {% csrf_token %}
-                        {{ campusFormset.management_form }}
-                        {{ schoolAdministratorFormset.management_form }}
-
-                        <div class="field">
-                            <label>Name: </label>
-                            {{form.name}}
-                        </div>
-                        <div class="field">
-                            <label>State: </label>
-                            {{form.state|attr:"id:stateField"}}
-                        </div>
-                        <div class="field">
-                            <label> Region: </label>
-                            {{form.region|attr:"id:regionField"}}
-                        </div>
-                        <div class="field">
-                            <label> Postcode: </label>
-                            {{form.postcode}}
-                        </div>
-
-                        <!-- Campus -->
-                        <h1>Campuses</h1>
-                        <p>Campuses can be used to ease the management of large schools. Each administrator can be assigned a campus and you can choose to be invoiced on a per campus basis.</p>
-                        {% if campusFormset.non_form_errors%}
-                            <div class="ui message left-aligned-text">
-                                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                                {{ campusFormset.non_form_errors }}
-                            </div>
-                        {% endif %}
-                        <div id = "form_set">
-                        {% for campusForm in campusFormset %}
-                        {% include 'schools/campusForm.html' %}
-                        {% endfor %}
-                        </div>
-
-                        <!-- Add more campus forms -->
-                        <br>
-                        <input type="button" value="Add Another Campus" id="add_more" class="primary ui button right floated">
-                        <div id="empty_form" style="display:none">
-                        {% with campusFormset.empty_form as campusForm %}
-                        {% include 'schools/campusForm.html' %}
-                        {% endwith %}
-                        </div>
-                        <br>
-
-                        <!-- Administrators -->
-                        <h1>Administrators</h1>
-                        <p>Administrators can manage the school.</p>
-                        {% if schoolAdministratorFormset.non_form_errors%}
-                            <div class="ui message left-aligned-text">
-                                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                                {{ schoolAdministratorFormset.non_form_errors }}
-                            </div>
-                        {% endif %}
-                        {% for administratorForm in schoolAdministratorFormset %}
-                            {{administratorForm.id|attr:"type:hidden"}}
-                            <div class="ui segment">
-                                <h4 class="ui dividing header">Administrator {{forloop.counter}}</h4>
-                                {% if administratorForm.errors or administratorForm.non_field_errors %}
-                                <div class="ui message left-aligned-text">
-                                    <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                                    {{ administratorForm.non_field_errors }}
-                                    <ul>
-                                        {% for field in administratorForm %}
-                                        {% if field.errors %}
-                                        <li>{{ field.label }}: {{ field.errors|striptags }}</li>
-                                        {% endif %}
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endif %}
-                                <div class="three fields">
-                                    <div class="field">
-                                        {{administratorForm.user.label_tag}}
-                                        {{administratorForm.user}}
-                                    </div>
-                                    <div class="field">
-                                            {{administratorForm.campus.label_tag}}
-                                            {{administratorForm.campus}}
-                                        </div>
-                                    {% if schoolAdministratorFormset.can_delete %}
-                                    <div class="field">
-                                        <label> Delete administrator</label>
-                                        {{administratorForm.DELETE}} <span>This will remove this user as an administrator for this school.</span>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                        
-                        <!-- Add administrator email field. Part of SchoolForm but place at end for aesthetics. -->
-                        <div class="field">
-                            <h3>Add new administrator: </h3>
-                            <span>To add a new administrator for this school enter their email.</span>
-                            {{form.addAdministratorEmail}}
-                        </div>
-
-                        <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
-                        <input class="primary ui button" type="submit" value="Save and exit" />
-                        {% if not request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
-                        <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
-                        {% endif %}
-                    </form>
-
+<div class="ui aligned container">
+    <div class = "row">
+        {% if request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
+            <div class="ui warning message">
+                <div class="Warning">
+                    <b>Please confirm your details</b>
                 </div>
+                <p>You have been redirected to this page because an administrator has asked you to confirm your details.</p>
+                <p>Please review the information below carefully, you must do this before you can use the rest of the site.</p>
             </div>
+        {% endif %}
+        <div class="form form-group left-aligned-text">
+            <h1> School details </h1>
+            {% if form.errors or form.non_field_errors %}
+                <!-- Error messaging -->
+                <div class="ui message left-aligned-text">
+                    <div class="">
+                        <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ form.non_field_errors }}
+                        <ul>
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <!-- /Error messaging -->
+            {% endif %}
+
+            <form method="post" class="ui form">
+                {% csrf_token %}
+                {{ campusFormset.management_form }}
+                {{ schoolAdministratorFormset.management_form }}
+
+                <div class="field">
+                    <label>Name: </label>
+                    {{form.name}}
+                </div>
+                <div class="field">
+                    <label>State: </label>
+                    {{form.state|attr:"id:stateField"}}
+                </div>
+                <div class="field">
+                    <label> Region: </label>
+                    {{form.region|attr:"id:regionField"}}
+                </div>
+                <div class="field">
+                    <label> Postcode: </label>
+                    {{form.postcode}}
+                </div>
+
+                <!-- Campus -->
+                <h1>Campuses</h1>
+                <p>Campuses can be used to ease the management of large schools. Each administrator can be assigned a campus and you can choose to be invoiced on a per campus basis.</p>
+                {% if campusFormset.non_form_errors%}
+                    <div class="ui message left-aligned-text">
+                        <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ campusFormset.non_form_errors }}
+                    </div>
+                {% endif %}
+                <div id = "form_set">
+                {% for campusForm in campusFormset %}
+                    {% include 'schools/campusForm.html' %}
+                {% endfor %}
+                </div>
+
+                <!-- Add more campus forms -->
+                <br>
+                <input type="button" value="Add Another Campus" id="add_more" class="primary ui button right floated">
+                <div id="empty_form" style="display:none">
+                {% with campusFormset.empty_form as campusForm %}
+                    {% include 'schools/campusForm.html' %}
+                {% endwith %}
+                </div>
+                <br>
+
+                <!-- Administrators -->
+                <h1>Administrators</h1>
+                <p>Administrators can manage the school.</p>
+                {% if schoolAdministratorFormset.non_form_errors%}
+                    <div class="ui message left-aligned-text">
+                        <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ schoolAdministratorFormset.non_form_errors }}
+                    </div>
+                {% endif %}
+                {% for administratorForm in schoolAdministratorFormset %}
+                    {{administratorForm.id|attr:"type:hidden"}}
+                    <div class="ui segment">
+                        <h4 class="ui dividing header">Administrator {{forloop.counter}}</h4>
+                        {% if administratorForm.errors or administratorForm.non_field_errors %}
+                            <div class="ui message left-aligned-text">
+                                <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                {{ administratorForm.non_field_errors }}
+                                <ul>
+                                    {% for field in administratorForm %}
+                                        {% if field.errors %}
+                                            <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <div class="three fields">
+                            <div class="field">
+                                {{administratorForm.user.label_tag}}
+                                {{administratorForm.user}}
+                            </div>
+                            <div class="field">
+                                {{administratorForm.campus.label_tag}}
+                                {{administratorForm.campus}}
+                            </div>
+                            {% if schoolAdministratorFormset.can_delete %}
+                                <div class="field">
+                                    <label> Delete administrator</label>
+                                    {{administratorForm.DELETE}} <span>This will remove this user as an administrator for this school.</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Add administrator email field. Part of SchoolForm but place at end for aesthetics. -->
+                <div class="field">
+                    <h3>Add new administrator: </h3>
+                    <span>To add a new administrator for this school enter their email.</span>
+                    {{form.addAdministratorEmail}}
+                </div>
+
+                <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
+                <input class="primary ui button" type="submit" value="Save and exit" />
+                {% if not request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
+                    <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                {% endif %}
+            </form>
         </div>
     </div>
 </div>
@@ -177,9 +168,7 @@
         </div>
     </div>
     <div class="actions">
-        <button id="confirm" class="ui positive right button">
-            I understand
-        </button>
+        <button id="confirm" class="ui positive right button">I understand</button>
     </div>
 </div>
 
@@ -187,19 +176,17 @@
 $(document).ready( () => {
     if("True" === "{{request.user.currentlySelectedSchool.forceSchoolDetailsUpdate}}") {
         if(getCookie("new_school_displayed") != "true") {
-                  $('.ui.modal.firstTimePopup').modal({
-                        closable  : false,
-                        onDeny    : () => true,
-                        onApprove : () => {
-                            $('.ui.modal').modal('hide');
-                            document.cookie="new_school_displayed=true";
-                        }
+            $('.ui.modal.firstTimePopup').modal({
+                closable  : false,
+                onDeny    : () => true,
+                onApprove : () => {
+                    $('.ui.modal').modal('hide');
+                    document.cookie="new_school_displayed=true";
+                }
 
-                    })
-            .modal('show');
+            }).modal('show');
         }
     }
-
 })
 
 function getCookie(name) {
@@ -209,9 +196,9 @@ function getCookie(name) {
 </script>
 <script>
     $('#add_more').click(function() {
-      var form_idx = $('#id_campus_set-TOTAL_FORMS').val();
-      $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
-      $('#id_campus_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        var form_idx = $('#id_campus_set-TOTAL_FORMS').val();
+        $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+        $('#id_campus_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
     });
 </script>
 
