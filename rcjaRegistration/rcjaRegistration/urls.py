@@ -48,4 +48,5 @@ urlpatterns = [
     path('',include('invoices.urls')),
     path('',include('eventfiles.urls')),
     path('',include('association.urls')),
+    path('',include('dev_data.urls'))
 ]
