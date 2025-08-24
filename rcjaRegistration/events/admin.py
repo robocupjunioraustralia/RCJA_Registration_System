@@ -250,7 +250,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
             'fields': ('entryFeeIncludesGST', 'workshopTeacherEntryFee', 'workshopStudentEntryFee', 'paymentDueDate', 'eventSurchargeAmount')
         }),
         ('Details', {
-            'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage')
+            'fields': ('directEnquiriesTo', 'venue', 'eventDetails', 'additionalInvoiceMessage', 'showPizzaPreference')
         }),
     ]
     add_fieldsets = [
@@ -369,6 +369,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'competition_specialRateFee',
         'workshopTeacherEntryFee',
         'workshopStudentEntryFee',
+        'showPizzaPreference',
         'paymentDueDate',
         'eventDetails',
         'additionalInvoiceMessage',

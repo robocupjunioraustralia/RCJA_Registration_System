@@ -126,10 +126,12 @@
                 </div>
               </div>
 
+              {% if event.showPizzaPreference %}
               <div class = "field">
                 <label>Pizza preference:</label>
                   {{form.pizzaPreference|attr:"placeholder:Pizza preference (optional)"}}
               </div>
+              {% endif %}
 
               <div id="teacherOnlyFields" style="display:none"> 
                 <div class = "field">
