@@ -34,6 +34,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details for teachers', {
             'fields': ('email',)
         }),
+        ('Optional details', {
+            'fields': ('pizzaPreference',)
+        }),
         ('Advanced billing settings', {
             'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this attendee from that invoice and add it to a different invoice, which can be for a different school or mentor.",
             'fields': ('invoiceOverride', )
@@ -52,6 +55,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         }),
         ('Required details for teachers', {
             'fields': ('email',)
+        }),
+        ('Optional details', {
+            'fields': ('pizzaPreference',)
         }),
     )
 
@@ -72,6 +78,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'attendeeType',
         'yearLevel',
         'gender',
+        'pizzaPreference',
         'event',
         'division',
         'creationDateTime',

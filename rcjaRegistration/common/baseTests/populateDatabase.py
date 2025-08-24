@@ -257,7 +257,7 @@ def createWorkshopAttendees(self):
         lastName='Last 1',
         yearLevel=10,
         attendeeType='student',
-        gender='male,'
+        gender='male',
     )
     self.state1_event1_workshopAttendee2 = WorkshopAttendee.objects.create(
         event=self.state1_openWorkshop,
