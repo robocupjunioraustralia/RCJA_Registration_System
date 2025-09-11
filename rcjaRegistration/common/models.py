@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
 
+from PIL import Image
+
 # **********CUSTOM CLASSES**********
 
 class SaveDeleteMixin:
@@ -56,3 +58,20 @@ def checkRequiredFieldsNotNone(self, requiredFields):
     # Raise any errors
     if errors:
         raise ValidationError(errors)
+
+def checkImage(imageField):
+    RATIO = 4/3
+    LEEWAY = 0.01
+    width = imageField.width
+    height = imageField.height
+    if abs(width/height - RATIO) > LEEWAY:
+        imageField.open()
+        if width/height> RATIO: # Too wide
+            (left, upper, right, lower) = (width/2-height*RATIO/2, 0, height, width/2+height*RATIO/2)
+        else: # Too tall
+            (left, upper, right, lower) = (0,height/2-width/RATIO/2, width, height/2+width/RATIO/2)
+        with Image.open(imageField) as im:
+            im_crop = im.crop((left, upper, right, lower))
+        im_crop.save(imageField.path)
+    if width < 50 or height <50:
+        raise ValidationError("The image is too small")

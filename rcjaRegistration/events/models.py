@@ -13,6 +13,7 @@ from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDImageField
 
 from rcjaRegistration.storageBackends import PublicMediaStorage
+from common.models import checkImage
 from django.templatetags.static import static
 
 from invoices.models import Invoice, InvoiceGlobalSettings
@@ -367,6 +368,14 @@ class Event(SaveDeleteMixin, models.Model):
 
         if self.pk and self.registrationsCloseDate is not None and self.eventavailablefiletype_set.filter(uploadDeadline__lt=self.registrationsCloseDate).exists():
             errors.append(ValidationError("Registration close date must on or before file upload deadlines"))
+        
+        # Check image size
+        if self.eventBannerImage:
+            try:    
+                checkImage(self.eventBannerImage)
+            except ValidationError as e:
+                errors.append(e)
+                
 
         # Raise any errors
         if errors:
