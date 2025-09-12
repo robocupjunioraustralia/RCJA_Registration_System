@@ -371,11 +371,10 @@ class Event(SaveDeleteMixin, models.Model):
         
         # Check image size
         if self.eventBannerImage:
-            try:    
-                checkImage(self.eventBannerImage)
+            try:
+                self.eventBannerImage.save(self.eventBannerImage.name,checkImage(self.eventBannerImage))
             except ValidationError as e:
                 errors.append(e)
-                
 
         # Raise any errors
         if errors:
