@@ -10,15 +10,21 @@ from django.db.models.fields.files import ImageFieldFile
 from PIL import Image
 from io import BytesIO
 
-from events.models import Event
+from django.db import models
 from common.models import checkImage
 
 from django.core.files.images import ImageFile
+from django.core.files.storage import InMemoryStorage
+from django.db.models import ImageField 
 
 import datetime
 
+class ModelWithImage(models.Model):
+    image = ImageField(storage=InMemoryStorage())
+
 def createImage(width, height):
-    file = ImageFieldFile(Event,Event.eventBannerImage.field,"Test.png")
+    
+    file = ImageFieldFile(ModelWithImage(),ModelWithImage.image.field,"Test.png")
     image = Image.new(mode = "RGB", size = (width, height))
     output = BytesIO()
     image.save(output, format="png")
