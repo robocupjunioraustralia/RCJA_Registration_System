@@ -29,8 +29,11 @@ def details(request, teamID):
     if not (mentorEventAttendanceAccessPermissions(request, team) or 
             checkCoordinatorPermission(request, Team, team, 'view')):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
+    
+    editable = team.event.registrationsOpen() or checkCoordinatorPermission(request, Team, team, 'update')
 
     context = {
+        "editable": editable,
         "team": team,
         "students": team.student_set.all(),
         'uploadedFiles': team.mentoreventfileupload_set.all(),
@@ -138,7 +141,8 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         if all([x.is_valid() for x in (form, formset)]):
             # Create team object but don't save so can set foreign keys
             team = form.save(commit=False)
-            team.mentorUser = request.user
+            if event.registrationsOpen():
+                team.mentorUser = request.user
 
             if newTeam and sourceTeam:
                 team.copiedFrom = sourceTeam

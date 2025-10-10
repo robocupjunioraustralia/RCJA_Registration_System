@@ -74,7 +74,7 @@
             <p>No students yet.</p>
             {% endif %}
             <a href = "{% url 'events:details' team.event.id %}" class = "ui button primary" style="margin-top:1rem;">Back to event</a>
-            {% if team.event.registrationsOpen %}
+            {% if editable %}
             <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
             {% endif %}
 
