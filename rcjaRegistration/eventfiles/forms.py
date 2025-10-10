@@ -14,7 +14,7 @@ class MentorEventFileUploadForm(ModelForm):
         ]
 
     # Override init to filter fileType
-    def __init__(self, *args, uploadedFile, eventAttendance, admin, **kwargs):
+    def __init__(self, *args, uploadedFile, eventAttendance, admin=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Filter fileType to available fileTypes
