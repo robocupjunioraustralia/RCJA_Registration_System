@@ -255,6 +255,10 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         # Check is correct event type
         if event.eventType != self.eventType:
             raise PermissionDenied('Teams/ attendees cannot be created for this event type')
+        
+        # Allow coordinators to always access
+        if checkCoordinatorPermission(request, Event, event, 'update'):
+            return
 
         # Check registrations open
         if not event.registrationsOpen():

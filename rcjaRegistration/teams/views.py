@@ -11,6 +11,7 @@ import datetime
 
 from .models import Student, Team
 from events.models import Event, AvailableDivision
+from coordination.permissions import checkCoordinatorPermission
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams
 
@@ -25,7 +26,8 @@ def details(request, teamID):
         raise PermissionDenied("Event is not published")
 
     # Check administrator of this team
-    if not mentorEventAttendanceAccessPermissions(request, team):
+    if not (mentorEventAttendanceAccessPermissions(request, team) or 
+            checkCoordinatorPermission(request, Team, team, 'view')):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
     context = {
@@ -164,13 +166,13 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'sourceTeam': sourceTeam, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
-def teamCreatePermissionForEvent(event):
+def teamCreatePermissionForEvent(request, event):
     # Check event is published
     if not event.published():
         raise PermissionDenied("Event is not published")
 
     # Check registrations open
-    if not event.registrationsOpen():
+    if not (event.registrationsOpen() or checkCoordinatorPermission(request, Event, event, 'update')):
         raise PermissionDenied("Registration has closed for this event")
 
     if event.eventType != 'competition':
@@ -187,7 +189,7 @@ def checkEventLimitsReached(request, event):
 def copyTeamsList(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
-    teamCreatePermissionForEvent(event)
+    teamCreatePermissionForEvent(request, event)
 
     try:
         checkEventLimitsReached(request, event)
