@@ -428,14 +428,18 @@ def summaryReport(request):
 
 # FROM HERE
 @login_required
-def singlePageAdminSummary(request, eventID): #TODO
+def singlePageAdminSummary(request, eventID): 
     event = get_object_or_404(Event, pk=eventID)
     if event.boolWorkshop():
         context = getAdminWorkSummary(event)
-        return render(request, 'events/adminWorkshopDetails.html', context)
+        context["column1"] = "Students"
+        context["column2"] = "Teachers"
+        return render(request, 'events/adminDetails.html', context)
     else:
         context = getAdminCompSummary(event)
-        return render(request, 'events/adminCompetitionDetails.html', context)
+        context["column1"] = "Students"
+        context["column2"] = "Teams"
+        return render(request, 'events/adminDetails.html', context)
 
 @login_required
 def eventAdminSummary(request): #TODO
@@ -452,7 +456,9 @@ def eventAdminSummary(request): #TODO
                 elif len(events_list)==1:
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminWorkSummary(event)
-                    return render(request, 'events/adminWorkshopDetails.html', context)
+                    context["column1"] = "Students"
+                    context["column2"] = "Teachers"
+                    return render(request, 'events/adminDetails.html', context)
                 else:
                     events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
                     context =  mergeMultipleWorkshopsAdminSummary(events)
@@ -464,7 +470,9 @@ def eventAdminSummary(request): #TODO
                 elif len(events_list)==1:
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminCompSummary(event)
-                    return render(request, 'events/adminCompetitionDetails.html', context)
+                    context["column1"] = "Students"
+                    context["column2"] = "Teams"
+                    return render(request, 'events/adminDetails.html', context)
                 else:
                     events = [getAdminCompSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
                     context = mergeMultipleCompsAdminSummary(events)
@@ -551,74 +559,85 @@ def mergeMultipleWorkshopsAdminSummary(events): #TODO
                'events':events,}
     return context
 
-def getAdminCompSummary(event): #TODO
-    # Divisions
-    divisionList = event.divisions.values()
-    division_categories = {}
-    division_teams = 0
-    division_students = 0
-    for division in divisionList.all():
-        teams = Team.objects.filter(event = event).filter(division = division["id"])
-        students = 0
-        for team in teams:
-            students += Student.objects.filter(team=team).count()  
-        division_students += students
-        division_teams += teams.count()
-        divisionDict = {
-            'name': division["name"],
-            'teams': teams.count(),
-            'students': students,
-        }
+def getAdminCompSummary(event):
+    with connection.cursor() as cursor:
+        cursor.execute("""SELECT cat.id, div.name, COUNT(student.id), COUNT( DISTINCT attendance.id)
+                       FROM events_divisioncategory AS cat LEFT JOIN events_division AS div ON cat.id = div.category_id
+                       LEFT JOIN events_baseeventattendance AS attendance ON attendance.division_id = div.id
+                       LEFT JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
+                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
+                       WHERE attendance.event_id = %s
+                       GROUP BY cat.id, div.id
+                       ORDER BY cat.id
+                       """, [event.pk])
+        division_grouping_data = cursor.fetchall()
+        print(division_grouping_data)
+        cursor.execute("""SELECT cat.id, cat.name, COUNT(student.id), COUNT( DISTINCT attendance.id)
+                       FROM events_divisioncategory AS cat LEFT JOIN events_division AS div ON cat.id = div.category_id
+                       LEFT JOIN events_baseeventattendance AS attendance ON attendance.division_id = div.id
+                       LEFT JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
+                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
+                       WHERE div.id IN (SELECT division_id FROM events_availabledivision WHERE event_id = %s) AND attendance.event_id = %s
+                       GROUP BY cat.id
+                       ORDER BY cat.id""", [event.pk, event.pk])
+        category_subtotal_data = cursor.fetchall()
+        print(category_subtotal_data)
 
-        if division['category_id'] in division_categories:
-           division_categories[division['category_id']]['divisions'].append(divisionDict)
-           division_categories[division['category_id']]['rows'] += 1
-           division_categories[division['category_id']]['students'] += students
-           division_categories[division['category_id']]['teams'] += teams.count()
-        elif division['category_id'] is None:
-            division_categories[division['category_id']]={'name':"None",
-                                                          'divisions':[divisionDict], 
-                                                          'rows': 2,
-                                                          'students': students,
-                                                          'teams': teams.count()}
-        else:
-            division_categories[division['category_id']]={'name':DivisionCategory.objects.get(id=division['category_id']).name,
-                                                          'divisions':[divisionDict], 
-                                                          'rows': 2,
-                                                          'students': students,
-                                                          'teams': teams.count()}
+        cursor.execute("""SELECT school.name,
+                       COUNT( DISTINCT attendance.id),
+                       COUNT(student.id)
+                       FROM schools_school AS school LEFT JOIN events_baseeventattendance AS attendance ON attendance.school_id = school.id
+                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
+                       WHERE attendance.event_id = %s
+                       GROUP BY school.id 
+                       ORDER BY school.name""", [event.pk])
+        school_grouping_data = cursor.fetchall()
+        print(school_grouping_data)
+
+        cursor.execute("""SELECT COUNT(attendance.id) FROM events_baseeventattendance AS attendance 
+                       INNER JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
+                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
+                       WHERE attendance.event_id = %s AND attendance.school_id IS Null """, [event.pk])
+        school_independent_data = cursor.fetchall()
+        cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
+                       WHERE attendance.event_id = %s AND attendance.school_id IS Null """, [event.pk])
+        school_independent_data += cursor.fetchall()
+        print(school_independent_data)
+
+    division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
+    division_grouping_index = 0
+
+    for category in category_subtotal_data:
+        rows = []
+        while True:
+            print("it", division_grouping_index, division_grouping_data)
+            if len(division_grouping_data)<=division_grouping_index \
+                or division_grouping_data[division_grouping_index][0] > category[0]:
+                break
+            elif division_grouping_data[division_grouping_index][0] == category[0]:
+                rows.append(division_grouping_data[division_grouping_index])
+                division_grouping_index += 1
+            else:
+                division_grouping_index += 1
+    
+        division_data[category[0]] = {
+            "name": category[1],
+            "rows": rows,
+            "subtotal": (category[2], category[3]),
+            "size": len(rows) + 1,
+            "total": (0,0)
+        }
+    print(division_data)
 
     # Schools
-    teams = Team.objects.filter(event = event)
-    schools = {}
-    school_teams = 0
-    school_students = 0
-    for team in teams:
-        school = team.school
-        students = Student.objects.filter(team=team).count()
-        school_teams += 1
-        school_students += students
-        if school in schools:
-            schools[school]['teams'] += 1
-            schools[school]['students'] += students
-        else:
-            name = school.name if school is not None else 'Independent'
-            schools[school] = {'name': name, 'teams': 1, 'students': students}
-    
-    independent = schools.pop(None, {'name': 'Independent', 'teams': 0, 'students': 0})
-    school_list = list(schools.values())
-    school_list.sort(key=lambda x: x['name'])
-    school_list.append(independent)
+    if (school_independent_data[0][0] != 0 or school_independent_data[1][0] != 0):
+        school_grouping_data.append(('Independent', school_independent_data[0][0], school_independent_data[1][0]))
     
     context = {
         "name": event.name,
         "year": str(event.year),
-        "division_categories": division_categories,
-        'division_teams': division_teams,
-        'division_students': division_students,
-        "schools": school_list,
-        'school_teams': school_teams,
-        'school_students': school_students,
+        "division_data": division_data,
+        'school_data': school_grouping_data,
     }
     return context
 
@@ -660,7 +679,7 @@ def getAdminWorkSummary(event: Event):
 
     division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
     division_grouping_index = 0
-    print(division_grouping_data)
+
     for category in category_subtotal_data:
         rows = []
         while True:

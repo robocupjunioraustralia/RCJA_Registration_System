@@ -9,7 +9,7 @@
 {% block content %}
 <div class="ui aligned container">
     <div class="row">
-        <h1>{{name}} Registrations</h1>
+        <h1>{{name}} Registrations TEST</h1>
     </div>
     <br> 
     <div class="row">
@@ -20,8 +20,8 @@
             <thead><tr>
                 <th>Category</th>
                 <th>Division</th>
-                <th>Students</th>
-                <th>Teachers</th>
+                <th>{{column1}}</th>
+                <th>{{column2}}</th>
             </tr></thead>
             <tbody>
                 {% for division_cat in division_data.values %}
@@ -56,8 +56,8 @@
         <table class="ui celled table">
             <thead>
             <tr><th>School</th>
-            <th>Students</th>
-            <th>Teachers</th>
+            <th>{{column1}}</th>
+            <th>{{column2}}</th>
             </tr></thead>
             <tbody>
                 {% for school in school_data %}
