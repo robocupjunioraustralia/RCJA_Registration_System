@@ -24,26 +24,26 @@
                 <th>Teachers</th>
             </tr></thead>
             <tbody>
-                {% for division_cat in division_categories.values %}
+                {% for division_cat in division_data.values %}
                     <tr>
-                        <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
-                    {% for division in division_cat.divisions %}
-                        <td>{{division.name}}</td>
-                        <td>{{division.students}}</td>
-                        <td>{{division.teachers}}</td>
+                        <td rowspan={{division_cat.size}}>{{division_cat.name}}</td>
+                    {% for division in division_cat.rows %}
+                        <td>{{division.1}}</td>
+                        <td>{{division.2}}</td>
+                        <td>{{division.3}}</td>
                     </tr>
                     <tr>
                     {% endfor %}
                         <td>Subtotal</td>
-                        <td>{{division_cat.students}}</td>
-                        <td>{{division_cat.teachers}}</td>
+                        <td>{{division_cat.subtotal.0}}</td>
+                        <td>{{division_cat.subtotal.1}}</td>
                     </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr><th colspan="2">Total</th>
-                <th>{{division_students}}</th>
-                <th>{{division_teachers}}</th>
+                <th>{{total.0}}</th>
+                <th>{{total.1}}</th>
             </tr>
             </tfoot>
         </table>
@@ -60,18 +60,18 @@
             <th>Teachers</th>
             </tr></thead>
             <tbody>
-                {% for school in schools %}
+                {% for school in school_data %}
                 <tr>
-                    <td>{{school.name}}</td>
-                    <td>{{school.students}}</td>
-                    <td>{{school.teachers}}</td>
+                    <td>{{school.0}}</td>
+                    <td>{{school.1}}</td>
+                    <td>{{school.2}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr><th>Total</th>
-                <th>{{school_students}}</th>
-                <th>{{school_teachers}}</th>
+                <th>{{total.0}}</th>
+                <th>{{total.1}}</th>
             </tr>
             </tfoot>
         </table>
