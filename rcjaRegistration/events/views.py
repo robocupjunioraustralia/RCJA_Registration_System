@@ -481,43 +481,61 @@ def eventAdminSummary(request): #TODO
         form = AdminEventsForm()
     return render(request, "events/adminBlank.html", {"form": form, 'output':output})
 
-def mergeMultipleCompsAdminSummary(events): #TODO
+def mergeMultipleCompsAdminSummary(events):
     comps_number = len(events)
+    total_teams = [0]*comps_number
+    total_students = [0]*comps_number
 
-    # Divisions
-    divisions = {'teams':[0]*comps_number,'students':[0]*comps_number,'categories':{}}
-    for event_no, event in enumerate(events):
-        for division_cat in event['division_categories'].values():
-            division_cat_dict = divisions['categories'].get(division_cat['name'], {'name':division_cat['name'], 'divisions':{},'teams':[0]*comps_number,'students':[0]*comps_number})
-            for division in division_cat['divisions']:
-                division_dict = division_cat_dict['divisions'].get(division['name'], {'name':division['name'],'results':['Division not included']*comps_number})
-                division_dict['results'][event_no] = {'teams':division['teams'],'students':division['students']}
-                division_cat_dict['teams'][event_no] += division['teams']
-                division_cat_dict['students'][event_no] += division['students']
-                division_cat_dict['divisions'][division['name']] = division_dict
-            divisions['categories'][division_cat['name']] = division_cat_dict
-            divisions['students'][event_no] += division_cat_dict['students'][event_no]
-            divisions['teams'][event_no] += division_cat_dict['teams'][event_no]
+    categoriesTeams = {}
+    categoriesStudents = {}
+    for i, event in enumerate(events):
+        for cat_id, category in event["division_data"].items():
+            categoryTeams = categoriesTeams.get(cat_id, {
+                "name": category["name"],
+                "rows": {},
+                "subtotal": comps_number*[0],
+                "size": 1,
+            })
 
+            categoryStudents = categoriesStudents.get(cat_id, {
+                "name": category["name"],
+                "rows": {},
+                "subtotal": comps_number*[0],
+                "size": 1,
+            })
 
-    for division_cat in divisions['categories']:
-        rows = len(divisions['categories'][division_cat]['divisions'].keys())
-        divisions['categories'][division_cat]['rows']=rows+1
+            for row in category["rows"]:
+                _cat_id, div_name, students, teams = row
+                c_t = categoryTeams["rows"].get(div_name, [div_name] + comps_number*[0])
+                c_s = categoryStudents["rows"].get(div_name, [div_name] + comps_number*[0])
+                c_t[i+1] = teams
+                c_s[i+1] = students
+                categoryTeams["rows"][div_name] = c_t
+                categoryStudents["rows"][div_name] = c_s
+            
+            categoryStudents["subtotal"][i] = category["subtotal"][0]
+            categoryTeams["subtotal"][i] = category["subtotal"][1]
+            categoryTeams["size"] += 1
+            categoryStudents["size"] += 1
+            categoriesTeams[cat_id] = categoryTeams
+            categoriesStudents[cat_id] = categoryStudents
     
     # Schools
-    schools = {'teams':[0]*comps_number,'students':[0]*comps_number,'schools':{}}
-    for event_no, event in enumerate(events):
-        for school in event['schools']:
-            school_dict = schools['schools'].get(school['name'], {'name':school['name'],'teams':[0]*comps_number,'students':[0]*comps_number})
-            school_dict['teams'][event_no] += school['teams']
-            school_dict['students'][event_no] += school['students']
-            schools['schools'][school['name']] = school_dict
-            schools['students'][event_no] += school_dict['students'][event_no]
-            schools['teams'][event_no] += school_dict['teams'][event_no]
-
-    context = {'divisions':divisions,
-               'schools':schools,
-               'events':events,}
+    schools = {}
+    for i, event in enumerate(events):
+        for school_name, teams, students in event["school_data"]:
+            school = schools.get(school_name, {'name':school_name,'teams':[0]*comps_number,'students':[0]*comps_number})
+            school['teams'][i] += teams
+            school['students'][i] += students
+            schools['name'] = school
+            total_teams[i] += teams
+            total_students[i] += students
+    events = [event["name"] for event in events]
+    context = {'catTeams': categoriesTeams,
+               'catStudents': categoriesStudents,
+               'schools': schools,
+               'events': events,
+               'total': {"teams": total_teams, "students": total_students}}
     return context
 
 def mergeMultipleWorkshopsAdminSummary(events): #TODO
@@ -571,7 +589,7 @@ def getAdminCompSummary(event):
                        ORDER BY cat.id
                        """, [event.pk])
         division_grouping_data = cursor.fetchall()
-        print(division_grouping_data)
+
         cursor.execute("""SELECT cat.id, cat.name, COUNT(student.id), COUNT( DISTINCT attendance.id)
                        FROM events_divisioncategory AS cat LEFT JOIN events_division AS div ON cat.id = div.category_id
                        LEFT JOIN events_baseeventattendance AS attendance ON attendance.division_id = div.id
@@ -581,7 +599,6 @@ def getAdminCompSummary(event):
                        GROUP BY cat.id
                        ORDER BY cat.id""", [event.pk, event.pk])
         category_subtotal_data = cursor.fetchall()
-        print(category_subtotal_data)
 
         cursor.execute("""SELECT school.name,
                        COUNT( DISTINCT attendance.id),
@@ -592,7 +609,6 @@ def getAdminCompSummary(event):
                        GROUP BY school.id 
                        ORDER BY school.name""", [event.pk])
         school_grouping_data = cursor.fetchall()
-        print(school_grouping_data)
 
         cursor.execute("""SELECT COUNT(attendance.id) FROM events_baseeventattendance AS attendance 
                        INNER JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
@@ -602,7 +618,6 @@ def getAdminCompSummary(event):
         cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
                        WHERE attendance.event_id = %s AND attendance.school_id IS Null """, [event.pk])
         school_independent_data += cursor.fetchall()
-        print(school_independent_data)
 
     division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
     division_grouping_index = 0
@@ -610,7 +625,6 @@ def getAdminCompSummary(event):
     for category in category_subtotal_data:
         rows = []
         while True:
-            print("it", division_grouping_index, division_grouping_data)
             if len(division_grouping_data)<=division_grouping_index \
                 or division_grouping_data[division_grouping_index][0] > category[0]:
                 break
@@ -625,9 +639,7 @@ def getAdminCompSummary(event):
             "rows": rows,
             "subtotal": (category[2], category[3]),
             "size": len(rows) + 1,
-            "total": (0,0)
         }
-    print(division_data)
 
     # Schools
     if (school_independent_data[0][0] != 0 or school_independent_data[1][0] != 0):
@@ -697,7 +709,6 @@ def getAdminWorkSummary(event: Event):
             "rows": rows,
             "subtotal": (category[2], category[3]),
             "size": len(rows) + 1,
-            "total": (0,0)
         }
 
     # Schools
