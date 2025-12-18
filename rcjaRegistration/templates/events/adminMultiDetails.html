@@ -13,7 +13,7 @@
     </div>
     <br> 
     <div class="row">
-        <h2>Teams Per Division</h2>
+        <h2>{{column1}} Per Division</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
@@ -25,7 +25,7 @@
                 {% endfor %}
             </tr></thead>
             <tbody>
-                {% for division_cat in catTeams.values %}
+                {% for division_cat in catCol1.values %}
                     <tr>
                         <td rowspan={{division_cat.size}}>{{division_cat.name}}</td>
                     {% for division in division_cat.rows.values %}
@@ -44,7 +44,7 @@
             </tbody>
             <tfoot>
             <tr><th colspan = 2>Total</th>
-                {% for event in total.teams %}
+                {% for event in total.col1 %}
                     <td>{{event}}</td>
                 {% endfor %}
             </tr>
@@ -53,7 +53,7 @@
     </div>
     <br> 
     <div class="row">
-        <h2>Students Per Division</h2>
+        <h2>{{column0}} Per Division</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
@@ -65,7 +65,7 @@
                 {% endfor %}
             </tr></thead>
             <tbody>
-                {% for division_cat in catStudents.values %}
+                {% for division_cat in catCol0.values %}
                     <tr>
                         <td rowspan={{division_cat.size}}>{{division_cat.name}}</td>
                     {% for division in division_cat.rows.values %}
@@ -84,7 +84,7 @@
             </tbody>
             <tfoot>
                 <tr><th colspan = 2>Total</th>
-                {% for event in total.students %}
+                {% for event in total.col0 %}
                     <td>{{event}}</td>
                 {% endfor %}
             </tr>
@@ -94,7 +94,7 @@
     <br>
     <br> 
     <div class="row">
-        <h2>Teams Per School</h2>
+        <h2>{{column1}} Per School</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
@@ -108,7 +108,7 @@
                 {% for school in schools.values %}
                     <tr>
                         <td>{{school.name}}</td>
-                    {% for event in school.teams %}
+                    {% for event in school.col1 %}
                         <td>{{event}}</td>
                         {% endfor %}
                     </tr>
@@ -116,7 +116,7 @@
             </tbody>
             <tfoot>
                 <tr><th>Total</th>
-                {% for event in total.teams %}
+                {% for event in total.col1 %}
                     <td>{{event}}</td>
                 {% endfor %}
             </tr>
@@ -125,7 +125,7 @@
     </div>
     <br> 
     <div class="row">
-        <h2>Students Per School</h2>
+        <h2>{{column0}} Per School</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
@@ -139,7 +139,7 @@
                 {% for school in schools.values %}
                     <tr>
                         <td>{{school.name}}</td>
-                    {% for event in school.students %}
+                    {% for event in school.col0 %}
                         <td>{{event}}</td>
                         {% endfor %}
                     </tr>
@@ -147,7 +147,7 @@
             </tbody>
             <tfoot>
                 <tr><th>Total</th>
-                {% for event in total.students %}
+                {% for event in total.col0 %}
                     <td>{{event}}</td>
                 {% endfor %}
             </tr>

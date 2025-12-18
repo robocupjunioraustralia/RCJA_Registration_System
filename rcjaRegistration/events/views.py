@@ -457,12 +457,14 @@ def eventAdminSummary(request): #TODO
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminWorkSummary(event)
                     context["column1"] = "Students"
-                    context["column2"] = "Teachers"
+                    context["column0"] = "Teachers"
                     return render(request, 'events/adminDetails.html', context)
                 else:
                     events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
-                    context =  mergeMultipleWorkshopsAdminSummary(events)
-                    return render(request, 'events/adminMultiWorkDetails.html', context)
+                    context =  mergeMultipleAdminSummary(events)
+                    context["column1"] = "Students"
+                    context["column0"] = "Teachers"
+                    return render(request, 'events/adminMultiDetails.html', context)
             else:
                 events_list = form.cleaned_data['competitions']
                 if form.cleaned_data['csv']:
@@ -471,33 +473,35 @@ def eventAdminSummary(request): #TODO
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminCompSummary(event)
                     context["column1"] = "Students"
-                    context["column2"] = "Teams"
+                    context["column0"] = "Teams"
                     return render(request, 'events/adminDetails.html', context)
                 else:
                     events = [getAdminCompSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
-                    context = mergeMultipleCompsAdminSummary(events)
-                    return render(request, 'events/adminMultiCompDetails.html', context)
+                    context = mergeMultipleAdminSummary(events)
+                    context["column1"] = "Students"
+                    context["column0"] = "Teams"
+                    return render(request, 'events/adminMultiDetails.html', context)
     else:
         form = AdminEventsForm()
     return render(request, "events/adminBlank.html", {"form": form, 'output':output})
 
-def mergeMultipleCompsAdminSummary(events):
+def mergeMultipleAdminSummary(events):
     comps_number = len(events)
-    total_teams = [0]*comps_number
-    total_students = [0]*comps_number
+    total_col1 = [0]*comps_number
+    total_col0 = [0]*comps_number
 
-    categoriesTeams = {}
-    categoriesStudents = {}
+    categoriesCol1 = {}
+    categoriesCol0 = {}
     for i, event in enumerate(events):
         for cat_id, category in event["division_data"].items():
-            categoryTeams = categoriesTeams.get(cat_id, {
+            categoryCol1 = categoriesCol1.get(cat_id, {
                 "name": category["name"],
                 "rows": {},
                 "subtotal": comps_number*[0],
                 "size": 1,
             })
 
-            categoryStudents = categoriesStudents.get(cat_id, {
+            categoryCol0 = categoriesCol0.get(cat_id, {
                 "name": category["name"],
                 "rows": {},
                 "subtotal": comps_number*[0],
@@ -505,76 +509,37 @@ def mergeMultipleCompsAdminSummary(events):
             })
 
             for row in category["rows"]:
-                _cat_id, div_name, students, teams = row
-                c_t = categoryTeams["rows"].get(div_name, [div_name] + comps_number*[0])
-                c_s = categoryStudents["rows"].get(div_name, [div_name] + comps_number*[0])
-                c_t[i+1] = teams
-                c_s[i+1] = students
-                categoryTeams["rows"][div_name] = c_t
-                categoryStudents["rows"][div_name] = c_s
+                _cat_id, div_name, col1, col0 = row
+                c_1 = categoryCol1["rows"].get(div_name, [div_name] + comps_number*[0])
+                c_0 = categoryCol0["rows"].get(div_name, [div_name] + comps_number*[0])
+                c_1[i+1] = col1
+                c_0[i+1] = col0
+                categoryCol1["rows"][div_name] = c_1
+                categoryCol0["rows"][div_name] = c_0
             
-            categoryStudents["subtotal"][i] = category["subtotal"][0]
-            categoryTeams["subtotal"][i] = category["subtotal"][1]
-            categoryTeams["size"] += 1
-            categoryStudents["size"] += 1
-            categoriesTeams[cat_id] = categoryTeams
-            categoriesStudents[cat_id] = categoryStudents
+            categoryCol0["subtotal"][i] = category["subtotal"][1]
+            categoryCol1["subtotal"][i] = category["subtotal"][0]
+            categoryCol1["size"] += 1
+            categoryCol0["size"] += 1
+            categoriesCol1[cat_id] = categoryCol1
+            categoriesCol0[cat_id] = categoryCol0
     
     # Schools
     schools = {}
     for i, event in enumerate(events):
-        for school_name, teams, students in event["school_data"]:
-            school = schools.get(school_name, {'name':school_name,'teams':[0]*comps_number,'students':[0]*comps_number})
-            school['teams'][i] += teams
-            school['students'][i] += students
+        for school_name, col1, col0 in event["school_data"]:
+            school = schools.get(school_name, {'name':school_name,'col1':[0]*comps_number,'col0':[0]*comps_number})
+            school['col1'][i] += col1
+            school['col0'][i] += col0
             schools['name'] = school
-            total_teams[i] += teams
-            total_students[i] += students
+            total_col1[i] += col1
+            total_col0[i] += col0
     events = [event["name"] for event in events]
-    context = {'catTeams': categoriesTeams,
-               'catStudents': categoriesStudents,
+    context = {'catCol1': categoriesCol1,
+               'catCol0': categoriesCol0,
                'schools': schools,
                'events': events,
-               'total': {"teams": total_teams, "students": total_students}}
-    return context
-
-def mergeMultipleWorkshopsAdminSummary(events): #TODO
-    workshop_number = len(events)
-
-    # Divisions
-    divisions = {'students':[0]*workshop_number,'teachers':[0]*workshop_number,'categories':{}}
-    for event_no, event in enumerate(events):
-        for division_cat in event['division_categories'].values():
-            division_cat_dict = divisions['categories'].get(division_cat['name'], {'name':division_cat['name'], 'divisions':{},'teachers':[0]*workshop_number,'students':[0]*workshop_number})
-            for division in division_cat['divisions']:
-                division_dict = division_cat_dict['divisions'].get(division['name'], {'name':division['name'],'results':['Division not included']*workshop_number})
-                division_dict['results'][event_no] = {'teachers':division['teachers'],'students':division['students']}
-                division_cat_dict['teachers'][event_no] += division['teachers']
-                division_cat_dict['students'][event_no] += division['students']
-                division_cat_dict['divisions'][division['name']] = division_dict
-            divisions['categories'][division_cat['name']] = division_cat_dict
-            divisions['students'][event_no] += division_cat_dict['students'][event_no]
-            divisions['teachers'][event_no] += division_cat_dict['teachers'][event_no]
-
-
-    for division_cat in divisions['categories']:
-        rows = len(divisions['categories'][division_cat]['divisions'].keys())
-        divisions['categories'][division_cat]['rows']=rows+1
-    
-    # Schools
-    schools = {'teachers':[0]*workshop_number,'students':[0]*workshop_number,'schools':{}}
-    for event_no, event in enumerate(events):
-        for school in event['schools']:
-            school_dict = schools['schools'].get(school['name'], {'name':school['name'],'teachers':[0]*workshop_number,'students':[0]*workshop_number})
-            school_dict['teachers'][event_no] += school['teachers']
-            school_dict['students'][event_no] += school['students']
-            schools['schools'][school['name']] = school_dict
-            schools['students'][event_no] += school_dict['students'][event_no]
-            schools['teachers'][event_no] += school_dict['teachers'][event_no]
-
-    context = {'divisions':divisions,
-               'schools':schools,
-               'events':events,}
+               'total': {"col1": total_col1, "col0": total_col0}}
     return context
 
 def getAdminCompSummary(event):
@@ -683,10 +648,10 @@ def getAdminWorkSummary(event: Event):
         school_grouping_data = cursor.fetchall()
 
         cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id 
-                       WHERE attendance.event_id = %s AND attendance.school_id IS Null AND 'work.attendeeType' = 'student' """, [event.pk])
+                       WHERE attendance.event_id = %s AND attendance.school_id IS Null AND work."attendeeType" = 'student' """, [event.pk])
         school_independent_data = cursor.fetchall()
         cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id 
-                       WHERE attendance.event_id = %s AND attendance.school_id IS Null AND 'work.attendeeType' = 'teacher' """, [event.pk])
+                       WHERE attendance.event_id = %s AND attendance.school_id IS Null AND work."attendeeType" = 'teacher' """, [event.pk])
         school_independent_data += cursor.fetchall()
 
     division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
