@@ -433,27 +433,24 @@ def singlePageAdminSummary(request, eventID):
     if event.boolWorkshop():
         context = getAdminWorkSummary(event)
         context["column1"] = "Students"
-        context["column2"] = "Teachers"
+        context["column0"] = "Teachers"
         return render(request, 'events/adminDetails.html', context)
     else:
         context = getAdminCompSummary(event)
         context["column1"] = "Students"
-        context["column2"] = "Teams"
+        context["column0"] = "Teams"
         return render(request, 'events/adminDetails.html', context)
 
 @login_required
-def eventAdminSummary(request): #TODO
+def eventAdminSummary(request):
     output = ""
     if request.method == "POST":
         form = AdminEventsForm(request.POST)
         if form.is_valid():
             output = form.cleaned_data
-
             if len(form.cleaned_data['workshops']):
                 events_list = form.cleaned_data['workshops']
-                if form.cleaned_data['csv']:
-                    return workshop_summary_csv(events_list)
-                elif len(events_list)==1:
+                if len(events_list)==1 and not form.cleaned_data['csv']:
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminWorkSummary(event)
                     context["column1"] = "Students"
@@ -464,12 +461,13 @@ def eventAdminSummary(request): #TODO
                     context =  mergeMultipleAdminSummary(events)
                     context["column1"] = "Students"
                     context["column0"] = "Teachers"
-                    return render(request, 'events/adminMultiDetails.html', context)
+                    if form.cleaned_data['csv']:
+                        return summary_csv(context)
+                    else:
+                        return render(request, 'events/adminMultiDetails.html', context)
             else:
                 events_list = form.cleaned_data['competitions']
-                if form.cleaned_data['csv']:
-                    return comp_summary_csv(events_list)
-                elif len(events_list)==1:
+                if len(events_list)==1 and not form.cleaned_data['csv']:
                     event = get_object_or_404(Event, pk=events_list[0])
                     context = getAdminCompSummary(event)
                     context["column1"] = "Students"
@@ -480,7 +478,10 @@ def eventAdminSummary(request): #TODO
                     context = mergeMultipleAdminSummary(events)
                     context["column1"] = "Students"
                     context["column0"] = "Teams"
-                    return render(request, 'events/adminMultiDetails.html', context)
+                    if form.cleaned_data['csv']:
+                        return summary_csv(context)
+                    else:
+                        return render(request, 'events/adminMultiDetails.html', context)
     else:
         form = AdminEventsForm()
     return render(request, "events/adminBlank.html", {"form": form, 'output':output})
@@ -656,6 +657,8 @@ def getAdminWorkSummary(event: Event):
 
     division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
     division_grouping_index = 0
+    total0 = 0
+    total1 = 0
 
     for category in category_subtotal_data:
         rows = []
@@ -668,6 +671,9 @@ def getAdminWorkSummary(event: Event):
                 division_grouping_index += 1
             else:
                 division_grouping_index += 1
+
+        total0 += category[2]
+        total1 +=  category[3]
 
         division_data[category[0]] = {
             "name": category[1],
@@ -685,23 +691,13 @@ def getAdminWorkSummary(event: Event):
         "year": str(event.year),
         "division_data": division_data,
         'school_data': school_grouping_data,
+        "total":[total0, total1]
     }
     return context
 
-def comp_summary_csv(events_list): #TODO
+def summary_csv(context: dict[str, str]):
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="Competition Attendance Summary.csv"'
-    t = loader.get_template("events/adminCompCsv.txt")
-    events = [getAdminCompSummary(get_object_or_404(Event, pk=event)) for event in events_list]
-    context =  mergeMultipleCompsAdminSummary(events)
-    response.write(t.render(context))
-    return response
-
-def workshop_summary_csv(events_list): #TODO
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="Workshop Attendance Summary.csv"'
-    t = loader.get_template("events/adminWorkshopCsv.txt")
-    events = [getAdminWorkSummary(get_object_or_404(Event, pk=event)) for event in events_list]
-    context = mergeMultipleWorkshopsAdminSummary(events)
+    response['Content-Disposition'] = 'attachment; filename="Attendance Summary.csv"'
+    t = loader.get_template("events/adminCsv.txt")
     response.write(t.render(context))
     return response

@@ -1651,55 +1651,34 @@ class TestAdminSummaryContext(TestCase):
 
     def testCompetitionDict(self):
         returned = getAdminCompSummary(self.oldEventWithTeams)
-        context = {
-            "name": self.oldEventWithTeams.name,
-            "year": "2019",
-            "division_categories": {self.divCategory.pk:
-                {'divisions':[
-                    {
-                        'name': 'Div2',
-                        'teams': 1,
-                        'students': 1,
-                    },
-                    {
-                        'name': 'test',
-                        'teams': 3,
-                        'students': 4,
-                    },
-                    ],
-                'name': 'Test', 'rows': 3,'students': 5,'teams': 4}},
-            'division_teams': 4,
-            'division_students': 5,
-            "schools": [{'name':self.newSchool.name,'teams':3,'students':3},{'name':self.school2.name,'teams':1,'students':2},{'name': 'Independent', 'teams': 0, 'students': 0}],
-            'school_teams': 4,
-            'school_students': 5,
-        }
+        print(returned)
+        context = {'name': 'test old yes reg', 
+                   'year': '2019', 
+                   'division_data': 
+                   {2: {'name': 'Test', 
+                        'rows': [(2, 'test', 4, 3), 
+                                (2, 'Div2', 1, 1)], 
+                        'subtotal': (5, 4), 
+                        'size': 3}}, 
+                    'school_data': 
+                        [('Melbourne High', 3, 3), 
+                         ('School 2', 1, 2)]}
         self.assertEqual(context, returned)
 
     def testWorkshopDict(self):
         returned = getAdminWorkSummary(self.workshop)
-        context = {
-            "name": self.workshop.name,
-            "year": "2019",
-            "division_categories": {self.divCategory.pk:
-                {'divisions':[
-                    {
-                        'name': 'Div2',
-                        'students': 1,
-                        'teachers': 0,
-                    },
-                    {
-                        'name': 'test',
-                        'students': 3,
-                        'teachers': 1,
-                    },],
-                'name':'Test','rows':3,'students':4,'teachers':1}},
-            'division_students': 4,
-            'division_teachers': 1,
-            "schools": [{'name':self.newSchool.name,'students':3,'teachers':1},{'name':self.school2.name,'students':1,'teachers':0},{'name': 'Independent', 'students': 0, 'teachers': 0}],
-            'school_students': 4,
-            'school_teachers': 1,
-        }
+        print(returned)
+        context = {'name': 'Workshop Test', 
+                   'year': '2019', 
+                   'division_data': {8: {'name': 'Test', 
+                                         'rows': [(8, 'test', 3, 1), 
+                                                  (8, 'Div2', 1, 0)], 
+                                         'subtotal': (4, 1), 
+                                         'size': 3}}, 
+                                         'school_data': 
+                                            [('Melbourne High', 3, 1), 
+                                             ('School 2', 1, 0)], 
+                                         'total': [4, 1]}
         self.assertEqual(context, returned)
 
     def testBlankForm(self):
