@@ -1651,7 +1651,6 @@ class TestAdminSummaryContext(TestCase):
 
     def testCompetitionDict(self):
         returned = getAdminCompSummary(self.oldEventWithTeams)
-        print(returned)
         context = {'name': 'test old yes reg', 
                    'year': '2019', 
                    'division_data': 
@@ -1667,7 +1666,6 @@ class TestAdminSummaryContext(TestCase):
 
     def testWorkshopDict(self):
         returned = getAdminWorkSummary(self.workshop)
-        print(returned)
         context = {'name': 'Workshop Test', 
                    'year': '2019', 
                    'division_data': {8: {'name': 'Test', 
