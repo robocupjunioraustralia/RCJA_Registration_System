@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'userquestions.apps.UserquestionsConfig',
     'regions.apps.RegionsConfig',
     'coordination.apps.CoordinationConfig',
+    'students.apps.StudentsConfig',
     'teams.apps.TeamsConfig',
     'events.apps.EventsConfig',
     'eventfiles.apps.EventfilesConfig',

@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from common.models import SaveDeleteMixin
 
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
+from students.models import StudentA
 
 # **********MODELS**********
 
@@ -121,7 +122,7 @@ class Team(BaseEventAttendance):
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Team'
-        ordering = ['event', 'school', 'division', 'name']
+        ordering = ['event', 'division', 'name']
 
     eventTypeMapping = 'competition'
 
@@ -158,6 +159,33 @@ class Team(BaseEventAttendance):
 
     # *****Email methods*****
 
+class TeamParticipation(SaveDeleteMixin, models.Model):
+    # Creation and update time
+    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
+    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
+    # Foreign keys
+    team = models.ForeignKey(Team, verbose_name='Team', on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentA, verbose_name='Student', on_delete=models.CASCADE)
+
+    # *****Meta and clean*****
+    class Meta:
+        verbose_name = 'Student'
+        ordering = ['team', 'student']
+
+    # *****Permissions*****
+    @classmethod
+    def stateCoordinatorPermissions(cls, level):
+        return eventCoordinatorEditPermissions(level)
+
+    # Used in state coordinator permission checking
+    def getState(self):
+        return self.team.event.state
+
+    def teamPK(self):
+        return self.team.pk
+    teamPK.short_description = 'Team PK'
+
+"""
 class Student(SaveDeleteMixin, models.Model):
     # Foreign keys
     team = models.ForeignKey(Team, verbose_name='Team', on_delete=models.CASCADE)
@@ -217,9 +245,7 @@ class Student(SaveDeleteMixin, models.Model):
     def __str__(self):
         return f'{self.firstName} {self.lastName}'
 
-    def teamPK(self):
-        return self.team.pk
-    teamPK.short_description = 'Team PK'
+    
 
     # *****CSV export methods*****
 
@@ -253,3 +279,4 @@ class Student(SaveDeleteMixin, models.Model):
         }
 
     # *****Email methods*****
+"""

@@ -1,0 +1,30 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> School details </title>
+
+<style>
+    .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile six wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    <form id= "studentSelectForm" action="" method="get">
+                        {% include "students/select.html" with form=studentForm%}
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

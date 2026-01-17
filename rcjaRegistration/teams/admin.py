@@ -8,8 +8,7 @@ from common.filters import FilteredRelatedOnlyFieldListFilter
 from django.utils.html import format_html
 from django.urls import reverse
 
-from .models import PlatformCategory, HardwarePlatform, SoftwarePlatform, Team, Student
-
+from .models import PlatformCategory, HardwarePlatform, SoftwarePlatform, Team,TeamParticipation
 from events.admin import BaseWorkshopAttendanceAdmin
 
 # Register your models here.
@@ -38,8 +37,8 @@ class SoftwarePlatformAdmin(AdminPermissions, admin.ModelAdmin):
         'category',
     ]
 
-class StudentInline(InlineAdminPermissions, admin.TabularInline):
-    model = Student
+class ParticipationInline(InlineAdminPermissions, admin.TabularInline):
+    model = TeamParticipation
     extra = 0
     min_num = 1
 
@@ -50,9 +49,6 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'event',
         'division',
         'creationDateTime',
-        'mentorUserName',
-        'school',
-        'campus',
         'homeState',
         'withdrawn',
         'uploadFileURL',
@@ -63,9 +59,6 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         }),
         ('Event', {
             'fields': ('event', 'division')
-        }),
-        ('School', {
-            'fields': ('mentorUser', 'school', 'campus',)
         }),
         ('Details', {
             'fields': (
@@ -88,10 +81,6 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         ('Event', {
             'fields': ('event', 'division')
         }),
-        ('School', {
-            'description': "Select this team's mentor.<br>If they are a mentor for one school that school will be autofilled. If they are mentor of more than one school you will need to select the school. Leave school blank if independent.<br>You can select campus after you have clicked save.",
-            'fields': ('mentorUser', 'school',)
-        }),
         ('Details', {
             'fields': ('hardwarePlatform', 'softwarePlatform',)
         }),
@@ -103,7 +92,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     ]
 
     inlines = [
-        StudentInline
+        ParticipationInline
     ]
 
     search_fields = BaseWorkshopAttendanceAdmin.search_fields + [
@@ -128,25 +117,19 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'withdrawn',
         'event',
         'division',
-        'mentorUserName',
-        'mentorUserEmail',
-        'mentorUserPK',
-        'school',
-        'campus',
         'homeState',
         'homeRegion',
-        'schoolPostcode',
         'hardwarePlatform',
         'softwarePlatform',
         'invoiceOverride',
     ]
     exportFieldsManyRelations = [
-        'mentor_questionresponse_set',
         'student_set',
     ]
+    """
     autocompleteFilters = {
-        'teams/student/': Student,
-    }
+        'teams/student/': StudentA,
+    }"""
 
     def uploadFileURL(self, obj):
         return format_html('<a href="{}" target="_blank">Upload file -></a>', reverse('eventfiles:uploadFile', args=(obj.id, )))
@@ -162,56 +145,3 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
 
     fieldFilteringModel = Team
 
-@admin.register(Student)
-class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
-    list_display = [
-        '__str__',
-        'team',
-    ]
-    autocomplete_fields = [
-        'team',
-    ]
-    list_filter = [
-        ('team__event', FilteredRelatedOnlyFieldListFilter),
-        ('team__division', FilteredRelatedOnlyFieldListFilter),
-    ]
-    search_fields = [
-        'firstName',
-        'lastName',
-        'team__name',
-        'team__school__state__name',
-        'team__school__state__abbreviation',
-        'team__school__region__name',
-        'team__school__name',
-        'team__campus__name',
-        'team__mentorUser__first_name',
-        'team__mentorUser__last_name',
-        'team__mentorUser__email',
-        'team__event__name',
-        'team__division__name',
-    ]
-    actions = [
-        'export_as_csv'
-    ]
-    exportFields = [
-        'pk',
-        'team',
-        'teamPK',
-        'firstName',
-        'lastName',
-        'yearLevel',
-        'gender',
-    ]
-
-    # State based filtering
-
-    fkFilterFields = {
-        'team': {
-            'fieldAdmin': TeamAdmin,
-        },
-    }
-
-    statePermissionsFilterLookup = 'team__event__state__coordinator'
-    filterQuerysetOnSelected = True
-    stateSelectedFilterLookup = 'team__event__state'
-    yearSelectedFilterLookup = 'team__event__year'

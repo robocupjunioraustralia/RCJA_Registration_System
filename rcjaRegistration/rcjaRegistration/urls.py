@@ -42,6 +42,7 @@ urlpatterns = [
     path('api/v1/cms/', include('cmsapi.urls')),
     path('', include('events.urls')),
     path('',include('schools.urls')),
+    path('',include('students.urls')),
     path('',include('teams.urls')),
     path('',include('workshops.urls')),
     path('',include('users.urls')),

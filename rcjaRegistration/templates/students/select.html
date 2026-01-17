@@ -1,0 +1,92 @@
+<div class="row" >
+    <input type="text" id="searchInput" placeholder="Type student name..." autocomplete="off" style="width:300px; padding:8px;" />
+    <div id="autocomplete-list"></div>
+</div>
+<br>
+
+<div class="row" id="studentBox">
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const autocompleteList = document.getElementById('autocomplete-list');
+    const studentBox = document.getElementById('studentBox');
+
+    function clearAutocomplete() {
+        autocompleteList.innerHTML = '';
+    }
+
+    function addStudent(student) {
+        var c = document.createElement("INPUT");
+        c.setAttribute("type", "checkbox");
+        c.name = "team_member" + student.id;
+        c.value = student.id;
+        c.textContent = student.name;
+        c.checked = true;
+        c.form = document.getElementById('studentSelectForm');
+        c.addEventListener('change', function () {
+            if (!this.checked) {
+                studentBox.removeChild(c.label);
+                studentBox.removeChild(c);
+            }});
+        studentBox.appendChild(c);
+        var l = document.createElement("label");
+        l.textContent = student.name;
+        l.check = c;
+        c.label = l;
+        studentBox.appendChild(l);
+    }
+
+    function createAutocompleteItem(student) {
+        const div = document.createElement('div');
+        div.textContent = student.name;
+        div.addEventListener('click', () => {
+            searchInput.value = "";
+            addStudent(student);
+            clearAutocomplete();
+        });
+        return div;
+    }
+
+    async function fetchAutocomplete() {
+        const query = searchInput.value.trim();
+
+        if (query.length === 0) {
+            clearAutocomplete();
+            return;
+        }
+
+        const url = new URL('/students/autocomplete', window.location.origin);
+        url.searchParams.append('q', query);
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const students = await response.json();
+
+            clearAutocomplete();
+
+            if (students.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.textContent = 'No results found';
+                autocompleteList.appendChild(noResult);
+                return;
+            }
+
+            students.forEach(student => {
+                autocompleteList.appendChild(createAutocompleteItem(student));
+            });
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
+    }
+
+    searchInput.addEventListener('input', fetchAutocomplete);
+
+    // Close autocomplete list if clicked outside
+    document.addEventListener('click', (e) => {
+        if (e.target !== searchInput) {
+            clearAutocomplete();
+        }
+    });
+</script>

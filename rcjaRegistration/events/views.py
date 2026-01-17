@@ -14,7 +14,7 @@ import jwt
 
 from .models import Event, BaseEventAttendance, Year
 from regions.models import State
-from teams.models import Team, Student
+from teams.models import Team, TeamParticipation
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
 from .forms import getSummaryForm
@@ -326,8 +326,9 @@ def getEventsForSummary(state, year):
             attendances = BaseEventAttendance.objects.filter(event=event)
             for attendance in attendances:
                 teamNumber += 1
-                students = Student.objects.filter(team=attendance.childObject())
-                for student in students:
+                participations = TeamParticipation.objects.filter(team=attendance.childObject())
+                for participation in participations:
+                    student = participation.student
                     studentNumber += 1
                     if student.gender == "male":
                         maleNumber += 1

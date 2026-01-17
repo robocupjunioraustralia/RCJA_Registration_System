@@ -11,8 +11,6 @@ class WorkshopAttendeeForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
         model = WorkshopAttendee
         fields= [
             'division',
-            'campus',
-            'school',
             'event',
             'firstName',
             'lastName',

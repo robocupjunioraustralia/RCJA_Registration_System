@@ -5,11 +5,12 @@ from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.urls import reverse
 
-from .forms import TeamForm, StudentForm
+from .forms import TeamForm
 
 import datetime
 
-from .models import Student, Team
+from .models import Team
+from students.models import StudentA
 from events.models import Event, AvailableDivision
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams
@@ -64,8 +65,8 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         self.StudentInLineFormSet = inlineformset_factory(
             Team,
-            Student,
-            form = StudentForm,
+            StudentA,
+            form = SelectStudentForm,
             min_num = 1,
             extra = sourceTeam.student_set.count() - 1 if sourceTeam else 0,
             max_num = event.maxMembersPerTeam,
