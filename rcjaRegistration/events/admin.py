@@ -496,17 +496,30 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
     list_display = [
         'event',
         'division',
+        'mentorUserName',
+        'school',
+        'campus',
         'homeState',
     ]
     autocomplete_fields = [
         'event',
         'division',
+        'mentorUser',
+        'school',
     ]
     list_filter = [
         ('event', FilteredRelatedOnlyFieldListFilter),
         ('division', FilteredRelatedOnlyFieldListFilter),
     ]
     search_fields = [
+        'school__state__name',
+        'school__state__abbreviation',
+        'school__region__name',
+        'school__name',
+        'campus__name',
+        'mentorUser__first_name',
+        'mentorUser__last_name',
+        'mentorUser__email',
         'event__name',
         'division__name',
     ]
@@ -517,9 +530,13 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
         'pk',
         'event',
         'division',
+        'mentorUserName',
+        'mentorUserEmail',
+        'school',
         'campus',
         'homeState',
         'homeRegion',
+        'schoolPostcode',
     ]
 
     form = BaseWorkshopAttendanceForm
@@ -527,7 +544,7 @@ class BaseWorkshopAttendanceAdmin(FKActionsRemove, AdminPermissions, DifferentAd
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
-        qs = qs.prefetch_related('event', 'division', )
+        qs = qs.prefetch_related('event', 'division', 'mentorUser__homeState', 'school__state', 'campus')
 
         return qs
 
