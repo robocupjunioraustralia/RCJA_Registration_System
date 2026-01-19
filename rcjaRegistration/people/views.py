@@ -1,7 +1,7 @@
 from django.http import JsonResponse, request
 from django.http.request import HttpRequest
 from django.shortcuts import render
-from .models import StudentA
+from .models import Student
 from schools.models import SchoolAdministrator
 
 def getStudents(request):
@@ -12,7 +12,7 @@ def getStudents(request):
         school = None
 
     query = request.GET.get('q', '')
-    students = StudentA.objects.raw("""SELECT * FROM students_StudentA 
+    students = Student.objects.raw("""SELECT * FROM students_StudentA 
                                     WHERE starts_with("firstName" || ' ' ||  "lastName", %s) 
                                     AND ("mentorUser" = %s
                                     OR school = %s)

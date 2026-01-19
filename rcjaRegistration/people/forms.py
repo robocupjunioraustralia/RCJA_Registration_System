@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from schools.models import SchoolAdministrator
-from .models import StudentA
+from .models import Student
 
 from events.forms import BaseEventAttendanceFormInitMixin
 
@@ -10,5 +10,5 @@ import datetime
 
 class NewStudentForm(forms.ModelForm):
     class Meta:
-        model = StudentA
+        model = Student
         fields = ['firstName','lastName','yearLevel','gender']

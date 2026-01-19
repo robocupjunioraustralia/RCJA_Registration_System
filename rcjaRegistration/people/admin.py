@@ -8,14 +8,14 @@ from common.filters import FilteredRelatedOnlyFieldListFilter
 from django.utils.html import format_html
 from django.urls import reverse
 
-from .models import StudentA
+from .models import Student
 
 
 # Register your models here.
 
 
 
-@admin.register(StudentA)
+@admin.register(Student)
 class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
         '__str__',

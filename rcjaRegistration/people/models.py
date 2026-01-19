@@ -5,27 +5,48 @@ from common.models import SaveDeleteMixin
 from django.conf import settings
 import datetime
 
+import re
+
 from schools.models import School
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
 
 # **********MODELS**********
 
-class StudentA(SaveDeleteMixin, models.Model):
-    # Creation and update time
-    creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
-    updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
-    # Fields
+class Person(SaveDeleteMixin, models.Model):
     firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
     lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
-    graduationYear = models.PositiveIntegerField('Year 12 Graduation Year')
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
-    school = models.ForeignKey(School, verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
-    
-    mentorUser = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Mentor', on_delete=models.PROTECT)
+
     school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
     campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
 
+    def clean(self):
+        errors = []
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+class Mentor(Person):
+    email = models.EmailField('Email')
+    yearLevel = models.CharField('Year level', max_length=10)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Mentor', on_delete=models.PROTECT)
+
+    def clean(self):
+        super().clean()
+        errors = []
+
+        if not re.match(r"(^[0-9,-]+$)", self.yearLevel):
+            errors.append(ValidationError('Year level can contain numbers, comma and hyphen'))
+
+        # Raise any errors
+        if errors:
+            raise ValidationError(errors)
+
+class Student(Person):
+    graduationYear = models.PositiveIntegerField('Year 12 Graduation Year')
+    
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Student'
