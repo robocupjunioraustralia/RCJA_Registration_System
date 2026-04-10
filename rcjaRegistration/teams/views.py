@@ -10,7 +10,7 @@ from .forms import TeamForm
 import datetime
 
 from .models import Team
-from people.models import Student
+from students.models import Student
 from events.models import Event, AvailableDivision
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams

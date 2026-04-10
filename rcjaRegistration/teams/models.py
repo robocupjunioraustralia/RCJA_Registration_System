@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from common.models import SaveDeleteMixin
 
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
-from people.models import Student
+from students.models import Student
 
 # **********MODELS**********
 

@@ -28,23 +28,8 @@ class Person(SaveDeleteMixin, models.Model):
         if errors:
             raise ValidationError(errors)
 
-class Mentor(Person):
-    email = models.EmailField('Email')
-    yearLevel = models.CharField('Year level', max_length=10)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Mentor', on_delete=models.PROTECT)
-
-    def clean(self):
-        super().clean()
-        errors = []
-
-        if not re.match(r"(^[0-9,-]+$)", self.yearLevel):
-            errors.append(ValidationError('Year level can contain numbers, comma and hyphen'))
-
-        # Raise any errors
-        if errors:
-            raise ValidationError(errors)
-
 class Student(Person):
+    mentorUser = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, verbose_name='Mentor', on_delete=models.PROTECT)
     graduationYear = models.PositiveIntegerField('Year 12 Graduation Year')
     
     # *****Meta and clean*****
@@ -69,8 +54,27 @@ class Student(Person):
     def __str__(self):
         return f'{self.firstName} {self.lastName}'
     
-    def yearLevel(self):
-        return datetime.datetime.now().year-self.graduationYear+12
+    def yearLevel(self) -> str:
+        year = datetime.datetime.now().year-self.graduationYear+12
+        if year>12:
+            return "Graduated"
+        if year==0:
+            return "Prep"
+        if year<0:
+            return "Before school"
+        return str(year)
+    
+    def canAccess(self, user) -> bool:
+        if user.currentlySelectedSchool:
+            # If user is a school administrator can only edit the currently selected school
+            if user.currentlySelectedSchool != self.school:
+                return False
+        else:
+            # If not a school administrator allow editing individually entered eventAttendances
+            if self.mentorUser != user or self.school:
+                return False
+
+        return True
 
     # *****CSV export methods*****
     """

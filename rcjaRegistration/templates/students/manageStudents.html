@@ -1,0 +1,84 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Modify Students </title>
+
+<style>
+    .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile six wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                    {% csrf_token %}
+                    <form id= "studentSelectForm" action="" method="post">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                        <p> Please fix the following</p>
+                        <p style="color: red">{{ form.non_field_errors }}</p>
+                        {% endif %}
+
+                        {% for field in form %}
+                        <p>
+                            {{ field.label_tag }}<br>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small style="color: grey">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                            <p style="color: red">{{ error }}</p>
+                            {% endfor %}
+                        </p>
+                        {% endfor %}
+                        {{ formset.management_form }}
+                        {% for form2 in formset %}
+                        {% for field in form2 %}
+                        <p>
+                            {{ field.label_tag }}<br>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small style="color: grey">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                            <p style="color: red">{{ error }}</p>
+                            {% endfor %}
+                        </p>
+                        {% endfor %}
+                        {% endfor %}
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+
+                <div class="row">
+                    <table class="ui celled table">
+                        <thead>
+                        <tr><th>Name</th>
+                        <th>Year</th>
+                        <th>Gender</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td data-label="Name">{{student.firstName}} {{student.lastName}} </td>
+                                <td data-label="Year">{{student.yearLevel}}</td>
+                                <td data-label="Gender">
+                                    {{student.gender}}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
