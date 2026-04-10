@@ -10,37 +10,34 @@ from django.urls import reverse
 
 from .models import Student
 
-
 # Register your models here.
-
 
 
 @admin.register(Student)
 class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
     list_display = [
-        '__str__',
+        "__str__",
     ]
     search_fields = [
-        'firstName',
-        'lastName',
-        'school__state__name',
-        'school__state__abbreviation',
-        'school__region__name',
-        'school__name',
-        'campus__name',
+        "firstName",
+        "lastName",
+        "school__state__name",
+        "school__state__abbreviation",
+        "school__region__name",
+        "school__name",
+        "campus__name",
     ]
-    actions = [
-        'export_as_csv'
-    ]
+    actions = ["export_as_csv"]
     exportFields = [
-        'pk',
-        'firstName',
-        'lastName',
-        'yearLevel',
-        'gender',
+        "pk",
+        "firstName",
+        "lastName",
+        "yearLevel",
+        "gender",
     ]
 
     filterQuerysetOnSelected = True
+
 
 """
 @admin.register(Student)

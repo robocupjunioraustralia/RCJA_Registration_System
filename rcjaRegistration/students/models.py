@@ -8,18 +8,54 @@ import datetime
 import re
 
 from schools.models import School
-from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
+from events.models import (
+    BaseEventAttendance,
+    eventCoordinatorEditPermissions,
+    eventCoordinatorViewPermissions,
+)
 
 # **********MODELS**********
 
-class Person(SaveDeleteMixin, models.Model):
-    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
-    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
-    genderOptions = (('male','Male'),('female','Female'),('other','Other'))
-    gender = models.CharField('Gender', choices=genderOptions, max_length=10)
 
-    school = models.ForeignKey('schools.School', verbose_name='School', on_delete=models.PROTECT, null=True, blank=True)
-    campus = models.ForeignKey('schools.Campus', verbose_name='Campus', on_delete=models.PROTECT, null=True, blank=True)
+class Person(SaveDeleteMixin, models.Model):
+    firstName = models.CharField(
+        "First name",
+        max_length=50,
+        validators=[
+            RegexValidator(
+                regex=r"^[0-9a-zA-Z \-\_]*$",
+                message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.",
+            )
+        ],
+    )
+    lastName = models.CharField(
+        "Last name",
+        max_length=50,
+        validators=[
+            RegexValidator(
+                regex=r"^[0-9a-zA-Z \-\_]*$",
+                message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.",
+            )
+        ],
+    )
+    genderOptions = (("male", "Male"), ("female", "Female"), ("other", "Other"))
+    gender = models.CharField("Gender", choices=genderOptions, max_length=10)
+
+    school = models.ForeignKey(
+        "schools.School",
+        verbose_name="School",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    campus = models.ForeignKey(
+        "schools.Campus",
+        verbose_name="Campus",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    archive = models.BooleanField(default=False)
 
     def clean(self):
         errors = []
@@ -28,14 +64,20 @@ class Person(SaveDeleteMixin, models.Model):
         if errors:
             raise ValidationError(errors)
 
+
 class Student(Person):
-    mentorUser = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, verbose_name='Mentor', on_delete=models.PROTECT)
-    graduationYear = models.PositiveIntegerField('Year 12 Graduation Year')
-    
+    mentorUser = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        verbose_name="Mentor",
+        on_delete=models.PROTECT,
+    )
+    graduationYear = models.PositiveIntegerField("Year 12 Graduation Year")
+
     # *****Meta and clean*****
     class Meta:
-        verbose_name = 'Student'
-        ordering = ['school', 'lastName', 'firstName']
+        verbose_name = "Student"
+        ordering = ["school", "lastName", "firstName"]
 
     # *****Permissions*****
     @classmethod
@@ -44,7 +86,6 @@ class Student(Person):
 
     # Used in state coordinator permission checking
 
-
     # *****Save & Delete Methods*****
 
     # *****Methods*****
@@ -52,18 +93,18 @@ class Student(Person):
     # *****Get Methods*****
 
     def __str__(self):
-        return f'{self.firstName} {self.lastName}'
-    
+        return f"{self.firstName} {self.lastName}"
+
     def yearLevel(self) -> str:
-        year = datetime.datetime.now().year-self.graduationYear+12
-        if year>12:
+        year = datetime.datetime.now().year - self.graduationYear + 12
+        if year > 12:
             return "Graduated"
-        if year==0:
+        if year == 0:
             return "Prep"
-        if year<0:
+        if year < 0:
             return "Before school"
         return str(year)
-    
+
     def canAccess(self, user) -> bool:
         if user.currentlySelectedSchool:
             # If user is a school administrator can only edit the currently selected school

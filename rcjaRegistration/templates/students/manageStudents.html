@@ -17,9 +17,10 @@
     <div class="">
         <div class="ui center aligned grid ">
             <div class="twelve wide mobile six wide computer column ui">
+                <h1> Add Student</h1>
                 <div class="form form-group left-aligned-text">
                     {% csrf_token %}
-                    <form id= "studentSelectForm" action="" method="post">
+                    <form id= "studentAddForm" action="" method="post">
                         {% csrf_token %}
                         {% if form.non_field_errors %}
                         <p> Please fix the following</p>
@@ -38,6 +39,7 @@
                             {% endfor %}
                         </p>
                         {% endfor %}
+                         <input type="hidden" id="studentID" name="studentID" value="-1">
                         {{ formset.management_form }}
                         {% for form2 in formset %}
                         {% for field in form2 %}
@@ -53,16 +55,19 @@
                         </p>
                         {% endfor %}
                         {% endfor %}
-                        <button type="submit">Submit</button>
+                        <button onclick="clearForm()">Add Student</button>
                     </form>
                 </div>
 
+                <h1>Current Students</h1>
                 <div class="row">
                     <table class="ui celled table">
                         <thead>
                         <tr><th>Name</th>
                         <th>Year</th>
                         <th>Gender</th>
+                        <th>Edit</th>
+                        <th>Archive</th>
                         </tr></thead>
                         <tbody>
                             {% for student in students %}
@@ -72,13 +77,78 @@
                                 <td data-label="Gender">
                                     {{student.gender}}
                                 </td>
+                                <td> <button onclick="editForm({{student.pk}}, '{{student.firstName}}', '{{student.lastName}}', {{student.graduationYear}}, '{{student.gender}}' )" >Edit</button></td>
+                                <td> <button onclick="archive({{student.pk}})" >Archive</button></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {%if archived_students%}
+                <h1>Archived Students</h1>
+                <div class="row">
+                    <table class="ui celled table">
+                        <thead>
+                        <tr><th>Name</th>
+                        <th>Year</th>
+                        <th>Gender</th>
+                        <th>Edit</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for student in archived_students %}
+                            <tr>
+                                <td data-label="Name">{{student.firstName}} {{student.lastName}} </td>
+                                <td data-label="Year">{{student.yearLevel}}</td>
+                                <td data-label="Gender">
+                                    {{student.gender}}
+                                </td>
+                                <td> <button onclick="editForm({{student.pk}}, '{{student.firstName}}', '{{student.lastName}}', {{student.graduationYear}}, '{{student.gender}}' )" >Edit</button></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    const form = document.getElementById("studentAddForm");
+    const firstNameField = document.getElementById('id_firstName');
+    const lastNameField = document.getElementById('id_lastName');
+    const yearField = document.getElementById('id_graduationYear');
+    const genderField = document.getElementById('id_gender');
+    const studentID = document.getElementById('studentID');
+
+    function submitForm() {
+        form.submit();
+    }
+
+    function editForm(student, first, last, year, gender){
+        firstNameField.value = first;
+        lastNameField.value = last;
+        yearField.value = year;
+        genderField.value = gender;
+        studentID.value = student;
+    }
+
+    async function archive(student){
+        const url = new URL('/students/archive', window.location.origin);
+        url.searchParams.append('student', student);
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const students = await response.json();
+            if (students[0]) {
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
+    }
+
+</script>
 {% endblock %}
+

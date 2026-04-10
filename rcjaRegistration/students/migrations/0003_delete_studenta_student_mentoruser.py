@@ -8,18 +8,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('students', '0002_person_remove_studenta_school_student'),
-        ('teams', '0012_alter_team_options_alter_teamparticipation_student'),
+        ("students", "0002_person_remove_studenta_school_student"),
+        ("teams", "0012_alter_team_options_alter_teamparticipation_student"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='StudentA',
+            name="StudentA",
         ),
         migrations.AddField(
-            model_name='student',
-            name='mentorUser',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL, verbose_name='Mentor'),
+            model_name="student",
+            name="mentorUser",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Mentor",
+            ),
         ),
     ]
