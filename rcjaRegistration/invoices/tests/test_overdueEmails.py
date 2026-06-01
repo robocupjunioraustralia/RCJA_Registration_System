@@ -387,6 +387,8 @@ class TestOverdueEmails(TestCase):
         self.user1.first_name = "First"
         self.user1.last_name = "Last"
         self.user1.save()
+        self.coord1.save()
+        self.user1.updateUserPermissions()
 
         self.client.login(
             request=HttpRequest(), username=self.email1, password=self.password
