@@ -86,6 +86,12 @@ def dashboard(request):
 
     outstandingInvoices = sum([1 for invoice in invoices if invoice.amountDueInclGST() > 0.05]) # Rounded because consistent with what user sees and not used in subsequent calculations
 
+    # Association join prompt
+    showAssociationPrompt = not request.user.associationPromptShown
+    if showAssociationPrompt:
+        request.user.associationPromptShown = True
+        request.user.save(update_fields=['associationPromptShown'], skipPrePostSave=True)
+
     context = {
         'futureEvents': futureEvents,
         'openForRegistrationCompetitions': openForRegistrationCompetitions,
@@ -96,6 +102,7 @@ def dashboard(request):
         'invoices': invoices,
         'currentState': currentState,
         'eventsAvailable': eventsAvailable,
+        'showAssociationPrompt': showAssociationPrompt
     }
     return render(request, 'events/dashboard.html', context)
 
@@ -181,6 +188,12 @@ def details(request, eventID):
 
     _, _, availableToCopyTeams = getAvailableToCopyTeams(request, event)
 
+    # Total registrations count for admins, excluding withdrawn teams
+    if event.boolWorkshop():
+        totalRegistrations = event.baseeventattendance_set.count()
+    else:
+        totalRegistrations = event.baseeventattendance_set.exclude(team__withdrawn=True).count()
+
     context = {
         'event': event,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
@@ -194,6 +207,7 @@ def details(request, eventID):
         'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
+        'totalRegistrations': totalRegistrations,
     }
     return render(request, 'events/details.html', context)
 

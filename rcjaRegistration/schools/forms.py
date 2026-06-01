@@ -51,3 +51,8 @@ class SchoolAdministratorForm(ModelForm):
         # This is needed because even if disabled all of the options are available in the html
         # This works to prevent a data leak but it is not the best way of achieving this
         self.fields['user'].queryset = User.objects.filter(schooladministrator__school=user.currentlySelectedSchool)
+
+class AdminSchoolsMergeForm(forms.Form):
+    school1NewCampusName = forms.CharField(label="School 1 new campus name", required=False, max_length=Campus._meta.get_field('name').max_length)
+    school2NewCampusName = forms.CharField(label="School 2 new campus name", required=False, max_length=Campus._meta.get_field('name').max_length)
+    keepExistingCampuses = forms.BooleanField(label="Keep existing campuses", required=False)

@@ -139,14 +139,6 @@ class TestAssociationMemberPage(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertContains(response, 'Address must not be blank for members 18 and over.')
 
-    def test_postFail_under18Address(self):
-        response = self.client.post(reverse('association:membership'), {
-            'birthday': (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date(),
-            'address': 'Test address',
-        })
-        self.assertEqual(200, response.status_code)
-        self.assertContains(response, 'Address must be blank for members under 18.')
-
 class TestAssociationMemberClean(TestCase):
     email1 = 'user1@user.com'
     password = 'chdj48958DJFHJGKDFNM'
@@ -176,11 +168,6 @@ class TestAssociationMemberClean(TestCase):
             self.associationMember1.clean()
         except ValidationError:
             self.fail("ValidationError raised")
-
-    def test_addressBlankIfUnder18(self):
-        self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
-        self.associationMember1.address = 'Test address'
-        self.assertRaises(ValidationError, self.associationMember1.clean)
 
     def test_addressNotBlankIfOver18(self):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date()
@@ -235,6 +222,16 @@ class TestAssociationMemberMethods(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.associationMember1), str(self.user1))
+
+    def test_preSave_clears_address_under18(self):
+        self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
+        self.associationMember1.address = 'Test address'
+        self.assertEqual(self.associationMember1.address, 'Test address')
+        
+        self.associationMember1.save()
+
+        self.associationMember1.refresh_from_db()
+        self.assertEqual(self.associationMember1.address, '')
 
     def test_membershipExpired_endToday(self):
         self.associationMember1.membershipEndDate = datetime.datetime.now().date()

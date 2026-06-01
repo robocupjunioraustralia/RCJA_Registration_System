@@ -3,6 +3,9 @@ from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKAction
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
 from .adminInlines import SchoolAdministratorInline
 
+from django.shortcuts import redirect
+from django.urls import reverse
+
 from .models import School, Campus, SchoolAdministrator
 
 from regions.admin import StateAdmin
@@ -42,6 +45,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
     actions = [
         'export_as_csv',
         'setForceDetailsUpdate',
+        'mergeSchools',
     ]
     exportFields = [
         'pk',
@@ -101,6 +105,21 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         queryset.update(forceSchoolDetailsUpdate=True)
     setForceDetailsUpdate.short_description = "Require details update"
     setForceDetailsUpdate.allowed_permissions = ('change',)
+
+    def mergeSchools(self, request, queryset):
+        if queryset.count() > 2:
+            self.message_user(request, "Select no more than two schools to merge", level='ERROR')
+            return
+
+        if queryset.count() == 1:
+            return redirect(reverse('schools:adminMergeSchools', args=[queryset[0].pk, queryset[0].pk]))
+
+        return redirect(reverse('schools:adminMergeSchools', args=[queryset[0].pk, queryset[1].pk]))
+    mergeSchools.short_description = "Merge schools"
+    mergeSchools.allowed_permissions = ('mergeSchools',)
+
+    def has_mergeSchools_permission(self, request):
+        return request.user.is_superuser
 
 @admin.register(Campus)
 class CampusAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSVMixin):

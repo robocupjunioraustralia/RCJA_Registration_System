@@ -84,6 +84,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'user',
         'email',
         'mobileNumber',
+        'getState',
         'homeRegion',
         'birthday',
         'address',

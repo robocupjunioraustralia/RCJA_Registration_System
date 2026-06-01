@@ -1,0 +1,106 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+
+<title> Merge Schools </title>
+
+<style>
+    .left-aligned-text {
+  text-align: left;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg">
+    <div class="">
+        <div class="ui center aligned grid ">
+            <div class="twelve wide mobile six wide computer column ui">
+                <div class="form form-group left-aligned-text">
+                
+                    <h1> Merge Schools </h1>
+                    <h3>{% if school1 == school2 %} Merging campuses for {{ school1 }} {% else %}Merging {{ school2 }} into {{ school1 }}{% endif %}</h3>
+                    {% if school1 != school2 %}<a href = "{% url 'schools:adminMergeSchools' school2.id school1.id %}" class = "primary ui button" style="margin-top:1rem;">Swap merge order</a>{% endif %}
+                    <br><br>
+
+                    {% if form.errors or form.non_field_errors %}
+                    
+                    <!-- Error messaging -->
+                    <div class="ui message left-aligned-text">
+                        <div class="">
+                            <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                            {{ form.non_field_errors }}
+
+                            <ul>
+                                {% for field in form %}
+                                {% if field.errors %}
+                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                {% endfor %}
+
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- /Error messaging -->
+                    {% endif %}
+
+                    <form method="post" class="ui form">
+                        {% csrf_token %}
+                        
+                        {% if school1 != school2 %}
+                        <h3>Campus names</h3>
+                        <p>Do you want to keep the existing campuses for both schools? If yes the existing campuses for both schools will be maintained and any associations unchanged. If no they will be deleted.</p>
+                        <div class="field">
+                            <label>Keep existing campuses?</label>
+                            {{form.keepExistingCampuses}}
+                        </div>
+                        <p>If name of an existing campus is entered that campus will be used and all objects that don't have a campus will be connected to it.<br>
+                            If new name is entered new campus will be createdand all objects that don't have a campus will be connected to it.<br>
+                            If blank no campus will be created and objects without a campus will have no campus, and objects with a campus will only keep their campus if keep existing campuses (above) is ticked.</p>
+                        <div class="field">
+                            <label>Name of new campus for {{ school1 }}: </label>
+                            {{form.school1NewCampusName}}
+                        </div>
+                        <div class="field">
+                            <label>Name of new campus for {{ school2 }}: </label>
+                            {{form.school2NewCampusName}}
+                        </div>
+                        {% else %}
+                        All campuses for {{ school1 }} will be deleted and removed from all teams, workshop attendees, school administrators, and invoices.<br>
+                        {% endif %}
+
+                        <input class="primary ui button" type="submit" value="Validate" />
+                        <a href = "{% url 'admin:schools_school_changelist' %}" class = "green ui button" style="margin-top:1rem;">Cancel</a>
+                        <br>
+                        {% if validated %}
+                        <h1>The following changes will be made:</h1>
+
+                        <h2>Campuses</h2>
+                        {% include "schools/adminMergeSchools_changesTable.html" with items=campusChanges firstColumnHeader="Name" showCampusColumn=False userField=False invoiceField=False %}
+
+                        <h2>School Administrators</h2>
+                        {% include "schools/adminMergeSchools_changesTable.html" with items=schoolAdministratorChanges firstColumnHeader="User" showCampusColumn=True userField=True invoiceField=False %}
+
+                        <h2>Team & workshop attendee changes</h2>
+                        {% include "schools/adminMergeSchools_changesTable.html" with items=eventAttendeeChanges firstColumnHeader="Team/ workshop attendee" showCampusColumn=True userField=False invoiceField=False %}
+
+                        <h2>Invoice changes</h2>
+                        {% include "schools/adminMergeSchools_changesTable.html" with items=invoiceChanges firstColumnHeader="Invoice" showCampusColumn=True userField=False invoiceField=True %}
+
+                        <br>
+                        {% if school1 != school2 %}
+                        <input class="negative ui button" type="submit" name="merge" value="Merge {{ school2 }} into {{ school1 }} and delete {{ school2 }}" />
+                        {% else %}
+                        <input class="negative ui button" type="submit" name="merge" value="Delete all campuses for {{ school1 }}" />
+                        {% endif %}
+                        {% endif %}
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

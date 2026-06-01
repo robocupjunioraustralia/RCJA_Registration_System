@@ -50,6 +50,22 @@ class Test_School_SuperUser(School_Base, Base_Test_SuperUser, TestCase):
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'This field is required.')
 
+    def test_has_mergeSchools_action(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, 'Merge schools')
+
+    def test_megerSchools_action_one_school(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_changelist'), data={'action': 'mergeSchools', '_selected_action': [self.school1_state1.id]})
+        self.assertRedirects(response, reverse(f'schools:adminMergeSchools', args=[self.school1_state1.id, self.school1_state1.id]))
+
+    def test_megerSchools_action_two_schools(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_changelist'), data={'action': 'mergeSchools', '_selected_action': [self.school1_state1.id, self.school2_state1.id]})
+        self.assertRedirects(response, reverse(f'schools:adminMergeSchools', args=[self.school1_state1.id, self.school2_state1.id]))
+
+    def test_megerSchools_action_three_schools(self):
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_changelist'), data={'action': 'mergeSchools', '_selected_action': [self.school1_state1.id, self.school2_state1.id, self.school3_state2.id]}, follow=True)
+        self.assertContains(response, 'Select no more than two schools to merge')
+
 class School_Coordinators_Base(School_Base):
     expectedListItems = 2
     expectedStrings = [
@@ -77,6 +93,10 @@ class Test_School_FullCoordinator(School_Coordinators_Base, Base_Test_FullCoordi
         self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
         self.assertContains(response, 'Please correct the error below.')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+
+    def test_has_no_mergeSchools_action(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, 'Merge schools')
 
 class Test_School_ViewCoordinator(School_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass

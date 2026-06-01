@@ -39,6 +39,11 @@
         .header-button:hover {
             background-color: rgba(0,0,0,.03) !important;
         }
+        @media (max-width: 1050px) {
+            .hide-on-mobile {
+                display: none !important;
+            }
+        }
     </style>
 
     {% block head %}
@@ -48,62 +53,71 @@
 
 <body>
 
-    <div class="ui labeled icon left inline vertical sidebar menu">
-        <div class="item">
+    <div class="ui labeled icon left inline vertical sidebar menu"">
+        <div class="item" style="height: 52.57px; display: grid; place-items: center;">
             <img src="{% static 'favicon-32x32.png' %}">
         </div>
         <a class="item" href="{% url 'events:dashboard' %}">
-            <i class="home icon"></i>
+            <i class="home icon"> </i>
             Dashboard
         </a>
         <a class="item" href="{% url 'invoices:summary' %}">
             <i class="credit card icon"></i>
             My Invoices
-        </a>   
+        </a>
         <a class="item" href="{% url 'association:membership' %}">
             <i class="briefcase icon"></i>
             Association Membership
-        </a> 
+        </a>
+        {% if user.is_staff %}
+        <a class="item" href="{% url 'events:summaryReport' %}">
+            <i class="eye icon"></i>
+            Summary Report
+        </a>
+        <a class="item" href="{% url 'admin:index' %}">
+            <i class="id badge icon"></i>
+            Admin
+        </a>
+
+        {% endif %}
+        {% if environment is not None %}
+        <span class="item" style="color:red;">
+            <i class="important"></i>
+            <b>{{environment}}</b>
+        </span>
+        {% endif %}
     </div>
     <div class="ui top massive fixed menu">
         <a class="item" style="margin-right:1rem;" onclick = "toggleSidebar()">
             <i class="sidebar icon"></i>
-            
+
         </a>
         <div class = "ui tablet only computer only grid menu-set">
             <a class="item" href="{% url 'events:dashboard' %}">
                 <i class="home icon"></i>
                 Dashboard
-            </a>  
+            </a>
             <a class="item" href="{% url 'invoices:summary' %}">
                 <i class="credit card icon"></i>
                 My Invoices
-            </a>            
-            <a class="item" href="{% url 'association:membership' %}">
-                <i class="briefcase icon"></i>
-                Association Membership
-            </a>     
+            </a>
         </div>
         <div class = "right menu">
             {% if environment is not None %}
-            <span class="item" style="color:red; max-width:48%" >
+            <span class="item hide-on-mobile" style="color:red; max-width:48%" >
                 <i class="important"></i>
                 <b>{{environment}}</b>
             </span>
             {% endif %}
             {% if user.is_staff %}
-            <a class="item" href="{% url 'events:summaryReport' %}">
-                <i class="eye icon"></i>
-                Summary Report
-            </a>
-            <a class="item" href="{% url 'admin:index' %}" style="max-width:48%" >
+            <a class="item hide-on-mobile" href="{% url 'admin:index' %}" style="max-width:48%" >
                 <i class="id badge icon"></i>
                 Admin
             </a>
             {% endif %}
             {% if user.schooladministrator_set.count > 1 %}
                 <div class="ui dropdown simple item" >
-                    <span style="width:3.3em; overflow: hidden; text-overflow: ellipsis;">
+                    <span style="width:6em; overflow: hidden; text-wrap: nowrap; text-overflow: ellipsis;">
                     {% if user.currentlySelectedSchool %}
                     {{ user.currentlySelectedSchool.name }}
                     {% else %}
@@ -123,7 +137,7 @@
             {% endif %}
             <div class="ui dropdown simple item" >
                 <i class="user circle icon"></i>
-                <span style="max-width:15vw; overflow: hidden; text-overflow: ellipsis;">
+                <span style="max-width:15vw; overflow: hidden; text-wrap: nowrap; text-overflow: ellipsis;">
                 {{ user.fullname_or_email }}
                 </span>
                     <i class="dropdown icon"></i>
@@ -139,12 +153,12 @@
                         {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
                     </div>
             </div>
-        </div>             
+        </div>
     </div>
     <div class="pusher" style="padding-bottom:3rem;">
         <div style="margin-bottom:6rem;"> </div>
         {% block content %}
-        {% endblock %} 
+        {% endblock %}
     </div>
     <footer>
         <a href="https://robocupjunior.org.au">RoboCup Junior Australia</a>
@@ -191,7 +205,7 @@ footer i {
     text-decoration: none;
 }
 </style>
-    
+
 <script>
 function toggleSidebar() {
 $('.ui.labeled.icon.sidebar')
