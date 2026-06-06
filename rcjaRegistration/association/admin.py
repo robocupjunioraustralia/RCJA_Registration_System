@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
 
@@ -126,6 +127,13 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
             member.approvalStatus = newStatus
             member.approvalRejectionBy = request.user
             member.approvalRejectionDate = datetime.date.today()
+
+            # Run model's validation before saving in case that matters (rules accepted, membership start, etc.)
+            try:
+                member.full_clean()
+            except ValidationError as e:
+                self.message_user(request, f"Skipped {member}: {'; '.join(e.messages)}", messages.WARNING)
+                continue
 
             # Persist changes
             member.save()
