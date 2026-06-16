@@ -11,6 +11,7 @@ from regions.models import State, Region
 from schools.models import School, SchoolAdministrator
 from teams.models import Team, Student
 from events.models import Event, Year, Division
+from association.models import AssociationMember
 
 import datetime
 
@@ -382,16 +383,24 @@ class TestOverdueEmails(TestCase):
 
     def testEventsDisplayed(self):
         self.coord1 = Coordinator.objects.create(
-            user=self.user1, state=self.state1, permissionLevel="full", position="Thing"
+            user=self.user2, state=self.state1, permissionLevel="full", position="Thing"
         )
-        self.user1.first_name = "First"
-        self.user1.last_name = "Last"
-        self.user1.save()
+        self.user2_association_member = AssociationMember.objects.create(
+            user=self.user2,
+            birthday=(
+                datetime.datetime.now() + datetime.timedelta(days=-20 * 365)
+            ).date(),
+            rulesAcceptedDate=datetime.datetime.now(),
+            membershipStartDate=datetime.datetime.now(),
+        )
+        self.user2.first_name = "First"
+        self.user2.last_name = "Last"
+        self.user2.save()
         self.coord1.save()
-        self.user1.updateUserPermissions()
-
+        self.user2.updateUserPermissions()
+        self.user2.save()
         self.client.login(
-            request=HttpRequest(), username=self.email1, password=self.password
+            request=HttpRequest(), username=self.email2, password=self.password
         )
         url = reverse("invoices:overdueEmails")
         response = self.client.get(url)
