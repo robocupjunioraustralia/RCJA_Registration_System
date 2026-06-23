@@ -406,7 +406,7 @@ class TestOverdueEmails(TestCase):
         response = self.client.get(url)
         self.assertNotContains(response, "Due Yesterday")
 
-    def checkNotSendIfPaid(self):
+    def testNotSendIfPaid(self):
         events = [
             self.eventDueYesterday,
             self.eventDue21Days,
@@ -420,7 +420,7 @@ class TestOverdueEmails(TestCase):
                 InvoicePayment.objects.create(
                     invoice=invoice,
                     amountPaid=invoice.amountDueInclGST_unrounded(),
-                    dataPaid=datetime.datetime.now(),
+                    datePaid=datetime.datetime.now(),
                 )
 
         self.client.login(
