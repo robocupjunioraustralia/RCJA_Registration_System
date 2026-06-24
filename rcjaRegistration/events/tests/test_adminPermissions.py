@@ -372,7 +372,7 @@ class AdditionalEventTestsMixin:
         self.assertContains(response, "Filtered to: ")
 
 class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_SuperUser, TestCase):
-    expectedListItems = 7
+    expectedListItems = 8
     expectedStrings = [
         'State 1 Open Competition',
         'State 1 Open Workshop',
@@ -412,7 +412,7 @@ class Test_Event_SuperUser(AdditionalEventTestsMixin, Event_Base, Base_Test_Supe
     ]
 
 class Event_Coordinators_Base(Event_Base):
-    expectedListItems = 5
+    expectedListItems = 6
     expectedStrings = [
         'State 1 Open Competition',
         'State 1 Open Workshop',
