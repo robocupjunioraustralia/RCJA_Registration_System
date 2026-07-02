@@ -272,7 +272,7 @@ class TestUpload(TestCase):
 
     def testNotDebug(self):
         self.client.login(
-            request=HttpRequest(), username=self.username, password=self.password
+            request=HttpRequest(), username=self.super, password=self.password
         )
         response = self.client.get(reverse("data:upload"))
         self.assertEqual(response.status_code, 404)
