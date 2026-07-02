@@ -1,0 +1,45 @@
+{'Metadata': {'date': '2026-07-02'
+    }, 'InvoiceGlobalSettings': [
+        {'id': 2, 'invoiceFromName': 'From Name', 'invoiceFromDetails': 'Test Details Text', 'invoiceFooterMessage': 'Test Footer Text', 'firstInvoiceNumber': 1, 'surchargeAmount': 0.0, 'surchargeName': 'Surcharge', 'surchargeInvoiceDescription': '', 'surchargeEventDescription': ''
+        }
+    ], 'Year': [
+        {'year': 2019, 'displayEventsOnWebsite': False
+        }
+    ], 'State': [
+        {'id': 6, 'name': 'National', 'abbreviation': 'NAT', 'typeCompetition': True, 'typeUserRegistration': True, 'typeGlobal': True, 'typeWebsite': False, 'bankAccountName': None, 'bankAccountBSB': None, 'bankAccountNumber': None, 'paypalEmail': '', 'defaultEventDetails': '', 'invoiceMessage': '', 'defaultEventImage': '', 'defaultEventImageOriginalFilename': None
+        },
+        {'id': 5, 'name': 'New South Wales', 'abbreviation': 'NSW', 'typeCompetition': True, 'typeUserRegistration': True, 'typeGlobal': False, 'typeWebsite': False, 'bankAccountName': None, 'bankAccountBSB': None, 'bankAccountNumber': None, 'paypalEmail': '', 'defaultEventDetails': '', 'invoiceMessage': '', 'defaultEventImage': '', 'defaultEventImageOriginalFilename': None
+        },
+        {'id': 4, 'name': 'Victoria', 'abbreviation': 'VIC', 'typeCompetition': True, 'typeUserRegistration': True, 'typeGlobal': False, 'typeWebsite': False, 'bankAccountName': None, 'bankAccountBSB': None, 'bankAccountNumber': None, 'paypalEmail': '', 'defaultEventDetails': '', 'invoiceMessage': '', 'defaultEventImage': '', 'defaultEventImageOriginalFilename': None
+        }
+    ], 'Region': [
+        {'id': 2, 'state_id': None, 'name': 'Test Region', 'description': 'test desc'
+        }
+    ], 'DivisionCategory': [
+        {'id': 2, 'name': 'Test'
+        }
+    ], 'Division': [
+        {'id': 4, 'state_id': 5, 'name': 'second', 'description': '', 'category_id': 2, 'active': True
+        },
+        {'id': 3, 'state_id': None, 'name': 'test', 'description': '', 'category_id': 2, 'active': True
+        }
+    ], 'Event': [
+        {'id': 6, 'year_id': 2019, 'state_id': 4, 'globalEvent': False, 'name': 'future event', 'eventType': 'competition', 'status': 'published', 'cmsEventId': None, 'eventBannerImage': '', 'eventBannerImageOriginalFilename': None, 'startDate': '2026-08-03', 'endDate': '2026-08-03', 'registrationsOpenDate': '2026-07-25', 'registrationsCloseDate': '2026-07-19', 'maxMembersPerTeam': 5, 'event_maxRegistrationsPerSchool': None, 'event_maxRegistrationsForEvent': None, 'entryFeeIncludesGST': True, 'paymentDueDate': None, 'competition_defaultEntryFee': 4, 'competition_billingType': 'team', 'competition_specialRateNumber': None, 'competition_specialRateFee': None, 'workshopTeacherEntryFee': 4, 'workshopStudentEntryFee': 4, 'eventSurchargeAmount': 0.0, 'directEnquiriesTo_id': 1, 'venue_id': None, 'eventDetails': '', 'additionalInvoiceMessage': ''
+        },
+        {'id': 7, 'year_id': 2019, 'state_id': 4, 'globalEvent': False, 'name': 'test new yes reg', 'eventType': 'competition', 'status': 'published', 'cmsEventId': None, 'eventBannerImage': '', 'eventBannerImageOriginalFilename': None, 'startDate': '2026-07-27', 'endDate': '2026-07-28', 'registrationsOpenDate': '2026-07-22', 'registrationsCloseDate': '2026-07-26', 'maxMembersPerTeam': 5, 'event_maxRegistrationsPerSchool': None, 'event_maxRegistrationsForEvent': None, 'entryFeeIncludesGST': True, 'paymentDueDate': None, 'competition_defaultEntryFee': 4, 'competition_billingType': 'team', 'competition_specialRateNumber': None, 'competition_specialRateFee': None, 'workshopTeacherEntryFee': 4, 'workshopStudentEntryFee': 4, 'eventSurchargeAmount': 0.0, 'directEnquiriesTo_id': 1, 'venue_id': None, 'eventDetails': '', 'additionalInvoiceMessage': ''
+        },
+        {'id': 5, 'year_id': 2019, 'state_id': 4, 'globalEvent': False, 'name': 'test old not reg', 'eventType': 'competition', 'status': 'published', 'cmsEventId': None, 'eventBannerImage': '', 'eventBannerImageOriginalFilename': None, 'startDate': '2026-07-23', 'endDate': '2026-07-23', 'registrationsOpenDate': '2026-07-23', 'registrationsCloseDate': '2026-07-23', 'maxMembersPerTeam': 5, 'event_maxRegistrationsPerSchool': None, 'event_maxRegistrationsForEvent': None, 'entryFeeIncludesGST': True, 'paymentDueDate': None, 'competition_defaultEntryFee': 4, 'competition_billingType': 'team', 'competition_specialRateNumber': None, 'competition_specialRateFee': None, 'workshopTeacherEntryFee': 4, 'workshopStudentEntryFee': 4, 'eventSurchargeAmount': 0.0, 'directEnquiriesTo_id': 1, 'venue_id': None, 'eventDetails': '', 'additionalInvoiceMessage': ''
+        },
+        {'id': 8, 'year_id': 2019, 'state_id': 4, 'globalEvent': False, 'name': 'test old yes reg', 'eventType': 'competition', 'status': 'published', 'cmsEventId': None, 'eventBannerImage': '', 'eventBannerImageOriginalFilename': None, 'startDate': '2026-07-21', 'endDate': '2026-07-20', 'registrationsOpenDate': '2026-07-18', 'registrationsCloseDate': '2026-07-19', 'maxMembersPerTeam': 5, 'event_maxRegistrationsPerSchool': None, 'event_maxRegistrationsForEvent': None, 'entryFeeIncludesGST': True, 'paymentDueDate': None, 'competition_defaultEntryFee': 4, 'competition_billingType': 'team', 'competition_specialRateNumber': None, 'competition_specialRateFee': None, 'workshopTeacherEntryFee': 4, 'workshopStudentEntryFee': 4, 'eventSurchargeAmount': 0.0, 'directEnquiriesTo_id': 1, 'venue_id': None, 'eventDetails': '', 'additionalInvoiceMessage': ''
+        }
+    ], 'AvailableDivision': [
+        {'id': 6, 'event_id': 6, 'division_id': 3, 'division_maxRegistrationsPerSchool': None, 'division_maxRegistrationsForDivision': None, 'division_billingType': 'event', 'division_entryFee': None
+        },
+        {'id': 7, 'event_id': 7, 'division_id': 3, 'division_maxRegistrationsPerSchool': None, 'division_maxRegistrationsForDivision': None, 'division_billingType': 'event', 'division_entryFee': None
+        },
+        {'id': 5, 'event_id': 5, 'division_id': 3, 'division_maxRegistrationsPerSchool': None, 'division_maxRegistrationsForDivision': None, 'division_billingType': 'event', 'division_entryFee': None
+        },
+        {'id': 8, 'event_id': 8, 'division_id': 3, 'division_maxRegistrationsPerSchool': None, 'division_maxRegistrationsForDivision': None, 'division_billingType': 'event', 'division_entryFee': None
+        }
+    ]
+}"

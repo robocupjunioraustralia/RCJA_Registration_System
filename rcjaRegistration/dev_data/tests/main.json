@@ -1,6 +1,6 @@
 {
     "Metadata": {
-        "date": "2019-06-05"
+        "date": "2019-06-27"
     },
     "InvoiceGlobalSettings": [
         {
@@ -120,8 +120,8 @@
             "eventBannerImageOriginalFilename": null,
             "startDate": "2019-07-07",
             "endDate": "2019-07-07",
-            "registrationsOpenDate": "2019-06-28",
-            "registrationsCloseDate": "2019-06-22",
+            "registrationsOpenDate": "2019-06-22",
+            "registrationsCloseDate": "2019-06-28",
             "maxMembersPerTeam": 5,
             "event_maxRegistrationsPerSchool": null,
             "event_maxRegistrationsForEvent": null,

@@ -121,8 +121,8 @@ def commonSetUp(obj):
         competition_defaultEntryFee=4,
         startDate=(now + datetime.timedelta(days=10)).date(),
         endDate=(now + datetime.timedelta(days=10)).date(),
-        registrationsOpenDate=(now + datetime.timedelta(days=1)).date(),
-        registrationsCloseDate=(now + datetime.timedelta(days=-5)).date(),
+        registrationsOpenDate=(now + datetime.timedelta(days=-5)).date(),
+        registrationsCloseDate=(now + datetime.timedelta(days=1)).date(),
         directEnquiriesTo=obj.user,
     )
     obj.registrationNotOpenYetEvent.divisions.add(obj.division)
@@ -319,13 +319,51 @@ class TestUpload(TestCase):
 
         with open("dev_data/tests/main.json", "r") as file:
             data = file.read(-1)
-            data = data.replace("TODAYDATE", f'"{datetime.date.today()}"')
-            loadedJSON = json.loads(data)
-        data = {"deleteData": True, "data_to_upload": loadedJSON}
+        data = {"deleteData": True, "data_to_upload": data}
         self.client.post(url, data=data)
 
+        self.superUser = User.objects.create_user(
+            adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION,
+            email=self.super,
+            password=self.password,
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+
         response = self.client.get(reverse("data:download"))
-        with open("dev_data/tests/main.txt", "r") as file:
+        with open("dev_data/tests/no-dates.txt", "r") as file:
             regex = file.read(-1)
         self.assertRegex(str(response.json()), regex)
+        self.close()
+
+    def testCorrectDates(self):
+        settings.DEBUG = True
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+        url = reverse("data:upload")
+
+        with open("dev_data/tests/main.json", "r") as file:
+            data = file.read(-1)
+        data = {"deleteData": True, "data_to_upload": data}
+        self.client.post(url, data=data)
+
+        event = Event.objects.filter(name="future event").first()
+        self.assertEqual(
+            datetime.date.today() + datetime.timedelta(days=10), event.startDate
+        )
+        self.assertEqual(
+            datetime.date.today() + datetime.timedelta(days=10), event.endDate
+        )
+        self.assertEqual(
+            datetime.date.today() + datetime.timedelta(days=-5),
+            event.registrationsOpenDate,
+        )
+        self.assertEqual(
+            datetime.date.today() + datetime.timedelta(days=1),
+            event.registrationsCloseDate,
+        )
         self.close()

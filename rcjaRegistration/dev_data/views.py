@@ -42,10 +42,30 @@ from users.models import User
 
 from .forms import DownloadDataForm
 
+"""
+A list of all models in order of dependency. Later tables reference earlier 
+tables. The remove dictionary allows specific information to be set to a 
+specific value, instead of the current setting when downloading. The download 
+field states whether the model should be converted to JSON data
+"""
 models = [
     {"class": InvoiceGlobalSettings, "remove": {}, "download": True},
-    {"class": Year, "remove": {}, "download": True},
-    {"class": State, "remove": {}, "download": True},
+    {
+        "class": Year,
+        "remove": {},
+        "download": True,
+    },
+    {
+        "class": State,
+        "remove": {
+            "defaultEventImage": None,
+            "bankAccountName": None,
+            "bankAccountBSB": None,
+            "bankAccountNumber": None,
+            "paypalEmail": "",
+        },
+        "download": True,
+    },
     {"class": Region, "remove": {}, "download": True},
     {"class": School, "remove": {}, "download": False},
     {"class": Campus, "remove": {}, "download": False},
@@ -61,7 +81,11 @@ models = [
     {"class": Coordinator, "remove": {}, "download": False},
     {"class": Question, "remove": {}, "download": True},
     {"class": QuestionResponse, "remove": {}, "download": False},
-    {"class": Event, "remove": {"directEnquiriesTo_id": 1}, "download": True},
+    {
+        "class": Event,
+        "remove": {"eventBannerImage": "", "directEnquiriesTo_id": 1},
+        "download": True,
+    },
     {"class": AvailableDivision, "remove": {}, "download": True},
     {"class": BaseEventAttendance, "remove": {}, "download": False},
     {"class": MentorEventFileType, "remove": {}, "download": True},
@@ -80,58 +104,54 @@ def download(request):
     if not request.user.is_staff:
         raise PermissionDenied("You do not have permission to view this page")
     data = {"Metadata": {"date": datetime.date.today()}}
-
     # No data removal necessary
     for model in models:
         if model["class"].objects.exists() and model["download"]:
-            allObjects = []
+            allObjects = []  # All objects for particular class
             for object in model["class"].objects.all():
-                variables = vars(object)
-                variables.pop("_state")
+                variables = vars(object)  # Copy all attributes
+                variables.pop("_state")  # Remove meta variables
                 variables.pop("creationDateTime")
                 variables.pop("updatedDateTime")
-
+                # Apply replacements
                 for field, replacement in model["remove"].items():
                     variables[field] = replacement
                 allObjects.append(variables)
+            # Add data to list
             data[model["class"].__name__] = allObjects
     return JsonResponse(data)
 
 
 def deleteData(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser:  # Double check
         return
-    for model in models[::-1]:
+    for model in models[::-1]:  # Delete everything in reverse order
         model["class"].objects.all().delete()
 
 
 def uploadData(data):
     today = datetime.date.today()
-    for model in models:
+    for model in models:  # Iterate through all given models
         if model["class"].__name__ in data:
-            for object in data[model["class"].__name__]:
+            for object in data[
+                model["class"].__name__
+            ]:  # Iterate through data for model
                 for key in object:
-                    print(
-                        key,
-                        isinstance(object[key], str),
-                        bool(re.search(r"\w*_id", key)),
-                    )
                     if isinstance(object[key], str) and re.search(
                         "2[0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]", object[key]
-                    ):
+                    ):  # Replace dates time shifted to current
                         object[key] = (
                             datetime.date.fromisoformat(object[key])
                             - datetime.date.fromisoformat(data["Metadata"]["date"])
                             + today
                         )
                     elif re.search(r"\w*_id", key):
-                        print("ID")
                         match key:
-                            case "directEnquiriesTo_id":
+                            case "directEnquiriesTo_id":  # To avoid bad references
                                 object[key] = User.objects.all().first().pk
-                                print("FOUND")
                 model["class"].objects.create(**object)
-        elif model["class"] == User:
+        elif model["class"] == User:  # Always ensure one user for enquires
+            # Details shouldn't matter as on development
             User.objects.create_superuser(email="tester@test.com", password="test")
 
 
