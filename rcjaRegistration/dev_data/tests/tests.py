@@ -270,6 +270,14 @@ class TestUpload(TestCase):
         self.assertEqual(response.status_code, 404)
         self.close()
 
+    def testNotDebug(self):
+        self.client.login(
+            request=HttpRequest(), username=self.username, password=self.password
+        )
+        response = self.client.get(reverse("data:upload"))
+        self.assertEqual(response.status_code, 404)
+        self.close()
+
     def testDeleteAll(self):
         settings.DEBUG = True
         self.client.login(
@@ -277,7 +285,7 @@ class TestUpload(TestCase):
         )
         url = reverse("data:upload")
 
-        data = {"deleteData": True, "data_to_upload": {}}
+        data = {"deleteData": True, "data_to_upload": ""}
         self.client.post(url, data=data)
 
         self.assertEqual(InvoiceGlobalSettings.objects.count(), 0)
@@ -367,3 +375,69 @@ class TestUpload(TestCase):
             event.registrationsCloseDate,
         )
         self.close()
+
+    def testInvalidForm(self):
+        settings.DEBUG = True
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+        url = reverse("data:upload")
+        data = {"deleteData": True, "data_to_upload": "Valid JSON data"}
+        response = self.client.post(url, data=data)
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "Data to upload: Enter a valid JSON.")
+        self.close()
+
+    def testDeleteNotSuperUser(self):
+        settings.DEBUG = True
+        email = "tester@test.com"
+        password = "password"
+        user = User.objects.create_user(
+            adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION,
+            email=email,
+            password=password,
+            is_superuser=False,
+            is_staff=True,
+        )
+        coord1 = Coordinator.objects.create(
+            user=user, state=self.newState, permissionLevel="full", position="Thing"
+        )
+        user_association_member = AssociationMember.objects.create(
+            user=user,
+            birthday=(
+                datetime.datetime.now() + datetime.timedelta(days=-20 * 365)
+            ).date(),
+            rulesAcceptedDate=datetime.datetime.now(),
+            membershipStartDate=datetime.datetime.now(),
+        )
+        self.client.login(request=HttpRequest(), username=email, password=password)
+        url = reverse("data:upload")
+        data = {"deleteData": True, "data_to_upload": "{}"}
+        self.client.post(url, data=data)
+        self.assertEqual(State.objects.count(), 3)
+        self.close()
+
+    def testAddDataNoDelete(self):
+        settings.DEBUG = True
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+        url = reverse("data:upload")
+        data = {
+            "deleteData": False,
+            "data_to_upload": """{
+            "Metadata": {
+                "date": "2019-06-27"
+            },
+            "Year": [
+                {
+                    "year": 2020,
+                    "displayEventsOnWebsite": false
+                }
+            ]
+            }""",
+        }
+        response = self.client.post(url, data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Year.objects.count(), 2)
+        self.assertEqual(Event.objects.count(), 4)
