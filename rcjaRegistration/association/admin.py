@@ -95,6 +95,7 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'address',
         'membershipActive',
         'membershipType',
+        'approvalStatus',
         'membershipStartDate',
         'membershipEndDate',
     ]
