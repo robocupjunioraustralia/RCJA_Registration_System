@@ -22,7 +22,7 @@
                 
                     <h1> Merge Schools </h1>
                     <h3>{% if school1 == school2 %} Merging campuses for {{ school1 }} {% else %}Merging {{ school2 }} into {{ school1 }}{% endif %}</h3>
-                    {% if school1 != school2 %}<a href = "{% url 'schools:adminMergeSchools' school2.id school1.id %}" class = "primary ui button" style="margin-top:1rem;">Swap merge order</a>{% endif %}
+                    {% if school1 != school2 %}<a href = "{% url 'schools:adminMergeSchools' school2.id school1.id %}" class = "primary ui button">Swap merge order</a>{% endif %}
                     <br><br>
 
                     {% if form.errors or form.non_field_errors %}
@@ -71,7 +71,7 @@
                         {% endif %}
 
                         <input class="primary ui button" type="submit" value="Validate" />
-                        <a href = "{% url 'admin:schools_school_changelist' %}" class = "green ui button" style="margin-top:1rem;">Cancel</a>
+                        <a href = "{% url 'admin:schools_school_changelist' %}" class = "ui negative button" >Cancel</a>
                         <br>
                         {% if validated %}
                         <h1>The following changes will be made:</h1>
@@ -90,9 +90,9 @@
 
                         <br>
                         {% if school1 != school2 %}
-                        <input class="negative ui button" type="submit" name="merge" value="Merge {{ school2 }} into {{ school1 }} and delete {{ school2 }}" />
+                        <input class="ui primary button" type="submit" name="merge" value="Merge {{ school2 }} into {{ school1 }} and delete {{ school2 }}" />
                         {% else %}
-                        <input class="negative ui button" type="submit" name="merge" value="Delete all campuses for {{ school1 }}" />
+                        <input class="ui primary button" type="submit" name="merge" value="Delete all campuses for {{ school1 }}" />
                         {% endif %}
                         {% endif %}
                     </form>

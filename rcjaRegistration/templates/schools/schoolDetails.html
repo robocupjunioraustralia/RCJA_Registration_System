@@ -152,7 +152,7 @@
                         <input class="primary ui button" type="submit" name="continue_editing"  value="Save" />
                         <input class="primary ui button" type="submit" value="Save and exit" />
                         {% if not request.user.currentlySelectedSchool.forceSchoolDetailsUpdate %}
-                        <a href = "{% url 'events:dashboard' %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                        <a href = "{% url 'events:dashboard' %}" class = "ui button negative">Cancel</a>
                         {% endif %}
                     </form>
 
@@ -177,7 +177,7 @@
         </div>
     </div>
     <div class="actions">
-        <button id="confirm" class="ui positive right button">
+        <button id="confirm" class="ui primary right button">
             I understand
         </button>
     </div>
