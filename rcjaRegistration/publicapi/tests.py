@@ -66,6 +66,10 @@ class TestEventsBaseQueryset(TestCase):
         qs = StateViewSet.eventsBaseQueryset(self, 'NAT')
         self.assertIn(self.state1_openCompetition, qs)
 
+    def testTbcEventIncluded(self):
+        qs = StateViewSet.eventsBaseQueryset(self, 'ST1', includeGlobal=True)
+        self.assertIn(self.state1_TbcCompetition, qs)
+
 # View tests
 
 class TestStates(TestCase):
@@ -157,6 +161,7 @@ class TestEvents(TestCase):
         self.assertContains(response, 'State 1 Closed Competition 2')
         self.assertContains(response, 'State 1 Open Workshop')
         self.assertContains(response, 'State 1 Past Competition')
+        self.assertContains(response, 'State 1 TBC Competition')
 
     def testAllEventsDetailedLoads(self):
         response = self.client.get('/api/v1/public/states/ST1/allEventsDetailed/')
@@ -169,6 +174,7 @@ class TestEvents(TestCase):
         self.assertContains(response, 'State 1 Closed Competition 2')
         self.assertContains(response, 'State 1 Open Workshop')
         self.assertContains(response, 'State 1 Past Competition')
+        self.assertContains(response, 'State 1 TBC Competition')
 
     # Upcoming events
 
@@ -186,6 +192,7 @@ class TestEvents(TestCase):
         self.assertContains(response, 'State 1 Closed Competition 1')
         self.assertContains(response, 'State 1 Closed Competition 2')
         self.assertContains(response, 'State 1 Open Workshop')
+        self.assertContains(response, 'State 1 TBC Competition')
 
     def testPastEventNotInUpcomingEvents(self):
         response = self.client.get('/api/v1/public/states/ST1/upcomingEvents/')
@@ -207,6 +214,7 @@ class TestEvents(TestCase):
         self.assertContains(response, 'State 1 Open Competition')
         self.assertContains(response, 'State 1 Closed Competition 1')
         self.assertContains(response, 'State 1 Closed Competition 2')
+        self.assertContains(response, 'State 1 TBC Competition')
 
     def testOtherStateEventNotInUpcomingCompetitions(self):
         response = self.client.get('/api/v1/public/states/ST1/upcomingCompetitions/')
@@ -250,3 +258,6 @@ class TestEvents(TestCase):
         response = self.client.get('/api/v1/public/states/ST1/pastWorkshops/')
         self.assertEqual(response.status_code, 200)
 
+    def testTbcEventNotInPastCompetitions(self):
+        response = self.client.get('/api/v1/public/states/ST1/pastCompetitions/')
+        self.assertNotContains(response, 'State 1 TBC Competition')

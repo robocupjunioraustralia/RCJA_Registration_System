@@ -201,6 +201,21 @@ def createEvents(self):
         venue=self.venue3_state2,
     )
 
+    self.state1_TbcCompetition = Event.objects.create(
+        year = self.year,
+        state = self.state1,
+        name = 'State 1 TBC Competition',
+        eventType = 'competition',
+        status = 'published',
+        competition_defaultEntryFee = 50,
+        startDate = None,
+        endDate = None,
+        registrationsOpenDate = None,
+        registrationsCloseDate = None,
+        directEnquiriesTo = self.user_state1_super1,
+        venue=None,
+    )
+
     # Divisions
 
     self.division1_state1 = Division.objects.create(name='Division 1', state=self.state1)
