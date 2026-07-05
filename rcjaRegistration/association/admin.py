@@ -1,4 +1,7 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from common.adminMixins import ExportCSVMixin, DifferentAddFieldsMixin, FKActionsRemove
 from coordination.permissions import AdminPermissions, InlineAdminPermissions
 
@@ -77,6 +80,8 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'user'
     ]
     actions = [
+        'bulkApproveMembers',
+        'bulkRejectMembers',
         'export_as_csv',
     ]
     exportFields = [
@@ -99,11 +104,71 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
     def save_model(self, request, obj, form, change):
         if obj.approvalRejectionBy is None and obj.approvalStatus != 'pending':
             obj.approvalRejectionBy = request.user
-        
+
         if obj.approvalRejectionDate is None and obj.approvalStatus != 'pending':
             obj.approvalRejectionDate = datetime.date.today()
-        
+
         super().save_model(request, obj, form, change)
+
+    # Bulk approve/reject actions
+    def setApprovalStatus(self, request, queryset, newStatus):
+        # Messaging variables
+        numberUpdated = 0
+        skippedNotPending = 0
+
+        approvalStatusLabel = AssociationMember._meta.get_field('approvalStatus').verbose_name
+
+        for member in queryset:
+            # approvalStatus is readonly once approved/rejected
+            if member.approvalStatus != 'pending' and member.approvalRejectionDate:
+                skippedNotPending += 1
+                continue
+
+            # Update status and other relevant fields
+            member.approvalStatus = newStatus
+            member.approvalRejectionBy = request.user
+            member.approvalRejectionDate = datetime.date.today()
+
+            # Run model's validation before saving in case that matters (rules accepted, membership start, etc.)
+            try:
+                member.full_clean()
+            except ValidationError as e:
+                self.message_user(request, f"Skipped {member}: {'; '.join(e.messages)}", messages.WARNING)
+                continue
+
+            # Persist changes
+            member.save()
+            numberUpdated += 1
+
+            # Log the action
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=ContentType.objects.get_for_model(AssociationMember).pk,
+                object_id=member.id,
+                object_repr=str(member),
+                action_flag=CHANGE,
+                change_message=[{"changed": {"fields": [approvalStatusLabel]}}],
+            )
+
+        if numberUpdated > 0:
+            self.message_user(request, f"{numberUpdated} association member(s) {newStatus}.", messages.SUCCESS)
+
+        if skippedNotPending > 0:
+            self.message_user(
+                request,
+                f"{skippedNotPending} association member(s) skipped (status can only be changed if pending).",
+                messages.WARNING
+            )
+
+    def bulkApproveMembers(self, request, queryset):
+        self.setApprovalStatus(request, queryset, 'approved')
+    bulkApproveMembers.short_description = "Approve selected"
+    bulkApproveMembers.allowed_permissions = ('change',)
+
+    def bulkRejectMembers(self, request, queryset):
+        self.setApprovalStatus(request, queryset, 'rejected')
+    bulkRejectMembers.short_description = "Reject selected"
+    bulkRejectMembers.allowed_permissions = ('change',)
 
     def get_readonly_fields(self, request, obj):
         readonly_fields = super().get_readonly_fields(request, obj).copy()
