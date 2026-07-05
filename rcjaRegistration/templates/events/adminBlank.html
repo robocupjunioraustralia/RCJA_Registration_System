@@ -1,0 +1,57 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title>Event Comparisons</title>
+
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Attendance Summaries</h1>
+    </div>
+    <br>
+    <div class="row">
+        <p>Choose one or more events to view the attendance summaries. </p>
+        <p>Competitions and workshops cannot be directly compared because competitions have teams whilst workshops have students and teachers.</p>
+        <p>Select the <em>Produce CSV</em> button if you wish to export a CSV file instead of viewing the data through a web page.</p>
+    </div>
+    <br>
+    <div class="row">
+        <div class="form form-group left-aligned-text">
+            {% if form.non_field_errors %}
+
+            <!-- Error messaging -->
+            <div class="ui message left-aligned-text">
+                <div class="">
+                    <p class="header">There were some errors in the information you entered. Please correct
+                        the following:</p>
+                    {{ form.non_field_errors }}
+                </div>
+            </div>
+            <!-- /Error messaging -->
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <h2>{{form.competitions.label_tag}}</h2>
+                    {{form.competitions}}
+                </div>
+                <br>
+                <div class="row">
+                    <h2>{{form.workshops.label_tag}}</h2>
+                    <p>{{form.workshops}}</p>
+                </div>
+                <br>
+                <div class="row">
+                    <h4>{{form.csv}} {{form.csv.label_tag}}</h4>
+                </div>
+                <br>
+                <input class="ui primary button" type="submit" value="Compare Selected Events">
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

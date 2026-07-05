@@ -1,0 +1,164 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> {{event}} Registrations</title>
+
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>{{event}} Registrations</h1>
+    </div>
+    <br> 
+    <div class="row">
+        <h2>Students Per Division</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>Category</th>
+                <th>Division</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for division_cat in divisions.categories.values %}
+                    <tr>
+                        <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
+                    {% for division in division_cat.divisions.values %}
+                        <td>{{division.name}}</td>
+                        {% for event in division.results %}
+                        <td>{{event.students}}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                    {% endfor %}
+                    <td>Subtotal</td>
+                    {% for event in division_cat.students %}
+                    <td>{{event}}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th colspan="2">Total</th>
+                {% for event in divisions.students %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br> 
+    <div class="row">
+        <h2>Teachers Per Division</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>Category</th>
+                <th>Division</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for division_cat in divisions.categories.values %}
+                    <tr>
+                        <td rowspan={{division_cat.rows}}>{{division_cat.name}}</td>
+                    {% for division in division_cat.divisions.values %}
+                        <td>{{division.name}}</td>
+                        {% for event in division.results %}
+                        <td>{{event.teachers}}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                    {% endfor %}
+                    <td>Subtotal</td>
+                    {% for event in division_cat.teachers %}
+                    <td>{{event}}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th colspan="2">Total</th>
+                {% for event in divisions.teachers %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br>
+    <br> 
+    <div class="row">
+        <h2>Students Per School</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>School</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for school in schools.schools.values %}
+                    <tr>
+                        <td>{{school.name}}</td>
+                    {% for event in school.students %}
+                        <td>{{event}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th>
+                {% for event in schools.students %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br> 
+    <div class="row">
+        <h2>Teachers Per School</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>School</th>
+                {% for event in events %}
+                <th>{{event.name}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for school in schools.schools.values %}
+                    <tr>
+                        <td>{{school.name}}</td>
+                    {% for event in school.teachers %}
+                        <td>{{event}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th>
+                {% for event in schools.teachers %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br>
+    <div class="row">
+        <a href="{% url 'events:eventAdminSummary' %}"><button class="ui primary button">Compare Other Events</button></a>
+    </div>
+</div>
+{% endblock %}

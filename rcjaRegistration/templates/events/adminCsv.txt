@@ -1,0 +1,19 @@
+{{column1}} Per Division
+"Division Category", Division,{% for event in events %}"{{event|addslashes}}",{% endfor %}
+{% for division_cat in catCol1.values %}{% for division in division_cat.rows.values %} "{{division_cat.name|addslashes}}",{% for event in division%}{{event|addslashes}},{% endfor %}
+{% endfor %}{% endfor %}
+
+{{column0}} Per Division
+"Division Category", Division,{% for event in events %}"{{event|addslashes}}",{% endfor %}
+{% for division_cat in catCol0.values %}{% for division in division_cat.rows.values %} "{{division_cat.name|addslashes}}", {% for event in division%} {{event|addslashes}}, {% endfor %}
+{% endfor %}{% endfor %}
+
+{{column1}} Per School
+"School",{% for event in events %}"{{event|addslashes}}",{% endfor %}
+{% for school in schools.values %}"{{school.name|addslashes}}", {% for event in school.col1 %}{{event}},{% endfor %}
+{% endfor %}
+
+Students Per School
+"School",{% for event in events %}"{{event|addslashes}}",{% endfor %}
+{% for school in schools.values %}"{{school.name|addslashes}}", {% for event in school.col0 %}{{event}},{% endfor %}
+{% endfor %}
