@@ -282,6 +282,9 @@ class Event(SaveDeleteMixin, models.Model):
     workshopTeacherEntryFee = models.PositiveIntegerField('Teacher entry fee', null=True)
     workshopStudentEntryFee = models.PositiveIntegerField('Student entry fee', null=True)
 
+    # Worshop settings
+    showPizzaPreference = models.BooleanField('Show pizza preference field', default=False, help_text='If enabled, workshop attendees will see a pizza preference field during registration.')
+
     # Surcharge
     eventSurchargeAmount = models.FloatField('Surcharge amount for event', default=0, editable=False) # Store the surcharge amount at the time of event creation so later changes don't affect past events
 

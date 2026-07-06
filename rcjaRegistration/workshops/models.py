@@ -21,6 +21,7 @@ class WorkshopAttendee(BaseEventAttendance):
     yearLevel = models.CharField('Year level', max_length=10)
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
+    pizzaPreference = models.CharField('Pizza preference', max_length=100, blank=True, null=True)
 
     # Required for teachers
     email = models.EmailField('Email', blank=True)

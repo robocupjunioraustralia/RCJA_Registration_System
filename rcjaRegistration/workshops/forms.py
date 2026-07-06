@@ -20,4 +20,5 @@ class WorkshopAttendeeForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
             'attendeeType',
             'yearLevel',
             'gender',
+            'pizzaPreference',
         ]
