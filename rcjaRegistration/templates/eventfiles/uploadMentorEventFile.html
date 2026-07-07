@@ -47,7 +47,9 @@
 
                         {% if not uploadedFile %}
                         <h2>Upload a new file</h2>
+                        {% if not directS3UploadEnabled %}
                         <h3 style="color: red">Due to an issue files larger than approximately 10MB currently cannot be uploaded. For larger files please instead submit a sharing link.<br/><br/>If you wish to submit a sharing link, please upload a Word or Notepad file with the sharing link inside. Ensure the sharing is set to public.</h3>
+                        {% endif %}
 
                         {% else %}
                         <h2>Edit existing file: <a href="{{uploadedFile.fileURL}}" target="_blank">{{uploadedFile.originalFilename}}</a></h2>
@@ -93,7 +95,7 @@
                         {% endif %}
                         <!-- /Error messaging -->
 
-                        <form enctype="multipart/form-data" method="post" class="ui form">
+                        <form enctype="multipart/form-data" method="post" class="ui form" id="uploadForm">
                             {% csrf_token %}
 
                             {% if not uploadedFile %}
@@ -114,10 +116,127 @@
                             </div>
                             {% endif %}
 
-                            <input class="primary ui button" type="submit" value="Save" />
+                            <p id="uploadStatus" style="display: none;"></p>
+                            <input class="primary ui button" type="submit" value="Save" id="saveButton" />
                             <a href="{{ cancelURL }}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
 
                         </form>
+
+                        {% if not uploadedFile and directS3UploadEnabled %}
+                        <script>
+                            function getCookie(name) {
+                                const value = `; ${document.cookie}`;
+                                const parts = value.split(`; ${name}=`);
+                                if (parts.length === 2) {
+                                    return parts.pop().split(';').shift();
+                                }
+                                return null;
+                            }
+
+                            function setUploadStatus(message) {
+                                const status = document.getElementById('uploadStatus');
+                                status.textContent = message;
+                                status.style.display = message ? 'block' : 'none';
+                            }
+
+                            document.getElementById('uploadForm').addEventListener('submit', function (event) {
+                                event.preventDefault();
+
+                                const fileInput = document.getElementById('id_fileUpload');
+                                const fileTypeInput = document.getElementById('id_fileType');
+                                const saveButton = document.getElementById('saveButton');
+                                const file = fileInput.files[0];
+
+                                if (!file) {
+                                    alert('Please select a file to upload.');
+                                    return;
+                                }
+
+                                if (!fileTypeInput.value) {
+                                    alert('Please select a category.');
+                                    return;
+                                }
+
+                                saveButton.disabled = true;
+                                setUploadStatus('Preparing upload...');
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '{% url "eventfiles:uploadFilePresign" eventAttendance.id %}',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({
+                                        originalFilename: file.name,
+                                        fileSize: file.size,
+                                        contentType: file.type || 'application/octet-stream',
+                                        fileType: fileTypeInput.value,
+                                    }),
+                                    beforeSend: function (xhr) {
+                                        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+                                    },
+                                })
+                                    .done(function (data) {
+                                        setUploadStatus('Uploading file...');
+
+                                        fetch(data.presignedUrl, {
+                                            method: 'PUT',
+                                            body: file,
+                                            headers: {
+                                                'Content-Type': file.type || 'application/octet-stream',
+                                            },
+                                        })
+                                            .then(function (response) {
+                                                if (!response.ok) {
+                                                    throw new Error('S3 upload failed');
+                                                }
+
+                                                setUploadStatus('Saving upload...');
+
+                                                const formData = new FormData();
+                                                formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+                                                formData.append('fileType', fileTypeInput.value);
+                                                formData.append('s3Key', data.s3Key);
+                                                formData.append('originalFilename', file.name);
+
+                                                return fetch('{% url "eventfiles:uploadFile" eventAttendance.id %}', {
+                                                    method: 'POST',
+                                                    body: formData,
+                                                    credentials: 'same-origin',
+                                                });
+                                            })
+                                            .then(function (response) {
+                                                if (response.redirected) {
+                                                    window.location.href = response.url;
+                                                    return;
+                                                }
+
+                                                if (!response.ok) {
+                                                    throw new Error('Failed to save upload');
+                                                }
+
+                                                return response.text().then(function (html) {
+                                                    document.open();
+                                                    document.write(html);
+                                                    document.close();
+                                                });
+                                            })
+                                            .catch(function () {
+                                                alert('Upload failed. Please try again.');
+                                                saveButton.disabled = false;
+                                                setUploadStatus('');
+                                            });
+                                    })
+                                    .fail(function (xhr) {
+                                        let message = 'Upload failed. Please try again.';
+                                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                                            message = xhr.responseJSON.errors.join('\n');
+                                        }
+                                        alert(message);
+                                        saveButton.disabled = false;
+                                        setUploadStatus('');
+                                    });
+                            });
+                        </script>
+                        {% endif %}
 
                     </div>
                 </div>
