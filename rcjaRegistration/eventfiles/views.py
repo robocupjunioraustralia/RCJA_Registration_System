@@ -42,17 +42,23 @@ def fileUploadEditPermissions(request, uploadedFile):
     fileUploadCommonPermissions(request, uploadedFile.eventAttendance)
 
     # Check upload deadline not passed
-    if (
-        not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(
-            uploadDeadline__gte=datetime.datetime.today(),
-            fileType=uploadedFile.fileType,
-        ).exists()
-    ) and not checkCoordinatorPermission(
+    if checkCoordinatorPermission(
         request, BaseEventAttendance, uploadedFile.eventAttendance, "change"
     ):
-        raise PermissionDenied(
-            "The upload deadline has passed for this file type for this event"
-        )
+        # Check end deadline not passed
+        if not uploadedFile.eventAttendance.event.endDate >= datetime.date.today():
+            raise PermissionDenied(
+                "This event has finished. File uploads are no longer possible."
+            )
+    else:
+        # Check upload deadline not passed
+        if not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(
+            uploadDeadline__gte=datetime.datetime.today(),
+            fileType=uploadedFile.fileType,
+        ).exists():
+            raise PermissionDenied(
+                "The upload deadline has passed for this file type for this event"
+            )
 
 
 def fileUploadUploadPermissions(request, eventAttendance):
@@ -63,8 +69,11 @@ def fileUploadUploadPermissions(request, eventAttendance):
         eventAttendance.event.eventavailablefiletype_set.filter(
             uploadDeadline__gte=datetime.datetime.today()
         ).exists()
-        or checkCoordinatorPermission(
-            request, BaseEventAttendance, eventAttendance, "change"
+        or (
+            checkCoordinatorPermission(
+                request, BaseEventAttendance, eventAttendance, "change"
+            )
+            and eventAttendance.event.endDate > datetime.date.today()
         )
     ):
         raise PermissionDenied("File upload not available")
@@ -77,12 +86,9 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         )
 
     def get_file_types(self, request, eventAttendance):
-        if self.admin_access(request, eventAttendance):
-            return eventAttendance.event.eventavailablefiletype_set.all()
-        else:
-            return eventAttendance.event.eventavailablefiletype_set.filter(
-                uploadDeadline__gte=datetime.datetime.today()
-            )
+        eventAttendance.availableFileUploadTypes(
+            self.admin_access(request, eventAttendance)
+        )
 
     def get_post_common(self, request, eventAttendanceID, uploadedFileID):
         # Check if editing an existing file
