@@ -10,7 +10,7 @@ from .forms import TeamForm, StudentForm
 import datetime
 
 from .models import Student, Team
-from events.models import Event, AvailableDivision
+from events.models import BaseEventAttendance, Event, AvailableDivision
 from coordination.permissions import checkCoordinatorPermission
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams
@@ -37,8 +37,9 @@ def details(request, teamID):
         "team": team,
         "students": team.student_set.all(),
         'uploadedFiles': team.mentoreventfileupload_set.all(),
+        "admin": checkCoordinatorPermission(request, BaseEventAttendance, team, 'change'),
+        "availableFileUploadTypes": lambda: team.availableFileUploadTypes(checkCoordinatorPermission(request, BaseEventAttendance, team, 'change'))
     }
-
     return render(request, 'teams/details.html', context)
 
 class CreateEditTeam(CreateEditBaseEventAttendance):

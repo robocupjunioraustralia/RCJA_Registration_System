@@ -879,8 +879,14 @@ class BaseEventAttendance(SaveDeleteMixin, models.Model):
 
     # File upload
 
-    def availableFileUploadTypes(self):
-        return self.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
+    def availableFileUploadTypes(self, admin=False):
+        if admin:
+            if self.event.endDate>=datetime.date.today():
+                return self.event.eventavailablefiletype_set.all()
+            else:
+                return []
+        else:
+            return self.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
 
     # *****CSV export methods*****
 

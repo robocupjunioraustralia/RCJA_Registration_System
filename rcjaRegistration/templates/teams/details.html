@@ -78,7 +78,7 @@
             <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
             {% endif %}
 
-            {% if uploadedFiles.exists or team.availableFileUploadTypes %}
+            {% if uploadedFiles.exists or availableFileUploadTypes %}
             <h2>Files</h2>
             {% endif %}
             {% if uploadedFiles.exists %}
@@ -100,7 +100,7 @@
                       <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>
                       <td>{{uploadedFile.creationDateTime}}</td>
                       <td>
-                        {% if not uploadedFile.uploadDeadlinePassed %}
+                        {% if not uploadedFile.uploadDeadlinePassed or admin%}
                         <a href="{% url 'eventfiles:edit' uploadedFile.id %}"><button class="ui primary button">Edit</button></a>
                         <button onClick="showDeleteModal({{uploadedFile.id}}, '{% url 'eventfiles:edit' uploadedFile.id %}')" class="ui negative button">Delete</button>
                         {% endif %}
@@ -110,12 +110,12 @@
               </tbody>
             </table>
             {% endif %}
-            {% if team.availableFileUploadTypes %}
+            {% if availableFileUploadTypes %}
             <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
 
             <h3>File upload categories:</h3>
             <ul>
-              {% for availableFileUploadType in team.availableFileUploadTypes %}
+              {% for availableFileUploadType in availableFileUploadTypes %}
               <li><strong>{{ availableFileUploadType.fileType.name }}</strong></li>
               {% endfor %}
             </ul>
