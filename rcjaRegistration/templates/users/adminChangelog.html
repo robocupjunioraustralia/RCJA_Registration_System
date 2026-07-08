@@ -7,17 +7,15 @@
 
 <style>
  .left-aligned-text {
-  text-align: left;
+    text-align: left;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="bg">
-  <div class = "">
-    <div class="ui center aligned grid ">
-      <div class = "twelve wide mobile six wide computer column ui">
+<div class="ui aligned container">
+    <div class = "row">
         <h1>Recent Administration Changes</h1>
         <a href="/"><button class="ui large blue button"> Home </button></a>
         <h2>1 February 2025</h2>
@@ -49,10 +47,7 @@
 
         <p>Admin pages can now be filtered by year and state to improve page load times. To enable this filtering select from the dropdowns in the top right corner of the page:</p>
         <img src="{% static 'adminChangelog/yearStateFilter.png' %}"><br><br>
-
-      </div>
     </div>
-  </div>
 </div>
 
 {% endblock %}

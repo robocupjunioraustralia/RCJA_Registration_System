@@ -4,179 +4,166 @@
 {% block head %}
 
 {% if team %}
-<title> Edit team </title>
+    <title> Edit team </title>
 {% else %}
-<title> Add team </title>
+    <title> Add team </title>
 {% endif %}
 
-
 <style type="text/css">
-  body {
-    background-color: white;
-  }
-  .column {
-    max-width: 100%;
-  }
+    body {
+        background-color: white;
+    }
+    .column {
+        max-width: 100%;
+    }
 
-  .formbox {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  }
-  .bg {
-      /* Full height */
-    height: 100%; 
-    width:auto;
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    /*background-color: #CCE2FF;*/
-  }
-  .left-aligned-text {
-  text-align: left;
-}
+    .formbox {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+    .bg {
+            /* Full height */
+        height: 100%; 
+        width:auto;
+        /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        /*background-color: #CCE2FF;*/
+    }
+    .left-aligned-text {
+        text-align: left;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<div class="bg">
-  <div class = "">
-    <div class="ui center aligned grid ">
-      <div class = "twelve wide mobile eight wide computer column ui">
+<div class="ui aligned container">
+    <div class = "row">
         <div class = "form form-group left-aligned-text">
-          <div>
             <h1>{{event}}</h1>
             {% if sourceTeam %}
-            <h2>Copying {{sourceTeam.name}} from {{sourceTeam.event}}</h2>
+                <h2>Copying {{sourceTeam.name}} from {{sourceTeam.event}}</h2>
             {% elif team %}
-            <h2> Editing: Team {{team.name}} </h2>
+                <h2> Editing: Team {{team.name}} </h2>
             {% else %}
-            <h2>Add a new team</h2> 
+                <h2>Add a new team</h2> 
             {% endif %}
 
             <!-- Error messaging -->
             {% if form.errors or form.non_field_errors %}
-            <div class="ui message left-aligned-text">
-              <div class="">
-                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                {{ form.non_field_errors }}
-                
-                <ul>
-                  {% for field in form %}
-                    {% if field.errors %}
-                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                  {% endfor %}
-                
-                </ul>
-              </div>
-            </div>
-            <!-- /Error messaging -->
+                <div class="ui message left-aligned-text">
+                        <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ form.non_field_errors }}
+                        <ul>
+                            {% for field in form %}
+                                {% if field.errors %}
+                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                            {% endfor %}
+                        </ul>
+                </div>
+                <!-- /Error messaging -->
             {% endif %}
 
             {% if divisionsMaxReachedWarnings and not team %}
-            <ul>
-                {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
-                <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
-                {% endfor %}
-            </ul>
+                <ul>
+                    {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                        <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
 
             <form method="post" class = "ui form">
-              {% csrf_token %}
-              {{ formset.management_form }}
-              {{ form.school }}
-              {{ form.event }}
+                {% csrf_token %}
+                {{ formset.management_form }}
+                {{ form.school }}
+                {{ form.event }}
+                    
+                <h2>Team details</h2>
+                <div class="two fields">
+                    <div class = "field">
+                        <label>Team name:</label>
+                        {{form.name|attr:"placeholder:Team name"}}
+                    </div>
+                    <div class = "field">
+                        <label>Division:</label>
+                        {{ form.division|attr:"class:ui dropdown"}} 
+                    </div>
+                </div>
+                {% if form.campus.field.queryset %}
+                    <div class = "field">
+                        <label>Campus:</label>
+                        {{ form.campus|attr:"class:ui dropdown"}} 
+                    </div>
+                {% endif %}
+
+                <h2>Platform</h2>
+                <div class="two fields">
+                    <div class = "field">
+                        <label>Hardware platform:</label>
+                        {{form.hardwarePlatform|attr:"class:ui dropdown"}}
+                    </div>
+                    <div class = "field">
+                        <label>Software platform:</label>
+                        {{ form.softwarePlatform|attr:"class:ui dropdown"}} 
+                    </div>
+                </div>
+
+                <!-- Students -->
+                <h2>Students</h2>
+                {% if formset.non_form_errors %}
+                    <div class="ui message left-aligned-text">
+                        <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ formset.non_form_errors }}
+                    </div>
+                {% endif %}
+                <div id = "form_set">
+                {% for studentform in formset %}
+                    {{studentform.id|attr:"type:hidden"}}
+                    {% include 'teams/studentForm.html' %}
+                {% endfor %}
+                </div>
+
+                <!-- Add more student forms -->
+                <br>
+                <input type="button" value="Add Another Student" id="add_more" class="primary ui button right floated" style="display: none">
+                <div id="empty_form" style="display:none">
+                    {% with formset.empty_form as studentform %}
+                        {% include 'teams/studentForm.html' %}
+                    {% endwith %}
+                </div>
+                <br>
+
+
+                <input class="primary ui button" type="submit" value="Save" />
+                {% if not team %}
+                    <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
+                {% endif %}
                 
-              <h2>Team details</h2>
-               
-              <div class="two fields">
-                <div class = "field">
-                  <label>Team name:</label>
-                    {{form.name|attr:"placeholder:Team name"}}
-                </div>
-                <div class = "field">
-                  <label>Division:</label>
-                    {{ form.division|attr:"class:ui dropdown"}} 
-                </div>
-              </div>
-              {% if form.campus.field.queryset %}
-              <div class = "field">
-                <label>Campus:</label>
-                  {{ form.campus|attr:"class:ui dropdown"}} 
-              </div>
-              {% endif %}
-
-              <h2>Platform</h2>
-
-              <div class="two fields">
-                <div class = "field">
-                  <label>Hardware platform:</label>
-                    {{form.hardwarePlatform|attr:"class:ui dropdown"}}
-                </div>
-                <div class = "field">
-                  <label>Software platform:</label>
-                    {{ form.softwarePlatform|attr:"class:ui dropdown"}} 
-                </div>
-              </div>
-
-              <!-- Students -->
-              <h2>Students</h2>
-              {% if formset.non_form_errors %}
-                <div class="ui message left-aligned-text">
-                    <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                    {{ formset.non_form_errors }}
-                </div>
-              {% endif %}
-              <div id = "form_set">
-              {% for studentform in formset %}
-                {{studentform.id|attr:"type:hidden"}}
-                {% include 'teams/studentForm.html' %}
-              {% endfor %}
-              </div>
-
-              <!-- Add more student forms -->
-              <br>
-              <input type="button" value="Add Another Student" id="add_more" class="primary ui button right floated" style="display: none">
-              <div id="empty_form" style="display:none">
-                {% with formset.empty_form as studentform %}
-                {% include 'teams/studentForm.html' %}
-                {% endwith %}
-              </div>
-              <br>
-
-
-              <input class="primary ui button" type="submit" value="Save" />
-              {% if not team %}
-              <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
-              {% endif %}
-              {% if 'fromEvent' in request.GET or not team %}
-              <a href = "{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
-              {% else %}
-              <a href = "{% url 'teams:details' team.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
-              {% endif %}
+                {% if 'fromEvent' in request.GET or not team %}
+                    <a href = "{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                {% else %}
+                    <a href = "{% url 'teams:details' team.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                {% endif %}
             </form>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 <script>
-  $(document).ready(function() {
-    console.log('loaded');
-    if ($('#id_student_set-TOTAL_FORMS').val() < $('#id_student_set-MAX_NUM_FORMS').val()) {
-      $("#add_more").show();
-    }
-  });
+    $(document).ready(function() {
+        console.log('loaded');
+        if ($('#id_student_set-TOTAL_FORMS').val() < $('#id_student_set-MAX_NUM_FORMS').val()) {
+            $("#add_more").show();
+        }
+    });
 
-  $('#add_more').click(function() {
-    var form_idx = $('#id_student_set-TOTAL_FORMS').val();
-    $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
-    $('#id_student_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+    $('#add_more').click(function() {
+        var form_idx = $('#id_student_set-TOTAL_FORMS').val();
+        $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+        $('#id_student_set-TOTAL_FORMS').val(parseInt(form_idx) + 1);
 
-    if ($('#id_student_set-TOTAL_FORMS').val() >= $('#id_student_set-MAX_NUM_FORMS').val()) {
-      $("#add_more").hide();
-    }
-  });
+        if ($('#id_student_set-TOTAL_FORMS').val() >= $('#id_student_set-MAX_NUM_FORMS').val()) {
+            $("#add_more").hide();
+        }
+    });
 </script>
 {% endblock %}

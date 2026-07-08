@@ -7,63 +7,63 @@
 
 {% block content %}
 <div class="bg">
-  <div class = "layer">
-    <div class="logincontent">
-      <div class="ui center aligned container grid">
-        <div class="twelve wide mobile six wide computer column ui segment">
-          <div class="form-group ">
-            <div>
-              <h1> RoboCup Junior Australia</h1>
-              <h3>Event and Workshop Registration System </h3>
-              <h4> Please Login, or Create an Account Below </h4>
-              <h5> For assistance, please contact us <a href="mailto:entersupport@robocupjunior.org.au?Subject=RCJA%20Registration%20System">here</a></h5>
+    <div class = "layer">
+        <div class="logincontent">
+            <div class="ui center aligned container grid">
+                <div class="twelve wide mobile six wide computer column ui segment">
+                    <div class="form-group ">
+                        <div>
+                            <h1> RoboCup Junior Australia</h1>
+                            <h3>Event and Workshop Registration System </h3>
+                            <h4> Please Login, or Create an Account Below </h4>
+                            <h5> For assistance, please contact us <a href="mailto:entersupport@robocupjunior.org.au?Subject=RCJA%20Registration%20System">here</a></h5>
 
-              {% if form.errors %}
-              <!-- Error messaging -->
-              <div class="ui warning message left-aligned-text">
-                <div class="">
-                  <p class="header">There were some errors in the information you entered. Please correct the following:</p>
-                  {{ form.non_field_errors }}
-                  <ul>
-                    {% for field in form %}
-                    {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                    {% endfor %}
-                  </ul>
-                </div>
-              </div>
-              <!-- /Error messaging -->
-              {% endif %}
+                            {% if form.errors %}
+                                <!-- Error messaging -->
+                                <div class="ui warning message left-aligned-text">
+                                    <div class="">
+                                        <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                                        {{ form.non_field_errors }}
+                                        <ul>
+                                            {% for field in form %}
+                                                {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- /Error messaging -->
+                            {% endif %}
 
-              <div class="ui large form">
-                <form method="post" action="{% url 'login' %}" style="display: inline">
-                  {% csrf_token %}
-                  <div class="field">
-                    <div class="ui left icon input">
-                      <i class="user icon"></i>
-                      {{ form.username }}
+                            <div class="ui large form">
+                                <form method="post" action="{% url 'login' %}" style="display: inline">
+                                    {% csrf_token %}
+                                    <div class="field">
+                                        <div class="ui left icon input">
+                                            <i class="user icon"></i>
+                                            {{ form.username }}
+                                        </div>
+                                    </div>
+
+                                    <div class="field">
+                                        <div class="ui left icon input">
+                                            <i class="lock icon"></i>
+                                            {{ form.password }}
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="next" value="{{ next }}">
+                                    <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
+                                </form>
+                                <br><br>
+                                <div style="display:flex; justify-content: center;">
+                                    <a href="{% url 'users:signup' %}"><button class="ui small teal button" type="" value="Sign Up"> Create account </button></a>
+                                    <a href="{% url 'password_reset' %}"><button class="ui small teal button" type="" value="Forgot password">Forgot password </button></a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-
-                  <div class="field">
-                    <div class="ui left icon input">
-                      <i class="lock icon"></i>
-                      {{ form.password }}
-                    </div>
-                  </div>
-                  <input type="hidden" name="next" value="{{ next }}">
-                  <button class="ui large blue submit button" type="submit" value="Login"> Login</button>
-                </form>
-                <br><br>
-                <div style="display:flex; justify-content: center;">
-                  <a href="{% url 'users:signup' %}"><button class="ui small teal button" type="" value="Sign Up"> Create account </button></a>
-                  <a href="{% url 'password_reset' %}"><button class="ui small teal button" type="" value="Forgot password">Forgot password </button></a>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock %}

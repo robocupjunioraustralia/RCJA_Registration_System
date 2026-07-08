@@ -2,166 +2,165 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Invoice - {{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.7/semantic.min.js"></script>
 </head>
 
 <body>
-  <!-- partial:index.partial.html -->
-  <div class="container invoice">
-    <div class="invoice-header">
-      <div class="ui left aligned grid">
-        <div class="row">
-          <div class="left floated left aligned six wide column">
-            <div class="ui">
-              <h1 class="ui header pageTitle">Tax Invoice <small class="ui sub header">{{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</small></h1>
-              <!-- <h3 class="ui sub header invDetails"></h3> -->
+    <!-- partial:index.partial.html -->
+    <div class="container invoice">
+        <div class="invoice-header">
+            <div class="ui left aligned grid">
+                <div class="row">
+                    <div class="left floated left aligned six wide column">
+                        <div class="ui">
+                            <h1 class="ui header pageTitle">Tax Invoice <small class="ui sub header">{{ invoice.event.year }} {{ invoice.event.name }} ({{ invoice.event.state.abbreviation }})</small></h1>
+                            <!-- <h3 class="ui sub header invDetails"></h3> -->
+                        </div>
+                    </div>
+                    <!-- <div class="right floated left aligned six wide column">
+                    <div class="ui">
+                        <div class="column two wide right floated">
+                            <img class="logo" src="https://scontent.fmel5-1.fna.fbcdn.net/v/t1.0-9/10358691_1595827163984651_6845505980791568353_n.png?_nc_cat=109&_nc_ohc=We4wwT6M2Q0AX8qY8-b&_nc_ht=scontent.fmel5-1.fna&oh=69bd30fc152063c470afd928919c8734&oe=5E94664A" />
+                            <ul class="">
+                                <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
+                                {{ invoiceSettings.invoiceFromDetails }}
+                            </ul>
+                        </div>
+                    </div>
+                </div> -->
+                </div>
             </div>
-          </div>
-          <!-- <div class="right floated left aligned six wide column">
-          <div class="ui">
-            <div class="column two wide right floated">
-              <img class="logo" src="https://scontent.fmel5-1.fna.fbcdn.net/v/t1.0-9/10358691_1595827163984651_6845505980791568353_n.png?_nc_cat=109&_nc_ohc=We4wwT6M2Q0AX8qY8-b&_nc_ht=scontent.fmel5-1.fna&oh=69bd30fc152063c470afd928919c8734&oe=5E94664A" />
-              <ul class="">
-                <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
-                {{ invoiceSettings.invoiceFromDetails }}
-              </ul>
+        </div>
+        <div class="ui segment cards">
+            <div class="ui card customercard">
+                <div class="content">
+                    <div class="header">To</div>
+                </div>
+                <div class="content">
+                    <ul>
+                        <li><strong>{{ invoice.school.name }}{% if invoice.campusInvoicingEnabled %}, {{invoice.campus|default:'No'}} Campus {% endif %}</strong></li>
+                        <li><strong>{{ invoice.invoiceToUser.get_full_name }}</strong></li>
+                        <li>{{ invoice.invoiceToUser.email }}</li>
+                        <li>Invoice Date: {{ invoice.invoicedDate }}</li>
+                        <li>Invoice Number: {{ invoice.invoiceNumber }}</li>
+                        <li>{% if invoice.purchaseOrderNumber %}PO Number: {{ invoice.purchaseOrderNumber }} {% endif %}</li>
+                    </ul>
+                </div>
             </div>
-          </div>
-        </div> -->
+            <div class="ui card">
+                    <div class="content" style = "text-align:right;">
+                        <div class="header">From</div>
+                    </div>
+                    <div class="content" style = "text-align:right;">
+                        <ul>
+                            <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
+                            {{ invoiceSettings.invoiceFromDetails|escape|linebreaks }}
+                        </ul>
+                    </div>
+                </div>
+
+            <div class="ui segment itemscard">
+                <div class="content">
+                    <table class="ui celled table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-center colfix">Unit Cost (ex GST)</th>
+                                <th class="text-center colfix">Quantity</th>
+                                <th class="text-center colfix">Total (ex GST)</th>
+                                <th class="text-center colfix">GST</th>
+                                <th class="text-center colfix">Total (incl GST)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoiceItem in invoice.invoiceItems %}
+                                <tr id="invoiceItemRom{{invoiceItem.id}}">
+                                    <td>
+                                        {{ invoiceItem.name }}
+                                        {% if invoiceItem.description %}
+                                            <br>
+                                            <small class="text-muted">{{ invoiceItem.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="mono">
+                                            ${{ invoiceItem.unitCost|floatformat:2 }}
+                                            {% if invoiceItem.unit %} per {{ invoiceItem.unit }} {% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="mono">{{ invoiceItem.quantity }}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="mono">${{ invoiceItem.totalExclGST|floatformat:2 }}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <strong class="mono">${{ invoiceItem.gst|floatformat:2 }}</strong>
+                                    </td>
+                                    <td class="text-right">
+                                        <strong class="mono">${{ invoiceItem.totalInclGST|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="full-width">
+                            <tr>
+                                <th> Total: </th>
+                                <th colspan="1"></th>
+                                <th colspan="1"> {{ invoice.totalQuantity }} </th>
+                                <th colspan="1"> ${{ invoice.invoiceAmountExclGST|floatformat:2 }} </th>
+                                <th colspan="1"> ${{ invoice.amountGST|floatformat:2 }} </th>
+                                <th colspan="1"> ${{ invoice.invoiceAmountInclGST|floatformat:2 }} </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="ui card">
+                <div class="content">
+                    <div class="header">Payment Details</div>
+                </div>
+                <div class="content">
+                    <p> <strong> Account Name: </strong> {{ invoice.event.state.bankAccountName }} </p>
+                    <p> <strong> BSB: </strong> {{ invoice.event.state.bankAccountBSB }} </p>
+                    <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
+                    {% if invoice.event.paymentDueDate %}<p> <strong>Payment Due: </strong> {{ invoice.event.paymentDueDate }} </p>{% endif %}
+                </div>
+            </div>
+            <div class="ui card">
+                <div class="content center aligned text segment">
+                    <small class="ui sub header"> Amount Due (EFT): </small>
+                    <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p>
+                    {% if invoice.paypalAvailable %}
+                    <small class="ui sub header"> Amount Due (PayPal): </small>
+                    <p class="bigfont"> ${{ invoice.amountDuePaypal|floatformat:2 }} </p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="ui card">
+                <div class="content center aligned text segment">
+                    <small class="ui sub header"> Amount Paid: </small>
+                    <p class="bigfont"> ${{ invoice.amountPaid|floatformat:2 }} </p>
+                    <p class="smallfont"> As of {{ currentDate }}</p>
+                </div>
+            </div>
+            <div class="ui segment itemscard">
+                <div class="content">
+                    <h3>Note:</h3>
+                    {% if invoice.event.state.invoiceMessage %}{{ invoice.event.state.invoiceMessage|escape|linebreaks }}<br>{% endif %}
+                    {% if invoice.event.additionalInvoiceMessage %}{{ invoice.event.additionalInvoiceMessage|escape|linebreaks }}<br>{% endif %}
+                    <strong>{{ invoiceSettings.invoiceFooterMessage|escape|linebreaks }}</strong>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-    <div class="ui segment cards">
-      <div class="ui card customercard">
-        <div class="content">
-          <div class="header">To</div>
-        </div>
-        <div class="content">
-          <ul>
-            <li><strong>{{ invoice.school.name }}{% if invoice.campusInvoicingEnabled %}, {{invoice.campus|default:'No'}} Campus {% endif %}</strong></li>
-            <li><strong>{{ invoice.invoiceToUser.get_full_name }}</strong></li>
-            <li>{{ invoice.invoiceToUser.email }}</li>
-            <li>Invoice Date: {{ invoice.invoicedDate }}</li>
-            <li>Invoice Number: {{ invoice.invoiceNumber }}</li>
-            <li>{% if invoice.purchaseOrderNumber %}PO Number: {{ invoice.purchaseOrderNumber }} {% endif %}</li>
-          </ul>
-        </div>
-      </div>
-      <div class="ui card">
-          <div class="content" style = "text-align:right;">
-            <div class="header">From</div>
-          </div>
-          <div class="content" style = "text-align:right;">
-            <ul>
-              <li><strong>{{ invoiceSettings.invoiceFromName }}</strong></li>
-              {{ invoiceSettings.invoiceFromDetails|escape|linebreaks }}
-            </ul>
-          </div>
-        </div>
-
-      <div class="ui segment itemscard">
-        <div class="content">
-          <table class="ui celled table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th class="text-center colfix">Unit Cost (ex GST)</th>
-                <th class="text-center colfix">Quantity</th>
-                <th class="text-center colfix">Total (ex GST)</th>
-                <th class="text-center colfix">GST</th>
-                <th class="text-center colfix">Total (incl GST)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for invoiceItem in invoice.invoiceItems %}
-              <tr id="invoiceItemRom{{invoiceItem.id}}">
-                <td>
-                  {{ invoiceItem.name }}
-                  {% if invoiceItem.description %}
-                  <br>
-                  <small class="text-muted">{{ invoiceItem.description }}</small>
-                  {% endif %}
-                </td>
-                <td class="text-right">
-                  <span class="mono">
-                    ${{ invoiceItem.unitCost|floatformat:2 }}
-                    {% if invoiceItem.unit %} per {{ invoiceItem.unit }} {% endif %}
-                  </span>
-                </td>
-                <td class="text-right">
-                  <span class="mono">{{ invoiceItem.quantity }}</span>
-                </td>
-                <td class="text-right">
-                  <span class="mono">${{ invoiceItem.totalExclGST|floatformat:2 }}</span>
-                </td>
-                <td class="text-right">
-                  <strong class="mono">${{ invoiceItem.gst|floatformat:2 }}</strong>
-                </td>
-                <td class="text-right">
-                  <strong class="mono">${{ invoiceItem.totalInclGST|floatformat:2 }}</strong>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-            <tfoot class="full-width">
-              <tr>
-                <th> Total: </th>
-                <th colspan="1"></th>
-                <th colspan="1"> {{ invoice.totalQuantity }} </th>
-                <th colspan="1"> ${{ invoice.invoiceAmountExclGST|floatformat:2 }} </th>
-                <th colspan="1"> ${{ invoice.amountGST|floatformat:2 }} </th>
-                <th colspan="1"> ${{ invoice.invoiceAmountInclGST|floatformat:2 }} </th>
-              </tr>
-            </tfoot>
-          </table>
-
-        </div>
-      </div>
-
-      <div class="ui card">
-        <div class="content">
-          <div class="header">Payment Details</div>
-        </div>
-        <div class="content">
-          <p> <strong> Account Name: </strong> {{ invoice.event.state.bankAccountName }} </p>
-          <p> <strong> BSB: </strong> {{ invoice.event.state.bankAccountBSB }} </p>
-          <p> <strong>Account Number: </strong> {{ invoice.event.state.bankAccountNumber }} </p>
-          {% if invoice.event.paymentDueDate %}<p> <strong>Payment Due: </strong> {{ invoice.event.paymentDueDate }} </p>{% endif %}
-        </div>
-      </div>
-      <div class="ui card">
-        <div class="content center aligned text segment">
-          <small class="ui sub header"> Amount Due (EFT): </small>
-          <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p>
-          {% if invoice.paypalAvailable %}
-          <small class="ui sub header"> Amount Due (PayPal): </small>
-          <p class="bigfont"> ${{ invoice.amountDuePaypal|floatformat:2 }} </p>
-          {% endif %}
-        </div>
-      </div>
-      <div class="ui card">
-        <div class="content center aligned text segment">
-          <small class="ui sub header"> Amount Paid: </small>
-          <p class="bigfont"> ${{ invoice.amountPaid|floatformat:2 }} </p>
-          <p class="smallfont"> As of {{ currentDate }}</p>
-        </div>
-      </div>
-      <div class="ui segment itemscard">
-        <div class="content">
-          <h3>Note:</h3>
-          {% if invoice.event.state.invoiceMessage %}{{ invoice.event.state.invoiceMessage|escape|linebreaks }}<br>{% endif %}
-          {% if invoice.event.additionalInvoiceMessage %}{{ invoice.event.additionalInvoiceMessage|escape|linebreaks }}<br>{% endif %}
-          <strong>{{ invoiceSettings.invoiceFooterMessage|escape|linebreaks }}</strong>
-        </div>
-      </div>
-    </div>
-  </div>
 </body>
 
 </html>
@@ -169,70 +168,70 @@
 
 <style>
 
-  @page {
-    size: A4;
-    margin: 2%;
-  }
-
-  @media print {
-
-    html,
-    body {
-      width: 210mm;
-      height: 297mm;
+    @page {
+        size: A4;
+        margin: 2%;
     }
 
-    /* ... the rest of the rules ... */
-  }
+    @media print {
 
-  body {
-    background: #EEE;
-    /* font-size:0.9em !important; */
-  }
+        html,
+        body {
+            width: 210mm;
+            height: 297mm;
+        }
 
-  .bigfont {
-    font-size: 3rem !important;
-  }
+        /* ... the rest of the rules ... */
+    }
 
-  .invoice {
-    width: 970px !important;
-    margin: 50px auto;
-  }
+    body {
+        background: #EEE;
+        /* font-size:0.9em !important; */
+    }
 
-  .logo {
-    float: left;
-    padding-right: 10px;
-    margin: 10px auto;
-  }
+    .bigfont {
+        font-size: 3rem !important;
+    }
 
-  dt {
-    float: left;
-  }
+    .invoice {
+        width: 970px !important;
+        margin: 50px auto;
+    }
 
-  dd {
-    float: left;
-    clear: right;
-  }
+    .logo {
+        float: left;
+        padding-right: 10px;
+        margin: 10px auto;
+    }
 
-  .customercard {
-    min-width: 65%;
-  }
+    dt {
+        float: left;
+    }
 
-  .itemscard {
-    min-width: 98.5%;
-    margin-left: 0.5%;
-  }
+    dd {
+        float: left;
+        clear: right;
+    }
 
-  .logo {
-    max-width: 5rem;
-    margin-top: -0.25rem;
-  }
+    .customercard {
+        min-width: 65%;
+    }
 
-  .invDetails {
-    margin-top: 0rem;
-  }
+    .itemscard {
+        min-width: 98.5%;
+        margin-left: 0.5%;
+    }
 
-  .pageTitle {
-    margin-bottom: -1rem;
-  }
+    .logo {
+        max-width: 5rem;
+        margin-top: -0.25rem;
+    }
+
+    .invDetails {
+        margin-top: 0rem;
+    }
+
+    .pageTitle {
+        margin-bottom: -1rem;
+    }
 </style>

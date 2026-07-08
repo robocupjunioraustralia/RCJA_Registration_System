@@ -70,21 +70,20 @@
             Association Membership
         </a>
         {% if user.is_staff %}
-        <a class="item" href="{% url 'events:summaryReport' %}">
-            <i class="eye icon"></i>
-            Summary Report
-        </a>
-        <a class="item" href="{% url 'admin:index' %}">
-            <i class="id badge icon"></i>
-            Admin
-        </a>
-
+            <a class="item" href="{% url 'events:summaryReport' %}">
+                <i class="eye icon"></i>
+                Summary Report
+            </a>
+            <a class="item" href="{% url 'admin:index' %}">
+                <i class="id badge icon"></i>
+                Admin
+            </a>
         {% endif %}
         {% if environment is not None %}
-        <span class="item" style="color:red;">
-            <i class="important"></i>
-            <b>{{environment}}</b>
-        </span>
+            <span class="item" style="color:red;">
+                <i class="important"></i>
+                <b>{{environment}}</b>
+            </span>
         {% endif %}
     </div>
     <div class="ui top massive fixed menu">
@@ -104,35 +103,35 @@
         </div>
         <div class = "right menu">
             {% if environment is not None %}
-            <span class="item hide-on-mobile" style="color:red; max-width:48%" >
-                <i class="important"></i>
-                <b>{{environment}}</b>
-            </span>
+                <span class="item hide-on-mobile" style="color:red; max-width:48%" >
+                    <i class="important"></i>
+                    <b>{{environment}}</b>
+                </span>
             {% endif %}
             {% if user.is_staff %}
-            <a class="item hide-on-mobile" href="{% url 'admin:index' %}" style="max-width:48%" >
-                <i class="id badge icon"></i>
-                Admin
-            </a>
+                <a class="item hide-on-mobile" href="{% url 'admin:index' %}" style="max-width:48%" >
+                    <i class="id badge icon"></i>
+                    Admin
+                </a>
             {% endif %}
             {% if user.schooladministrator_set.count > 1 %}
                 <div class="ui dropdown simple item" >
                     <span style="width:6em; overflow: hidden; text-wrap: nowrap; text-overflow: ellipsis;">
                     {% if user.currentlySelectedSchool %}
-                    {{ user.currentlySelectedSchool.name }}
+                        {{ user.currentlySelectedSchool.name }}
                     {% else %}
-                    School
+                        School
                     {% endif %}
                     </span>
-                        <i class="dropdown icon"></i>
-                        <div class="menu">
-                            {% for schoolAdmin in user.schooladministrator_set.all %}
-                                <form method="post" action="{% url 'schools:setCurrentSchool' schoolAdmin.school.id %}" class="button-form">
-                                    {% csrf_token %}
-                                    <input class="header-button item" type="submit" value="{{ schoolAdmin.school.name }}"/>
-                                </form>
-                            {% endfor %}
-                        </div>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        {% for schoolAdmin in user.schooladministrator_set.all %}
+                            <form method="post" action="{% url 'schools:setCurrentSchool' schoolAdmin.school.id %}" class="button-form">
+                                {% csrf_token %}
+                                <input class="header-button item" type="submit" value="{{ schoolAdmin.school.name }}"/>
+                            </form>
+                        {% endfor %}
+                    </div>
                 </div>
             {% endif %}
             <div class="ui dropdown simple item" >
@@ -140,18 +139,18 @@
                 <span style="max-width:15vw; overflow: hidden; text-wrap: nowrap; text-overflow: ellipsis;">
                 {{ user.fullname_or_email }}
                 </span>
-                    <i class="dropdown icon"></i>
-                    <div class="menu">
-                        <a href="{% url 'users:details' %}" class="item">My details</a>
-                        {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
-                        <a href = "{% url 'password_change' %}" class="item">Change password</a>
-                        <form method="post" action="{% url 'logout' %}" class="button-form">
-                            {% csrf_token %}
-                            <input class="header-button item" type="submit" value="Log out"/>
-                        </form>
-                        <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
-                        {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
-                    </div>
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                    <a href="{% url 'users:details' %}" class="item">My details</a>
+                    {% if user.currentlySelectedSchool %}<a href="{% url 'schools:details' %}" class="item">School details</a>{% endif %}
+                    <a href = "{% url 'password_change' %}" class="item">Change password</a>
+                    <form method="post" action="{% url 'logout' %}" class="button-form">
+                        {% csrf_token %}
+                        <input class="header-button item" type="submit" value="Log out"/>
+                    </form>
+                    <a href = "{% url 'users:termsAndConditions' %}" class="item">Terms and Conditions</a>
+                    {% if user.is_staff %}<a href = "{% url 'users:adminChangelog' %}" class="item">Admin Changelog</a>{% endif %}
+                </div>
             </div>
         </div>
     </div>

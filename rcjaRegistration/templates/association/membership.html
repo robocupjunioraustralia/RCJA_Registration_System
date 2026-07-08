@@ -9,108 +9,99 @@
 
 {% block content %}
 <div class="ui aligned container">
-    <div class="bg">
-        <div class="">
-            <h1>Association Membership</h1>
+    <div class="row">
+        <h1>Association Membership</h1>
 
-            {% if pageForced %}
+        {% if pageForced %}
             <div class="ui message" style="color: red;">
                 <div class="header">Association Membership Required</div>
                 <p>All Committee members must be members of the Association. You must complete this page before accessing the rest of the site.</p>
             </div>
-            {% endif %}
+        {% endif %}
 
-            <p><b>RoboCup Junior (Australia) Inc.</b></p>
-            <p>Registration Number: A0040826L<br>Australian Business Number: 72 592 462 493</p>
-            <p><a href="https://www.robocupjunior.org.au/wp-content/uploads/2020/10/RCJA-Association-Rules.pdf" target="_blank">Rules of Association</a></p>
+        <p><b>RoboCup Junior (Australia) Inc.</b></p>
+        <p>Registration Number: A0040826L<br>Australian Business Number: 72 592 462 493</p>
+        <p><a href="https://www.robocupjunior.org.au/wp-content/uploads/2020/10/RCJA-Association-Rules.pdf" target="_blank">Rules of Association</a></p>
 
-            <h3>Your details</h3>
-            <p>Name: {{ request.user.get_full_name }}</p>
-            <p>Email: {{ request.user.email }}</p>
-            <p>Phone: {{ request.user.mobileNumber }}</p>
-            <p>State: {{ request.user.homeState }}</p>
+        <h3>Your details</h3>
+        <p>Name: {{ request.user.get_full_name }}</p>
+        <p>Email: {{ request.user.email }}</p>
+        <p>Phone: {{ request.user.mobileNumber }}</p>
+        <p>State: {{ request.user.homeState }}</p>
 
-            <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.
-            <br>
-            If you have any questions please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.
-            </p>
+        <p>To update the above information, please visit the <a href="{% url 'users:details' %}">my details</a> page.
+        <br>
+        If you have any questions please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.
+        </p>
 
-            <h3>Membership status: {% if associationMember %}{{ associationMember.membershipStatus }}{% else %}Not a member{% endif %}</h3>
-            {% if associationMember and associationMember.membershipExpired %}
-                <h3>Your membership is expired. Please speak to the relevant Committee member to resume your membership.</h3>
+        <h3>Membership status: {% if associationMember %}{{ associationMember.membershipStatus }}{% else %}Not a member{% endif %}</h3>
+        {% if associationMember and associationMember.membershipExpired %}
+            <h3>Your membership is expired. Please speak to the relevant Committee member to resume your membership.</h3>
+        {% else %}
+            {% if associationMember and associationMember.membershipActive and associationMember.approvalStatus == "approved" %}
+                <h3>Membership details</h3>
+                <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.</p>
+                <p>Membership start date: {{ associationMember.membershipStartDate }}</p>
+                <p><b>Membership type: {{associationMember.membershipType }}</b></p>
+            {% elif associationMember and associationMember.membershipActive and associationMember.approvalStatus == "pending" %}
+                <p>Your membership is pending approval.</p>
+                <p>Please check that your details below are up to date.</p>
             {% else %}
-                {% if associationMember and associationMember.membershipActive and associationMember.approvalStatus == "approved" %}
-                    <h3>Membership details</h3>
-                    <p>You are currently a member. You can update your details below. To end your membership please contact the Association's Secretary at <a href="mailto:secretary@robocupjunior.org.au">secretary@robocupjunior.org.au</a>.</p>
-                    <p>Membership start date: {{ associationMember.membershipStartDate }}</p>
-                    <p><b>Membership type: {{associationMember.membershipType }}</b></p>
-                {% elif associationMember and associationMember.membershipActive and associationMember.approvalStatus == "pending" %}
-                    <p>Your membership is pending approval.</p>
-                    <p>Please check that your details below are up to date.</p>
-                {% else %}
-                    <p>To become a member of the Association please fill out the details below and click Join.</p>
-                {% endif %}
-
-                <div class="ui left aligned grid ">
-                    <div class="twelve wide mobile eight wide computer column ui">
-                        <div class="form form-group left-aligned-text">
-                            {% if form.non_field_errors %}
-
-                            <!-- Error messaging -->
-                            <div class="ui message left-aligned-text">
-                                <div class="">
-                                    <p class="header">There were some errors in the information you entered. Please correct
-                                        the following:</p>
-                                    {{ form.non_field_errors }}
-                                </div>
-                            </div>
-                            <!-- /Error messaging -->
-                            {% endif %}
-
-                            <form method="post" class="ui form">
-                                {% csrf_token %}
-                                <div class="field">
-                                    <label>Birthday:</label>
-                                    {{form.birthday|attr:"type:date"|attr:"placeholder:YYYY-mm-dd"}}
-                                </div>
-                                {% if form.birthday.errors %}
-                                {% for error in form.birthday.errors %}
-                                <p style="color: red">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-
-                                <div class="field">
-                                    <label>Residential address:</label>
-                                    {{form.address}}
-                                </div>
-                                {% if form.address.errors %}
-                                {% for error in form.address.errors %}
-                                <p style="color: red">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-
-                                <div class="field">
-                                    <label>I accept the rules of the association:</label>
-                                    {{form.rulesAccepted}}
-                                </div>
-                                {% if form.rulesAccepted.errors %}
-                                {% for error in form.rulesAccepted.errors %}
-                                <p style="color: red">{{ error }}</p>
-                                {% endfor %}
-                                {% endif %}
-
-                                {% if associationMember and associationMember.membershipActive %}
-                                <input class="primary ui button" type="submit" value="Update" />
-                                {% else %}
-                                <input class="primary ui button" type="submit" value="Join" />
-                                {% endif %}
-                            </form>
+                <p>To become a member of the Association please fill out the details below and click Join.</p>
+            {% endif %}
+            <div class="form form-group left-aligned-text">
+                {% if form.non_field_errors %}
+                    <!-- Error messaging -->
+                    <div class="ui message left-aligned-text">
+                        <div class="">
+                            <p class="header">There were some errors in the information you entered. Please correct
+                                the following:</p>
+                            {{ form.non_field_errors }}
                         </div>
                     </div>
-                </div>
+                    <!-- /Error messaging -->
+                {% endif %}
 
-            {% endif %}
-        </div>
+                <form method="post" class="ui form">
+                    {% csrf_token %}
+                    <div class="field">
+                        <label>Birthday:</label>
+                        {{form.birthday|attr:"type:date"|attr:"placeholder:YYYY-mm-dd"}}
+                    </div>
+                    {% if form.birthday.errors %}
+                        {% for error in form.birthday.errors %}
+                            <p style="color: red">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="field">
+                        <label>Residential address:</label>
+                        {{form.address}}
+                    </div>
+                    {% if form.address.errors %}
+                        {% for error in form.address.errors %}
+                            <p style="color: red">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="field">
+                        <label>I accept the rules of the association:</label>
+                        {{form.rulesAccepted}}
+                    </div>
+                    {% if form.rulesAccepted.errors %}
+                        {% for error in form.rulesAccepted.errors %}
+                            <p style="color: red">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if associationMember and associationMember.membershipActive %}
+                        <input class="primary ui button" type="submit" value="Update" />
+                    {% else %}
+                        <input class="primary ui button" type="submit" value="Join" />
+                    {% endif %}
+                </form>
+            </div>
+        {% endif %}
     </div>
 </div>
 
