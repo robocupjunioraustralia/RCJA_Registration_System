@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from common.models import SaveDeleteMixin
+from django.urls import reverse
 
 from events.models import BaseEventAttendance, eventCoordinatorEditPermissions, eventCoordinatorViewPermissions
 
@@ -153,6 +154,9 @@ class Team(BaseEventAttendance):
 
     def __str__(self):
         return f"{self.name} ({self.event.name} {self.event.year})"
+    
+    def get_absolute_url(self):
+        return reverse('teams:details', kwargs = {"teamID": self.pk})
 
     # *****CSV export methods*****
 

@@ -19,8 +19,9 @@ class MentorEventFileUploadForm(ModelForm):
 
         # Filter fileType to available fileTypes
         if admin:
-            self.fields['fileType'].queryset = MentorEventFileType.objects.all()
+            self.fields['fileType'].queryset = MentorEventFileType.objects.filter(eventavailablefiletype__event__baseeventattendance=eventAttendance, eventavailablefiletype__event__endDate__gte=datetime.datetime.today())
         else:
+
             self.fields['fileType'].queryset = MentorEventFileType.objects.filter(eventavailablefiletype__event__baseeventattendance=eventAttendance, eventavailablefiletype__uploadDeadline__gte=datetime.datetime.today())
 
         if uploadedFile:

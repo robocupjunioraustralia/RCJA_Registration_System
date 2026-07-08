@@ -7,7 +7,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from coordination.permissions import checkCoordinatorPermission
 
-# from .forms import 
+# from .forms import
 
 from .models import MentorEventFileUpload
 from events.models import BaseEventAttendance
@@ -18,46 +18,71 @@ from .forms import MentorEventFileUploadForm
 
 import datetime
 
+
 def fileUploadCommonPermissions(request, eventAttendance):
     # Check event is published
     if not eventAttendance.event.published():
         raise PermissionDenied("Event is not published")
 
     # Check team - file upload currently not implemented for workshop attendees
-    if not eventAttendance.eventAttendanceType() == 'team':
-        raise PermissionDenied("File upload is only supported for teams") 
+    if not eventAttendance.eventAttendanceType() == "team":
+        raise PermissionDenied("File upload is only supported for teams")
 
-    if checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change'):
+    if checkCoordinatorPermission(
+        request, BaseEventAttendance, eventAttendance, "change"
+    ):
         return
 
     # Check administrator of this eventAttendance
     if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
+
 def fileUploadEditPermissions(request, uploadedFile):
     fileUploadCommonPermissions(request, uploadedFile.eventAttendance)
 
     # Check upload deadline not passed
-    if not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=uploadedFile.fileType).exists():
-        raise PermissionDenied("The upload deadline has passed for this file type for this event")
+    if (
+        not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(
+            uploadDeadline__gte=datetime.datetime.today(),
+            fileType=uploadedFile.fileType,
+        ).exists()
+    ) and not checkCoordinatorPermission(
+        request, BaseEventAttendance, uploadedFile.eventAttendance, "change"
+    ):
+        raise PermissionDenied(
+            "The upload deadline has passed for this file type for this event"
+        )
 
-def fileUploadUploadPermissions( request, eventAttendance):
+
+def fileUploadUploadPermissions(request, eventAttendance):
     fileUploadCommonPermissions(request, eventAttendance)
 
     # Check at least one available file type
-    if not (eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists()
-        or checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change')):
+    if not (
+        eventAttendance.event.eventavailablefiletype_set.filter(
+            uploadDeadline__gte=datetime.datetime.today()
+        ).exists()
+        or checkCoordinatorPermission(
+            request, BaseEventAttendance, eventAttendance, "change"
+        )
+    ):
         raise PermissionDenied("File upload not available")
+
 
 class MentorEventFileUploadView(LoginRequiredMixin, View):
     def admin_access(self, request, eventAttendance):
-        return checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change')
+        return checkCoordinatorPermission(
+            request, BaseEventAttendance, eventAttendance, "change"
+        )
 
     def get_file_types(self, request, eventAttendance):
         if self.admin_access(request, eventAttendance):
             return eventAttendance.event.eventavailablefiletype_set.all()
         else:
-            return eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
+            return eventAttendance.event.eventavailablefiletype_set.filter(
+                uploadDeadline__gte=datetime.datetime.today()
+            )
 
     def get_post_common(self, request, eventAttendanceID, uploadedFileID):
         # Check if editing an existing file
@@ -73,7 +98,9 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         else:
             # Otherwise assume uploading a new file - is the only alternative and in the event that this is also None, will just return 404
             # Get eventAttendance object
-            eventAttendance = get_object_or_404(BaseEventAttendance, pk=eventAttendanceID)
+            eventAttendance = get_object_or_404(
+                BaseEventAttendance, pk=eventAttendanceID
+            )
 
             # Check upload permissions
             fileUploadUploadPermissions(request, eventAttendance)
@@ -82,33 +109,52 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             uploadedFile = None
 
         if mentorEventAttendanceAccessPermissions(request, eventAttendance):
-            cancelURL = reverse('teams:details', kwargs = {"teamID": eventAttendance.id})
+            cancelURL = reverse("teams:details", kwargs={"teamID": eventAttendance.id})
         else:
-            cancelURL = reverse('admin:teams_team_changelist') + f"?event__id__exact={str(eventAttendance.event.id)}"
+            cancelURL = (
+                reverse("admin:teams_team_changelist")
+                + f"?event__id__exact={str(eventAttendance.event.id)}"
+            )
 
         return eventAttendance, uploadedFile, cancelURL
 
     def get(self, request, eventAttendanceID=None, uploadedFileID=None):
         # Get file and eventAttendance
-        eventAttendance, uploadedFile, cancelURL = self.get_post_common(request, eventAttendanceID, uploadedFileID)
+        eventAttendance, uploadedFile, cancelURL = self.get_post_common(
+            request, eventAttendanceID, uploadedFileID
+        )
 
         context = {
             "eventAttendance": eventAttendance,
             "uploadedFile": uploadedFile,
             "availableFileUploadTypes": self.get_file_types(request, eventAttendance),
-            "form": MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, admin=self.admin_access(request, eventAttendance)), # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
+            "form": MentorEventFileUploadForm(
+                instance=uploadedFile,
+                uploadedFile=uploadedFile,
+                eventAttendance=eventAttendance,
+                admin=self.admin_access(request, eventAttendance),
+            ),  # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
             "cancelURL": cancelURL,
         }
 
-        return render(request, 'eventfiles/uploadMentorEventFile.html', context)
+        return render(request, "eventfiles/uploadMentorEventFile.html", context)
 
     def post(self, request, eventAttendanceID=None, uploadedFileID=None):
         # Get file and eventAttendance
-        eventAttendance, uploadedFile, cancelURL = self.get_post_common(request, eventAttendanceID, uploadedFileID)
+        eventAttendance, uploadedFile, cancelURL = self.get_post_common(
+            request, eventAttendanceID, uploadedFileID
+        )
 
         # Get the form here so it can be used in the saving of valid data and also returning errors
         # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
-        form = MentorEventFileUploadForm(request.POST, request.FILES, instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, admin=self.admin_access(request, eventAttendance))
+        form = MentorEventFileUploadForm(
+            request.POST,
+            request.FILES,
+            instance=uploadedFile,
+            uploadedFile=uploadedFile,
+            eventAttendance=eventAttendance,
+            admin=self.admin_access(request, eventAttendance),
+        )
 
         if form.is_valid():
             # Create fileUpload object but don't save so can set foreign keys
@@ -126,9 +172,14 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
 
             # Redirect to team details view if admistrator of team, otherwise team admin changelist page
             if mentorEventAttendanceAccessPermissions(request, eventAttendance):
-                return redirect(reverse('teams:details', kwargs = {"teamID": eventAttendance.id}))
+                return redirect(
+                    reverse("teams:details", kwargs={"teamID": eventAttendance.id})
+                )
 
-            return redirect(reverse('admin:teams_team_changelist') + f"?event__id__exact={str(eventAttendance.event.id)}")
+            return redirect(
+                reverse("admin:teams_team_changelist")
+                + f"?event__id__exact={str(eventAttendance.event.id)}"
+            )
 
         # Default to displaying the form again if form not valid
         context = {
@@ -139,7 +190,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             "cancelURL": cancelURL,
         }
 
-        return render(request, 'eventfiles/uploadMentorEventFile.html', context)
+        return render(request, "eventfiles/uploadMentorEventFile.html", context)
 
     def delete(self, request, eventAttendanceID=None, uploadedFileID=None):
         # This endpoint should never be called with eventAttendanceID
