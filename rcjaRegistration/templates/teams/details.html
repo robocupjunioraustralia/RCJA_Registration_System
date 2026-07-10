@@ -100,7 +100,7 @@
                       <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>
                       <td>{{uploadedFile.creationDateTime}}</td>
                       <td>
-                        {% if not uploadedFile.uploadDeadlinePassed or admin%}
+                        {% if availableFileUploadTypes%}
                         <a href="{% url 'eventfiles:edit' uploadedFile.id %}"><button class="ui primary button">Edit</button></a>
                         <button onClick="showDeleteModal({{uploadedFile.id}}, '{% url 'eventfiles:edit' uploadedFile.id %}')" class="ui negative button">Delete</button>
                         {% endif %}

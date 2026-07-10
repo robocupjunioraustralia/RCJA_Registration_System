@@ -158,7 +158,6 @@ def commonSetUp(obj):  # copied from events, todo refactor
 
 
 class TestFileUpload(TestCase):
-
     def setUp(self):
         commonSetUp(self)
 
@@ -315,5 +314,193 @@ class TestFileUpload(TestCase):
             0,
             MentorEventFileUpload.objects.filter(
                 eventAttendance=self.afterDueTeam
+            ).count(),
+        )
+
+
+class TestFileDeletion(TestCase):
+    def setUp(self):
+        commonSetUp(self)
+
+    @patch("storages.backends.s3boto3.S3Boto3Storage.size", return_value=1)
+    @patch(
+        "storages.backends.s3boto3.S3Boto3Storage.save", return_value="something.txt"
+    )
+    @patch("storages.backends.s3boto3.S3Boto3Storage.delete")
+    def testBeforeDueMentor(self, mock_size, mock_save, mock_delete):
+        file = SimpleUploadedFile(
+            "something.txt", b"file_content", content_type="text/plain"
+        )
+        upload = MentorEventFileUpload.objects.create(
+            eventAttendance=self.beforeDueTeam,
+            uploadedBy=self.user,
+            fileType=self.fileType1,
+            fileUpload=file,
+            originalFilename="something.txt",
+        )
+        self.client.login(
+            request=HttpRequest(), username=self.username, password=self.password
+        )
+        response = self.client.get(
+            reverse("teams:details", kwargs={"teamID": self.beforeDueTeam.pk})
+        )
+        self.assertContains(response, "Delete</button>")
+        response = self.client.delete(
+            reverse(
+                "eventfiles:edit",
+                kwargs={"uploadedFileID": upload.pk},
+            ),
+            data={},
+            follow=False,
+        )
+        self.assertEqual(
+            MentorEventFileUpload.objects.filter(
+                eventAttendance=self.beforeDueTeam
+            ).count(),
+            0,
+        )
+
+    @patch("storages.backends.s3boto3.S3Boto3Storage.size", return_value=1)
+    @patch("storages.backends.s3boto3.S3Boto3Storage.save", return_value="fileName.ext")
+    @patch("storages.backends.s3boto3.S3Boto3Storage.delete")
+    def testAfterDueMentor(self, mock_size, mock_save, mock_delete):
+        file = SimpleUploadedFile(
+            "something.txt", b"file_content", content_type="text/plain"
+        )
+        upload = MentorEventFileUpload.objects.create(
+            eventAttendance=self.afterDueTeam,
+            uploadedBy=self.user,
+            fileType=self.fileType1,
+            fileUpload=file,
+            originalFilename="something.txt",
+        )
+        self.client.login(
+            request=HttpRequest(), username=self.username, password=self.password
+        )
+        response = self.client.get(
+            reverse("teams:details", kwargs={"teamID": self.afterDueTeam.pk})
+        )
+        self.assertNotContains(response, "Delete</button>")
+        response = self.client.delete(
+            reverse(
+                "eventfiles:edit",
+                kwargs={"uploadedFileID": upload.pk},
+            ),
+            data={},
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            1,
+            MentorEventFileUpload.objects.filter(
+                eventAttendance=self.afterDueTeam
+            ).count(),
+        )
+
+    @patch("storages.backends.s3boto3.S3Boto3Storage.size", return_value=1)
+    @patch("storages.backends.s3boto3.S3Boto3Storage.save", return_value="fileName.ext")
+    @patch("storages.backends.s3boto3.S3Boto3Storage.delete")
+    def testBeforeDueCoordinator(self, mock_size, mock_save, mock_delete):
+        file = SimpleUploadedFile(
+            "something.txt", b"file_content", content_type="text/plain"
+        )
+        upload = MentorEventFileUpload.objects.create(
+            eventAttendance=self.beforeDueTeam,
+            uploadedBy=self.user,
+            fileType=self.fileType1,
+            fileUpload=file,
+            originalFilename="something.txt",
+        )
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+        response = self.client.get(
+            reverse("teams:details", kwargs={"teamID": self.beforeDueTeam.pk})
+        )
+        self.assertContains(response, "Delete</button>")
+        response = self.client.delete(
+            reverse(
+                "eventfiles:edit",
+                kwargs={"uploadedFileID": upload.pk},
+            ),
+            data={},
+            follow=False,
+        )
+        self.assertEqual(
+            MentorEventFileUpload.objects.filter(
+                eventAttendance=self.beforeDueTeam
+            ).count(),
+            0,
+        )
+
+    @patch("storages.backends.s3boto3.S3Boto3Storage.size", return_value=1)
+    @patch("storages.backends.s3boto3.S3Boto3Storage.save", return_value="fileName.ext")
+    @patch("storages.backends.s3boto3.S3Boto3Storage.delete")
+    def testAfterDueCoordinator(self, mock_size, mock_save, mock_delete):
+        file = SimpleUploadedFile(
+            "something.txt", b"file_content", content_type="text/plain"
+        )
+        upload = MentorEventFileUpload.objects.create(
+            eventAttendance=self.afterDueTeam,
+            uploadedBy=self.user,
+            fileType=self.fileType1,
+            fileUpload=file,
+            originalFilename="something.txt",
+        )
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+        response = self.client.get(
+            reverse("teams:details", kwargs={"teamID": self.afterDueTeam.pk})
+        )
+        self.assertContains(response, "Delete</button>")
+        response = self.client.delete(
+            reverse(
+                "eventfiles:edit",
+                kwargs={"uploadedFileID": upload.pk},
+            ),
+            data={},
+            follow=False,
+        )
+        self.assertEqual(
+            MentorEventFileUpload.objects.filter(
+                eventAttendance=self.afterDueTeam
+            ).count(),
+            0,
+        )
+
+    @patch("storages.backends.s3boto3.S3Boto3Storage.size", return_value=1)
+    @patch("storages.backends.s3boto3.S3Boto3Storage.save", return_value="fileName.ext")
+    def testAfterEventCoordinator(self, mock_size, mock_save):
+        file = SimpleUploadedFile(
+            "something.txt", b"file_content", content_type="text/plain"
+        )
+        upload = MentorEventFileUpload.objects.create(
+            eventAttendance=self.afterEventTeam,
+            uploadedBy=self.user,
+            fileType=self.fileType1,
+            fileUpload=file,
+            originalFilename="something.txt",
+        )
+        self.client.login(
+            request=HttpRequest(), username=self.super, password=self.password
+        )
+        response = self.client.get(
+            reverse("teams:details", kwargs={"teamID": self.afterEventTeam.pk})
+        )
+        self.assertNotContains(response, "Delete</button>")
+        response = self.client.delete(
+            reverse(
+                "eventfiles:edit",
+                kwargs={"uploadedFileID": upload.pk},
+            ),
+            data={},
+            follow=False,
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            1,
+            MentorEventFileUpload.objects.filter(
+                eventAttendance=self.afterEventTeam
             ).count(),
         )
