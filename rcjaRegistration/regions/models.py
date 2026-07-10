@@ -18,6 +18,7 @@ class State(SaveDeleteMixin, models.Model):
     # Fields
     name = models.CharField('Name', max_length=30, unique=True)
     abbreviation = models.CharField('Abbreviation', max_length=3, unique=True)
+    introductionEmailTemplate = models.TextField('Introduction Email Template',blank=True,default="",help_text="This message is sent to mentors when they sign up. Use {{name}} for where to input the recipient's name and {{events}} for a paragraph that lists events happening soon in your state.")
     # Type fields
     typeCompetition = models.BooleanField('Competition', default=False, help_text='Allow events to be created for this state. Once enabled cannot be disabled.')
     typeUserRegistration = models.BooleanField('User registration', default=False, help_text='Allow users to register to this state. Once enabled cannot be disabled.')
