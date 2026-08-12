@@ -597,6 +597,32 @@ class TestImportCSVPreviewLimits(ImportCSVBase, TestCase):
         self.assertContains(response, 'Max teams for school for this event division reached')
         self.assertImportButtonNotShown(response)
 
+    def testCumulativeDivisionLimitTotal(self):
+        # Two teams from this school are already in this division, and no other school has any
+        availableDivision = self.availableDivision3_state1_openCompetition
+        availableDivision.division_maxRegistrationsForDivision = 3
+        availableDivision.save()
+
+        response = self.preview(buildCSV(
+            HEADER,
+            'Team 10,Division 3,,HW 1,HW 1,Alice,Smith,7,Female',
+            'Team 11,Division 3,,HW 1,HW 1,Bob,Smith,7,Male',
+        ))
+        self.assertContains(response, 'Division 3: Max teams for this event division reached')
+        self.assertImportButtonNotShown(response)
+
+    def testCumulativeDivisionLimitTotalNotExceeded(self):
+        availableDivision = self.availableDivision3_state1_openCompetition
+        availableDivision.division_maxRegistrationsForDivision = 4
+        availableDivision.save()
+
+        response = self.preview(buildCSV(
+            HEADER,
+            'Team 10,Division 3,,HW 1,HW 1,Alice,Smith,7,Female',
+            'Team 11,Division 3,,HW 1,HW 1,Bob,Smith,7,Male',
+        ))
+        self.assertContains(response, 'No errors were found')
+
     def testCumulativeDivisionLimitDoesNotAffectOtherDivision(self):
         availableDivision = self.availableDivision3_state1_openCompetition
         availableDivision.division_maxRegistrationsPerSchool = 3
