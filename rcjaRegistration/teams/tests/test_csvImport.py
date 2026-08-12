@@ -37,7 +37,7 @@ def buildCSV(*lines):
     return '\r\n'.join(lines) + '\r\n'
 
 def csvUpload(content):
-    return SimpleUploadedFile('teams.csv', content.encode('utf-8'), content_type='text/csv')
+    return SimpleUploadedFile('teams.csv', content, content_type='text/csv')
 
 class ImportCSVBase:
     @classmethod
@@ -60,8 +60,11 @@ class ImportCSVBase:
     def loginIndependentMentor5(self):
         self.client.login(request=HttpRequest(), username=self.email_user_state1_independent_mentor5, password=self.password)
 
-    def preview(self, content):
-        return self.client.post(self.importURL, {'preview': '', 'csvFile': csvUpload(content)})
+    def preview(self, content, url=None):
+        return self.previewBytes(content.encode('utf-8'), url=url)
+
+    def previewBytes(self, content, url=None):
+        return self.client.post(url or self.importURL, {'preview': '', 'csvFile': csvUpload(content)})
 
     def importTeams(self, content):
         return self.client.post(self.importURL, {'import': '', 'csvText': content})
@@ -133,9 +136,9 @@ class TestImportCSVPermissions(ImportCSVBase, TestCase):
         self.assertEqual(403, response.status_code)
 
     def testPostDeniedRegistrationClosed(self):
-        response = self.client.post(
-            reverse('teams:importCSV', kwargs={'eventID': self.state1_closedCompetition1.id}),
-            {'preview': '', 'csvFile': csvUpload(buildCSV(HEADER, VALID_ROW))},
+        response = self.preview(
+            buildCSV(HEADER, VALID_ROW),
+            url = reverse('teams:importCSV', kwargs={'eventID': self.state1_closedCompetition1.id}),
         )
         self.assertEqual(403, response.status_code)
 
@@ -309,6 +312,17 @@ class TestImportCSVPreview(ImportCSVBase, TestCase):
     def testFileWithOnlyBlankLines(self):
         response = self.preview('\r\n\r\n')
         self.assertContains(response, 'The file is empty')
+        self.assertImportButtonNotShown(response)
+
+    def testFileTooLarge(self):
+        response = self.previewBytes(b'a' * (1024 * 1024 + 1))
+        self.assertContains(response, 'File is too large. The maximum size is 1024 KB.')
+        self.assertImportButtonNotShown(response)
+
+    def testFileNotUTF8(self):
+        # A csv saved in another encoding, the accented character is not valid utf-8 on its own
+        response = self.previewBytes(buildCSV(HEADER, VALID_ROW).encode('utf-8') + b'Team \xe9\r\n')
+        self.assertContains(response, 'File could not be read. Please make sure it is a CSV file saved with UTF-8 encoding.')
         self.assertImportButtonNotShown(response)
 
     def testHeaderOnlyFile(self):
