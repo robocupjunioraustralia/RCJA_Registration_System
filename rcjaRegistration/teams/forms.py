@@ -21,3 +21,6 @@ class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
         super().__init__(*args, user=user, event=event, **kwargs)
         for field in ['hardwarePlatform', 'softwarePlatform']:
             self.fields[field].required = True
+
+class ImportTeamsCSVForm(forms.Form):
+    csvFile = forms.FileField(label='CSV file', widget=forms.ClearableFileInput(attrs={'accept': '.csv'}))

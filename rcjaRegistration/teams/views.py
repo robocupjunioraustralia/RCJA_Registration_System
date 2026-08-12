@@ -1,18 +1,22 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.urls import reverse
 
-from .forms import TeamForm, StudentForm
+from .forms import TeamForm, StudentForm, ImportTeamsCSVForm
 
+import csv
 import datetime
 
 from .models import Student, Team
 from events.models import Event, AvailableDivision
 
 from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams, createPermissionForEvent, checkEventLimitsReached
+
+from . import csvImport
 
 # Create your views here.
 
@@ -188,3 +192,106 @@ def copyTeamsList(request, eventID):
     }
 
     return render(request, 'teams/copyTeamsList.html', context)
+
+@login_required
+def importTeamsCSVTemplate(request, eventID):
+    event = get_object_or_404(Event, pk=eventID)
+
+    # Same checks as the import page, so the template can't be downloaded for an event that can't be registered for
+    createPermissionForEvent(event, 'competition')
+    checkEventLimitsReached(request, event)
+
+    response = HttpResponse(content_type='text/csv')
+    # Quoted because the event name includes the state in brackets
+    response['Content-Disposition'] = f'attachment; filename="{event} Team Import Template.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(csvImport.csvHeaders(event, request.user))
+
+    return response
+
+class ImportTeamsCSV(CreateEditBaseEventAttendance):
+    eventType = 'competition'
+
+    def context(self, request, event, **kwargs):
+        optionHeaders, optionRows = csvImport.optionsTable(event, request.user)
+
+        context = {
+            'event': event,
+            'form': ImportTeamsCSVForm(),
+            'optionHeaders': optionHeaders,
+            'optionRows': optionRows,
+            'showCampusColumn': csvImport.campusFieldRelevant(request.user),
+            'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
+        }
+        context.update(kwargs)
+
+        return context
+
+    def get(self, request, eventID):
+        event = get_object_or_404(Event, pk=eventID)
+        self.common(request, event, None)
+
+        return render(request, 'teams/importTeamsCSV.html', self.context(request, event))
+
+    def post(self, request, eventID):
+        event = get_object_or_404(Event, pk=eventID)
+        self.common(request, event, None)
+
+        if 'import' in request.POST:
+            return self.importTeams(request, event)
+
+        return self.preview(request, event)
+
+    def preview(self, request, event):
+        # Validates and displays the teams in the uploaded file, does not create anything
+        form = ImportTeamsCSVForm(request.POST, request.FILES)
+
+        if not form.is_valid():
+            return render(request, 'teams/importTeamsCSV.html', self.context(request, event, form=form))
+
+        csvText, fileError = csvImport.readUploadedFile(form.cleaned_data['csvFile'])
+
+        if fileError:
+            return render(request, 'teams/importTeamsCSV.html', self.context(request, event, fileErrors=[fileError]))
+
+        importedTeams, fileErrors = csvImport.parseAndValidateCSV(event, request.user, csvText)
+
+        return render(request, 'teams/importTeamsCSV.html', self.context(
+            request,
+            event,
+            importedTeams = importedTeams,
+            fileErrors = fileErrors,
+            csvText = csvText,
+            showImportButton = bool(importedTeams) and not fileErrors and not csvImport.hasErrors(importedTeams),
+        ))
+
+    def importTeams(self, request, event):
+        # The csv is re-posted from the preview page so it must be validated again before anything is created
+        csvText = request.POST.get('csvText', '')
+
+        importedTeams, fileErrors = csvImport.parseAndValidateCSV(event, request.user, csvText)
+
+        if fileErrors or not importedTeams or csvImport.hasErrors(importedTeams):
+            return render(request, 'teams/importTeamsCSV.html', self.context(
+                request,
+                event,
+                importedTeams = importedTeams,
+                fileErrors = fileErrors,
+                csvText = csvText,
+                showImportButton = False,
+            ))
+
+        # All or nothing, so a failure part way through does not leave a partially imported event
+        with transaction.atomic():
+            for importedTeam in importedTeams:
+                team = importedTeam.teamForm.save(commit=False)
+                team.csv_imported = True
+                team.save()
+
+                for studentForm in importedTeam.studentForms:
+                    student = studentForm.save(commit=False)
+                    student.team = team
+                    student.save()
+
+        return redirect(reverse('events:details', kwargs={'eventID': event.id}))
