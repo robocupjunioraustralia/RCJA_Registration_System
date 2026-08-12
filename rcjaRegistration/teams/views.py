@@ -136,7 +136,6 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
         if all([x.is_valid() for x in (form, formset)]):
             # Create team object but don't save so can set foreign keys
             team = form.save(commit=False)
-            team.mentorUser = request.user
 
             if newTeam and sourceTeam:
                 team.copiedFrom = sourceTeam
