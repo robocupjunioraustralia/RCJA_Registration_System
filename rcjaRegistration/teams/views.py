@@ -12,7 +12,7 @@ import datetime
 from .models import Student, Team
 from events.models import Event, AvailableDivision
 
-from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams
+from events.views import CreateEditBaseEventAttendance, mentorEventAttendanceAccessPermissions, getDivisionsMaxReachedWarnings, getAvailableToCopyTeams, createPermissionForEvent, checkEventLimitsReached
 
 # Create your views here.
 
@@ -164,30 +164,11 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
 
         return render(request, 'teams/createEditTeam.html', {'form': form, 'formset':formset, 'event':event, 'team':team, 'sourceTeam': sourceTeam, 'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user)})
 
-def teamCreatePermissionForEvent(event):
-    # Check event is published
-    if not event.published():
-        raise PermissionDenied("Event is not published")
-
-    # Check registrations open
-    if not event.registrationsOpen():
-        raise PermissionDenied("Registration has closed for this event")
-
-    if event.eventType != 'competition':
-        raise PermissionDenied("Can only copy teams for competitions")
-
-def checkEventLimitsReached(request, event):
-    if event.maxEventRegistrationsForSchoolReached(request.user):
-        raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
-
-    if event.maxEventRegistrationsTotalReached():
-        raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
-
 @login_required
 def copyTeamsList(request, eventID):
     event = get_object_or_404(Event, pk=eventID)
 
-    teamCreatePermissionForEvent(event)
+    createPermissionForEvent(event, 'competition')
 
     try:
         checkEventLimitsReached(request, event)

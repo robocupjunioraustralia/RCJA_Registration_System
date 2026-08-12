@@ -250,30 +250,36 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
 
     return True
 
+def createPermissionForEvent(event, eventType):
+    # Check is correct event type
+    if event.eventType != eventType:
+        raise PermissionDenied('Teams/ attendees cannot be created for this event type')
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+def checkEventLimitsReached(request, event):
+    if event.maxEventRegistrationsForSchoolReached(request.user):
+        raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+
+    if event.maxEventRegistrationsTotalReached():
+        raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
     def common(self, request, event, eventAttendance):
-        # Check is correct event type
-        if event.eventType != self.eventType:
-            raise PermissionDenied('Teams/ attendees cannot be created for this event type')
-
-        # Check registrations open
-        if not event.registrationsOpen():
-            raise PermissionDenied("Registration has closed for this event")
-
-        # Check event is published
-        if not event.published():
-            raise PermissionDenied("Event is not published")
+        createPermissionForEvent(event, self.eventType)
 
         # Check administrator of this eventAttendance
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
         if not eventAttendance:
-            if event.maxEventRegistrationsForSchoolReached(request.user):
-                raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
-
-            if event.maxEventRegistrationsTotalReached():
-                raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+            checkEventLimitsReached(request, event)
 
     def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
         # This endpoint should never be called with eventID or sourceTeamID
