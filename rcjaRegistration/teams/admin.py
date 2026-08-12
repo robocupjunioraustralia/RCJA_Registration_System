@@ -74,6 +74,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
                 'creationDateTime',
                 'updatedDateTime',
                 'withdrawn',
+                'csv_imported',
             )
         }),
         ('Advanced billing settings', {
@@ -100,6 +101,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
     readonly_fields = [
         'creationDateTime',
         'updatedDateTime',
+        'csv_imported',
     ]
 
     inlines = [

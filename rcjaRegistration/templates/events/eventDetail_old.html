@@ -9,25 +9,25 @@
     <br>
     {% for team in teams %}
     <div>
-            <h5>{{team.name}} - {{team.division}}</h5>
-            <table class = "ui celled table">
-                <thead>
-                    <th> First Name</th>
-                    <th> Last Name</th> 
-                    <th> Year Level</th>
-                    <th> Gender </th>
-                </thead>
-                <tbody>
-                    {% for student in team.student_set.all %}
-                        <tr>
-                            <td>{{student.firstName}}</td>
-                            <td>{{student.lastName}}</td>
-                            <td>{{student.yearLevel}}</td>
-                            <td>{{student.gender}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <h5>{{team.name}} - {{team.division}}</h5>
+        <table class = "ui celled table">
+            <thead>
+                <th> First Name</th>
+                <th> Last Name</th> 
+                <th> Year Level</th>
+                <th> Gender </th>
+            </thead>
+            <tbody>
+                {% for student in team.student_set.all %}
+                    <tr>
+                        <td>{{student.firstName}}</td>
+                        <td>{{student.lastName}}</td>
+                        <td>{{student.yearLevel}}</td>
+                        <td>{{student.gender}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     <br>
     {% endfor %}
