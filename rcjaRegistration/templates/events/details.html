@@ -116,6 +116,7 @@
                     <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
                 {% else %} {# Competition #}
                     <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
+                    <a href="{% url 'teams:importCSV' event.id %}"><button class="ui positive button">Import CSV</button></a>
                     {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
                 {% endif %}
             {% endif %}
