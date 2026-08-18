@@ -5,6 +5,7 @@ from django.test import Client
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
 from unittest.mock import patch, Mock
+from django.core import mail
 
 import datetime
 
@@ -62,12 +63,14 @@ class AuthViewTests(TestCase):
         self.assertEqual(get_user_model().objects.count(), prevUsers + 1)
         # this checks the user created has the right username
         User.objects.get(email=self.email)
+        self.assertEqual(1,len(mail.outbox)) # test email sent
 
     def testUserInvalidSignup(self):
         payloadData = {'username':self.email}
         response = self.client.post(path=reverse('users:signup'),data = payloadData)
         self.assertEqual(response.status_code,200) #ensure user is not redirected
         self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(0,len(mail.outbox)) # test no email sent
     
     def testUserExistingSignup(self):
         payloadData = self.validPayload
