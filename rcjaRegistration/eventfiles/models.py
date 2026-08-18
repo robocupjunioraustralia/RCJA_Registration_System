@@ -14,7 +14,6 @@ from events.models import eventCoordinatorViewPermissions, eventCoordinatorEditP
 from rcjaRegistration.storageBackends import PrivateMediaStorage
 
 # **********MODELS**********
-
 class MentorEventFileType(models.Model):
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)

@@ -1,0 +1,50 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> {{event}} </title>
+
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row">
+        <h1>Upload Data</h1>
+    </div>
+
+    {% if form.errors %}
+    <!-- Error messaging -->
+    <div class="ui warning message left-aligned-text">
+    <div class="">
+        <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+        {{ form.non_field_errors }}
+        <ul>
+        {% for field in form %}
+        {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+        {% endfor %}
+        </ul>
+    </div>
+    </div>
+    <!-- /Error messaging -->
+    {% endif %}
+
+    <div class="row" id="inputForm">
+        <form action="" method="post" class = "ui form">
+            {% csrf_token %}
+            <div class="two fields">
+                <div class = "field">
+                  <label>Delete data when creating new data (non-recoverable): </label>
+                    {{form.deleteData}}
+                    {{form.deleteData.error}}
+                </div>
+                <div class = "field">
+                  <label> Data as JSON: </label>
+                    {{form.data_to_upload}}
+                     {{form.data_to_upload.error}}
+                </div>
+              </div>
+            <input type="submit" value="Upload">
+        </form>
+    </div>
+</div>
+{% endblock %}
