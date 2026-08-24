@@ -2,31 +2,31 @@
     <h2> {{rowHeading}} </h2>
     <div class="ui special cards equal width grid" style="margin-left:1rem;">
         {% for event in comps %}
-        <div class="card" style="max-width:19rem; cursor: pointer;" onclick="window.location='{% url 'events:details' event.id %}';">
-            <div class="blurring dimmable image">
-                <img class="cardimage" style="object-fit: cover;" src="{{ event.effectiveBannerImageURL }}">
-            </div>
-            <div class="content">
-                <span class="header">{{event}}</span>
-                <div class="meta">
-                    <span class="date">{{event.startDate|default_if_none:"TBC"}}{% if event.startDate != event.endDate %} - {{event.endDate|default_if_none:"TBC"}}{% endif %}<br>Registrations close: {{event.registrationsCloseDate|default_if_none:"TBC"}}</span>
+            <div class="card" style="max-width:19rem; cursor: pointer;" onclick="window.location='{% url 'events:details' event.id %}';">
+                <div class="blurring dimmable image">
+                    <img class="cardimage" style="object-fit: cover;" src="{{ event.effectiveBannerImageURL }}">
                 </div>
-                <div class="cardcontent">
+                <div class="content">
+                    <span class="header">{{event}}</span>
+                    <div class="meta">
+                        <span class="date">{{event.startDate|default_if_none:"TBC"}}{% if event.startDate != event.endDate %} - {{event.endDate|default_if_none:"TBC"}}{% endif %}<br>Registrations close: {{event.registrationsCloseDate|default_if_none:"TBC"}}</span>
+                    </div>
+                    <div class="cardcontent">
+                    </div>
+                </div>
+                <div class="extra content">
                 </div>
             </div>
-            <div class="extra content">
-            </div>
-        </div>
         {% empty %}
-        <div class="ui icon message">
-            <i class="frown icon"></i>
-            <div class="content">
-                <div class="header">
-                    No Events
+            <div class="ui icon message">
+                <i class="frown icon"></i>
+                <div class="content">
+                    <div class="header">
+                        No Events
+                    </div>
+                    <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
                 </div>
-                <p>Sorry, no events found. Try checking for events from other states or check back later.</p>
             </div>
-        </div>
         {% endfor %}
     </div>
 </div>

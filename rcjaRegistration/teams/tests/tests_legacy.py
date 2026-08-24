@@ -921,7 +921,7 @@ class TestCopyTeamsList(TestCase):
     
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
+        self.assertContains(response, 'Teams/ attendees cannot be created for this event type', status_code=403)
 
     def testRedirect_eventSchoolMaxReached(self):
         self.newEvent.event_maxRegistrationsPerSchool = 1

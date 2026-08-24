@@ -39,6 +39,11 @@ class BaseEventAttendanceFormInitMixin:
         self.fields['event'].disabled = True
         self.fields['event'].widget = forms.HiddenInput()
 
+        # MentorUser field
+        self.fields['mentorUser'].initial = user.id
+        self.fields['mentorUser'].disabled = True
+        self.fields['mentorUser'].widget = forms.HiddenInput()
+
 def getSummaryForm(request):
     # Use constructor function as user from request is required for permissions
     class SummaryRequestForm(forms.Form):

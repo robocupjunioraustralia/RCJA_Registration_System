@@ -165,8 +165,8 @@ class Student(SaveDeleteMixin, models.Model):
     creationDateTime = models.DateTimeField('Creation date',auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date',auto_now=True)
     # Fields
-    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
-    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_']*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_' and space.")])
+    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_']*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_' and space.")])
     yearLevel = models.PositiveIntegerField('Year level')
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)

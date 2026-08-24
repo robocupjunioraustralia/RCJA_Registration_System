@@ -83,7 +83,7 @@ class AdditionalAssociationMemberTestsMixin:
         self.assertEqual(response.status_code, POST_SUCCESS)
         self.state1_associationMember1.refresh_from_db()
         self.assertIsNone(self.state1_associationMember1.approvalRejectionBy)
-    
+
     def test_save_sets_approvalRejectionDate_not_already_set(self):
         payload = self.validPayload.copy()
         payload['approvalStatus'] = 'approved'
@@ -112,7 +112,74 @@ class AdditionalAssociationMemberTestsMixin:
         self.state1_associationMember1.refresh_from_db()
         self.assertIsNone(self.state1_associationMember1.approvalRejectionDate)
 
-class Test_AssociationMember_SuperUser(AdditionalAssociationMemberTestsMixin, AssociationMember_Base, Base_Test_SuperUser, TestCase):
+class AssociationBulkActionsTestsMixin:
+    def runBulkAction(self, action, members, follow=False):
+        return self.client.post(
+            reverse(f'admin:{self.modelURLName}_changelist'),
+            data={'action': action, '_selected_action': [member.id for member in members]},
+            follow=follow,
+        )
+
+    def test_bulkApprove_action_available(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, 'Approve selected')
+
+    def test_bulkReject_action_available(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertContains(response, 'Reject selected')
+
+    def test_bulkApprove_setsApproved(self):
+        response = self.runBulkAction('bulkApproveMembers', [self.state1_associationMember1, self.state1_associationMember2])
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+        self.state1_associationMember1.refresh_from_db()
+        self.state1_associationMember2.refresh_from_db()
+
+        for member in (self.state1_associationMember1, self.state1_associationMember2):
+            self.assertEqual(member.approvalStatus, 'approved')
+            self.assertEqual(member.approvalRejectionBy, self.loggedInUser)
+            self.assertEqual(member.approvalRejectionDate, datetime.date.today())
+
+    def test_bulkReject_setsRejected(self):
+        response = self.runBulkAction('bulkRejectMembers', [self.state1_associationMember1])
+        self.assertEqual(response.status_code, POST_SUCCESS)
+
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalStatus, 'rejected')
+        self.assertEqual(self.state1_associationMember1.approvalRejectionBy, self.loggedInUser)
+        self.assertEqual(self.state1_associationMember1.approvalRejectionDate, datetime.date.today())
+
+    def test_bulkApprove_successMessage(self):
+        response = self.runBulkAction('bulkApproveMembers', [self.state1_associationMember1, self.state1_associationMember2], follow=True)
+        self.assertContains(response, '2 association member(s) approved.')
+
+    def test_bulkApprove_skipsReadonlyMembers(self):
+        # Already approved/rejected members are readonly
+        self.state1_associationMember1.approvalStatus = 'rejected'
+        self.state1_associationMember1.approvalRejectionDate = datetime.date.today()
+        self.state1_associationMember1.save()
+
+        response = self.runBulkAction('bulkApproveMembers', [self.state1_associationMember1, self.state1_associationMember2], follow=True)
+
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalStatus, 'rejected')
+        self.assertContains(response, '1 association member(s) skipped (status can only be changed if pending).')
+
+        self.state1_associationMember2.refresh_from_db()
+        self.assertEqual(self.state1_associationMember2.approvalStatus, 'approved')
+
+    def test_bulkApprove_skipsValidationFailure(self):
+        # Approval requires the rules to have been accepted
+        self.state1_associationMember1.rulesAcceptedDate = None
+        self.state1_associationMember1.save()
+
+        response = self.runBulkAction('bulkApproveMembers', [self.state1_associationMember1], follow=True)
+
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.approvalStatus, 'pending')
+        self.assertContains(response, 'Rules must be accepted before approval.')
+
+class Test_AssociationMember_SuperUser(AssociationBulkActionsTestsMixin, AdditionalAssociationMemberTestsMixin, AssociationMember_Base, Base_Test_SuperUser, TestCase):
     expectedListItems = 8
     expectedStrings = [
         'user6@user.com',
@@ -137,6 +204,14 @@ class AssociationMember_Coordinators_Base(AssociationMember_Base):
         'user9@user.com',
     ]
 
+    def test_bulkApprove_action_hidden(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, 'Approve selected')
+
+    def test_bulkReject_action_hidden(self):
+        response = self.client.get(reverse(f'admin:{self.modelURLName}_changelist'))
+        self.assertNotContains(response, 'Reject selected')
+
 class Test_AssociationMember_FullCoordinator(AssociationMember_Coordinators_Base, Base_Test_FullCoordinator, TestCase):
     def testChangeReadOnly(self):
         response = self.client.get(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)))
@@ -144,7 +219,7 @@ class Test_AssociationMember_FullCoordinator(AssociationMember_Coordinators_Base
         self.assertNotContains(response, 'Save and continue editing')
         self.assertContains(response, 'Close')
 
-class Test_AssociationMember_GlobalFullCoordinator(AdditionalAssociationMemberTestsMixin, Test_AssociationMember_FullCoordinator):
+class Test_AssociationMember_GlobalFullCoordinator(AssociationBulkActionsTestsMixin, AdditionalAssociationMemberTestsMixin, Test_AssociationMember_FullCoordinator):
     addLoadsCode = GET_SUCCESS
     deleteLoadsCode = GET_SUCCESS
 
@@ -167,6 +242,12 @@ class Test_AssociationMember_GlobalFullCoordinator(AdditionalAssociationMemberTe
         cls.coord_state1_fullcoordinator.save()
 
     def testChangeReadOnly(self):
+        pass
+
+    def test_bulkApprove_action_hidden(self):
+        pass
+
+    def test_bulkReject_action_hidden(self):
         pass
 
 class Test_AssociationMember_ViewCoordinator(AssociationMember_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
