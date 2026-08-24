@@ -198,13 +198,14 @@ def details(request, eventID):
     else:
         totalRegistrations = event.baseeventattendance_set.exclude(team__withdrawn=True).count()
 
-    electronicDeedsEnabled = event.electronicParticipationDeedsEnabled
+    electronicParticipationDeedsEnabled = event.electronicParticipationDeedsEnabled
     schoolMagicLink = None
     unattachedDeedCount = 0
     teamDeedSummaries = {}
 
-    hasRegistrations = (teams.exists() or workshopAttendees.exists())
-    if electronicDeedsEnabled and hasRegistrations:
+    hasStudentRegistrations = (teams.exists() or workshopAttendees.filter(attendeeType='student').exists())
+    electronicParticipationDeedsAvailable = electronicParticipationDeedsEnabled and hasStudentRegistrations
+    if electronicParticipationDeedsAvailable:
         school = filterDict.get('school')
         mentorUser = request.user if school is None else None 
         if deeds_available_for_event(event):
@@ -233,7 +234,8 @@ def details(request, eventID):
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
         'totalRegistrations': totalRegistrations,
-        'electronicParticipationDeedsEnabled': electronicDeedsEnabled,
+        'electronicParticipationDeedsEnabled': electronicParticipationDeedsEnabled,
+        'electronicParticipationDeedsAvailable': electronicParticipationDeedsAvailable,
         'schoolMagicLink': schoolMagicLink,
         'unattachedDeedCount': unattachedDeedCount,
         'teamDeedSummaries': teamDeedSummaries,
