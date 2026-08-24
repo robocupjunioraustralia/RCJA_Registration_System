@@ -154,6 +154,12 @@ class Team(BaseEventAttendance):
     def __str__(self):
         return f"{self.name} ({self.event.name} {self.event.year})"
 
+    def deedSummary(self):
+        from participationdeeds.participants import team_deed_counts
+        complete, total = team_deed_counts(self)
+        return f'{complete}/{total}'
+    deedSummary.short_description = 'Participation Deeds'
+
     # *****CSV export methods*****
 
     # *****Email methods*****
@@ -228,6 +234,19 @@ class Student(SaveDeleteMixin, models.Model):
         return self.team.pk
     teamPK.short_description = 'Team PK'
 
+    def participationDeedComplete(self):
+        return bool(self.participationDeed_id)
+    participationDeedComplete.short_description = 'Participation Deed Complete'
+    participationDeedComplete.boolean = True
+
+    def participationDeedParentName(self):
+        return self.participationDeed.parentName if self.participationDeed_id else ''
+    participationDeedParentName.short_description = 'Parent/ Guardian Name'
+
+    def participationDeedSignedDateTime(self):
+        return self.participationDeed.signedDateTime if self.participationDeed_id else ''
+    participationDeedSignedDateTime.short_description = 'Deed Signed Time'
+
     # *****CSV export methods*****
 
     # Returns index of this group membship in queryset of groupMemberships for this group
@@ -242,21 +261,29 @@ class Student(SaveDeleteMixin, models.Model):
     # List of all csv headers for instance of this model
     def csvHeaders(self):
         studentNumber = self.getStudentNumber()
-        return [
+        headers = [
             {'header': f'Member {studentNumber} First Name', 'order': f'{studentNumber}a'},
             {'header': f'Member {studentNumber} Last Name', 'order': f'{studentNumber}b'},
             {'header': f'Member {studentNumber} Year Level', 'order': f'{studentNumber}c'},
             {'header': f'Member {studentNumber} Gender', 'order': f'{studentNumber}d'},
+            {'header': f'Member {studentNumber} Participation Deed Complete', 'order': f'{studentNumber}e'},
+            {'header': f'Member {studentNumber} Parent/ Guardian Name', 'order': f'{studentNumber}f'},
+            {'header': f'Member {studentNumber} Deed Signed Time', 'order': f'{studentNumber}g'},
         ]
+        return headers
 
     # Dictionary of values for each header
     def csvValues(self):
         studentNumber = self.getStudentNumber()
+        deed = self.participationDeed
         return {
             f'Member {studentNumber} First Name': self.firstName,
             f'Member {studentNumber} Last Name': self.lastName,
             f'Member {studentNumber} Year Level': self.yearLevel,
             f'Member {studentNumber} Gender': self.get_gender_display(),
+            f'Member {studentNumber} Participation Deed Complete': 'Complete' if deed else 'Incomplete',
+            f'Member {studentNumber} Parent/ Guardian Name': deed.parentName if deed else '',
+            f'Member {studentNumber} Deed Signed Time': deed.signedDateTime if deed else '',
         }
 
     # *****Email methods*****

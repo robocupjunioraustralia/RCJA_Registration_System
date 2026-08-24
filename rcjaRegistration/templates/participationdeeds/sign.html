@@ -1,0 +1,63 @@
+{% extends 'common/base.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+<title>Participation deed — {{ event }}</title>
+{% include 'common/loginBase.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="bg">
+    <div class="layer">
+        <div class="logincontent">
+            <div class="ui center aligned container grid">
+                <div class="twelve wide mobile ten wide computer column ui segment left aligned">
+                    <h2>Participation deed</h2>
+                    <p><strong>{{ event }}</strong></p>
+
+                    {% if not sign_form %}
+                        <p>Enter your child's name and year level to continue.</p>
+                        <form method="post" class="ui form">
+                            {% csrf_token %}
+                            {% for field in lookup_form %}
+                                <div class="field">
+                                    <label>{{ field.label }}</label>
+                                    {{ field|add_class:"ui input" }}
+                                    {% if field.errors %}<div class="ui red message">{{ field.errors }}</div>{% endif %}
+                                </div>
+                            {% endfor %}
+                            <button class="ui large blue button" type="submit">Continue</button>
+                        </form>
+                    {% else %}
+                        <div class="ui segment">
+                            {{ deed_text|linebreaks }}
+                        </div>
+                        <p>Child: <strong>{{ child_data.firstName }} {{ child_data.lastName }}</strong> (Year {{ child_data.yearLevel }})</p>
+                        <form method="post" class="ui form">
+                            {% csrf_token %}
+                            <input type="hidden" name="firstName" value="{{ child_data.firstName }}">
+                            <input type="hidden" name="lastName" value="{{ child_data.lastName }}">
+                            <input type="hidden" name="yearLevel" value="{{ child_data.yearLevel }}">
+                            {% for field in sign_form %}
+                                <div class="field">
+                                    {% if field.field.widget.input_type == 'checkbox' %}
+                                        <div class="ui checkbox">
+                                            {{ field }}
+                                            <label>{{ field.label }}</label>
+                                        </div>
+                                    {% else %}
+                                        <label>{{ field.label }}</label>
+                                        {{ field|add_class:"ui input" }}
+                                    {% endif %}
+                                    {% if field.errors %}<div class="ui red message">{{ field.errors }}</div>{% endif %}
+                                </div>
+                            {% endfor %}
+                            <button class="ui large blue button" type="submit">Submit</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

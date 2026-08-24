@@ -34,6 +34,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         ('Required details for teachers', {
             'fields': ('email',)
         }),
+        ('Participation deed', {
+            'fields': ('participationDeed',)
+        }),
         ('Advanced billing settings', {
             'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this attendee from that invoice and add it to a different invoice, which can be for a different school or mentor.",
             'fields': ('invoiceOverride', )
@@ -84,9 +87,26 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'homeRegion',
         'schoolPostcode',
         'invoiceOverride',
+        'participationDeedComplete',
+        'participationDeedParentName',
+        'participationDeedSignedDateTime',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',
     ]
+
+    def participationDeedComplete(self, obj):
+        if obj.attendeeType != 'student':
+            return ''
+        return bool(obj.participationDeed_id)
+    participationDeedComplete.short_description = 'Participation deed'
+
+    def participationDeedParentName(self, obj):
+        return obj.participationDeed.parentName if obj.participationDeed_id else ''
+    participationDeedParentName.short_description = 'Parent name'
+
+    def participationDeedSignedDateTime(self, obj):
+        return obj.participationDeed.signedDateTime if obj.participationDeed_id else ''
+    participationDeedSignedDateTime.short_description = 'Deed signed'
 
     eventTypeMapping = 'workshop'

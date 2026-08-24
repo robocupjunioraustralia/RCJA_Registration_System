@@ -563,6 +563,9 @@ class Event(SaveDeleteMixin, models.Model):
             return f"{reverse('admin:workshops_workshopattendee_changelist')}?event__id__exact={self.id}"
         return f"{reverse('admin:teams_team_changelist')}?event__id__exact={self.id}"
 
+    def participationDeedsSummaryURL(self):
+        return reverse('participationdeeds:coordinator_summary', kwargs={'eventID': self.id})
+
     # Image methods
 
     def effectiveBannerImageURL(self):

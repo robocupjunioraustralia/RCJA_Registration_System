@@ -42,6 +42,16 @@ class StudentInline(InlineAdminPermissions, admin.TabularInline):
     model = Student
     extra = 0
     min_num = 1
+    readonly_fields = ['participationDeedStatus']
+    fields = ['firstName', 'lastName', 'yearLevel', 'gender', 'participationDeedStatus']
+
+    def participationDeedStatus(self, obj):
+        if not obj.pk:
+            return ''
+        if obj.participationDeed_id:
+            return f'Complete ({obj.participationDeed.parentName})'
+        return 'Incomplete'
+    participationDeedStatus.short_description = 'Participation deed'
 
 @admin.register(Team)
 class TeamAdmin(BaseWorkshopAttendanceAdmin):
@@ -55,6 +65,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'campus',
         'homeState',
         'withdrawn',
+        'deedSummary',
         'uploadFileURL',
     ]
     fieldsets = (
@@ -141,6 +152,7 @@ class TeamAdmin(BaseWorkshopAttendanceAdmin):
         'hardwarePlatform',
         'softwarePlatform',
         'invoiceOverride',
+        'deedSummary',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',
@@ -203,6 +215,9 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
         'lastName',
         'yearLevel',
         'gender',
+        'participationDeedComplete',
+        'participationDeedParentName',
+        'participationDeedSignedDateTime',
     ]
 
     # State based filtering

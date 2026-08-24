@@ -55,6 +55,9 @@
                             <th>Name</th>
                             <th>Year Level</th>
                             <th>Gender</th>
+                            {% if electronicParticipationDeedsEnabled %}
+                                <th>Participation deed</th>
+                            {% endif %}
                         </thead>
                         <tbody>
                             {% for student in students.all %}
@@ -62,6 +65,9 @@
                                     <td>{{student}}</td>
                                     <td>{{student.yearLevel}}</td>
                                     <td>{{student.get_gender_display}}</td>
+                                    {% if electronicParticipationDeedsEnabled %}
+                                        <td>{% if student.participationDeed %}Complete ({{ student.participationDeed.parentName }}){% else %}Incomplete{% endif %}</td>
+                                    {% endif %}
                                 </tr>
                             {% endfor %}
                         </tbody>

@@ -208,7 +208,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     competition_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink', 'electronicParticipationDeedsEnabled', 'participationDeedsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -234,7 +234,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     workshop_fieldsets = [
         (None, {
             'description': "You do not need to place the year or state name in the event name as these are automatically added.",
-            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink')
+            'fields': ('year', ('state', 'globalEvent'), 'name', 'eventType', 'status', 'registrationsLink', 'electronicParticipationDeedsEnabled', 'participationDeedsLink')
         }),
         ('Display image', {
             'description': "This is the image that is displayed for this event. Will use the first of event image, venue image, state image, default image.",
@@ -281,6 +281,7 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
         'bannerImageFilesize',
         'effectiveBannerImageTag',
         'registrationsLink',
+        'participationDeedsLink',
         'eventSurchargeAmount',
         'cmsLink'
     ]
@@ -302,6 +303,12 @@ class EventAdmin(FKActionsRemove, DifferentAddFieldsMixin, AdminPermissions, adm
     def registrationsLink(self, obj):
         return format_html('<a href="{}" class="viewlink">View</a>', obj.registrationsAdminURL())
     registrationsLink.short_description = 'View registrations'
+
+    def participationDeedsLink(self, obj):
+        if not obj.electronicParticipationDeedsEnabled:
+            return 'Disabled'
+        return format_html('<a href="{}" class="viewlink">View</a>', obj.participationDeedsSummaryURL())
+    participationDeedsLink.short_description = 'View participation deeds'
 
     def cmsLink(self, obj):
         if obj.cmsEventId:
