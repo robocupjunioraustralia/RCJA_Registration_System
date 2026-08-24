@@ -185,6 +185,9 @@ class StudentAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCS
     autocomplete_fields = [
         'team',
     ]
+    readonly_fields = [
+        'participationDeed',
+    ]
     list_filter = [
         ('team__event', FilteredRelatedOnlyFieldListFilter),
         ('team__division', FilteredRelatedOnlyFieldListFilter),

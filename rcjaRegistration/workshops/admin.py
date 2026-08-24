@@ -20,6 +20,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'participationDeedStatus',
     ]
     fieldsets = (
         ('Event', {
@@ -57,6 +58,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('email',)
         }),
     )
+    readonly_fields = [
+        'participationDeed',
+    ]
 
     search_fields = BaseWorkshopAttendanceAdmin.search_fields + [
         'firstName',
@@ -95,18 +99,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'mentor_questionresponse_set',
     ]
 
-    def participationDeedComplete(self, obj):
-        if obj.attendeeType != 'student':
-            return ''
-        return bool(obj.participationDeed_id)
-    participationDeedComplete.short_description = 'Participation deed'
-
-    def participationDeedParentName(self, obj):
-        return obj.participationDeed.parentName if obj.participationDeed_id else ''
-    participationDeedParentName.short_description = 'Parent name'
-
-    def participationDeedSignedDateTime(self, obj):
-        return obj.participationDeed.signedDateTime if obj.participationDeed_id else ''
-    participationDeedSignedDateTime.short_description = 'Deed signed'
-
     eventTypeMapping = 'workshop'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('participationDeed')

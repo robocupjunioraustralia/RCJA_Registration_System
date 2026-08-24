@@ -93,6 +93,32 @@ class WorkshopAttendee(BaseEventAttendance):
     def __str__(self):
         return f"{self.attendeeFullName()} ({self.event.name} {self.event.year})"
 
+    def participationDeedComplete(self):
+        if self.attendeeType != 'student':
+            return ''
+        return bool(self.participationDeed_id)
+    participationDeedComplete.short_description = 'Participation Deed Complete'
+
+    def participationDeedStatus(self):
+        if self.attendeeType != 'student':
+            return ''
+        if self.participationDeed_id:
+            return f'Complete ({self.participationDeed.parentName})'
+        return 'Incomplete'
+    participationDeedStatus.short_description = 'Participation Deed'
+
+    def participationDeedParentName(self):
+        if self.attendeeType != 'student' or not self.participationDeed_id:
+            return ''
+        return self.participationDeed.parentName
+    participationDeedParentName.short_description = 'Parent/ Guardian Name'
+
+    def participationDeedSignedDateTime(self):
+        if self.attendeeType != 'student' or not self.participationDeed_id:
+            return ''
+        return self.participationDeed.signedDateTime
+    participationDeedSignedDateTime.short_description = 'Deed Signed Time'
+
     # *****CSV export methods*****
 
     # *****Email methods*****
