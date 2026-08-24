@@ -25,6 +25,15 @@ class WorkshopAttendee(BaseEventAttendance):
     # Required for teachers
     email = models.EmailField('Email', blank=True)
 
+    # Participation deeds (students)
+    participationDeed = models.ForeignKey(
+        'participationdeeds.ParticipationDeed',
+        verbose_name='Participation deed',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
     # *****Meta and clean*****
     class Meta:
         verbose_name = 'Workshop attendee'

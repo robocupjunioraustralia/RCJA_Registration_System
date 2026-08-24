@@ -170,6 +170,13 @@ class Student(SaveDeleteMixin, models.Model):
     yearLevel = models.PositiveIntegerField('Year level')
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
+    participationDeed = models.ForeignKey(
+        'participationdeeds.ParticipationDeed',
+        verbose_name='Participation deed',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     # *****Meta and clean*****
     class Meta:
