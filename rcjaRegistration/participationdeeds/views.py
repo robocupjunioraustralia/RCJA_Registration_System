@@ -166,9 +166,6 @@ def attach_deed_view(request, eventID, deedID):
     form = AttachStudentForm(request.POST or None, students=students)
     if request.method == 'POST' and form.is_valid():
         student = form.cleaned_data['student']
-        teamOrAttendee = student.team if isinstance(student, Student) else student
-        if not mentorEventAttendanceAccessPermissions(request, teamOrAttendee):
-            raise PermissionDenied('You do not have permission to attach a deed for this student.')
         attach_deed(student, deed)
         return redirect(reverse('participationdeeds:mentor_summary', kwargs={'eventID': event.id}))
 
