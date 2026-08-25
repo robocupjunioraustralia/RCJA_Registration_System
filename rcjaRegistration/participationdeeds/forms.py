@@ -11,10 +11,10 @@ class ChildLookupForm(forms.Form):
 
 class ParticipationDeedSignForm(forms.Form):
     agree = forms.BooleanField(
-        label='I have read and agree to the participation deed',
+        label='I have read and understood, and I agree to all parts of the Participation Deed',
         required=True,
     )
-    parentName = forms.CharField(label='Parent / guardian full name', max_length=100)
+    parentName = forms.CharField(label="Parent's/Guardian's Name", max_length=100)
 
 
 class AttachStudentForm(forms.Form):

@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 
 from events.models import Event
 from events.views import (
@@ -27,6 +28,7 @@ from .participants import (
     mentor_teams_for_context,
     summary_groups_for_event,
 )
+from invoices.models import InvoiceGlobalSettings
 from teams.models import Student, Team
 from workshops.models import WorkshopAttendee
 
@@ -117,10 +119,14 @@ def sign_participation_deed(request, token):
 
     return render(request, 'participationdeeds/sign.html', {
         'event': event,
+        'school': school,
+        'mentorUser': mentorUser,
         'lookup_form': lookup_form,
         'sign_form': sign_form,
         'child_data': child_data,
         'deed_text': event.state.bleachedParticipationDeedText(),
+        'invoiceSettings': InvoiceGlobalSettings.objects.first(),
+        'today': timezone.localdate(),
         'token': token,
     })
 

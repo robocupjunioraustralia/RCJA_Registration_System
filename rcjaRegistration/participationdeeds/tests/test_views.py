@@ -35,6 +35,8 @@ class SignPageBase(ParticipationDeedsFixture):
         response = self.client.get(self.sign_url(self.school_token()))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Participation deed')
+        self.assertContains(response, self.invoiceSettings.invoiceFromName)
+        self.assertContains(response, self.invoiceSettings.invoiceFromDetails)
 
     def test_page_load_ok_independent_token(self):
         response = self.client.get(self.sign_url(self.independent_token()))
@@ -107,7 +109,8 @@ class TestSignPage_Competition(SignPageBase, TestCase):
             'yearLevel': str(student.yearLevel),
         })
         self.assertEqual(lookup.status_code, 200)
-        self.assertContains(lookup, 'Parent / guardian')
+        self.assertContains(lookup, 'id_parentName')
+        self.assertContains(lookup, f'School: <strong>{self.school1_state1}</strong>', html=True)
 
         response = self.client.post(url, {
             'firstName': student.firstName,
@@ -154,7 +157,7 @@ class TestSignPage_Workshop(SignPageBase, TestCase):
             'yearLevel': str(student.yearLevel),
         })
         self.assertEqual(lookup.status_code, 200)
-        self.assertContains(lookup, 'Parent / guardian')
+        self.assertContains(lookup, 'id_parentName')
 
         response = self.client.post(url, {
             'firstName': student.firstName,
