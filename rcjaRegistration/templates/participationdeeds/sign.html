@@ -90,7 +90,7 @@ body {
                     </form>
                 {% else %}
                     <div class="ui segment">
-                        {{ deed_text|linebreaks }}
+                        {{ deed_text }}
                     </div>
                     <p>Child: <strong>{{ child_data.firstName }} {{ child_data.lastName }}</strong> (Year {{ child_data.yearLevel }})</p>
                     {% if school %}
