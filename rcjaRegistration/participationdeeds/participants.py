@@ -3,12 +3,6 @@ from workshops.models import WorkshopAttendee
 from participationdeeds.models import ParticipationDeed
 
 
-def event_for_participant(participant):
-    """Return the event for a competition student or workshop attendee."""
-    if isinstance(participant, Student):
-        return participant.team.event
-    return participant.event
-
 
 def school_for_participant(participant):
     """Return the school for a competition student or workshop attendee."""
@@ -16,25 +10,11 @@ def school_for_participant(participant):
         return participant.team.school
     return participant.school
 
-
 def mentor_for_participant(participant):
     """Return the mentor user for a competition student or workshop attendee."""
     if isinstance(participant, Student):
         return participant.team.mentorUser
     return participant.mentorUser
-
-
-def display_name(participant):
-    """Return a display name for a competition student or workshop attendee."""
-    if isinstance(participant, Student):
-        return str(participant)
-    return participant.attendeeFullName()
-
-
-def year_level_str(participant):
-    """Return the participant's year level as a string."""
-    return str(participant.yearLevel)
-
 
 def eligible_students_queryset(event, school=None, mentorUser=None):
     """Return competition students for an event, filtered to a school or independent mentor."""
