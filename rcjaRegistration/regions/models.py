@@ -12,6 +12,8 @@ from rcjaRegistration.storageBackends import PublicMediaStorage
 
 import bleach
 
+PARTICIPANT_DEED_BLEACH_TAGS = ['p', 'b', 'i', 'u', 'em', 'strong', 'a', 'br', 'ol', 'ul', 'li']
+
 # **********MODELS**********
 
 class State(SaveDeleteMixin, models.Model):
@@ -105,7 +107,10 @@ class State(SaveDeleteMixin, models.Model):
     defaultEventImageTag.short_description = 'Preview'
 
     def bleachedParticipationDeedText(self):
-        return mark_safe(bleach.clean(self.participationDeedText))
+        return mark_safe(bleach.clean(
+            self.participationDeedText,
+            tags=PARTICIPANT_DEED_BLEACH_TAGS,
+        ))
 
     def __str__(self):
         return self.name

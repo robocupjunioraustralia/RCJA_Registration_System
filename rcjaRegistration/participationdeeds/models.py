@@ -7,6 +7,7 @@ import bleach
 
 from common.models import SaveDeleteMixin
 from events.models import eventCoordinatorEditPermissions
+from regions.models import PARTICIPANT_DEED_BLEACH_TAGS
 
 
 class ParticipationDeed(SaveDeleteMixin, models.Model):
@@ -92,7 +93,10 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
     isAttached.short_description = 'Is attached'
 
     def bleachedParticipationDeedText(self):
-        return mark_safe(bleach.clean(self.participationDeedText))
+        return mark_safe(bleach.clean(
+            self.participationDeedText,
+            tags=PARTICIPANT_DEED_BLEACH_TAGS
+        ))
     bleachedParticipationDeedText.short_description = 'Participation deed text'
 
     def __str__(self):
