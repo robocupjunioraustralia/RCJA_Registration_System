@@ -1538,6 +1538,86 @@ class TestTeamMethods(TestCase):
     def testMentorUserEmail(self):
         self.assertEqual(self.team1.mentorUserEmail(), self.email2)
 
+    def test_deedSummary_no_students(self):
+        self.assertEqual(self.team1.deedSummary(), '0/0')
+
+    def test_deedSummary_incomplete(self):
+        Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(self.team1.deedSummary(), '0/1')
+
+    def test_deedSummary_complete_and_incomplete(self):
+        from participationdeeds.models import ParticipationDeed
+        student1 = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        Student.objects.create(team=self.team1, firstName='Bob', lastName='Jones', yearLevel=8, gender='male')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student1.participationDeed = deed
+        student1.save()
+        self.assertEqual(self.team1.deedSummary(), '1/2')
+
+    def test_student_teamPK(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.teamPK(), self.team1.pk)
+
+    def test_student_participationDeedComplete_incomplete(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.participationDeedComplete(), False)
+
+    def test_student_participationDeedComplete_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(student.participationDeedComplete(), True)
+
+    def test_student_participationDeedParentName_incomplete(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.participationDeedParentName(), '')
+
+    def test_student_participationDeedParentName_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(student.participationDeedParentName(), 'Parent Name')
+
+    def test_student_participationDeedSignedDateTime_incomplete(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.participationDeedSignedDateTime(), '')
+
+    def test_student_participationDeedSignedDateTime_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(student.participationDeedSignedDateTime(), deed.signedDateTime)
+
 class TestTeamCreationFormValidation_School(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
