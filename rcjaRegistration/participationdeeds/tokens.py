@@ -12,7 +12,7 @@ SALT_SCHOOL = 'participationdeeds.school'
 def deeds_available_for_event(event):
     if not event.electronicParticipationDeedsEnabled:
         return False
-    if event.startDate is None:
+    if not event.hasAllDetails():
         return False
     return datetime.date.today() <= event.startDate
 
