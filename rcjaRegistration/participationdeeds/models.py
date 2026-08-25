@@ -1,6 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import RegexValidator
+from django.utils.safestring import mark_safe
+
+import bleach
 
 from common.models import SaveDeleteMixin
 from events.models import eventCoordinatorEditPermissions
@@ -51,6 +54,11 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
         )],
     )
     submittedYearLevel = models.PositiveIntegerField('Submitted year level')
+    participationDeedText = models.TextField(
+        'Participation deed text',
+        editable=False,
+        help_text='Snapshot of the state participation deed text at the time of signing.',
+    )
 
     # *****Meta and clean*****
     class Meta:
@@ -68,6 +76,10 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
 
     # *****Save & Delete Methods*****
 
+    def preSave(self):
+        if self._state.adding and not self.participationDeedText:
+            self.participationDeedText = self.originalEvent.state.participationDeedText
+
     # *****Methods*****
 
     # *****Get Methods*****
@@ -78,6 +90,10 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
     def isAttached(self):
         return self.student_set.exists() or self.workshopattendee_set.exists()
     isAttached.short_description = 'Is attached'
+
+    def bleachedParticipationDeedText(self):
+        return mark_safe(bleach.clean(self.participationDeedText))
+    bleachedParticipationDeedText.short_description = 'Participation deed text'
 
     def __str__(self):
         return f'{self.submittedFirstName} {self.submittedLastName} ({self.parentName})'

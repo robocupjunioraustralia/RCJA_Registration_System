@@ -36,6 +36,7 @@ class ParticipationDeedAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin
         'updatedDateTime',
         'signedDateTime',
         'isAttached',
+        'bleachedParticipationDeedText',
     ]
     autocomplete_fields = [
         'school',

@@ -143,6 +143,24 @@ class TestParticipationDeedMethods(ParticipationDeedsFixture, TestCase):
         self.assertTrue(self.deed.isAttached())
         self.assertEqual(attendee.participationDeed_id, self.deed.pk)
 
+    def test_create_sets_participationDeedText(self):
+        self.assertEqual(self.deed.participationDeedText, self.state1.participationDeedText)
+
+    def test_update_does_not_set_participationDeedText(self):
+        original_text = self.deed.participationDeedText
+        self.state1.participationDeedText = '<p>Changed after signing</p>'
+        self.state1.save()
+        self.deed.parentName = 'Updated Parent'
+        self.deed.save()
+        self.deed.refresh_from_db()
+        self.assertEqual(self.deed.participationDeedText, original_text)
+        self.assertEqual(self.deed.parentName, 'Updated Parent')
+
+    def test_bleachedParticipationDeedText(self):
+        bleached = self.deed.bleachedParticipationDeedText()
+        self.assertIn('<b>agree</b>', bleached)
+        self.assertNotIn('<script>', bleached)
+
     def test_stateCoordinatorPermissions(self):
         self.assertEqual(
             ParticipationDeed.stateCoordinatorPermissions('full'),
