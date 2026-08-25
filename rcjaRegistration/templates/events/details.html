@@ -21,8 +21,28 @@
             {% if not event.boolWorkshop %}<a href="{% url 'admin:eventfiles_mentoreventfileupload_changelist'%}?eventAttendance__event__id__exact={{event.id}}"><button class="ui primary button">View Files</button></a>{% endif %}
             <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}"><button class="ui primary button">View Invoices</button></a>
             {% if event.cmsEventId %}<a href="{% url 'events:cms' event.id %}"><button class="ui primary button">View Results</button></a>{% endif %}
+            {% if electronicParticipationDeedsEnabled %}<a href="{% url 'participationdeeds:coordinator_summary' event.id %}"><button class="ui primary button">Participation deeds</button></a>{% endif %}
             <br>
             <h2>Mentor View</h2>
+        </div>
+    {% endif %}
+
+    {% if electronicParticipationDeedsAvailable %}
+        <div class="row">
+            <h3>Participation deeds</h3>
+            {% if schoolMagicLink %}
+                <p>All students must have a participation deed signed by a parent or guardian prior to participating in the event.</p>
+                <p>Share this link with the parents and guardians of your students to complete the participation deed electronically:</p>
+                <div class="ui action input" style="width:100%; max-width:40rem;">
+                    <input type="text" readonly value="{{ schoolMagicLink }}" id="participationDeedMagicLink">
+                    <button class="ui button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('participationDeedMagicLink').value)">Copy</button>
+                </div>
+            {% elif teams or workshopAttendees %}
+                <p>The parent signing link is unavailable (event start date missing or passed).</p>
+            {% endif %}
+            {% if teams or workshopAttendees %}
+                <p style="margin-top:1rem;"><a href="{% url 'participationdeeds:mentor_summary' event.id %}">View participation deeds</a>{% if unattachedDeedCount %} ({{ unattachedDeedCount }} unattached){% endif %}</p>
+            {% endif %}
         </div>
     {% endif %}
 
@@ -134,6 +154,7 @@
                     <th>Type</th>
                     <th> Division</th>
                     {% if showCampusColumn %}<th>Campus</th>{% endif %}
+                    {% if electronicParticipationDeedsEnabled %}<th>Participation deed</th>{% endif %}
                     {% if event.registrationsOpen %}<th>Actions</th>{% endif %}
                 </thead>
                 <tbody>
@@ -143,6 +164,17 @@
                         <td>{{workshopAttendee.attendeeType}}</td>
                         <td>{{workshopAttendee.division}}</td>
                         {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
+                        {% if electronicParticipationDeedsEnabled %}
+                            <td>
+                                {% if workshopAttendee.attendeeType != 'student' %}
+                                    N/A
+                                {% elif workshopAttendee.participationDeed %}
+                                    Complete
+                                {% else %}
+                                    Incomplete
+                                {% endif %}
+                            </td>
+                        {% endif %}
                         {% if event.registrationsOpen %}
                             <td>
                                 <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
@@ -161,6 +193,7 @@
                     <th> Division</th>
                     {% if showCampusColumn %}<th>Campus</th>{% endif %}
                     <th>Students</th>
+                    {% if electronicParticipationDeedsEnabled %}<th>Participation deeds</th>{% endif %}
                     <th>Actions</th>
                 </thead>
                 <tbody>
@@ -177,6 +210,9 @@
                                 {% endfor %}
                                 {% if team.withdrawn %}</s>{% endif %}
                             </td>
+                            {% if electronicParticipationDeedsEnabled %}
+                                <td>{{ team.deedSummary }}</td>
+                            {% endif %}
                             <td>
                                 <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
                                 {% if event.registrationsOpen %}

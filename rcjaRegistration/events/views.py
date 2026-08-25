@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
 from django.conf import settings
+from django.urls import reverse
 from coordination.permissions import checkCoordinatorPermission
 
 import datetime
@@ -18,6 +19,9 @@ from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
 from .forms import getSummaryForm
+
+from participationdeeds.tokens import dumps_school_or_mentor, deeds_available_for_event
+from participationdeeds.participants import team_deed_counts, unattached_deeds_for_context
 
 # Need to check if schooladministrator is None
 
@@ -194,6 +198,28 @@ def details(request, eventID):
     else:
         totalRegistrations = event.baseeventattendance_set.exclude(team__withdrawn=True).count()
 
+    electronicParticipationDeedsEnabled = event.electronicParticipationDeedsEnabled
+    schoolMagicLink = None
+    unattachedDeedCount = 0
+    teamDeedSummaries = {}
+
+    hasStudentRegistrations = (teams.exists() or workshopAttendees.filter(attendeeType='student').exists())
+    electronicParticipationDeedsAvailable = electronicParticipationDeedsEnabled and hasStudentRegistrations
+    if electronicParticipationDeedsAvailable:
+        school = filterDict.get('school')
+        mentorUser = request.user if school is None else None 
+        if deeds_available_for_event(event):
+            token = dumps_school_or_mentor(event, school=school, mentorUser=mentorUser)
+            schoolMagicLink = request.build_absolute_uri(
+                reverse('participationdeeds:sign_participation_deed', kwargs={'token': token})
+            )
+        unattachedDeedCount = unattached_deeds_for_context(event, school=school, mentorUser=mentorUser).count()
+        if not event.boolWorkshop():
+            for team in teams:
+                complete, total = team_deed_counts(team)
+                team.deedSummary = f"{complete}/{total}"
+                teamDeedSummaries[team.id] = (complete, total)
+
     context = {
         'event': event,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
@@ -208,6 +234,11 @@ def details(request, eventID):
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
         'totalRegistrations': totalRegistrations,
+        'electronicParticipationDeedsEnabled': electronicParticipationDeedsEnabled,
+        'electronicParticipationDeedsAvailable': electronicParticipationDeedsAvailable,
+        'schoolMagicLink': schoolMagicLink,
+        'unattachedDeedCount': unattachedDeedCount,
+        'teamDeedSummaries': teamDeedSummaries,
     }
     return render(request, 'events/details.html', context)
 

@@ -20,6 +20,7 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'school',
         'campus',
         'homeState',
+        'participationDeedStatus',
     ]
     fieldsets = (
         ('Event', {
@@ -33,6 +34,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         }),
         ('Required details for teachers', {
             'fields': ('email',)
+        }),
+        ('Participation deed', {
+            'fields': ('participationDeed',)
         }),
         ('Advanced billing settings', {
             'description': "By default an invoice will be created for paid events. Selecting an invoice override will remove this attendee from that invoice and add it to a different invoice, which can be for a different school or mentor.",
@@ -54,6 +58,9 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
             'fields': ('email',)
         }),
     )
+    readonly_fields = [
+        'participationDeed',
+    ]
 
     search_fields = BaseWorkshopAttendanceAdmin.search_fields + [
         'firstName',
@@ -84,9 +91,15 @@ class WorkshopAttendeeAdmin(BaseWorkshopAttendanceAdmin):
         'homeRegion',
         'schoolPostcode',
         'invoiceOverride',
+        'participationDeedComplete',
+        'participationDeedParentName',
+        'participationDeedSignedDateTime',
     ]
     exportFieldsManyRelations = [
         'mentor_questionresponse_set',
     ]
 
     eventTypeMapping = 'workshop'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('participationDeed')

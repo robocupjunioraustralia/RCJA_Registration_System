@@ -36,6 +36,7 @@ def details(request, teamID):
         "team": team,
         "students": team.student_set.all(),
         'uploadedFiles': team.mentoreventfileupload_set.all(),
+        'electronicParticipationDeedsEnabled': team.event.electronicParticipationDeedsEnabled,
     }
 
     return render(request, 'teams/details.html', context)
@@ -151,7 +152,15 @@ class CreateEditTeam(CreateEditBaseEventAttendance):
             if newTeam:
                 # This is needed because it is possible to create teams and add students in one request
                 formset.instance = team
-            formset.save()
+            students = formset.save()
+
+            # When copying a team, share participation deeds from source students (matched by order)
+            if newTeam and sourceTeam:
+                sourceStudents = list(sourceTeam.student_set.all())
+                for index, student in enumerate(students):
+                    if index < len(sourceStudents) and sourceStudents[index].participationDeed_id:
+                        student.participationDeed = sourceStudents[index].participationDeed
+                        student.save(update_fields=['participationDeed', 'updatedDateTime'])
 
             # Redirect if add another in response
             if 'add_text' in request.POST and newTeam and not (event.maxEventRegistrationsForSchoolReached(request.user) or event.maxEventRegistrationsTotalReached()):

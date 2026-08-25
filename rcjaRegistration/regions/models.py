@@ -4,10 +4,15 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.template.defaultfilters import filesizeformat
 from common.fields import UUIDImageField
 
 from rcjaRegistration.storageBackends import PublicMediaStorage
+
+import bleach
+
+PARTICIPANT_DEED_BLEACH_TAGS = ['p', 'b', 'i', 'u', 'em', 'strong', 'a', 'br', 'ol', 'ul', 'li']
 
 # **********MODELS**********
 
@@ -31,6 +36,11 @@ class State(SaveDeleteMixin, models.Model):
     # Defaults
     defaultEventDetails = models.TextField('Default event details', blank=True)
     invoiceMessage = models.TextField('Invoice message', blank=True)
+    participationDeedText = models.TextField(
+        'Participation deed text',
+        blank=True,
+        help_text='Rich text shown to parents when signing an electronic participation deed. HTML is sanitized on display.',
+    )
     # Default event image
     defaultEventImage = UUIDImageField('Default event image', storage=PublicMediaStorage(), upload_prefix="DefaultEventImage", original_filename_field="defaultEventImageOriginalFilename", null=True, blank=True)
     defaultEventImageOriginalFilename = models.CharField('Original filename', max_length=300, null=True, blank=True, editable=False)
@@ -95,6 +105,12 @@ class State(SaveDeleteMixin, models.Model):
     def defaultEventImageTag(self):
         return format_html('<img src="{}" height="200" />', self.defaultEventImage.url)
     defaultEventImageTag.short_description = 'Preview'
+
+    def bleachedParticipationDeedText(self):
+        return mark_safe(bleach.clean(
+            self.participationDeedText,
+            tags=PARTICIPANT_DEED_BLEACH_TAGS,
+        ))
 
     def __str__(self):
         return self.name

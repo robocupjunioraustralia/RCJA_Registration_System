@@ -1,0 +1,29 @@
+{% extends 'common/loggedInbase.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+<title>Attach participation deed — {{ event }}</title>
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <h1>Attach participation deed</h1>
+    <p>{{ event }}</p>
+    <p>
+        Select a student without a participation deed to attach the deed for
+        <strong>{{ deed.submittedFullName }}</strong> (Year {{ deed.submittedYearLevel }}),
+        signed by {{ deed.parentName }}.
+    </p>
+
+    <form method="post" class="ui form">
+        {% csrf_token %}
+        <div class="field">
+            <label>{{ form.student.label }}</label>
+            {{ form.student }}
+            {% if form.student.errors %}<div class="ui red message">{{ form.student.errors }}</div>{% endif %}
+        </div>
+        <button class="ui primary button" type="submit">Attach</button>
+        <a href="{% url 'participationdeeds:mentor_summary' event.id %}" class="ui button">Cancel</a>
+    </form>
+</div>
+{% endblock %}

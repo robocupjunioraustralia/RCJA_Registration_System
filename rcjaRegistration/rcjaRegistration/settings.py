@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'schools.apps.SchoolsConfig',
     'workshops.apps.WorkshopsConfig',
     'association.apps.AssociationConfig',
+    'participationdeeds.apps.ParticipationdeedsConfig',
     'common.apps.CommonConfig',
     'django.contrib.admin',
     'django.contrib.auth',

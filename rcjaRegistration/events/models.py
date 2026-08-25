@@ -290,6 +290,11 @@ class Event(SaveDeleteMixin, models.Model):
     venue = models.ForeignKey(Venue, verbose_name='Venue', on_delete=models.PROTECT, null=True, blank=True)
     eventDetails = models.TextField('Event details', blank=True)
     additionalInvoiceMessage = models.TextField('Additional invoice message', blank=True, help_text='This appears below the state based invoice message on the invoice.')
+    electronicParticipationDeedsEnabled = models.BooleanField(
+        'Participation deeds',
+        default=False,
+        help_text='Allow parents to sign participation deeds electronically for this event.',
+    )
 
     # Available divisions
     divisions = models.ManyToManyField(Division, verbose_name='Available divisions', through='AvailableDivision')
@@ -557,6 +562,9 @@ class Event(SaveDeleteMixin, models.Model):
         if self.boolWorkshop():
             return f"{reverse('admin:workshops_workshopattendee_changelist')}?event__id__exact={self.id}"
         return f"{reverse('admin:teams_team_changelist')}?event__id__exact={self.id}"
+
+    def participationDeedsSummaryURL(self):
+        return reverse('participationdeeds:coordinator_summary', kwargs={'eventID': self.id})
 
     # Image methods
 
