@@ -378,6 +378,15 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
         own.refresh_from_db()
         self.assertEqual(own.participationDeed_id, deed.pk)
 
+    def test_post_rejects_student_outside_queryset(self):
+        deed = self.own_unattached_deed()
+        other = getattr(self, self.other_student_attr)
+        response = self.client.post(self.attach_deed_url(deed), {'student': other.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form'].errors)
+        other.refresh_from_db()
+        self.assertIsNone(other.participationDeed_id)
+
     def test_denied_for_attached_deed(self):
         deed = self.own_unattached_deed()
         own = getattr(self, self.own_student_attr)
