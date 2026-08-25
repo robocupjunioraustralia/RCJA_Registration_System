@@ -20,16 +20,24 @@ from .common import (
 
 # ***** Sign page *****
 
-class TestSignPage(ParticipationDeedsFixture, TestCase):
+class SignPageBase(ParticipationDeedsFixture):
+    """Shared sign page tests; subclasses set sign_event and token helpers."""
+
+    sign_event = None
+
+    def school_token(self):
+        return dumps_school_or_mentor(self.sign_event, school=self.school1_state1)
+
+    def independent_token(self):
+        return dumps_school_or_mentor(self.sign_event, mentorUser=self.user_state1_independent_mentor5)
+
     def test_page_load_ok_school_token(self):
-        token = dumps_school_or_mentor(self.competition, school=self.school1_state1)
-        response = self.client.get(self.sign_url(token))
+        response = self.client.get(self.sign_url(self.school_token()))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Participation deed')
 
     def test_page_load_ok_independent_token(self):
-        token = dumps_school_or_mentor(self.competition, mentorUser=self.user_state1_independent_mentor5)
-        response = self.client.get(self.sign_url(token))
+        response = self.client.get(self.sign_url(self.independent_token()))
         self.assertEqual(response.status_code, 200)
 
     def test_rejects_incorrect_url(self):
@@ -38,47 +46,19 @@ class TestSignPage(ParticipationDeedsFixture, TestCase):
         self.assertContains(response, 'unavailable', status_code=400)
 
     def test_does_not_load_when_disabled(self):
-        self.competition.electronicParticipationDeedsEnabled = False
-        self.competition.save()
-        token = dumps_school_or_mentor(self.competition, school=self.school1_state1)
-        response = self.client.get(self.sign_url(token))
+        self.sign_event.electronicParticipationDeedsEnabled = False
+        self.sign_event.save()
+        response = self.client.get(self.sign_url(self.school_token()))
         self.assertEqual(response.status_code, 400)
 
     def test_does_not_load_after_start_date(self):
-        self.competition.startDate = self.state1_pastCompetition.startDate
-        self.competition.save()
-        token = dumps_school_or_mentor(self.competition, school=self.school1_state1)
-        response = self.client.get(self.sign_url(token))
+        self.sign_event.startDate = self.state1_pastCompetition.startDate
+        self.sign_event.save()
+        response = self.client.get(self.sign_url(self.school_token()))
         self.assertEqual(response.status_code, 400)
 
-    def test_post_lookup_then_sign_auto_attaches_school(self):
-        token = dumps_school_or_mentor(self.competition, school=self.school1_state1)
-        url = self.sign_url(token)
-
-        lookup = self.client.post(url, {
-            'firstName': self.school_student.firstName,
-            'lastName': self.school_student.lastName,
-            'yearLevel': str(self.school_student.yearLevel),
-        })
-        self.assertEqual(lookup.status_code, 200)
-        self.assertContains(lookup, 'Parent / guardian')
-
-        response = self.client.post(url, {
-            'firstName': self.school_student.firstName,
-            'lastName': self.school_student.lastName,
-            'yearLevel': str(self.school_student.yearLevel),
-            'agree': True,
-            'parentName': 'Parent One',
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Thank you')
-        self.school_student.refresh_from_db()
-        self.assertIsNotNone(self.school_student.participationDeed_id)
-        self.assertEqual(self.school_student.participationDeed.parentName, 'Parent One')
-
     def test_post_silent_unattached_on_miss(self):
-        token = dumps_school_or_mentor(self.competition, school=self.school1_state1)
-        response = self.client.post(self.sign_url(token), {
+        response = self.client.post(self.sign_url(self.school_token()), {
             'firstName': 'Missing',
             'lastName': 'Child',
             'yearLevel': '7',
@@ -87,54 +67,142 @@ class TestSignPage(ParticipationDeedsFixture, TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Thank you')
-        deed = ParticipationDeed.objects.get(parentName='Parent Two')
+        deed = ParticipationDeed.objects.get(parentName='Parent Two', originalEvent=self.sign_event)
         self.assertEqual(deed.submittedFirstName, 'Missing')
         self.assertFalse(deed.isAttached())
 
-    def test_post_auto_attaches_independent(self):
-        token = dumps_school_or_mentor(self.competition, mentorUser=self.user_state1_independent_mentor5)
-        response = self.client.post(self.sign_url(token), {
-            'firstName': self.independent_student.firstName,
-            'lastName': self.independent_student.lastName,
-            'yearLevel': str(self.independent_student.yearLevel),
-            'agree': True,
-            'parentName': 'Indie Parent',
-        })
-        self.assertEqual(response.status_code, 200)
-        self.independent_student.refresh_from_db()
-        self.assertEqual(self.independent_student.participationDeed.parentName, 'Indie Parent')
-
     def test_post_invalid_sign_form_redisplays(self):
-        token = dumps_school_or_mentor(self.competition, school=self.school1_state1)
-        response = self.client.post(self.sign_url(token), {
-            'firstName': self.school_student.firstName,
-            'lastName': self.school_student.lastName,
-            'yearLevel': str(self.school_student.yearLevel),
+        student = self.school_sign_student
+        response = self.client.post(self.sign_url(self.school_token()), {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
             'parentName': '',
             'agree': True,
         })
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'participationdeeds/sign.html')
-        self.assertContains(response, self.school_student.firstName)
-        self.assertFalse(ParticipationDeed.objects.filter(submittedFirstName=self.school_student.firstName).exists())
+        self.assertContains(response, student.firstName)
+        self.assertFalse(ParticipationDeed.objects.filter(
+            submittedFirstName=student.firstName,
+            originalEvent=self.sign_event,
+        ).exists())
+
+
+class TestSignPage_Competition(SignPageBase, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.sign_event = self.competition
+        self.school_sign_student = self.school_student
+        self.independent_sign_student = self.independent_student
+
+    def test_post_lookup_then_sign_auto_attaches_school(self):
+        token = self.school_token()
+        url = self.sign_url(token)
+        student = self.school_sign_student
+
+        lookup = self.client.post(url, {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
+        })
+        self.assertEqual(lookup.status_code, 200)
+        self.assertContains(lookup, 'Parent / guardian')
+
+        response = self.client.post(url, {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
+            'agree': True,
+            'parentName': 'Parent One',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Thank you')
+        student.refresh_from_db()
+        self.assertIsNotNone(student.participationDeed_id)
+        self.assertEqual(student.participationDeed.parentName, 'Parent One')
+
+    def test_post_auto_attaches_independent(self):
+        student = self.independent_sign_student
+        response = self.client.post(self.sign_url(self.independent_token()), {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
+            'agree': True,
+            'parentName': 'Indie Parent',
+        })
+        self.assertEqual(response.status_code, 200)
+        student.refresh_from_db()
+        self.assertEqual(student.participationDeed.parentName, 'Indie Parent')
+
+
+class TestSignPage_Workshop(SignPageBase, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.sign_event = self.workshop
+        self.school_sign_student = self.state1_event1_workshopAttendee1
+        self.independent_sign_student = self.independent_workshop_student
+
+    def test_post_lookup_then_sign_auto_attaches_school(self):
+        token = self.school_token()
+        url = self.sign_url(token)
+        student = self.school_sign_student
+
+        lookup = self.client.post(url, {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
+        })
+        self.assertEqual(lookup.status_code, 200)
+        self.assertContains(lookup, 'Parent / guardian')
+
+        response = self.client.post(url, {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
+            'agree': True,
+            'parentName': 'Workshop Parent One',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Thank you')
+        student.refresh_from_db()
+        self.assertIsNotNone(student.participationDeed_id)
+        self.assertEqual(student.participationDeed.parentName, 'Workshop Parent One')
+
+    def test_post_auto_attaches_independent(self):
+        student = self.independent_sign_student
+        response = self.client.post(self.sign_url(self.independent_token()), {
+            'firstName': student.firstName,
+            'lastName': student.lastName,
+            'yearLevel': str(student.yearLevel),
+            'agree': True,
+            'parentName': 'Workshop Indie Parent',
+        })
+        self.assertEqual(response.status_code, 200)
+        student.refresh_from_db()
+        self.assertEqual(student.participationDeed.parentName, 'Workshop Indie Parent')
 
 # ***** Mentor summary *****
 
 class MentorSummaryAccessBase(ParticipationDeedsFixture):
     """Shared access / availability tests for mentor summary; subclasses set login + expected student."""
 
+    summary_event = None
     own_student_attr = None
     other_student_attr = None
     own_school = None
     own_mentor = None
 
+    def mentor_url(self, event=None):
+        return self.mentor_summary_url(event or self.summary_event)
+
     def test_page_load_ok(self):
-        response = self.client.get(self.mentor_summary_url())
+        response = self.client.get(self.mentor_url())
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Participation deeds')
 
     def test_filters_to_own_students_and_teams(self):
-        response = self.client.get(self.mentor_summary_url())
+        response = self.client.get(self.mentor_url())
         self.assertEqual(response.status_code, 200)
         own = getattr(self, self.own_student_attr)
         other = getattr(self, self.other_student_attr)
@@ -143,21 +211,21 @@ class MentorSummaryAccessBase(ParticipationDeedsFixture):
 
     def test_unattached_deeds_show_for_own_context(self):
         kwargs = {'school': self.own_school} if self.own_school is not None else {'mentorUser': self.own_mentor}
-        deed = self.create_unattached_deed(**kwargs, firstName='OwnUnattached')
+        deed = self.create_unattached_deed(**kwargs, firstName='OwnUnattached', event=self.summary_event)
         other_kwargs = {'school': self.school2_state1} if self.own_school is not None else {'school': self.school1_state1}
-        self.create_unattached_deed(**other_kwargs, firstName='OtherUnattached')
+        self.create_unattached_deed(**other_kwargs, firstName='OtherUnattached', event=self.summary_event)
 
-        response = self.client.get(self.mentor_summary_url())
+        response = self.client.get(self.mentor_url())
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Unattached deeds')
         self.assertContains(response, 'OwnUnattached')
         self.assertNotContains(response, 'OtherUnattached')
-        self.assertContains(response, self.attach_url(deed))
+        self.assertContains(response, self.attach_url(deed, self.summary_event))
 
     def test_does_not_load_when_disabled(self):
-        self.competition.electronicParticipationDeedsEnabled = False
-        self.competition.save()
-        response = self.client.get(self.mentor_summary_url())
+        self.summary_event.electronicParticipationDeedsEnabled = False
+        self.summary_event.save()
+        response = self.client.get(self.mentor_url())
         self.assertEqual(response.status_code, 403)
 
     def test_does_not_load_if_no_registrations(self):
@@ -165,7 +233,7 @@ class MentorSummaryAccessBase(ParticipationDeedsFixture):
             year=self.year,
             state=self.state1,
             name='Empty Competition For Deeds',
-            eventType='competition',
+            eventType=self.summary_event.eventType,
             status='published',
             competition_defaultEntryFee=50,
             startDate=(datetime.datetime.now() + datetime.timedelta(days=20)).date(),
@@ -176,18 +244,18 @@ class MentorSummaryAccessBase(ParticipationDeedsFixture):
             electronicParticipationDeedsEnabled=True,
         )
         AvailableDivision.objects.create(event=empty_event, division=self.division3)
-        response = self.client.get(self.mentor_summary_url(empty_event))
+        response = self.client.get(self.mentor_url(empty_event))
         self.assertEqual(response.status_code, 403)
 
     def test_does_not_load_when_event_unavailable(self):
-        self.competition.status = 'draft'
-        self.competition.save()
-        response = self.client.get(self.mentor_summary_url())
+        self.summary_event.status = 'draft'
+        self.summary_event.save()
+        response = self.client.get(self.mentor_url())
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'This event is unavailable', status_code=403)
 
     def test_mentor_cannot_access_coordinator_page(self):
-        response = self.client.get(self.coordinator_summary_url())
+        response = self.client.get(self.coordinator_summary_url(self.summary_event))
         self.assertEqual(response.status_code, 403)
 
 class TestMentorSummary_SchoolMentor(SchoolMentorLoginMixin, MentorSummaryAccessBase, TestCase):
@@ -196,6 +264,7 @@ class TestMentorSummary_SchoolMentor(SchoolMentorLoginMixin, MentorSummaryAccess
 
     def setUp(self):
         super().setUp()
+        self.summary_event = self.competition
         self.own_school = self.school1_state1
         self.own_mentor = None
 
@@ -205,8 +274,41 @@ class TestMentorSummary_IndependentMentor(IndependentMentorLoginMixin, MentorSum
 
     def setUp(self):
         super().setUp()
+        self.summary_event = self.competition
         self.own_school = None
         self.own_mentor = self.user_state1_independent_mentor5
+
+class TestMentorSummary_WorkshopSchoolMentor(SchoolMentorLoginMixin, MentorSummaryAccessBase, TestCase):
+    own_student_attr = 'state1_event1_workshopAttendee1'
+    other_student_attr = 'independent_workshop_student'
+
+    def setUp(self):
+        super().setUp()
+        self.summary_event = self.workshop
+        self.own_school = self.school1_state1
+        self.own_mentor = None
+
+    def test_page_load_ok(self):
+        response = self.client.get(self.mentor_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Student attendees')
+        self.assertContains(response, self.state1_event1_workshopAttendee1.firstName)
+
+class TestMentorSummary_WorkshopIndependentMentor(IndependentMentorLoginMixin, MentorSummaryAccessBase, TestCase):
+    own_student_attr = 'independent_workshop_student'
+    other_student_attr = 'state1_event1_workshopAttendee1'
+
+    def setUp(self):
+        super().setUp()
+        self.summary_event = self.workshop
+        self.own_school = None
+        self.own_mentor = self.user_state1_independent_mentor5
+
+    def test_page_load_ok(self):
+        response = self.client.get(self.mentor_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Student attendees')
+        self.assertContains(response, self.independent_workshop_student.firstName)
 
 class TestMentorSummary_OtherSchoolCannotAccessOwnFilter(OtherSchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_cannot_see_school1_students(self):
@@ -216,23 +318,28 @@ class TestMentorSummary_OtherSchoolCannotAccessOwnFilter(OtherSchoolMentorLoginM
         self.assertNotContains(response, self.school_student.firstName)
         self.assertNotContains(response, self.independent_student.firstName)
 
-class TestMentorSummary_Workshop(SchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
-    def test_page_load_ok_for_workshop(self):
+    def test_cannot_see_school1_workshop_attendees(self):
+        WorkshopAttendee.objects.create(
+            event=self.workshop,
+            mentorUser=self.user_state1_school2_mentor3,
+            school=self.school2_state1,
+            division=self.division3,
+            firstName='OtherSchool',
+            lastName='WorkshopKid',
+            yearLevel='8',
+            attendeeType='student',
+            gender='male',
+        )
         response = self.client.get(self.mentor_summary_url(self.workshop))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Student attendees')
-        self.assertContains(response, self.state1_event1_workshopAttendee1.firstName)
-
-    def test_does_not_load_workshop_without_student_attendees(self):
-        from workshops.models import WorkshopAttendee
-        WorkshopAttendee.objects.filter(event=self.workshop, school=self.school1_state1).delete()
-        response = self.client.get(self.mentor_summary_url(self.workshop))
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'No registrations for this event.', status_code=403)
+        self.assertContains(response, 'OtherSchool')
+        self.assertNotContains(response, self.state1_event1_workshopAttendee1.firstName)
+        self.assertNotContains(response, self.independent_workshop_student.firstName)
 
 # ***** Attach page *****
 
 class AttachPageAccessBase(ParticipationDeedsFixture):
+    attach_event = None
     own_student_attr = None
     other_student_attr = None
     own_school = None
@@ -240,17 +347,23 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
 
     def own_unattached_deed(self):
         kwargs = {'school': self.own_school} if self.own_school is not None else {'mentorUser': self.own_mentor}
-        return self.create_unattached_deed(**kwargs)
+        return self.create_unattached_deed(**kwargs, event=self.attach_event)
+
+    def attach_deed_url(self, deed):
+        return self.attach_url(deed, self.attach_event)
+
+    def mentor_url(self):
+        return self.mentor_summary_url(self.attach_event)
 
     def test_page_load_ok(self):
         deed = self.own_unattached_deed()
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Attach participation deed')
 
     def test_students_filtered_on_attach_page(self):
         deed = self.own_unattached_deed()
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 200)
         own = getattr(self, self.own_student_attr)
         other = getattr(self, self.other_student_attr)
@@ -260,7 +373,7 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
     def test_post_attaches_deed(self):
         deed = self.own_unattached_deed()
         own = getattr(self, self.own_student_attr)
-        response = self.client.post(self.attach_url(deed), {'student': own.pk})
+        response = self.client.post(self.attach_deed_url(deed), {'student': own.pk})
         self.assertEqual(response.status_code, 302)
         own.refresh_from_db()
         self.assertEqual(own.participationDeed_id, deed.pk)
@@ -270,54 +383,62 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
         own = getattr(self, self.own_student_attr)
         own.participationDeed = deed
         own.save()
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, self.mentor_summary_url())
+        self.assertEqual(response.url, self.mentor_url())
 
     def test_does_not_load_when_disabled(self):
         deed = self.own_unattached_deed()
-        self.competition.electronicParticipationDeedsEnabled = False
-        self.competition.save()
-        response = self.client.get(self.attach_url(deed))
+        self.attach_event.electronicParticipationDeedsEnabled = False
+        self.attach_event.save()
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
     def test_redirects_when_no_students_without_deed(self):
         deed = self.own_unattached_deed()
         own = getattr(self, self.own_student_attr)
+        year_level = own.yearLevel
+        try:
+            year_level = int(year_level)
+        except (TypeError, ValueError):
+            year_level = 7
         own.participationDeed = ParticipationDeed.objects.create(
             parentName='Existing Parent',
             submittedFirstName=own.firstName,
             submittedLastName=own.lastName,
-            submittedYearLevel=own.yearLevel,
+            submittedYearLevel=year_level,
             school=self.own_school,
             mentorUser=self.own_mentor,
-            originalEvent=self.competition,
+            originalEvent=self.attach_event,
         )
         own.save()
-        # Attach any other incomplete students in this context so none remain without a deed
         from participationdeeds.participants import participants_without_deed
         for student in participants_without_deed(
-            self.competition,
+            self.attach_event,
             school=self.own_school,
             mentorUser=self.own_mentor,
         ):
+            try:
+                student_year = int(student.yearLevel)
+            except (TypeError, ValueError):
+                student_year = 7
             student.participationDeed = ParticipationDeed.objects.create(
                 parentName='Fill Parent',
                 submittedFirstName=student.firstName,
                 submittedLastName=student.lastName,
-                submittedYearLevel=student.yearLevel,
+                submittedYearLevel=student_year,
                 school=self.own_school,
                 mentorUser=self.own_mentor,
-                originalEvent=self.competition,
+                originalEvent=self.attach_event,
             )
             student.save()
 
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, self.mentor_summary_url())
+        self.assertEqual(response.url, self.mentor_url())
 
     def test_mentor_cannot_access_coordinator_page(self):
-        response = self.client.get(self.coordinator_summary_url())
+        response = self.client.get(self.coordinator_summary_url(self.attach_event))
         self.assertEqual(response.status_code, 403)
 
 class TestAttachPage_SchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, TestCase):
@@ -326,17 +447,18 @@ class TestAttachPage_SchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, 
 
     def setUp(self):
         super().setUp()
+        self.attach_event = self.competition
         self.own_school = self.school1_state1
         self.own_mentor = None
 
     def test_cannot_access_other_school_deed(self):
         deed = self.create_unattached_deed(school=self.school2_state1)
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
     def test_cannot_access_independent_deed(self):
         deed = self.create_unattached_deed(mentorUser=self.user_state1_independent_mentor5)
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
 class TestAttachPage_IndependentMentor(IndependentMentorLoginMixin, AttachPageAccessBase, TestCase):
@@ -345,18 +467,62 @@ class TestAttachPage_IndependentMentor(IndependentMentorLoginMixin, AttachPageAc
 
     def setUp(self):
         super().setUp()
+        self.attach_event = self.competition
         self.own_school = None
         self.own_mentor = self.user_state1_independent_mentor5
 
     def test_cannot_access_school_deed(self):
         deed = self.create_unattached_deed(school=self.school1_state1)
-        response = self.client.get(self.attach_url(deed))
+        response = self.client.get(self.attach_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+
+class TestAttachPage_WorkshopSchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, TestCase):
+    own_student_attr = 'state1_event1_workshopAttendee1'
+    other_student_attr = 'independent_workshop_student'
+
+    def setUp(self):
+        super().setUp()
+        self.attach_event = self.workshop
+        self.own_school = self.school1_state1
+        self.own_mentor = None
+
+    def test_cannot_access_other_school_deed(self):
+        deed = self.create_unattached_deed(school=self.school2_state1, event=self.workshop)
+        response = self.client.get(self.attach_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+
+    def test_cannot_access_independent_deed(self):
+        deed = self.create_unattached_deed(
+            mentorUser=self.user_state1_independent_mentor5,
+            event=self.workshop,
+        )
+        response = self.client.get(self.attach_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+
+class TestAttachPage_WorkshopIndependentMentor(IndependentMentorLoginMixin, AttachPageAccessBase, TestCase):
+    own_student_attr = 'independent_workshop_student'
+    other_student_attr = 'state1_event1_workshopAttendee1'
+
+    def setUp(self):
+        super().setUp()
+        self.attach_event = self.workshop
+        self.own_school = None
+        self.own_mentor = self.user_state1_independent_mentor5
+
+    def test_cannot_access_school_deed(self):
+        deed = self.create_unattached_deed(school=self.school1_state1, event=self.workshop)
+        response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
 class TestAttachPage_OtherSchoolMentor(OtherSchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_cannot_access_school1_deed(self):
         deed = self.create_unattached_deed(school=self.school1_state1)
         response = self.client.get(self.attach_url(deed))
+        self.assertEqual(response.status_code, 403)
+
+    def test_cannot_access_school1_workshop_deed(self):
+        deed = self.create_unattached_deed(school=self.school1_state1, event=self.workshop)
+        response = self.client.get(self.attach_url(deed, self.workshop))
         self.assertEqual(response.status_code, 403)
 
 # ***** Coordinator summary *****
@@ -396,6 +562,27 @@ class CoordinatorSummaryAccessBase(CoordinatorLoginMixin, ParticipationDeedsFixt
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Orphan School')
         self.assertContains(response, 'OrphanUnattached')
+
+    def test_unattached_only_independent_group_with_no_participants(self):
+        from users.models import User
+        orphan_mentor = User.objects.create_user(
+            adminChangelogVersionShown=User.ADMIN_CHANGELOG_CURRENT_VERSION,
+            email='orphan.indie@test.com',
+            password=self.password,
+            homeState=self.state1,
+            first_name='Orphan',
+            last_name='IndieMentor',
+        )
+        self.create_unattached_deed(
+            mentorUser=orphan_mentor,
+            firstName='IndieOrphanUnattached',
+            event=self.summary_event,
+        )
+        response = self.client.get(self.summary_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Independent:')
+        self.assertContains(response, 'IndieOrphanUnattached')
+        self.assertContains(response, orphan_mentor.fullname_or_email())
 
     def test_shows_disabled_message_when_turned_off(self):
         self.summary_event.electronicParticipationDeedsEnabled = False
