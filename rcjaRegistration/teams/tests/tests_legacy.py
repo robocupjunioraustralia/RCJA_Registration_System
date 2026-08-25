@@ -1618,6 +1618,44 @@ class TestTeamMethods(TestCase):
         student.save()
         self.assertEqual(student.participationDeedSignedDateTime(), deed.signedDateTime)
 
+
+class TestTeamAdminMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        from django.contrib.admin.sites import site
+        from teams.admin import StudentInline
+        newCommonSetUp(self)
+        self.team = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team Admin', division=self.division1)
+        self.inline = StudentInline(Team, site)
+
+    def test_participationDeedStatus_unsaved(self):
+        student = Student(team=self.team, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(self.inline.participationDeedStatus(student), '')
+
+    def test_participationDeedStatus_incomplete(self):
+        student = Student.objects.create(team=self.team, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(self.inline.participationDeedStatus(student), 'Incomplete')
+
+    def test_participationDeedStatus_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(self.inline.participationDeedStatus(student), 'Complete (Parent Name)')
+
+
 class TestTeamCreationFormValidation_School(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
