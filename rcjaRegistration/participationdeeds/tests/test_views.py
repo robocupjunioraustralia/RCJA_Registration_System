@@ -7,6 +7,7 @@ from events.models import AvailableDivision, Event
 from participationdeeds.models import ParticipationDeed
 from participationdeeds.tokens import dumps_school_or_mentor
 from teams.models import Student, Team
+from workshops.models import WorkshopAttendee
 
 from .common import (
     ParticipationDeedsFixture,
@@ -117,7 +118,6 @@ class TestSignPage(ParticipationDeedsFixture, TestCase):
         self.assertContains(response, self.school_student.firstName)
         self.assertFalse(ParticipationDeed.objects.filter(submittedFirstName=self.school_student.firstName).exists())
 
-
 # ***** Mentor summary *****
 
 class MentorSummaryAccessBase(ParticipationDeedsFixture):
@@ -190,7 +190,6 @@ class MentorSummaryAccessBase(ParticipationDeedsFixture):
         response = self.client.get(self.coordinator_summary_url())
         self.assertEqual(response.status_code, 403)
 
-
 class TestMentorSummary_SchoolMentor(SchoolMentorLoginMixin, MentorSummaryAccessBase, TestCase):
     own_student_attr = 'school_student'
     other_student_attr = 'independent_student'
@@ -199,7 +198,6 @@ class TestMentorSummary_SchoolMentor(SchoolMentorLoginMixin, MentorSummaryAccess
         super().setUp()
         self.own_school = self.school1_state1
         self.own_mentor = None
-
 
 class TestMentorSummary_IndependentMentor(IndependentMentorLoginMixin, MentorSummaryAccessBase, TestCase):
     own_student_attr = 'independent_student'
@@ -210,7 +208,6 @@ class TestMentorSummary_IndependentMentor(IndependentMentorLoginMixin, MentorSum
         self.own_school = None
         self.own_mentor = self.user_state1_independent_mentor5
 
-
 class TestMentorSummary_OtherSchoolCannotAccessOwnFilter(OtherSchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_cannot_see_school1_students(self):
         response = self.client.get(self.mentor_summary_url())
@@ -218,7 +215,6 @@ class TestMentorSummary_OtherSchoolCannotAccessOwnFilter(OtherSchoolMentorLoginM
         self.assertContains(response, self.other_school_student.firstName)
         self.assertNotContains(response, self.school_student.firstName)
         self.assertNotContains(response, self.independent_student.firstName)
-
 
 class TestMentorSummary_Workshop(SchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_page_load_ok_for_workshop(self):
@@ -233,7 +229,6 @@ class TestMentorSummary_Workshop(SchoolMentorLoginMixin, ParticipationDeedsFixtu
         response = self.client.get(self.mentor_summary_url(self.workshop))
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'No registrations for this event.', status_code=403)
-
 
 # ***** Attach page *****
 
@@ -325,7 +320,6 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
         response = self.client.get(self.coordinator_summary_url())
         self.assertEqual(response.status_code, 403)
 
-
 class TestAttachPage_SchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, TestCase):
     own_student_attr = 'school_student'
     other_student_attr = 'independent_student'
@@ -345,7 +339,6 @@ class TestAttachPage_SchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, 
         response = self.client.get(self.attach_url(deed))
         self.assertEqual(response.status_code, 403)
 
-
 class TestAttachPage_IndependentMentor(IndependentMentorLoginMixin, AttachPageAccessBase, TestCase):
     own_student_attr = 'independent_student'
     other_student_attr = 'school_student'
@@ -360,24 +353,65 @@ class TestAttachPage_IndependentMentor(IndependentMentorLoginMixin, AttachPageAc
         response = self.client.get(self.attach_url(deed))
         self.assertEqual(response.status_code, 403)
 
-
 class TestAttachPage_OtherSchoolMentor(OtherSchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_cannot_access_school1_deed(self):
         deed = self.create_unattached_deed(school=self.school1_state1)
         response = self.client.get(self.attach_url(deed))
         self.assertEqual(response.status_code, 403)
 
-
 # ***** Coordinator summary *****
 
-class TestCoordinatorSummary(CoordinatorLoginMixin, ParticipationDeedsFixture, TestCase):
+class CoordinatorSummaryAccessBase(CoordinatorLoginMixin, ParticipationDeedsFixture):
+    """Shared coordinator summary tests; subclasses set summary_event."""
+
+    summary_event = None
+
+    def summary_url(self):
+        return self.coordinator_summary_url(self.summary_event)
+
     def test_page_load_ok(self):
-        response = self.client.get(self.coordinator_summary_url())
+        response = self.client.get(self.summary_url())
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Participation deeds summary')
 
+    def test_unattached_deeds_show(self):
+        self.create_unattached_deed(
+            school=self.school1_state1,
+            firstName='CoordUnattached',
+            event=self.summary_event,
+        )
+        response = self.client.get(self.summary_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'CoordUnattached')
+
+    def test_unattached_only_group_with_no_participants(self):
+        from schools.models import School
+        orphan_school = School.objects.create(name='Orphan School', state=self.state1, region=self.region1)
+        self.create_unattached_deed(
+            school=orphan_school,
+            firstName='OrphanUnattached',
+            event=self.summary_event,
+        )
+        response = self.client.get(self.summary_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Orphan School')
+        self.assertContains(response, 'OrphanUnattached')
+
+    def test_shows_disabled_message_when_turned_off(self):
+        self.summary_event.electronicParticipationDeedsEnabled = False
+        self.summary_event.save()
+        response = self.client.get(self.summary_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'not enabled')
+
+
+class TestCoordinatorSummary(CoordinatorSummaryAccessBase, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.summary_event = self.competition
+
     def test_filters_to_correct_students_and_teams(self):
-        response = self.client.get(self.coordinator_summary_url())
+        response = self.client.get(self.summary_url())
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, str(self.school1_state1))
         self.assertContains(response, str(self.school2_state1))
@@ -385,27 +419,31 @@ class TestCoordinatorSummary(CoordinatorLoginMixin, ParticipationDeedsFixture, T
         self.assertContains(response, self.other_school_student.firstName)
         self.assertContains(response, self.independent_student.firstName)
 
-    def test_unattached_deeds_show(self):
-        self.create_unattached_deed(school=self.school1_state1, firstName='CoordUnattached')
-        response = self.client.get(self.coordinator_summary_url())
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'CoordUnattached')
 
-    def test_unattached_only_group_with_no_participants(self):
-        from schools.models import School
-        orphan_school = School.objects.create(name='Orphan School', state=self.state1, region=self.region1)
-        self.create_unattached_deed(school=orphan_school, firstName='OrphanUnattached')
-        response = self.client.get(self.coordinator_summary_url())
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Orphan School')
-        self.assertContains(response, 'OrphanUnattached')
+class TestCoordinatorSummary_Workshop(CoordinatorSummaryAccessBase, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.summary_event = self.workshop
+        self.other_school_workshop_student = WorkshopAttendee.objects.create(
+            event=self.workshop,
+            mentorUser=self.user_state1_school2_mentor3,
+            school=self.school2_state1,
+            division=self.division3,
+            firstName='OtherSchool',
+            lastName='WorkshopKid',
+            yearLevel='8',
+            attendeeType='student',
+            gender='male',
+        )
 
-    def test_shows_disabled_message_when_turned_off(self):
-        self.competition.electronicParticipationDeedsEnabled = False
-        self.competition.save()
-        response = self.client.get(self.coordinator_summary_url())
+    def test_filters_to_correct_attendees(self):
+        response = self.client.get(self.summary_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'not enabled')
+        self.assertContains(response, str(self.school1_state1))
+        self.assertContains(response, str(self.school2_state1))
+        self.assertContains(response, self.state1_event1_workshopAttendee1.firstName)
+        self.assertContains(response, self.other_school_workshop_student.firstName)
+        self.assertContains(response, self.independent_workshop_student.firstName)
 
 
 class TestCoordinatorSummary_MentorDenied(SchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
@@ -413,12 +451,10 @@ class TestCoordinatorSummary_MentorDenied(SchoolMentorLoginMixin, ParticipationD
         response = self.client.get(self.coordinator_summary_url())
         self.assertEqual(response.status_code, 403)
 
-
 class TestCoordinatorSummary_IndependentMentorDenied(IndependentMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_independent_mentor_denied(self):
         response = self.client.get(self.coordinator_summary_url())
         self.assertEqual(response.status_code, 403)
-
 
 # ***** Event details *****
 
@@ -464,8 +500,6 @@ class EventDetailsDeedsBase(ParticipationDeedsFixture):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'participation-deeds/sign/')
 
-
-class TestEventDetails_SchoolMentor(SchoolMentorLoginMixin, EventDetailsDeedsBase, TestCase):
     def test_teams_table_shows_deed_column_when_enabled(self):
         response = self.client.get(self.event_details_url())
         self.assertEqual(response.status_code, 200)
@@ -479,12 +513,13 @@ class TestEventDetails_SchoolMentor(SchoolMentorLoginMixin, EventDetailsDeedsBas
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, f'<th>Participation deeds</th>')
 
+class TestEventDetails_SchoolMentor(SchoolMentorLoginMixin, EventDetailsDeedsBase, TestCase):
+    pass
 
 class TestEventDetails_IndependentMentor(IndependentMentorLoginMixin, EventDetailsDeedsBase, TestCase):
     pass
 
-
-class TestEventDetails_WorkshopTables(SchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
+class TestEventDetails_Workshop(SchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_attendees_table_shows_deed_column_when_enabled(self):
         response = self.client.get(self.event_details_url(self.workshop))
         self.assertEqual(response.status_code, 200)
@@ -496,7 +531,6 @@ class TestEventDetails_WorkshopTables(SchoolMentorLoginMixin, ParticipationDeeds
         response = self.client.get(self.event_details_url(self.workshop))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '<th>Participation deed</th>')
-
 
 # ***** Team copy *****
 
