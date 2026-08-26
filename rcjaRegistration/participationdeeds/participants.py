@@ -88,8 +88,10 @@ def unattached_deeds_for_context(event, school=None, mentorUser=None):
 def participants_without_deed(event, school=None, mentorUser=None):
     """Return eligible participants for an event/school/mentor who have no deed attached."""
     if event.boolWorkshop():
-        return eligible_workshop_students_queryset(event, school=school, mentorUser=mentorUser).filter(participationDeed=None)
-    return eligible_students_queryset(event, school=school, mentorUser=mentorUser).filter(participationDeed=None)
+        qs = eligible_workshop_students_queryset(event, school=school, mentorUser=mentorUser)
+    else:
+        qs = eligible_students_queryset(event, school=school, mentorUser=mentorUser)
+    return qs.filter(participationDeed=None).order_by('firstName', 'lastName')
 
 
 def mentor_teams_for_context(event, school=None, mentorUser=None):
