@@ -143,6 +143,16 @@ class Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEventFileU
         response = self.getResponse()
         self.assertEqual(response.status_code, 200)
 
+    def testAllowedSuperUserUploadDeadlinePassed(self):
+        self.availableFileType1.uploadDeadline=(datetime.datetime.now() - datetime.timedelta(days=5)).date()
+        self.availableFileType1.save()
+
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 200)
+
     def testDeniedEventNotPublished(self):
         self.event.status = 'draft'
         self.event.save()
@@ -229,6 +239,12 @@ class Patched_Base_Test_MentorEventFileUploadView_Permissions(Base_Test_MentorEv
     def testAllowedSuperUser(self, mock_save, mock_size, mock_delete):
         return super().testAllowedSuperUser()
 
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testAllowedSuperUserUploadDeadlinePassed(self, mock_save, mock_size, mock_delete):
+        return super().testAllowedSuperUserUploadDeadlinePassed()
+
 class Test_MentorEventFileUploadView_Permissions_ExistingFile_Post(Patched_Base_Test_MentorEventFileUploadView_Permissions, TestCase):
     def setUp(self):
         super().setUp()
@@ -277,6 +293,19 @@ class Test_MentorEventFileUploadView_Permissions_ExistingFile_Delete(Patched_Bas
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
     @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
     def testAllowedSuperUser(self, mock_save, mock_size, mock_delete):
+        self.client.logout()
+        self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.getResponse()
+        self.assertEqual(response.status_code, 204)
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.delete')
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=1)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.save', return_value='fileName.ext')
+    def testAllowedSuperUserUploadDeadlinePassed(self, mock_save, mock_size, mock_delete):
+        self.availableFileType1.uploadDeadline=(datetime.datetime.now() - datetime.timedelta(days=5)).date()
+        self.availableFileType1.save()
+
         self.client.logout()
         self.login = self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 

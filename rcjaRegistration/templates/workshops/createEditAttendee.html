@@ -4,175 +4,166 @@
 {% block head %}
 
 {% if attendee %}
-<title> Edit attendee </title>
+    <title> Edit attendee </title>
 {% else %}
-<title> Add attendee </title>
+    <title> Add attendee </title>
 {% endif %}
 
-
 <style type="text/css">
-  body {
-    background-color: white;
-  }
-  .column {
-    max-width: 100%;
-  }
+    body {
+        background-color: white;
+    }
+    .column {
+        max-width: 100%;
+    }
 
-  .formbox {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  }
-  .bg {
-      /* Full height */
-    height: 100%; 
-    width:auto;
-    /* Center and scale the image nicely */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    /*background-color: #CCE2FF;*/
-  }
-  .left-aligned-text {
-  text-align: left;
+    .formbox {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+    .bg {
+            /* Full height */
+        height: 100%; 
+        width:auto;
+        /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        /*background-color: #CCE2FF;*/
+    }
+    .left-aligned-text {
+    text-align: left;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-
-<div class="bg">
-  <div class = "">
-    <div class="ui center aligned grid ">
-      <div class = "twelve wide mobile eight wide computer column ui">
+<div class="ui aligned container">
+    <div class = "row">
         <div class = "form form-group left-aligned-text">
-          <div>
             <h1>{{event}}</h1>
             {% if attendee %}
-            <h2> Editing: {{attendee.attendeeFullName}} </h2>
+                <h2> Editing: {{attendee.attendeeFullName}} </h2>
             {% else %}
-            <h2>Add a new attendee</h2> 
+                <h2>Add a new attendee</h2> 
             {% endif %}
 
             <!-- Error messaging -->
             {% if form.errors %}
-            <div class="ui message left-aligned-text">
-              <div class="">
-                <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
-                {{ form.non_field_errors }}
-                
-                <ul>
-                  {% for field in form %}
-                    {% if field.errors %}
-                  <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
-                  {% endfor %}
-                
-                </ul>
-              </div>
-            </div>
-            <!-- /Error messaging -->
+                <div class="ui message left-aligned-text">
+                    <div class="">
+                        <p class = "header">There were some errors in the information you entered. Please correct the following:</p>
+                        {{ form.non_field_errors }}
+                        <ul>
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                            {% endfor %}
+                        
+                        </ul>
+                    </div>
+                </div>
+                <!-- /Error messaging -->
             {% endif %}
-          
+        
             {% if divisionsMaxReachedWarnings and not attendee %}
-            <ul>
-              {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
-              <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
-              {% endfor %}
-            </ul>
+                <ul>
+                    {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                        <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
 
             <form method="post" class = "ui form">
-              {% csrf_token %}
-              {{ form.school }}
-              {{ form.event }}
-                
-              <h2>Attendee details</h2>
+                {% csrf_token %}
+                {{ form.school }}
+                {{ form.event }}
+                    
+                <h2>Attendee details</h2>
 
-              <div class="two fields">
-                <div class = "field">
-                  <label>Type:</label>
-                    {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
+                <div class="two fields">
+                    <div class = "field">
+                        <label>Type:</label>
+                        {{form.attendeeType|attr:"class:ui dropdown"|attr:"id:attendeeType"}}
+                    </div>
+                    <div class = "field">
+                        <label>Division:</label>
+                        {{ form.division|attr:"class:ui dropdown"}} 
+                    </div>
                 </div>
-                <div class = "field">
-                  <label>Division:</label>
-                    {{ form.division|attr:"class:ui dropdown"}} 
-                </div>
-              </div>
-              {% if form.campus.field.queryset %}
-              <div class = "field">
-                <label>Campus:</label>
-                  {{ form.campus|attr:"class:ui dropdown"}} 
-              </div>
-              {% endif %}
+                {% if form.campus.field.queryset %}
+                    <div class = "field">
+                        <label>Campus:</label>
+                        {{ form.campus|attr:"class:ui dropdown"}} 
+                    </div>
+                {% endif %}
 
-              <!-- Name -->
-              <div class="two fields">
-                <div class = "field">
-                  <label>First name:</label>
-                    {{form.firstName|attr:"placeholder:First name"}}
+                <!-- Name -->
+                <div class="two fields">
+                    <div class = "field">
+                        <label>First name:</label>
+                        {{form.firstName|attr:"placeholder:First name"}}
+                    </div>
+                    <div class = "field">
+                        <label>Last name:</label>
+                        {{form.lastName|attr:"placeholder:Last name"}}
+                    </div>
                 </div>
-                <div class = "field">
-                  <label>Last name:</label>
-                    {{form.lastName|attr:"placeholder:Last name"}}
-                </div>
-              </div>
 
-              <div class="two fields">
-                <div class = "field">
-                  <label>Year level:</label>
-                    {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
+                <div class="two fields">
+                    <div class = "field">
+                        <label>Year level:</label>
+                        {{form.yearLevel|attr:"placeholder:Year level"|attr:"id:yearLevelForm"}}
+                    </div>
+                    <div class = "field">
+                        <label>Gender:</label>
+                        {{form.gender|attr:"class:ui dropdown"}}
+                    </div>
                 </div>
-                <div class = "field">
-                  <label>Gender:</label>
-                    {{form.gender|attr:"class:ui dropdown"}}
-                </div>
-              </div>
 
-              <div id="teacherOnlyFields" style="display:none"> 
-                <div class = "field">
-                  <label>Email:</label>
-                    {{form.email|attr:"placeholder:Email"|attr:"id:emailForm"}}
+                <div id="teacherOnlyFields" style="display:none"> 
+                    <div class = "field">
+                        <label>Email:</label>
+                        {{form.email|attr:"placeholder:Email"|attr:"id:emailForm"}}
+                    </div>
                 </div>
-              </div>
-              <div id="studentOnlyFields"style="display:none">
-              </div>
+                <div id="studentOnlyFields"style="display:none">
+                </div>
 
-              <input class="primary ui button" type="submit" value="Save" />
-              {% if not attendee %}
-              <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
-              {% endif %}    
-              <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
+                <input class="primary ui button" type="submit" value="Save" />
+                {% if not attendee %}
+                    <input class="primary ui button" type="submit" name="add_text" value="Save & Add Another" />
+                {% endif %}        
+                    <a href ="{% url 'events:details' event.id %}" class = "ui button negative" style="margin-top:1rem;">Cancel</a>
             </form>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <script>
 $(document).ready(function() {
-  attendeeTypeHandler($('#attendeeType').val());
-  console.log('loaded');
+    attendeeTypeHandler($('#attendeeType').val());
+    console.log('loaded');
 });
 
 $('#attendeeType').change(function() {
-  attendeeTypeHandler(this.value);
-  });
+    attendeeTypeHandler(this.value);
+    });
 
 const attendeeTypeHandler = (newDisplayString) => {
-    if( newDisplayString === "teacher") {
-    $("#studentOnlyFields").hide("slow");
-    $("#teacherOnlyFields").show("slow");
-  
-    $("#yearLevelForm").attr("placeholder", "Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)");
-    $("#emailForm").attr("required", true);
-  }
-  if( newDisplayString=== "student") {
-    $("#studentOnlyFields").show("slow");
-    $("#teacherOnlyFields").hide("slow");
+        if( newDisplayString === "teacher") {
+        $("#studentOnlyFields").hide("slow");
+        $("#teacherOnlyFields").show("slow");
+    
+        $("#yearLevelForm").attr("placeholder", "Enter a range of of year levels (eg 9-12) or a comma separated list (eg 3,5,7)");
+        $("#emailForm").attr("required", true);
+    }
+    if( newDisplayString=== "student") {
+        $("#studentOnlyFields").show("slow");
+        $("#teacherOnlyFields").hide("slow");
 
-    $("#yearLevelForm").attr("placeholder", "Enter a year level");
-    $("#emailForm").attr("required", false);
-  }
+        $("#yearLevelForm").attr("placeholder", "Enter a year level");
+        $("#emailForm").attr("required", false);
+    }
 }
 
 </script>

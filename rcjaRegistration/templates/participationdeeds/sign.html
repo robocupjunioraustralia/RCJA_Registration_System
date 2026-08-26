@@ -1,0 +1,128 @@
+{% extends 'common/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head %}
+<title>Participation deed — {{ event }}</title>
+{% include 'common/loginBase.html' %}
+<style type="text/css">
+html, body {
+    height: 100%;
+    margin: 0;
+}
+body {
+    overflow: hidden;
+}
+.logincontent {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.deed-content-panel {
+    width: 92%;
+    max-width: 60rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    text-align: left;
+}
+.deed-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(34, 36, 38, 0.15);
+}
+.deed-header-logo img {
+    height: 96px;
+    width: auto;
+    display: block;
+}
+.deed-from-details {
+    text-align: right;
+    margin-left: auto;
+}
+.deed-from-details p {
+    margin: 0.25em 0 0;
+    white-space: pre-line;
+}
+.deed-title {
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg">
+    <div class="layer">
+        <div class="logincontent">
+            <div class="ui segment deed-content-panel">
+                <div class="deed-header">
+                    <div class="deed-header-logo">
+                        <img src="{% static 'apple-touch-icon.png' %}" alt="RoboCup Junior Australia">
+                    </div>
+                    {% if invoiceSettings %}
+                    <div class="deed-from-details">
+                        <strong>{{ invoiceSettings.invoiceFromName }}</strong>
+                        <p>{{ invoiceSettings.invoiceFromDetails|escape }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <h2 class="deed-title">Participation Deed</h2>
+
+                {% if not sign_form %}
+                    <p>Enter your child's name and year level to continue.</p>
+                    <form method="post" class="ui form">
+                        {% csrf_token %}
+                        {% for field in lookup_form %}
+                            <div class="field">
+                                <label>{{ field.label }}</label>
+                                {{ field|add_class:"ui input" }}
+                                {% if field.errors %}<div class="ui red message">{{ field.errors }}</div>{% endif %}
+                            </div>
+                        {% endfor %}
+                        <button class="ui large blue button" type="submit">Continue</button>
+                    </form>
+                {% else %}
+                    <div class="ui segment">
+                        {{ deed_text }}
+                    </div>
+                    <p>Child: <strong>{{ child_data.firstName }} {{ child_data.lastName }}</strong> (Year {{ child_data.yearLevel }})</p>
+                    {% if school %}
+                        <p>School: <strong>{{ school }}</strong></p>
+                    {% else %}
+                        <p>School: <strong>Independent ({{ mentorUser.fullname_or_email }})</strong></p>
+                    {% endif %}
+                    <form method="post" class="ui form">
+                        {% csrf_token %}
+                        <input type="hidden" name="firstName" value="{{ child_data.firstName }}">
+                        <input type="hidden" name="lastName" value="{{ child_data.lastName }}">
+                        <input type="hidden" name="yearLevel" value="{{ child_data.yearLevel }}">
+                        {% for field in sign_form %}
+                            <div class="field">
+                                {% if field.field.widget.input_type == 'checkbox' %}
+                                    <div class="ui checkbox">
+                                        {{ field }}
+                                        <label>{{ field.label }}</label>
+                                    </div>
+                                {% else %}
+                                    <label>{{ field.label }}</label>
+                                    {{ field|add_class:"ui input" }}
+                                {% endif %}
+                                {% if field.errors %}<div class="ui red message">{{ field.errors }}</div>{% endif %}
+                            </div>
+                        {% endfor %}
+                        <p>Date: {{ today|date:"j F Y" }}</p>
+                        <button class="ui large blue button" type="submit">Submit</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

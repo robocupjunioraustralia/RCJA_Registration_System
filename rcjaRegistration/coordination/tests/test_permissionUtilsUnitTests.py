@@ -657,7 +657,7 @@ class Test_coordinatorFilterQueryset(TestCase):
 
         qs = coordinatorFilterQueryset(baseqs, self.request.user, ['eventmanager', 'viewall'], ['eventmanager', 'viewall'], 'state__coordinator', False)
 
-        self.assertEqual(5, qs.count())
+        self.assertEqual(6, qs.count())
         self.assertFalse(qs.filter(state=self.state2).exists())
 
 class ModelAdminTest:

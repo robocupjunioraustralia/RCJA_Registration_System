@@ -10,6 +10,8 @@ from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
+from eventfiles.models import MentorEventFileType, EventAvailableFileType
+from association.models import AssociationMember
 
 from teams.forms import TeamForm
 
@@ -748,6 +750,56 @@ class TestTeamDetailsPermissions(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'You are not an administrator of this team', status_code=403)
 
+    def createAvailableFileType(self, daysFromNow):
+        fileType = MentorEventFileType.objects.create(name="File Type 1")
+        EventAvailableFileType.objects.create(event=self.event, fileType=fileType, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=daysFromNow)).date())
+
+    def makeUser1Coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Coordinator')
+        AssociationMember.objects.create(user=self.user1, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
+    def testCoordinatorOnlyFileMessage_notShown_mentor_beforeDeadline(self):
+        self.createAvailableFileType(daysFromNow=4)
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
+    def testCoordinatorOnlyFileMessage_notShown_mentor_afterDeadline(self):
+        self.createAvailableFileType(daysFromNow=-5)
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
+    def testCoordinatorOnlyFileMessage_notShown_coordinatorMentor_beforeDeadline(self):
+        self.createAvailableFileType(daysFromNow=4)
+        self.makeUser1Coordinator()
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
+    def testCoordinatorOnlyFileMessage_shown_coordinatorMentor_afterDeadline(self):
+        self.createAvailableFileType(daysFromNow=-5)
+        self.makeUser1Coordinator()
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
 class TestTeamEditPermissions(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'
@@ -921,7 +973,7 @@ class TestCopyTeamsList(TestCase):
     
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'Can only copy teams for competitions', status_code=403)
+        self.assertContains(response, 'Teams/ attendees cannot be created for this event type', status_code=403)
 
     def testRedirect_eventSchoolMaxReached(self):
         self.newEvent.event_maxRegistrationsPerSchool = 1
@@ -1537,6 +1589,124 @@ class TestTeamMethods(TestCase):
 
     def testMentorUserEmail(self):
         self.assertEqual(self.team1.mentorUserEmail(), self.email2)
+
+    def test_deedSummary_no_students(self):
+        self.assertEqual(self.team1.deedSummary(), '0/0')
+
+    def test_deedSummary_incomplete(self):
+        Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(self.team1.deedSummary(), '0/1')
+
+    def test_deedSummary_complete_and_incomplete(self):
+        from participationdeeds.models import ParticipationDeed
+        student1 = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        Student.objects.create(team=self.team1, firstName='Bob', lastName='Jones', yearLevel=8, gender='male')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student1.participationDeed = deed
+        student1.save()
+        self.assertEqual(self.team1.deedSummary(), '1/2')
+
+    def test_student_teamPK(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.teamPK(), self.team1.pk)
+
+    def test_student_participationDeedComplete_incomplete(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.participationDeedComplete(), False)
+
+    def test_student_participationDeedComplete_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(student.participationDeedComplete(), True)
+
+    def test_student_participationDeedParentName_incomplete(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.participationDeedParentName(), '')
+
+    def test_student_participationDeedParentName_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(student.participationDeedParentName(), 'Parent Name')
+
+    def test_student_participationDeedSignedDateTime_incomplete(self):
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(student.participationDeedSignedDateTime(), '')
+
+    def test_student_participationDeedSignedDateTime_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team1, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(student.participationDeedSignedDateTime(), deed.signedDateTime)
+
+
+class TestTeamAdminMethods(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        from django.contrib.admin.sites import site
+        from teams.admin import StudentInline
+        newCommonSetUp(self)
+        self.team = Team.objects.create(event=self.event, mentorUser=self.user2, name='Team Admin', division=self.division1)
+        self.inline = StudentInline(Team, site)
+
+    def test_participationDeedStatus_unsaved(self):
+        student = Student(team=self.team, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(self.inline.participationDeedStatus(student), '')
+
+    def test_participationDeedStatus_incomplete(self):
+        student = Student.objects.create(team=self.team, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        self.assertEqual(self.inline.participationDeedStatus(student), 'Incomplete')
+
+    def test_participationDeedStatus_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        student = Student.objects.create(team=self.team, firstName='Alice', lastName='Smith', yearLevel=7, gender='female')
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName='Alice',
+            submittedLastName='Smith',
+            submittedYearLevel=7,
+            originalEvent=self.event,
+        )
+        student.participationDeed = deed
+        student.save()
+        self.assertEqual(self.inline.participationDeedStatus(student), 'Complete (Parent Name)')
+
 
 class TestTeamCreationFormValidation_School(TestCase):
     email1 = 'user1@user.com'

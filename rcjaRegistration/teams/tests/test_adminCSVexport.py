@@ -36,6 +36,8 @@ class TestAdminCSVExport_Team(TestCase):
         self.assertContains(response, 'Member 1 Last Name')
         self.assertContains(response, 'Member 1 Year Level')
         self.assertContains(response, 'Member 1 Gender')
+        self.assertContains(response, 'Member 1 Participation Deed Complete')
+        self.assertContains(response, 'Participation Deeds')
         self.assertContains(response, 'Consent')
         self.assertContains(response, 'Marketing')
 
@@ -48,5 +50,7 @@ class TestAdminCSVExport_Team(TestCase):
         self.assertContains(response, 'Smith')
         self.assertContains(response, '5')
         self.assertContains(response, 'Other')
+        self.assertContains(response, '0/1')
+        self.assertContains(response, 'Incomplete')
         self.assertContains(response, 'True')
         self.assertContains(response, 'False')

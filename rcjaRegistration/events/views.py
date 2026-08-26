@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import F, Q
 from django.conf import settings
+from django.urls import reverse
 from coordination.permissions import checkCoordinatorPermission
 from django.forms import formset_factory
 from django.db import connection
@@ -20,6 +21,9 @@ from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
 from .forms import getSummaryForm, AdminEventsForm
+
+from participationdeeds.tokens import dumps_school_or_mentor, deeds_available_for_event
+from participationdeeds.participants import team_deed_counts, unattached_deeds_for_context
 
 # Need to check if schooladministrator is None
 
@@ -119,6 +123,10 @@ def dashboard(request):
 def coordinatorEventDetailsPermissions(request, event):
     return checkCoordinatorPermission(request, Event, event, 'view')
 
+def coordinatorInvoiceViewPermissions(request, event):
+    from invoices.models import Invoice
+    return checkCoordinatorPermission(request, Invoice, event, 'view')
+
 def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):
         return True
@@ -204,6 +212,28 @@ def details(request, eventID):
     else:
         totalRegistrations = event.baseeventattendance_set.exclude(team__withdrawn=True).count()
 
+    electronicParticipationDeedsEnabled = event.electronicParticipationDeedsEnabled
+    schoolMagicLink = None
+    unattachedDeedCount = 0
+    teamDeedSummaries = {}
+
+    hasStudentRegistrations = (teams.exists() or workshopAttendees.filter(attendeeType='student').exists())
+    electronicParticipationDeedsAvailable = electronicParticipationDeedsEnabled and hasStudentRegistrations
+    if electronicParticipationDeedsAvailable:
+        school = filterDict.get('school')
+        mentorUser = request.user if school is None else None 
+        if deeds_available_for_event(event):
+            token = dumps_school_or_mentor(event, school=school, mentorUser=mentorUser)
+            schoolMagicLink = request.build_absolute_uri(
+                reverse('participationdeeds:sign_participation_deed', kwargs={'token': token})
+            )
+        unattachedDeedCount = unattached_deeds_for_context(event, school=school, mentorUser=mentorUser).count()
+        if not event.boolWorkshop():
+            for team in teams:
+                complete, total = team_deed_counts(team)
+                team.deedSummary = f"{complete}/{total}"
+                teamDeedSummaries[team.id] = (complete, total)
+
     context = {
         'event': event,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
@@ -213,11 +243,17 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'hasInvoiceViewPermissions': coordinatorInvoiceViewPermissions(request, event),
         'maxEventRegistrationsForSchoolReached': event.maxEventRegistrationsForSchoolReached(request.user),
         'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
         'totalRegistrations': totalRegistrations,
+        'electronicParticipationDeedsEnabled': electronicParticipationDeedsEnabled,
+        'electronicParticipationDeedsAvailable': electronicParticipationDeedsAvailable,
+        'schoolMagicLink': schoolMagicLink,
+        'unattachedDeedCount': unattachedDeedCount,
+        'teamDeedSummaries': teamDeedSummaries,
     }
     return render(request, 'events/details.html', context)
 
@@ -260,30 +296,36 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
 
     return True
 
+def createPermissionForEvent(event, eventType):
+    # Check is correct event type
+    if event.eventType != eventType:
+        raise PermissionDenied('Teams/ attendees cannot be created for this event type')
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+def checkEventLimitsReached(request, event):
+    if event.maxEventRegistrationsForSchoolReached(request.user):
+        raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+
+    if event.maxEventRegistrationsTotalReached():
+        raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
     def common(self, request, event, eventAttendance):
-        # Check is correct event type
-        if event.eventType != self.eventType:
-            raise PermissionDenied('Teams/ attendees cannot be created for this event type')
-
-        # Check registrations open
-        if not event.registrationsOpen():
-            raise PermissionDenied("Registration has closed for this event")
-
-        # Check event is published
-        if not event.published():
-            raise PermissionDenied("Event is not published")
+        createPermissionForEvent(event, self.eventType)
 
         # Check administrator of this eventAttendance
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
         if not eventAttendance:
-            if event.maxEventRegistrationsForSchoolReached(request.user):
-                raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
-
-            if event.maxEventRegistrationsTotalReached():
-                raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+            checkEventLimitsReached(request, event)
 
     def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
         # This endpoint should never be called with eventID or sourceTeamID
