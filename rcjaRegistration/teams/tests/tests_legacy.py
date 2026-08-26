@@ -10,6 +10,8 @@ from schools.models import School, SchoolAdministrator, Campus
 from events.models import Event, Year, Division, AvailableDivision
 from coordination.models import Coordinator
 from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
+from eventfiles.models import MentorEventFileType, EventAvailableFileType
+from association.models import AssociationMember
 
 from teams.forms import TeamForm
 
@@ -747,6 +749,56 @@ class TestTeamDetailsPermissions(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, 'You are not an administrator of this team', status_code=403)
+
+    def createAvailableFileType(self, daysFromNow):
+        fileType = MentorEventFileType.objects.create(name="File Type 1")
+        EventAvailableFileType.objects.create(event=self.event, fileType=fileType, uploadDeadline=(datetime.datetime.now() + datetime.timedelta(days=daysFromNow)).date())
+
+    def makeUser1Coordinator(self):
+        Coordinator.objects.create(user=self.user1, state=self.state1, permissionLevel='full', position='Coordinator')
+        AssociationMember.objects.create(user=self.user1, birthday=(datetime.datetime.now() + datetime.timedelta(days=-20*365)).date(), rulesAcceptedDate=datetime.datetime.now(), membershipStartDate=datetime.datetime.now())
+
+    def testCoordinatorOnlyFileMessage_notShown_mentor_beforeDeadline(self):
+        self.createAvailableFileType(daysFromNow=4)
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
+    def testCoordinatorOnlyFileMessage_notShown_mentor_afterDeadline(self):
+        self.createAvailableFileType(daysFromNow=-5)
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
+    def testCoordinatorOnlyFileMessage_notShown_coordinatorMentor_beforeDeadline(self):
+        self.createAvailableFileType(daysFromNow=4)
+        self.makeUser1Coordinator()
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "File upload and edit available to coordinators only (closed for mentors).")
+
+    def testCoordinatorOnlyFileMessage_shown_coordinatorMentor_afterDeadline(self):
+        self.createAvailableFileType(daysFromNow=-5)
+        self.makeUser1Coordinator()
+
+        url = reverse('teams:details', kwargs={'teamID':self.team1.id})
+        login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "File upload and edit available to coordinators only (closed for mentors).")
 
 class TestTeamEditPermissions(TestCase):
     email1 = 'user1@user.com'

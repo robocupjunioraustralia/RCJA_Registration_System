@@ -114,6 +114,9 @@ class ParticipationDeedsFixture:
             'deedID': deed.id,
         })
 
+    def delete_deed_url(self, deed, event=None):
+        return reverse('participationdeeds:delete', kwargs={'deedID': deed.id})
+
     def coordinator_summary_url(self, event=None):
         return reverse('participationdeeds:coordinator_summary', kwargs={'eventID': (event or self.competition).id})
 

@@ -266,6 +266,37 @@ class MentorSummaryAccessBase(ParticipationDeedsFixture):
         self.assertContains(response, 'OwnUnattached')
         self.assertNotContains(response, 'OtherUnattached')
         self.assertContains(response, self.attach_url(deed, self.summary_event))
+        self.assertContains(response, 'Delete')
+
+    def test_attach_button_hidden_when_no_students_without_deed(self):
+        from participationdeeds.participants import participants_without_deed
+        kwargs = {'school': self.own_school} if self.own_school is not None else {'mentorUser': self.own_mentor}
+        deed = self.create_unattached_deed(**kwargs, firstName='NoAttachUnattached', event=self.summary_event)
+        for student in participants_without_deed(
+            self.summary_event,
+            school=self.own_school,
+            mentorUser=self.own_mentor,
+        ):
+            try:
+                student_year = int(student.yearLevel)
+            except (TypeError, ValueError):
+                student_year = 7
+            student.participationDeed = ParticipationDeed.objects.create(
+                parentName='Fill Parent',
+                submittedFirstName=student.firstName,
+                submittedLastName=student.lastName,
+                submittedYearLevel=student_year,
+                school=self.own_school,
+                mentorUser=self.own_mentor,
+                originalEvent=self.summary_event,
+            )
+            student.save()
+
+        response = self.client.get(self.mentor_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'NoAttachUnattached')
+        self.assertNotContains(response, self.attach_url(deed, self.summary_event))
+        self.assertContains(response, 'Delete')
 
     def test_does_not_load_when_disabled(self):
         self.summary_event.electronicParticipationDeedsEnabled = False
@@ -423,6 +454,39 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
         own.refresh_from_db()
         self.assertEqual(own.participationDeed_id, deed.pk)
 
+    def test_students_listed_alphabetically_by_first_name(self):
+        from participationdeeds.participants import participants_without_deed
+        deed = self.own_unattached_deed()
+        students = list(participants_without_deed(
+            self.attach_event,
+            school=self.own_school,
+            mentorUser=self.own_mentor,
+        ))
+        self.assertGreaterEqual(len(students), 1)
+        response = self.client.get(self.attach_deed_url(deed))
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        ordered = list(form.fields['student'].queryset)
+        self.assertEqual(
+            [student.firstName for student in ordered],
+            sorted(student.firstName for student in ordered),
+        )
+
+    def test_delete_unattached_deed(self):
+        deed = self.own_unattached_deed()
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
+    def test_cannot_delete_attached_deed(self):
+        deed = self.own_unattached_deed()
+        own = getattr(self, self.own_student_attr)
+        own.participationDeed = deed
+        own.save()
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
     def test_post_rejects_student_outside_queryset(self):
         deed = self.own_unattached_deed()
         other = getattr(self, self.other_student_attr)
@@ -510,10 +574,22 @@ class TestAttachPage_SchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, 
         response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
+    def test_cannot_delete_other_school_deed(self):
+        deed = self.create_unattached_deed(school=self.school2_state1)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
     def test_cannot_access_independent_deed(self):
         deed = self.create_unattached_deed(mentorUser=self.user_state1_independent_mentor5)
         response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
+
+    def test_cannot_delete_independent_deed(self):
+        deed = self.create_unattached_deed(mentorUser=self.user_state1_independent_mentor5)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
 
 class TestAttachPage_IndependentMentor(IndependentMentorLoginMixin, AttachPageAccessBase, TestCase):
     own_student_attr = 'independent_student'
@@ -530,6 +606,12 @@ class TestAttachPage_IndependentMentor(IndependentMentorLoginMixin, AttachPageAc
         response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
+    def test_cannot_delete_school_deed(self):
+        deed = self.create_unattached_deed(school=self.school1_state1)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
 class TestAttachPage_WorkshopSchoolMentor(SchoolMentorLoginMixin, AttachPageAccessBase, TestCase):
     own_student_attr = 'state1_event1_workshopAttendee1'
     other_student_attr = 'independent_workshop_student'
@@ -545,6 +627,12 @@ class TestAttachPage_WorkshopSchoolMentor(SchoolMentorLoginMixin, AttachPageAcce
         response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
+    def test_cannot_delete_other_school_deed(self):
+        deed = self.create_unattached_deed(school=self.school2_state1, event=self.workshop)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
     def test_cannot_access_independent_deed(self):
         deed = self.create_unattached_deed(
             mentorUser=self.user_state1_independent_mentor5,
@@ -552,6 +640,15 @@ class TestAttachPage_WorkshopSchoolMentor(SchoolMentorLoginMixin, AttachPageAcce
         )
         response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
+
+    def test_cannot_delete_independent_deed(self):
+        deed = self.create_unattached_deed(
+            mentorUser=self.user_state1_independent_mentor5,
+            event=self.workshop,
+        )
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
 
 class TestAttachPage_WorkshopIndependentMentor(IndependentMentorLoginMixin, AttachPageAccessBase, TestCase):
     own_student_attr = 'independent_workshop_student'
@@ -568,16 +665,34 @@ class TestAttachPage_WorkshopIndependentMentor(IndependentMentorLoginMixin, Atta
         response = self.client.get(self.attach_deed_url(deed))
         self.assertEqual(response.status_code, 403)
 
+    def test_cannot_delete_school_deed(self):
+        deed = self.create_unattached_deed(school=self.school1_state1, event=self.workshop)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
 class TestAttachPage_OtherSchoolMentor(OtherSchoolMentorLoginMixin, ParticipationDeedsFixture, TestCase):
     def test_cannot_access_school1_deed(self):
         deed = self.create_unattached_deed(school=self.school1_state1)
         response = self.client.get(self.attach_url(deed))
         self.assertEqual(response.status_code, 403)
 
+    def test_cannot_delete_school1_deed(self):
+        deed = self.create_unattached_deed(school=self.school1_state1)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
+
     def test_cannot_access_school1_workshop_deed(self):
         deed = self.create_unattached_deed(school=self.school1_state1, event=self.workshop)
         response = self.client.get(self.attach_url(deed, self.workshop))
         self.assertEqual(response.status_code, 403)
+
+    def test_cannot_delete_school1_workshop_deed(self):
+        deed = self.create_unattached_deed(school=self.school1_state1, event=self.workshop)
+        response = self.client.delete(self.delete_deed_url(deed))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ParticipationDeed.objects.filter(pk=deed.pk).exists())
 
 # ***** Coordinator summary *****
 
