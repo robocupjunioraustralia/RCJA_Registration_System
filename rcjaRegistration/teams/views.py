@@ -5,6 +5,7 @@ from django.db import transaction
 from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.urls import reverse
+from coordination.permissions import checkCoordinatorPermission
 
 from .forms import TeamForm, StudentForm, ImportTeamsCSVForm
 
@@ -32,10 +33,13 @@ def details(request, teamID):
     if not mentorEventAttendanceAccessPermissions(request, team):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
+    coordinatorEditFilesPermission = checkCoordinatorPermission(request, Team, team, 'change')
+
     context = {
         "team": team,
         "students": team.student_set.all(),
         'uploadedFiles': team.mentoreventfileupload_set.all(),
+        'coordinatorEditFilesPermission': coordinatorEditFilesPermission,
         'electronicParticipationDeedsEnabled': team.event.electronicParticipationDeedsEnabled,
     }
 
