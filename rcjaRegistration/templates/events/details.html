@@ -320,8 +320,7 @@
                             <td>
                                 {% if team.withdrawn %}<s>{% endif %}
                                 {% for student in team.student_set.all %}
-                                    {{student.firstName}} {{student.lastName}} ({{student.yearLevel}})
-                                    {% if not forloop.last %}, {% endif %}
+                                    {{student.firstName}} {{student.lastName}} ({{student.yearLevel}}){% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                                 {% if team.withdrawn %}</s>{% endif %}
                             </td>
