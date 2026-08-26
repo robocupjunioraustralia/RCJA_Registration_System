@@ -67,6 +67,14 @@ def team_deed_counts(team):
     return complete, total
 
 
+def participant_deed_counts(event, school=None, mentorUser=None):
+    """Return (complete, incomplete) deed counts across eligible students for a mentor context."""
+    qs = eligible_participants(event, school=school, mentorUser=mentorUser)
+    total = qs.count()
+    complete = qs.exclude(participationDeed=None).count()
+    return complete, total - complete
+
+
 def participant_has_deed(participant):
     """Return whether the participant already has a participation deed attached."""
     return participant.participationDeed_id is not None
