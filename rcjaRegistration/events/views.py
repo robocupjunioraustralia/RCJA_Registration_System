@@ -20,7 +20,7 @@ from regions.models import State
 from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
-from .forms import getSummaryForm, AdminEventsForm
+from .forms import getSummaryForm, getAdminEventsForm
 
 from participationdeeds.tokens import dumps_school_or_mentor, deeds_available_for_event
 from participationdeeds.participants import team_deed_counts, unattached_deeds_for_context, participant_deed_counts
@@ -357,6 +357,8 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         eventAttendance.delete()
         return HttpResponse(status=204)
 
+# Event summary pages
+
 def getEventsForSummary(state, year):
     """ Create list of event dictionaries of all events in state and year """
     eventList = Event.objects.filter(state = state, year = year).order_by('startDate', 'endDate')
@@ -477,10 +479,19 @@ def summaryReport(request):
     return render(request, 'events/summaryReport.html', context)
 
 
-# FROM HERE
 @login_required
-def singlePageAdminSummary(request, eventID): 
+def singlePageAdminSummary(request, eventID):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+
     event = get_object_or_404(Event, pk=eventID)
+
+    if not coordinatorEventDetailsPermissions(request, event):
+        raise PermissionDenied("You do not have permission to view this page") 
+
     if event.boolWorkshop():
         context = getAdminWorkSummary(event)
         context["column1"] = "Students"
@@ -494,9 +505,12 @@ def singlePageAdminSummary(request, eventID):
 
 @login_required
 def eventAdminSummary(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+
     output = ""
     if request.method == "POST":
-        form = AdminEventsForm(request.POST)
+        form = getAdminEventsForm(request)
         if form.is_valid():
             output = form.cleaned_data
             if len(form.cleaned_data['workshops']):
@@ -534,7 +548,7 @@ def eventAdminSummary(request):
                     else:
                         return render(request, 'events/adminMultiDetails.html', context)
     else:
-        form = AdminEventsForm()
+        form = getAdminEventsForm(request)
     return render(request, "events/adminBlank.html", {"form": form, 'output':output})
 
 def mergeMultipleAdminSummary(events):

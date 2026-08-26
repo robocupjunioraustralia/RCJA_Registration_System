@@ -59,26 +59,31 @@ def getSummaryForm(request):
 
     return SummaryRequestForm(request.GET)
 
+def getAdminEventsForm(request):
+    def COMPETITIONS_CHOICES():
+        for event in Event.objects.filter(status='published', eventType='competition', state__in=request.user.adminViewableStates()):
+            label = f"{event.year} - {event.state} - {event.name}"
+            yield (event.pk, label)
 
-def COMPETITIONS_CHOICES():
-    for event in Event.objects.filter(status='published', eventType='competition'):
-        label = f"{event.year} - {event.state} - {event.name}"
-        yield (event.pk, label)
+    def WORKSHOPS_CHOICES():
+        for event in Event.objects.filter(status='published', eventType='workshop', state__in=request.user.adminViewableStates()):
+            label = f"{event.year} - {event.state} - {event.name}"
+            yield (event.pk, label)
 
-def WORKSHOPS_CHOICES():
-    for event in Event.objects.filter(status='published', eventType='workshop'):
-        label = f"{event.year} - {event.state} - {event.name}"
-        yield (event.pk, label)
+    class AdminEventsForm(forms.Form):
+        competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))
+        workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(WORKSHOPS_CHOICES, tuple))
+        csv = forms.BooleanField(required=False,label="Produce CSV",)
 
-class AdminEventsForm(forms.Form):
-    competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))
-    workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(WORKSHOPS_CHOICES, tuple))
-    csv = forms.BooleanField(required=False,label="Produce CSV",)
+        def clean(self):
+            workshops = len(self.cleaned_data.get('workshops', []))>0
+            competitions = len(self.cleaned_data.get('competitions', []))>0
+            if workshops and competitions:
+                raise ValidationError("Cannot directly compare workshops and competitions")
+            if not (workshops or competitions):
+                raise ValidationError("Choose at least one event")
 
-    def clean(self):
-        workshops = len(self.cleaned_data['workshops'])>0
-        competitions = len(self.cleaned_data['competitions'])>0
-        if workshops and competitions:
-            raise ValidationError("Cannot directly compare workshops and competitions")
-        if not (workshops or competitions):
-            raise ValidationError("Choose at least one event")
+    if request.method == "POST":
+        return AdminEventsForm(request.POST)
+    else:
+        return AdminEventsForm
