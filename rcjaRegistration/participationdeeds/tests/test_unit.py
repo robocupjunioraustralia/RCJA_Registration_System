@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from events.models import eventCoordinatorEditPermissions
 from participationdeeds.models import ParticipationDeed
-from participationdeeds.participants import match_participant
+from participationdeeds.participants import match_participant, participant_deed_counts
 from participationdeeds.tokens import (
     SALT_SCHOOL,
     deeds_available_for_event,
@@ -96,6 +96,35 @@ class TestMatching(ParticipationDeedsFixture, TestCase):
             school=teacher.school,
         )
         self.assertIsNone(matched)
+
+
+class TestParticipantDeedCounts(ParticipationDeedsFixture, TestCase):
+    def test_counts_school_students(self):
+        complete, incomplete = participant_deed_counts(
+            self.competition,
+            school=self.school1_state1,
+        )
+        self.assertEqual(complete, 0)
+        self.assertEqual(incomplete, 1)
+
+        deed = self.create_unattached_deed(school=self.school1_state1)
+        self.school_student.participationDeed = deed
+        self.school_student.save()
+
+        complete, incomplete = participant_deed_counts(
+            self.competition,
+            school=self.school1_state1,
+        )
+        self.assertEqual(complete, 1)
+        self.assertEqual(incomplete, 0)
+
+    def test_counts_independent_separately(self):
+        complete, incomplete = participant_deed_counts(
+            self.competition,
+            mentorUser=self.user_state1_independent_mentor5,
+        )
+        self.assertEqual(complete, 0)
+        self.assertEqual(incomplete, 1)
 
 
 class TestParticipationDeedMethods(ParticipationDeedsFixture, TestCase):
