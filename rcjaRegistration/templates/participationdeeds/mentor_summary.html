@@ -36,7 +36,7 @@
                             <button
                                 type="button"
                                 class="ui mini negative button"
-                                onClick="showDeleteDeedModal({{ deed.id }}, '{% url 'participationdeeds:delete' deed.id %}')"
+                                onClick="showDeleteDeedModal({{ deed.id }}, '{% url 'participationdeeds:delete' deed.id %}', '{{ deed.submittedFullName|escapejs }}')"
                             >Delete</button>
                         </td>
                     </tr>
@@ -115,7 +115,11 @@
     <div class="image content">
         <div class="description">
             <div class="ui header">Are you sure?</div>
-            <p>Deleting a participation deed is an irreversible action. Are you sure that this is the deed you want to delete?</p>
+            <p>
+                Deleting the participation deed for
+                <strong id="deleteDeedStudentName"></strong>
+                is an irreversible action. Are you sure that this is the deed you want to delete?
+            </p>
         </div>
     </div>
     <div class="actions">
@@ -137,7 +141,8 @@
             .fail(() => alert('Unexpected Error!'));
     }
 
-    function showDeleteDeedModal(id, url) {
+    function showDeleteDeedModal(id, url, studentName) {
+        $('#deleteDeedStudentName').text(studentName);
         $('#deleteDeedConfirm').attr('onClick', "deleteDeed(" + id + ",'" + url + "');");
         $('#deleteDeedModal').modal('show');
     }
