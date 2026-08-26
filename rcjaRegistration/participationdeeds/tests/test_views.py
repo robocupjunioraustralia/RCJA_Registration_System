@@ -267,6 +267,36 @@ class MentorSummaryAccessBase(ParticipationDeedsFixture):
         self.assertNotContains(response, 'OtherUnattached')
         self.assertContains(response, self.attach_url(deed, self.summary_event))
 
+    def test_attach_button_hidden_when_no_students_without_deed(self):
+        from participationdeeds.participants import participants_without_deed
+        kwargs = {'school': self.own_school} if self.own_school is not None else {'mentorUser': self.own_mentor}
+        deed = self.create_unattached_deed(**kwargs, firstName='NoAttachUnattached', event=self.summary_event)
+        for student in participants_without_deed(
+            self.summary_event,
+            school=self.own_school,
+            mentorUser=self.own_mentor,
+        ):
+            try:
+                student_year = int(student.yearLevel)
+            except (TypeError, ValueError):
+                student_year = 7
+            student.participationDeed = ParticipationDeed.objects.create(
+                parentName='Fill Parent',
+                submittedFirstName=student.firstName,
+                submittedLastName=student.lastName,
+                submittedYearLevel=student_year,
+                school=self.own_school,
+                mentorUser=self.own_mentor,
+                originalEvent=self.summary_event,
+            )
+            student.save()
+
+        response = self.client.get(self.mentor_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'NoAttachUnattached')
+        self.assertNotContains(response, self.attach_url(deed, self.summary_event))
+        self.assertContains(response, 'Delete')
+
     def test_does_not_load_when_disabled(self):
         self.summary_event.electronicParticipationDeedsEnabled = False
         self.summary_event.save()
@@ -422,6 +452,24 @@ class AttachPageAccessBase(ParticipationDeedsFixture):
         self.assertEqual(response.status_code, 302)
         own.refresh_from_db()
         self.assertEqual(own.participationDeed_id, deed.pk)
+
+    def test_students_listed_alphabetically_by_first_name(self):
+        from participationdeeds.participants import participants_without_deed
+        deed = self.own_unattached_deed()
+        students = list(participants_without_deed(
+            self.attach_event,
+            school=self.own_school,
+            mentorUser=self.own_mentor,
+        ))
+        self.assertGreaterEqual(len(students), 1)
+        response = self.client.get(self.attach_deed_url(deed))
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        ordered = list(form.fields['student'].queryset)
+        self.assertEqual(
+            [student.firstName for student in ordered],
+            sorted(student.firstName for student in ordered),
+        )
 
     def test_post_rejects_student_outside_queryset(self):
         deed = self.own_unattached_deed()
