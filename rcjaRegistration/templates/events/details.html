@@ -3,6 +3,16 @@
 {% block head %}
 
 <title> {{event}} </title>
+<style>
+    .event-table-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .event-table-actions .button {
+        margin: 0;
+    }
+</style>
 
 {% endblock %}
 
@@ -280,8 +290,10 @@
                         {% endif %}
                         {% if event.registrationsOpen %}
                             <td>
-                                <a href="{% url 'workshops:details' workshopAttendee.id %}" class="ui primary button">Edit/View Details</a>
-                                <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
+                                <div class="event-table-actions">
+                                    <a href="{% url 'workshops:details' workshopAttendee.id %}" class="ui primary button">Edit/View Details</a>
+                                    <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
+                                </div>
                             </td>
                         {% endif %}
                     </tr>
@@ -317,18 +329,20 @@
                                 <td>{{ team.deedSummary }}</td>
                             {% endif %}
                             <td>
-                                <a href="{% url 'teams:details' team.id %}" class="ui primary button">View Details</a>
-                                {% if event.registrationsOpen %}
-                                    <a href="{% url 'teams:edit' team.id %}?fromEvent" class="ui primary button">Edit</a>
-                                {% endif %}
+                                <div class="event-table-actions">
+                                    <a href="{% url 'teams:details' team.id %}" class="ui primary button">View Details</a>
+                                    {% if event.registrationsOpen %}
+                                        <a href="{% url 'teams:edit' team.id %}?fromEvent" class="ui primary button">Edit</a>
+                                    {% endif %}
 
-                                {% if team.availableFileUploadTypes %}
-                                    <a href="{% url 'eventfiles:uploadFile' team.id %}" class="ui button primary">Upload file</a>
-                                {% endif %}
+                                    {% if team.availableFileUploadTypes %}
+                                        <a href="{% url 'eventfiles:uploadFile' team.id %}" class="ui button primary">Upload file</a>
+                                    {% endif %}
 
-                                {% if event.registrationsOpen %}
-                                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
-                                {% endif %}
+                                    {% if event.registrationsOpen %}
+                                        <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

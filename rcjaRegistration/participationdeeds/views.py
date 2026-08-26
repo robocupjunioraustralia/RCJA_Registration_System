@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core import signing
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.validators import validate_ipv46_address
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -35,6 +36,22 @@ from workshops.models import WorkshopAttendee
 
 def _invalid_link_response(request, message='This participation deed link is invalid or has expired.'):
     return render(request, 'participationdeeds/invalid.html', {'message': message}, status=400)
+
+
+def _client_ip_address(request):
+    """Return the client IP, preferring X-Forwarded-For when behind a reverse proxy."""
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded_for:
+        ipAddress = forwarded_for.split(',')[0].strip()
+    else:
+        ipAddress = (request.META.get('REMOTE_ADDR') or '').strip()
+    if not ipAddress:
+        return None
+    try:
+        validate_ipv46_address(ipAddress)
+    except ValidationError:
+        return None
+    return ipAddress
 
 
 def _mentor_context_for_event(request, event):
@@ -104,6 +121,9 @@ def sign_participation_deed(request, token):
                     school=school,
                     mentorUser=mentorUser if school is None else None,
                     originalEvent=event,
+                    ipAddress=_client_ip_address(request),
+                    userAgent=request.META.get('HTTP_USER_AGENT', '')[:2000],
+                    loggedInUser=request.user if request.user.is_authenticated else None,
                 )
                 if participant is not None and not participant.participationDeed_id:
                     attach_deed(participant, deed)

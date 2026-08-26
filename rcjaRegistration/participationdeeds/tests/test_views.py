@@ -125,6 +125,48 @@ class TestSignPage_Competition(SignPageBase, TestCase):
         self.assertIsNotNone(student.participationDeed_id)
         self.assertEqual(student.participationDeed.parentName, 'Parent One')
 
+    def test_sign_records_request_metadata_from_forwarded_for(self):
+        student = self.school_sign_student
+        response = self.client.post(
+            self.sign_url(self.school_token()),
+            {
+                'firstName': student.firstName,
+                'lastName': student.lastName,
+                'yearLevel': str(student.yearLevel),
+                'agree': True,
+                'parentName': 'Meta Parent',
+            },
+            HTTP_X_FORWARDED_FOR='203.0.113.10, 10.0.0.1',
+            HTTP_USER_AGENT='DeedTestAgent/1.0',
+            REMOTE_ADDR='127.0.0.1',
+        )
+        self.assertEqual(response.status_code, 200)
+        deed = ParticipationDeed.objects.get(parentName='Meta Parent')
+        self.assertEqual(deed.ipAddress, '203.0.113.10')
+        self.assertEqual(deed.userAgent, 'DeedTestAgent/1.0')
+        self.assertIsNone(deed.loggedInUser_id)
+
+    def test_sign_records_logged_in_user(self):
+        self.client.force_login(self.user_state1_school1_mentor1)
+        student = self.school_sign_student
+        response = self.client.post(
+            self.sign_url(self.school_token()),
+            {
+                'firstName': student.firstName,
+                'lastName': student.lastName,
+                'yearLevel': str(student.yearLevel),
+                'agree': True,
+                'parentName': 'Logged In Parent',
+            },
+            HTTP_X_FORWARDED_FOR='198.51.100.20',
+            HTTP_USER_AGENT='LoggedInAgent/2.0',
+        )
+        self.assertEqual(response.status_code, 200)
+        deed = ParticipationDeed.objects.get(parentName='Logged In Parent')
+        self.assertEqual(deed.ipAddress, '198.51.100.20')
+        self.assertEqual(deed.userAgent, 'LoggedInAgent/2.0')
+        self.assertEqual(deed.loggedInUser_id, self.user_state1_school1_mentor1.pk)
+
     def test_post_auto_attaches_independent(self):
         student = self.independent_sign_student
         response = self.client.post(self.sign_url(self.independent_token()), {

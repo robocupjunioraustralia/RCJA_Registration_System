@@ -31,6 +31,15 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
         verbose_name='Original event',
         on_delete=models.PROTECT,
     )
+    loggedInUser = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Logged in user',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        editable=False,
+        related_name='+',
+    )
     # Creation and update time
     creationDateTime = models.DateTimeField('Creation date', auto_now_add=True)
     updatedDateTime = models.DateTimeField('Last modified date', auto_now=True)
@@ -59,6 +68,17 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
         'Participation deed text',
         editable=False,
         help_text='Snapshot of the state participation deed text at the time of signing.',
+    )
+    ipAddress = models.GenericIPAddressField(
+        'IP address',
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    userAgent = models.TextField(
+        'User agent',
+        blank=True,
+        editable=False,
     )
 
     # *****Meta and clean*****
