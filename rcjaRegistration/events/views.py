@@ -113,6 +113,10 @@ def dashboard(request):
 def coordinatorEventDetailsPermissions(request, event):
     return checkCoordinatorPermission(request, Event, event, 'view')
 
+def coordinatorInvoiceViewPermissions(request, event):
+    from invoices.models import Invoice
+    return checkCoordinatorPermission(request, Invoice, event, 'view')
+
 def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):
         return True
@@ -229,6 +233,7 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'hasInvoiceViewPermissions': coordinatorInvoiceViewPermissions(request, event),
         'maxEventRegistrationsForSchoolReached': event.maxEventRegistrationsForSchoolReached(request.user),
         'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
