@@ -46,6 +46,7 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         ('Event details', {
             'fields': (
                 ('defaultEventDetails', 'invoiceMessage'),
+                'participationDeedText',
                 ('defaultEventImage', 'defaultEventImageOriginalFilename', 'defaultEventImageFilesize', 'defaultEventImageTag')
             )
         }),

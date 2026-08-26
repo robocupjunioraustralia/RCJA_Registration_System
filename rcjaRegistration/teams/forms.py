@@ -15,9 +15,12 @@ class StudentForm(forms.ModelForm):
 class TeamForm(BaseEventAttendanceFormInitMixin, forms.ModelForm):
     class Meta:
         model = Team
-        fields= ['division', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
+        fields= ['division', 'mentorUser', 'campus', 'school', 'event', 'name', 'hardwarePlatform', 'softwarePlatform']
 
     def __init__(self, *args, user, event, **kwargs):
         super().__init__(*args, user=user, event=event, **kwargs)
         for field in ['hardwarePlatform', 'softwarePlatform']:
             self.fields[field].required = True
+
+class ImportTeamsCSVForm(forms.Form):
+    csvFile = forms.FileField(label='CSV file', widget=forms.ClearableFileInput(attrs={'accept': '.csv'}))

@@ -108,6 +108,94 @@ class TestWorkshopAttendeeMethods(TestCase):
     def test_strNameAndSchool_school(self):
         self.assertEqual(self.attendee2.strNameAndSchool(), "First2 Last2 (School 2)")
 
+    def test_participationDeedComplete_teacher(self):
+        self.assertEqual(self.attendee1.participationDeedComplete(), '')
+
+    def test_participationDeedComplete_student_incomplete(self):
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedComplete(), False)
+
+    def test_participationDeedComplete_student_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        self.attendee2.save()
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName=self.attendee2.firstName,
+            submittedLastName=self.attendee2.lastName,
+            submittedYearLevel=10,
+            school=self.school2,
+            originalEvent=self.event,
+        )
+        self.attendee2.participationDeed = deed
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedComplete(), True)
+
+    def test_participationDeedStatus_teacher(self):
+        self.assertEqual(self.attendee1.participationDeedStatus(), '')
+
+    def test_participationDeedStatus_student_incomplete(self):
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedStatus(), 'Incomplete')
+
+    def test_participationDeedStatus_student_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        self.attendee2.save()
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName=self.attendee2.firstName,
+            submittedLastName=self.attendee2.lastName,
+            submittedYearLevel=10,
+            school=self.school2,
+            originalEvent=self.event,
+        )
+        self.attendee2.participationDeed = deed
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedStatus(), 'Complete (Parent Name)')
+
+    def test_participationDeedParentName_teacher(self):
+        self.assertEqual(self.attendee1.participationDeedParentName(), '')
+
+    def test_participationDeedParentName_student_incomplete(self):
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedParentName(), '')
+
+    def test_participationDeedParentName_student_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        self.attendee2.save()
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName=self.attendee2.firstName,
+            submittedLastName=self.attendee2.lastName,
+            submittedYearLevel=10,
+            school=self.school2,
+            originalEvent=self.event,
+        )
+        self.attendee2.participationDeed = deed
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedParentName(), 'Parent Name')
+
+    def test_participationDeedSignedDateTime_teacher(self):
+        self.assertEqual(self.attendee1.participationDeedSignedDateTime(), '')
+
+    def test_participationDeedSignedDateTime_student_incomplete(self):
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedSignedDateTime(), '')
+
+    def test_participationDeedSignedDateTime_student_complete(self):
+        from participationdeeds.models import ParticipationDeed
+        self.attendee2.save()
+        deed = ParticipationDeed.objects.create(
+            parentName='Parent Name',
+            submittedFirstName=self.attendee2.firstName,
+            submittedLastName=self.attendee2.lastName,
+            submittedYearLevel=10,
+            school=self.school2,
+            originalEvent=self.event,
+        )
+        self.attendee2.participationDeed = deed
+        self.attendee2.save()
+        self.assertEqual(self.attendee2.participationDeedSignedDateTime(), deed.signedDateTime)
+
 class TestWorkshopAttendeeClean(TestCase):
     email1 = 'user1@user.com'
     email2 = 'user2@user.com'

@@ -1,0 +1,184 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+
+<title> Import teams from CSV </title>
+
+<style type="text/css">
+    body {
+        background-color: white;
+    }
+    .column {
+        max-width: 100%;
+    }
+    .left-aligned-text {
+        text-align: left;
+    }
+    .error-text {
+        color: red;
+    }
+    .scrolling-table {
+        overflow-x: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <div class="row left-aligned-text">
+        <h1>{{ event }}</h1>
+        <h2>Import teams from CSV</h2>
+
+        <p>Download the template below, fill in one row for each team you want to register, then upload it. You will be shown the teams from your file so you can check them before anything is created.</p>
+
+        <a href="{% url 'teams:importCSVTemplate' event.id %}"><button class="ui primary button">Download template CSV</button></a>
+        <br><br>
+
+        <h3>Filling out the template</h3>
+        <ul>
+            <li>Do not change the heading row.</li>
+            <li>This event allows up to {{ event.maxMembersPerTeam }} student{{ event.maxMembersPerTeam|pluralize }} per team. Leave the columns for any students you don't need blank.</li>
+            <li>Every team needs at least one student.</li>
+            <li>The Division, {% if showCampusColumn %}Campus, {% endif %}Hardware platform, Software platform and Gender columns must exactly match one of the options listed below.</li>
+            <li>Year level must be a whole number.</li>
+        </ul>
+
+        {% if divisionsMaxReachedWarnings %}
+            <ul>
+                {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                    <li class="error-text">{{ divisionsMaxReachedWarning }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h3>Valid options</h3>
+        <div class="scrolling-table">
+            <table id="optionsTable" class="ui celled table">
+                <thead>
+                    <tr>
+                        {% for optionHeader in optionHeaders %}<th>{{ optionHeader }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for optionRow in optionRows %}
+                        <tr>
+                            {% for option in optionRow %}<td>{{ option }}</td>{% endfor %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{{ optionHeaders|length }}">There are no options available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if showCampusColumn %}
+            <p>Campus is optional, leave the column blank if you don't want to set a campus.</p>
+        {% endif %}
+
+        {# Once the file is ready to import there is nothing left to upload, so the cancel button moves next to the import button #}
+        {% if not showImportButton %}
+            <h3>Upload your CSV</h3>
+            <form method="post" enctype="multipart/form-data" class="ui form">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="ui message left-aligned-text">
+                        <p class="header">There were some errors in the information you entered. Please correct the following:</p>
+                        <ul>
+                            {% for field in form %}
+                                {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                <div class="field">
+                    <label>CSV file:</label>
+                    {{ form.csvFile }}
+                </div>
+                <br>
+                <input class="primary ui button" type="submit" name="preview" value="Upload" />
+                <a href="{% url 'events:details' event.id %}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
+            </form>
+        {% endif %}
+
+        {% if fileErrors %}
+            <br>
+            <div class="ui message left-aligned-text">
+                <p class="header">Your file could not be read. Please correct the following and upload it again:</p>
+                <ul>
+                    {% for fileError in fileErrors %}
+                        <li class="error-text">{{ fileError }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if importedTeams %}
+            <br>
+            <h2>Teams to be imported</h2>
+            {% if showImportButton %}
+                <p>No errors were found. Check the teams below, then click Import teams to create them.</p>
+            {% else %}
+                <p class="error-text">Please correct the errors below and upload your file again.</p>
+            {% endif %}
+
+            <div class="scrolling-table">
+                <table id="importTeamTable" class="ui celled table">
+                    <thead>
+                        <th>Team name</th>
+                        <th>Division</th>
+                        {% if showCampusColumn %}<th>Campus</th>{% endif %}
+                        <th>Hardware platform</th>
+                        <th>Software platform</th>
+                        <th>Students</th>
+                    </thead>
+                    <tbody>
+                        {% for importedTeam in importedTeams %}
+                            <tr>
+                                <td>
+                                    {{ importedTeam.name }}
+                                    {% for error in importedTeam.nameErrors %}<div class="error-text">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ importedTeam.division }}
+                                    {% for error in importedTeam.divisionErrors %}<div class="error-text">{{ error }}</div>{% endfor %}
+                                </td>
+                                {% if showCampusColumn %}
+                                    <td>
+                                        {{ importedTeam.campus }}
+                                        {% for error in importedTeam.campusErrors %}<div class="error-text">{{ error }}</div>{% endfor %}
+                                    </td>
+                                {% endif %}
+                                <td>
+                                    {{ importedTeam.hardwarePlatform }}
+                                    {% for error in importedTeam.hardwarePlatformErrors %}<div class="error-text">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ importedTeam.softwarePlatform }}
+                                    {% for error in importedTeam.softwarePlatformErrors %}<div class="error-text">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {% for student in importedTeam.students %}{{ student }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                    {% for error in importedTeam.studentErrors %}<div class="error-text">{{ error }}</div>{% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if showImportButton %}
+                <form method="post" class="ui form" style="margin-top:1rem;">
+                    {% csrf_token %}
+                    {# Textarea rather than a hidden input so the line breaks in the csv survive the round trip #}
+                    <textarea name="csvText" style="display:none">{{ csvText }}</textarea>
+                    <input class="positive ui button" type="submit" name="import" value="Import teams" />
+                    <a href="{% url 'events:details' event.id %}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+    <br>
+</div>
+{% endblock %}

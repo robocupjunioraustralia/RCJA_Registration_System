@@ -2,7 +2,7 @@
 
 {% block object-tools %}
 {% if filterQuerysetOnSelected %}
-<p>Filtered to: {{ user.currentlySelectedAdminState|default:"All states" }} {{ user.currentlySelectedAdminYear|default:"" }}</p>
+    <p>Filtered to: {{ user.currentlySelectedAdminState|default:"All states" }} {{ user.currentlySelectedAdminYear|default:"" }}</p>
 {% endif %}
 {{ block.super }}
 {% endblock %}
