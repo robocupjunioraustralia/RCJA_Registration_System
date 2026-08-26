@@ -196,6 +196,11 @@
     {% if electronicParticipationDeedsAvailable %}
         <div class="ui segment">
             <h3 class="ui dividing header">Participation deeds</h3>
+            <p>
+                <strong>Complete:</strong> {{ completeDeedCount }}
+                &nbsp;·&nbsp;
+                <strong>Incomplete:</strong> {{ incompleteDeedCount }}
+            </p>
             {% if schoolMagicLink %}
                 <p>All students must have a participation deed signed by a parent or guardian prior to participating in the event.</p>
                 <p>Share this link with the parents and guardians of your students to complete the participation deed electronically:</p>

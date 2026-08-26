@@ -8,6 +8,11 @@
 <div class="ui aligned container">
     <h1>Participation deeds</h1>
     <p>{{ event }}</p>
+    <p>
+        <strong>Complete:</strong> {{ completeDeedCount }}
+        &nbsp;·&nbsp;
+        <strong>Incomplete:</strong> {{ incompleteDeedCount }}
+    </p>
 
     {% if unattached %}
         <h2>Unattached deeds</h2>

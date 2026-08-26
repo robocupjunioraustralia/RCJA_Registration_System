@@ -29,6 +29,7 @@ from .participants import (
     eligible_workshop_students_queryset,
     mentor_teams_for_context,
     summary_groups_for_event,
+    participant_deed_counts,
 )
 from invoices.models import InvoiceGlobalSettings
 from teams.models import Student, Team
@@ -159,6 +160,11 @@ def mentor_summary(request, eventID):
 
     unattached = unattached_deeds_for_context(event, school=school, mentorUser=mentorUser)
     can_attach_deeds = participants_without_deed(event, school=school, mentorUser=mentorUser).exists()
+    completeDeedCount, incompleteDeedCount = participant_deed_counts(
+        event,
+        school=school,
+        mentorUser=mentorUser,
+    )
 
     teams = None
     attendees = None
@@ -173,6 +179,8 @@ def mentor_summary(request, eventID):
         'attendees': attendees,
         'unattached': unattached,
         'can_attach_deeds': can_attach_deeds,
+        'completeDeedCount': completeDeedCount,
+        'incompleteDeedCount': incompleteDeedCount,
     })
 
 
