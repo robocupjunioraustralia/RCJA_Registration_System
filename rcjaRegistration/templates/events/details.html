@@ -4,12 +4,12 @@
 
 <title> {{event}} </title>
 <style>
-    .event-table-actions {
+    .event-action-buttons {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
     }
-    .event-table-actions .button {
+    .event-action-buttons .button {
         margin: 0;
     }
 </style>
@@ -27,18 +27,22 @@
                 <div class="sub header">Only event administrators can see this section.</div>
             </h3>
             <p>{{ totalRegistrations }} registration{{ totalRegistrations|pluralize }} so far.</p>
-            <a href="{% url 'admin:events_event_change' event.id %}" class="ui primary button">Edit Event</a>
-            <a href="{{ event.registrationsAdminURL }}" class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</a>
-            {% if not event.boolWorkshop %}
-                <a href="{% url 'admin:eventfiles_mentoreventfileupload_changelist'%}?eventAttendance__event__id__exact={{event.id}}" class="ui primary button">View Files</a>
-            {% endif %}
-            <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}" class="ui primary button">View Invoices</a>
-            {% if event.cmsEventId %}
-                <a href="{% url 'events:cms' event.id %}" class="ui primary button">View Results</a>
-            {% endif %}
-            {% if electronicParticipationDeedsEnabled %}
-                <a href="{% url 'participationdeeds:coordinator_summary' event.id %}" class="ui primary button">Participation deeds</a>
-            {% endif %}
+            <div class="event-action-buttons">
+                <a href="{% url 'admin:events_event_change' event.id %}" class="ui primary button">Edit Event</a>
+                <a href="{{ event.registrationsAdminURL }}" class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</a>
+                {% if not event.boolWorkshop %}
+                    <a href="{% url 'admin:eventfiles_mentoreventfileupload_changelist'%}?eventAttendance__event__id__exact={{event.id}}" class="ui primary button">View Files</a>
+                {% endif %}
+                {% if hasInvoiceViewPermissions %}
+                    <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}" class="ui primary button">View Invoices</a>
+                {% endif %}
+                {% if event.cmsEventId %}
+                    <a href="{% url 'events:cms' event.id %}" class="ui primary button">View Results</a>
+                {% endif %}
+                {% if electronicParticipationDeedsEnabled %}
+                    <a href="{% url 'participationdeeds:coordinator_summary' event.id %}" class="ui primary button">Participation deeds</a>
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 
@@ -290,7 +294,7 @@
                         {% endif %}
                         {% if event.registrationsOpen %}
                             <td>
-                                <div class="event-table-actions">
+                                <div class="event-action-buttons">
                                     <a href="{% url 'workshops:details' workshopAttendee.id %}" class="ui primary button">Edit/View Details</a>
                                     <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
                                 </div>
@@ -328,7 +332,7 @@
                                 <td>{{ team.deedSummary }}</td>
                             {% endif %}
                             <td>
-                                <div class="event-table-actions">
+                                <div class="event-action-buttons">
                                     <a href="{% url 'teams:details' team.id %}" class="ui primary button">View Details</a>
                                     {% if event.registrationsOpen %}
                                         <a href="{% url 'teams:edit' team.id %}?fromEvent" class="ui primary button">Edit</a>
