@@ -1,0 +1,56 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+<title>Participation deeds summary — {{ event }}</title>
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <h1>Participation deeds summary</h1>
+    <p>{{ event }}</p>
+
+    {% if not enabled %}
+        <div class="ui warning message">Electronic participation deeds are not enabled for this event.</div>
+    {% elif not groups %}
+        <div class="ui info message">No student registrations yet.</div>
+    {% else %}
+        {% for group in groups %}
+            <h2>{{ group.label }}</h2>
+            <p>
+                Complete: {{ group.complete|length }} /
+                Incomplete: {{ group.incomplete|length }}
+                {% if group.unattached %} / Unattached deeds: {{ group.unattached|length }}{% endif %}
+            </p>
+
+            {% if group.complete %}
+                <h4>Complete</h4>
+                <ul>
+                    {% for p in group.complete %}
+                        <li>{{ p }} — {{ p.participationDeed.parentName }} ({{ p.participationDeed.signedDateTime }})</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if group.incomplete %}
+                <h4>Incomplete</h4>
+                <ul>
+                    {% for p in group.incomplete %}
+                        <li>{{ p }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if group.unattached %}
+                <h4>Unattached deeds</h4>
+                <ul>
+                    {% for deed in group.unattached %}
+                        <li>{{ deed.submittedFullName }} (Year {{ deed.submittedYearLevel }}) — {{ deed.parentName }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <a href="{% url 'events:details' event.id %}" class="ui button" style="margin-top:1rem;">Back to event</a>
+</div>
+{% endblock %}

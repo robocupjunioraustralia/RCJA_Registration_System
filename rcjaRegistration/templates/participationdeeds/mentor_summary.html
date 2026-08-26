@@ -1,0 +1,105 @@
+{% extends 'common/loggedInbase.html' %}
+
+{% block head %}
+<title>Participation deeds — {{ event }}</title>
+{% endblock %}
+
+{% block content %}
+<div class="ui aligned container">
+    <h1>Participation deeds</h1>
+    <p>{{ event }}</p>
+
+    {% if unattached %}
+        <h2>Unattached deeds</h2>
+        <p>These were submitted via the parent link but could not be matched automatically. Attach each one to the correct student.</p>
+        <table class="ui celled table">
+            <thead>
+                <tr>
+                    <th>Submitted child</th>
+                    <th>Year level</th>
+                    <th>Signed by</th>
+                    <th>Signed</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for deed in unattached %}
+                    <tr>
+                        <td>{{ deed.submittedFullName }}</td>
+                        <td>{{ deed.submittedYearLevel }}</td>
+                        <td>{{ deed.parentName }}</td>
+                        <td>{{ deed.signedDateTime }}</td>
+                        <td>
+                            <a href="{% url 'participationdeeds:attach' event.id deed.id %}" class="ui mini primary button">Attach</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if teams %}
+        {% for team in teams %}
+            <h2>{{ team.name }} <span class="ui grey text">({{ team.division }})</span></h2>
+            <table class="ui celled table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Year level</th>
+                        <th>Participation deed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in team.student_set.all %}
+                        <tr{% if not student.participationDeed %} class="negative"{% endif %}>
+                            <td>{{ student }}</td>
+                            <td>{{ student.yearLevel }}</td>
+                            <td>
+                                {% if student.participationDeed %}
+                                    Complete — {{ student.participationDeed.parentName }} ({{ student.participationDeed.signedDateTime }})
+                                {% else %}
+                                    Incomplete
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3">No students on this team.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    {% elif attendees %}
+        <h2>Student attendees</h2>
+        <table class="ui celled table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Year level</th>
+                    <th>Participation deed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendee in attendees %}
+                    <tr{% if not attendee.participationDeed %} class="negative"{% endif %}>
+                        <td>{{ attendee }}</td>
+                        <td>{{ attendee.yearLevel }}</td>
+                        <td>
+                            {% if attendee.participationDeed %}
+                                Complete — {{ attendee.participationDeed.parentName }} ({{ attendee.participationDeed.signedDateTime }})
+                            {% else %}
+                                Incomplete
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">No student attendees.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="ui info message">No students registered yet.</div>
+    {% endif %}
+
+    <a href="{% url 'events:details' event.id %}" class="ui button" style="margin-top:1rem;">Back to event</a>
+</div>
+{% endblock %}

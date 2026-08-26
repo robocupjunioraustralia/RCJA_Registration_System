@@ -1257,6 +1257,46 @@ class TestEventMethods(TestCase):
 
         self.assertEqual(self.event.surchargeEventDescription(), '')
 
+    def test_participationDeedsSummaryURL(self):
+        self.assertEqual(
+            self.event.participationDeedsSummaryURL(),
+            reverse('participationdeeds:coordinator_summary', kwargs={'eventID': self.event.id}),
+        )
+
+
+class TestEventAdminMethods(TestCase):
+    def setUp(self):
+        from django.contrib.admin.sites import site
+        from events.admin import EventAdmin
+        commonSetUp(self)
+        self.event = Event.objects.create(
+            year=self.year,
+            state=self.newState,
+            name='Event Admin Methods',
+            eventType='competition',
+            status='published',
+            maxMembersPerTeam=5,
+            competition_defaultEntryFee=4,
+            startDate=(datetime.datetime.now() + datetime.timedelta(days=+5)).date(),
+            endDate=(datetime.datetime.now() + datetime.timedelta(days=+6)).date(),
+            registrationsOpenDate=(datetime.datetime.now() + datetime.timedelta(days=-5)).date(),
+            registrationsCloseDate=(datetime.datetime.now() + datetime.timedelta(days=-1)).date(),
+            directEnquiriesTo=self.user,
+        )
+        self.admin = EventAdmin(Event, site)
+
+    def test_participationDeedsLink_disabled(self):
+        self.event.electronicParticipationDeedsEnabled = False
+        self.assertEqual(self.admin.participationDeedsLink(self.event), 'Disabled')
+
+    def test_participationDeedsLink_enabled(self):
+        self.event.electronicParticipationDeedsEnabled = True
+        self.event.save()
+        link_html = self.admin.participationDeedsLink(self.event)
+        self.assertIn('View', link_html)
+        self.assertIn(self.event.participationDeedsSummaryURL(), link_html)
+
+
 def newSetupEvent(self):
     self.division1 = Division.objects.create(name='Division 1')
     self.event = Event(

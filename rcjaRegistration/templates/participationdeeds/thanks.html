@@ -1,0 +1,21 @@
+{% extends 'common/base.html' %}
+
+{% block head %}
+<title>Thank you</title>
+{% include 'common/loginBase.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="bg">
+    <div class="layer">
+        <div class="logincontent">
+            <div class="ui center aligned container grid">
+                <div class="twelve wide mobile eight wide computer column ui segment">
+                    <h2>Thank you</h2>
+                    <p>Your participation deed for <strong>{{ event }}</strong> has been recorded.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

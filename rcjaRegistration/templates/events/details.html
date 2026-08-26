@@ -3,137 +3,271 @@
 {% block head %}
 
 <title> {{event}} </title>
+<style>
+    .event-table-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .event-table-actions .button {
+        margin: 0;
+    }
+</style>
 
 {% endblock %}
 
 {% block content %}
 <div class="ui aligned container">
-    <div class="row">
-        <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}}</h1>
-    </div>
+    <h1>{% if event.boolWorkshop %}Workshop: {% endif %}{{event}}</h1>
+
     {% if hasAdminPermissions %}
-        <div class="row">    
-            <h2>Administration Shortcuts</h2>
-            <p>Only event administrators can see this section.</p>
-            <p>{{ totalRegistrations }} registrations so far.</p>
-            <a href="{% url 'admin:events_event_change' event.id %}"><button class="ui primary button">Edit Event</button></a>
-            <a href="{{ event.registrationsAdminURL }}"><button class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</button></a>
-            {% if not event.boolWorkshop %}<a href="{% url 'admin:eventfiles_mentoreventfileupload_changelist'%}?eventAttendance__event__id__exact={{event.id}}"><button class="ui primary button">View Files</button></a>{% endif %}
-            <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}"><button class="ui primary button">View Invoices</button></a>
-            {% if event.cmsEventId %}<a href="{% url 'events:cms' event.id %}"><button class="ui primary button">View Results</button></a>{% endif %}
-            <br>
-            <h2>Mentor View</h2>
+        <div class="ui secondary segment">
+            <h3 class="ui header">
+                Administration
+                <div class="sub header">Only event administrators can see this section.</div>
+            </h3>
+            <p>{{ totalRegistrations }} registration{{ totalRegistrations|pluralize }} so far.</p>
+            <a href="{% url 'admin:events_event_change' event.id %}" class="ui primary button">Edit Event</a>
+            <a href="{{ event.registrationsAdminURL }}" class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</a>
+            {% if not event.boolWorkshop %}
+                <a href="{% url 'admin:eventfiles_mentoreventfileupload_changelist'%}?eventAttendance__event__id__exact={{event.id}}" class="ui primary button">View Files</a>
+            {% endif %}
+            <a href="{% url 'admin:invoices_invoice_changelist'%}?event__id__exact={{event.id}}" class="ui primary button">View Invoices</a>
+            {% if event.cmsEventId %}
+                <a href="{% url 'events:cms' event.id %}" class="ui primary button">View Results</a>
+            {% endif %}
+            {% if electronicParticipationDeedsEnabled %}
+                <a href="{% url 'participationdeeds:coordinator_summary' event.id %}" class="ui primary button">Participation deeds</a>
+            {% endif %}
         </div>
     {% endif %}
 
-    <div class="row">
-        <h3>Dates</h3>
-        {% if event.startDate == event.endDate %}
-            <p>Event date: {{event.startDate|default_if_none:"TBC"}}</p>
-        {% else %}
-            <p>Start date: {{event.startDate|default_if_none:"TBC"}}</p>
-            <p>End date: {{event.endDate|default_if_none:"TBC"}}</p>
-        {% endif %}
-        <p>Registrations close: {{event.registrationsCloseDate|default_if_none:"TBC"}}</p>
-        {% if not event.boolWorkshop %}<h3>Max members per team: {{ event.maxMembersPerTeam }}</h3>{% endif %}
-        <h3>Direct enquiries to: {{ event.directEnquiriesTo.get_full_name }}, <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a></h3>
-        <h3>Payment</h3>
-        <p>
+    <div class="ui stackable two column equal height grid">
+        <div class="column">
+            <div class="ui fluid segment" style="height: 100%;">
+                <h3 class="ui dividing header">Dates</h3>
+                <div class="ui list">
+                    {% if event.startDate == event.endDate %}
+                        <div class="item"><strong>Event date:</strong> {{event.startDate|default_if_none:"TBC"}}</div>
+                    {% else %}
+                        <div class="item"><strong>Start date:</strong> {{event.startDate|default_if_none:"TBC"}}</div>
+                        <div class="item"><strong>End date:</strong> {{event.endDate|default_if_none:"TBC"}}</div>
+                    {% endif %}
+                    <div class="item"><strong>Registrations close:</strong> {{event.registrationsCloseDate|default_if_none:"TBC"}}</div>
+                </div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="ui fluid segment" style="height: 100%;">
+                <h3 class="ui dividing header">Contact &amp; venue</h3>
+                <div class="ui list">
+                    <div class="item">
+                        <strong>Direct enquiries to:</strong>
+                        {{ event.directEnquiriesTo.get_full_name }},
+                        <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>
+                    </div>
+                    {% if not event.boolWorkshop %}
+                        <div class="item"><strong>Max members per team:</strong> {{ event.maxMembersPerTeam }}</div>
+                    {% endif %}
+                    <div class="item">
+                        <strong>Location:</strong>
+                        {% if event.venue %}
+                            {{ event.venue.name }}
+                            {% if event.venue.address %}<br>{{ event.venue.address|escape|linebreaks }}{% endif %}
+                        {% else %}
+                            TBC
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui segment">
+        <h3 class="ui dividing header">Payment</h3>
+        <div class="ui list">
             {% if event.eventType == 'competition' %}
-                {% if event.competition_defaultEntryFee is not None %}This Event costs ${{event.competition_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.{% else %}The event's cost is TBC. {% endif %}{% endif %}
+                <div class="item">
+                    {% if event.competition_defaultEntryFee is not None %}
+                        This event costs ${{event.competition_defaultEntryFee}} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ billingTypeLabel }}.
+                    {% else %}
+                        The event's cost is TBC.
+                    {% endif %}
+                </div>
+            {% endif %}
             {% if event.eventType == 'workshop' %}
-                This Workshop costs ${{ event.workshopTeacherEntryFee }} per teacher attendee and ${{ event.workshopStudentEntryFee }} per student attendee {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %}.
+                <div class="item">
+                    This workshop costs ${{ event.workshopTeacherEntryFee }} per teacher attendee and ${{ event.workshopStudentEntryFee }} per student attendee {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %}.
+                </div>
             {% endif %}
             {% if event.eventSurchargeAmount %}
-                <br><br>{{ event.surchargeName }}: ${{ event.eventSurchargeAmount}}
-                {% if event.surchargeEventDescription %}<br>{{ event.surchargeEventDescription }}<br>{% endif %}
+                <div class="item">
+                    <strong>{{ event.surchargeName }}:</strong> ${{ event.eventSurchargeAmount }}
+                    {% if event.surchargeEventDescription %}<br>{{ event.surchargeEventDescription }}{% endif %}
+                </div>
             {% endif %}
             {% if event.competition_specialRateNumber %}
-                <br>A special price of ${{ event.competition_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.competition_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.
+                <div class="item">
+                    A special price of ${{ event.competition_specialRateFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} applies to the first {{ event.competition_specialRateNumber }} {{ billingTypeLabel }}s that your school enters, measured across all campuses.
+                </div>
             {% endif %}
             {% if divisionPricing %}
-                <br>Some divisions have different prices, please see below.
+                <div class="item">Some divisions have different prices, please see Available divisions below.</div>
             {% endif %}
             {% if event.event_maxRegistrationsPerSchool %}
-                <br>There is a {{ event.event_maxRegistrationsPerSchool }} team per school limit for this event.
+                <div class="item">There is a {{ event.event_maxRegistrationsPerSchool }} team per school limit for this event.</div>
             {% endif %}
             {% if event.event_maxRegistrationsForEvent %}
-                <br>There is a {{ event.event_maxRegistrationsForEvent }} team overall limit for this event.
+                <div class="item">There is a {{ event.event_maxRegistrationsForEvent }} team overall limit for this event.</div>
             {% endif %}
-        </p>
-        {% if event.paymentDueDate %}
-            <p>Payment due is due on {{ event.paymentDueDate }}.</p>
-        {% endif %}
-        <h3>Available divisions</h3>
+            {% if event.paymentDueDate %}
+                <div class="item"><strong>Payment due:</strong> {{ event.paymentDueDate }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="ui segment">
+        <h3 class="ui dividing header">Available divisions</h3>
         {% if availableDivisions %}
-            <ul>
+            <style>
+                .available-division-item {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: baseline;
+                    gap: 0.25rem 0.75rem;
+                }
+                .available-division-item .division-name {
+                    font-weight: 700;
+                }
+                .available-division-item .division-detail {
+                    margin: 0;
+                    color: rgba(0, 0, 0, 0.7);
+                }
+                .available-division-item .division-detail::before {
+                    content: "·";
+                    margin-right: 0.75rem;
+                    color: rgba(0, 0, 0, 0.7);
+                }
+            </style>
+            <div class="ui relaxed divided list">
                 {% for availableDivision in availableDivisions %}
-                <li><strong>{{ availableDivision.division.name }}</strong>
-                    {% if availableDivision.division.description %}<br>{{ availableDivision.division.description }}{% endif %}
-                    {% if availableDivision.division_billingType != 'event' %}<br>This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.{% endif %}
-                    {% if availableDivision.division_maxRegistrationsPerSchool %}<br>There is a {{ availableDivision.division_maxRegistrationsPerSchool }} team per school limit for this division.{% endif %}
-                    {% if availableDivision.division_maxRegistrationsForDivision %}<br>There is a {{ availableDivision.division_maxRegistrationsForDivision }} team overall limit for this division.{% endif %}
-                </li>
+                    <div class="item available-division-item">
+                        <span class="division-name">{{ availableDivision.division.name }}</span>
+                        {% if availableDivision.division.description %}
+                            <span class="division-detail">{{ availableDivision.division.description }}</span>
+                        {% endif %}
+                        {% if availableDivision.division_billingType != 'event' %}
+                            <span class="division-detail">This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.</span>
+                        {% endif %}
+                        {% if availableDivision.division_maxRegistrationsPerSchool %}
+                            <span class="division-detail">{{ availableDivision.division_maxRegistrationsPerSchool }} team per school limit.</span>
+                        {% endif %}
+                        {% if availableDivision.division_maxRegistrationsForDivision %}
+                            <span class="division-detail">{{ availableDivision.division_maxRegistrationsForDivision }} team overall limit.</span>
+                        {% endif %}
+                    </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% else %}
             <p>TBC</p>
         {% endif %}
         {% if divisionsMaxReachedWarnings %}
-            <ul>
-                {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
-                <li style="color:red;">{{ divisionsMaxReachedWarning }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        {% if event.eventDetails %}
-            <h3>Event details</h3>
-            <p> {{ event.bleachedEventDetails|linebreaks }} </p>
-        {% endif %}
-        {% if event.venue %}
-            <h3>Location: {{ event.venue.name }}</h3>
-            {% if event.venue.address %}<p>{{ event.venue.address|escape|linebreaks }}</p>{% endif %}
-        {% else %}
-            <h3>Location: TBC</h3>
+            <div class="ui negative message">
+                <ul class="list">
+                    {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                        <li>{{ divisionsMaxReachedWarning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         {% endif %}
     </div>
-    <br>
 
-    <div class="row">
+    {% if event.eventDetails %}
+        <div class="ui segment">
+            <h3 class="ui dividing header">Event details</h3>
+            {{ event.bleachedEventDetails|linebreaks }}
+        </div>
+    {% endif %}
+
+    {% if electronicParticipationDeedsAvailable %}
+        <div class="ui segment">
+            <h3 class="ui dividing header">Participation deeds</h3>
+            {% if schoolMagicLink %}
+                <p>All students must have a participation deed signed by a parent or guardian prior to participating in the event.</p>
+                <p>Share this link with the parents and guardians of your students to complete the participation deed electronically:</p>
+                <div class="ui action input" style="width:100%; max-width:40rem;">
+                    <input type="text" readonly value="{{ schoolMagicLink }}" id="participationDeedMagicLink">
+                    <button class="ui button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('participationDeedMagicLink').value)">Copy</button>
+                </div>
+            {% elif teams or workshopAttendees %}
+                <div class="ui warning message">The parent signing link is unavailable (event start date missing or passed).</div>
+            {% endif %}
+            {% if teams or workshopAttendees %}
+                <p style="margin-top:1rem;">
+                    <a href="{% url 'participationdeeds:mentor_summary' event.id %}" class="ui button">
+                        View participation deeds{% if unattachedDeedCount %} ({{ unattachedDeedCount }} unattached){% endif %}
+                    </a>
+                </p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="ui segment">
         {% if not event.published %}
-            <h5> Event is not published. </h5>
+            <div class="ui warning message">Event is not published.</div>
         {% elif not event.hasAllDates %}
-            <h1> The dates are still to be confirmed. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            <div class="ui warning message">
+                The dates are still to be confirmed. If you have questions please contact
+                {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on
+                <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>.
+            </div>
         {% elif event.registrationNotOpenYet %}
-            <h1> Registration for this event hasn't opened yet. Please wait until registrations open{% if event.registrationOpenDate %} on {{ event.registrationsOpenDate }} to register{% endif %}. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            <div class="ui info message">
+                Registration for this event hasn't opened yet. Please wait until registrations open{% if event.registrationOpenDate %} on {{ event.registrationsOpenDate }} to register{% endif %}.
+                If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on
+                <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>.
+            </div>
         {% elif event.registrationsOpen %}
             {% if maxEventRegistrationsForSchoolReached %}
-            <h1> You have registered the maximium number of {{event.registrationName}}s for your school for this event. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+                <div class="ui warning message">
+                    You have registered the maximium number of {{event.registrationName}}s for your school for this event.
+                    If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on
+                    <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>.
+                </div>
             {% elif maxEventRegistrationsTotalReached %}
-            <h1> Maximium number of {{event.registrationName}}s for this event reached. If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+                <div class="ui warning message">
+                    Maximium number of {{event.registrationName}}s for this event reached.
+                    If you have questions please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on
+                    <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>.
+                </div>
             {% else %}
+                <h3 class="ui dividing header">Registrations</h3>
                 {% if event.boolWorkshop %}
-                    <a href="{% url 'workshops:create' event.id %}"><button class="ui positive button">Add attendee</button></a>
-                {% else %} {# Competition #}
-                    <a href="{% url 'teams:create' event.id %}"><button class="ui positive button">Add team</button></a>
-                    <a href="{% url 'teams:importCSV' event.id %}"><button class="ui positive button">Import CSV</button></a>
-                    {% if duplicateTeamsAvailable %}<a href="{% url 'teams:copyTeamsList' event.id %}"><button class="ui positive button">Copy existing team from previous event</button></a>{% endif %}
+                    <a href="{% url 'workshops:create' event.id %}" class="ui positive button">Add attendee</a>
+                {% else %}
+                    <a href="{% url 'teams:create' event.id %}" class="ui positive button">Add team</a>
+                    <a href="{% url 'teams:importCSV' event.id %}" class="ui positive button">Import CSV</a>
+                    {% if duplicateTeamsAvailable %}
+                        <a href="{% url 'teams:copyTeamsList' event.id %}" class="ui positive button">Copy existing team from previous event</a>
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% else %}
-            <h1> Registration for this event has closed. If you need to make modifications, please contact {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>. </h1>
+            <div class="ui warning message">
+                Registration for this event has closed. If you need to make modifications, please contact
+                {{ event.directEnquiriesTo.get_full_name }} (Event Coordinator) on
+                <a href="mailto:{{ event.directEnquiriesTo.email }}">{{ event.directEnquiriesTo.email }}</a>.
+            </div>
         {% endif %}
-    </div>
-    <br>
 
-    <div class="row">
         {% if workshopAttendees %}
-            <table id="attendeeTable" class="ui celled table">
+            <table id="attendeeTable" class="ui celled table" style="margin-top:1rem;">
                 <thead>
                     <th>Attendee name</th>
                     <th>Type</th>
                     <th> Division</th>
                     {% if showCampusColumn %}<th>Campus</th>{% endif %}
+                    {% if electronicParticipationDeedsEnabled %}<th>Participation deed</th>{% endif %}
                     {% if event.registrationsOpen %}<th>Actions</th>{% endif %}
                 </thead>
                 <tbody>
@@ -143,10 +277,23 @@
                         <td>{{workshopAttendee.attendeeType}}</td>
                         <td>{{workshopAttendee.division}}</td>
                         {% if showCampusColumn %}<td>{{workshopAttendee.campus}}</td>{% endif %}
+                        {% if electronicParticipationDeedsEnabled %}
+                            <td>
+                                {% if workshopAttendee.attendeeType != 'student' %}
+                                    N/A
+                                {% elif workshopAttendee.participationDeed %}
+                                    Complete
+                                {% else %}
+                                    Incomplete
+                                {% endif %}
+                            </td>
+                        {% endif %}
                         {% if event.registrationsOpen %}
                             <td>
-                                <a href="{% url 'workshops:details' workshopAttendee.id %}"><button class="ui primary button">Edit/View Details</button></a>
-                                <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
+                                <div class="event-table-actions">
+                                    <a href="{% url 'workshops:details' workshopAttendee.id %}" class="ui primary button">Edit/View Details</a>
+                                    <button onClick="showDeleteModal({{workshopAttendee.id}}, '{% url 'workshops:details' workshopAttendee.id %}')" class="ui negative button">Delete</button>
+                                </div>
                             </td>
                         {% endif %}
                     </tr>
@@ -155,12 +302,13 @@
             </table>
 
         {% elif teams %}
-            <table id="teamTable" class="ui celled table">
+            <table id="teamTable" class="ui celled table" style="margin-top:1rem;">
                 <thead>
                     <th>Team name</th>
                     <th> Division</th>
                     {% if showCampusColumn %}<th>Campus</th>{% endif %}
                     <th>Students</th>
+                    {% if electronicParticipationDeedsEnabled %}<th>Participation deeds</th>{% endif %}
                     <th>Actions</th>
                 </thead>
                 <tbody>
@@ -177,19 +325,24 @@
                                 {% endfor %}
                                 {% if team.withdrawn %}</s>{% endif %}
                             </td>
+                            {% if electronicParticipationDeedsEnabled %}
+                                <td>{{ team.deedSummary }}</td>
+                            {% endif %}
                             <td>
-                                <a href="{% url 'teams:details' team.id %}"><button class="ui primary button">View Details</button></a>
-                                {% if event.registrationsOpen %}
-                                    <a href="{% url 'teams:edit' team.id %}?fromEvent"><button class="ui primary button">Edit</button></a>
-                                {% endif %}
+                                <div class="event-table-actions">
+                                    <a href="{% url 'teams:details' team.id %}" class="ui primary button">View Details</a>
+                                    {% if event.registrationsOpen %}
+                                        <a href="{% url 'teams:edit' team.id %}?fromEvent" class="ui primary button">Edit</a>
+                                    {% endif %}
 
-                                {% if team.availableFileUploadTypes %}
-                                    <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload file</a>
-                                {% endif %}
+                                    {% if team.availableFileUploadTypes %}
+                                        <a href="{% url 'eventfiles:uploadFile' team.id %}" class="ui button primary">Upload file</a>
+                                    {% endif %}
 
-                                {% if event.registrationsOpen %}
-                                    <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
-                                {% endif %}
+                                    {% if event.registrationsOpen %}
+                                        <button onClick="showDeleteModal({{team.id}}, '{% url 'teams:edit' team.id %}')" class="ui negative button">Delete</button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -197,7 +350,6 @@
             </table>
         {% endif %}
     </div>
-    <br>
 </div>
 
 <div class="ui modal">
@@ -225,9 +377,6 @@
 </div>
 
 <script>
-    // $(document).ready(function () {
-    //     $('#teamTable').DataTable();
-    // });
     function showModal() {
         $('.ui.modal').modal('show');
     }
