@@ -35,6 +35,7 @@ class SignPageBase(ParticipationDeedsFixture):
         response = self.client.get(self.sign_url(self.school_token()))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Participation deed')
+        self.assertContains(response, "This form must be completed by the child's parent/ guardian.")
         self.assertContains(response, self.invoiceSettings.invoiceFromName)
         self.assertContains(response, self.invoiceSettings.invoiceFromDetails)
 
@@ -65,6 +66,7 @@ class SignPageBase(ParticipationDeedsFixture):
             'lastName': 'Child',
             'yearLevel': '7',
             'agree': True,
+            'confirmParent': True,
             'parentName': 'Parent Two',
         })
         self.assertEqual(response.status_code, 200)
@@ -81,6 +83,7 @@ class SignPageBase(ParticipationDeedsFixture):
             'yearLevel': str(student.yearLevel),
             'parentName': '',
             'agree': True,
+            'confirmParent': True,
         })
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'participationdeeds/sign.html')
@@ -111,12 +114,15 @@ class TestSignPage_Competition(SignPageBase, TestCase):
         self.assertEqual(lookup.status_code, 200)
         self.assertContains(lookup, 'id_parentName')
         self.assertContains(lookup, f'School: <strong>{self.school1_state1}</strong>', html=True)
+        self.assertContains(lookup, "This form must be completed by the child's parent/ guardian.")
+        self.assertContains(lookup, f'I am the parent/ guardian of {student.firstName} {student.lastName}')
 
         response = self.client.post(url, {
             'firstName': student.firstName,
             'lastName': student.lastName,
             'yearLevel': str(student.yearLevel),
             'agree': True,
+            'confirmParent': True,
             'parentName': 'Parent One',
         })
         self.assertEqual(response.status_code, 200)
@@ -134,6 +140,7 @@ class TestSignPage_Competition(SignPageBase, TestCase):
                 'lastName': student.lastName,
                 'yearLevel': str(student.yearLevel),
                 'agree': True,
+                'confirmParent': True,
                 'parentName': 'Meta Parent',
             },
             HTTP_X_FORWARDED_FOR='203.0.113.10, 10.0.0.1',
@@ -156,6 +163,7 @@ class TestSignPage_Competition(SignPageBase, TestCase):
                 'lastName': student.lastName,
                 'yearLevel': str(student.yearLevel),
                 'agree': True,
+                'confirmParent': True,
                 'parentName': 'Logged In Parent',
             },
             HTTP_X_FORWARDED_FOR='198.51.100.20',
@@ -174,6 +182,7 @@ class TestSignPage_Competition(SignPageBase, TestCase):
             'lastName': student.lastName,
             'yearLevel': str(student.yearLevel),
             'agree': True,
+            'confirmParent': True,
             'parentName': 'Indie Parent',
         })
         self.assertEqual(response.status_code, 200)
@@ -206,6 +215,7 @@ class TestSignPage_Workshop(SignPageBase, TestCase):
             'lastName': student.lastName,
             'yearLevel': str(student.yearLevel),
             'agree': True,
+            'confirmParent': True,
             'parentName': 'Workshop Parent One',
         })
         self.assertEqual(response.status_code, 200)
@@ -221,6 +231,7 @@ class TestSignPage_Workshop(SignPageBase, TestCase):
             'lastName': student.lastName,
             'yearLevel': str(student.yearLevel),
             'agree': True,
+            'confirmParent': True,
             'parentName': 'Workshop Indie Parent',
         })
         self.assertEqual(response.status_code, 200)
