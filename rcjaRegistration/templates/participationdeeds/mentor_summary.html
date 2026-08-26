@@ -24,7 +24,7 @@
             </thead>
             <tbody>
                 {% for deed in unattached %}
-                    <tr>
+                    <tr id="unattachedDeedRow{{ deed.id }}">
                         <td>{{ deed.submittedFullName }}</td>
                         <td>{{ deed.submittedYearLevel }}</td>
                         <td>{{ deed.parentName }}</td>
@@ -33,6 +33,11 @@
                             {% if can_attach_deeds %}
                                 <a href="{% url 'participationdeeds:attach' event.id deed.id %}" class="ui mini primary button">Attach</a>
                             {% endif %}
+                            <button
+                                type="button"
+                                class="ui mini negative button"
+                                onClick="showDeleteDeedModal({{ deed.id }}, '{% url 'participationdeeds:delete' deed.id %}')"
+                            >Delete</button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -104,4 +109,37 @@
 
     <a href="{% url 'events:details' event.id %}" class="ui button" style="margin-top:1rem;">Back to event</a>
 </div>
+
+<div class="ui modal" id="deleteDeedModal">
+    <div class="header">Delete Participation Deed</div>
+    <div class="image content">
+        <div class="description">
+            <div class="ui header">Are you sure?</div>
+            <p>Deleting a participation deed is an irreversible action. Are you sure that this is the deed you want to delete?</p>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">No, cancel</div>
+        <button id="deleteDeedConfirm" class="ui negative right button">Yes, I'm certain</button>
+    </div>
+</div>
+
+<script>
+    function deleteDeed(id, url) {
+        $.ajax({
+            type: "DELETE",
+            url: url,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+            },
+        })
+            .done(() => $('#unattachedDeedRow' + id).remove())
+            .fail(() => alert('Unexpected Error!'));
+    }
+
+    function showDeleteDeedModal(id, url) {
+        $('#deleteDeedConfirm').attr('onClick', "deleteDeed(" + id + ",'" + url + "');");
+        $('#deleteDeedModal').modal('show');
+    }
+</script>
 {% endblock %}
