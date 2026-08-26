@@ -515,38 +515,29 @@ def eventAdminSummary(request):
             output = form.cleaned_data
             if len(form.cleaned_data['workshops']):
                 events_list = form.cleaned_data['workshops']
-                if len(events_list)==1 and not form.cleaned_data['csv']:
-                    event = get_object_or_404(Event, pk=events_list[0])
-                    context = getAdminWorkSummary(event)
-                    context["column1"] = "Students"
-                    context["column0"] = "Teachers"
-                    return render(request, 'events/adminDetails.html', context)
-                else:
-                    events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
-                    context =  mergeMultipleAdminSummary(events)
-                    context["column1"] = "Students"
-                    context["column0"] = "Teachers"
-                    if form.cleaned_data['csv']:
-                        return summary_csv(context)
-                    else:
-                        return render(request, 'events/adminMultiDetails.html', context)
+                columnHeadings = ["Teachers", "Students"] 
             else:
                 events_list = form.cleaned_data['competitions']
-                if len(events_list)==1 and not form.cleaned_data['csv']:
-                    event = get_object_or_404(Event, pk=events_list[0])
-                    context = getAdminCompSummary(event)
-                    context["column1"] = "Students"
-                    context["column0"] = "Teams"
-                    return render(request, 'events/adminDetails.html', context)
+                columnHeadings = ["Teams", "Students"] 
+
+            if len(events_list)==1 and not form.cleaned_data['csv']:
+                event = get_object_or_404(Event, pk=events_list[0])
+                context = getAdminWorkSummary(event)
+                context["column0"] = columnHeadings[0]
+                context["column1"] = columnHeadings[1]
+                return render(request, 'events/adminDetails.html', context)
+
+            else:
+                events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                context = mergeMultipleAdminSummary(events)
+                context["column0"] = columnHeadings[0]
+                context["column1"] = columnHeadings[1]
+
+                if form.cleaned_data['csv']:
+                    return summary_csv(context)
                 else:
-                    events = [getAdminCompSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
-                    context = mergeMultipleAdminSummary(events)
-                    context["column1"] = "Students"
-                    context["column0"] = "Teams"
-                    if form.cleaned_data['csv']:
-                        return summary_csv(context)
-                    else:
-                        return render(request, 'events/adminMultiDetails.html', context)
+                    return render(request, 'events/adminMultiDetails.html', context)
+
     else:
         form = getAdminEventsForm(request)
     return render(request, "events/adminBlank.html", {"form": form, 'output':output})
