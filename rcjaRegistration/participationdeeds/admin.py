@@ -37,6 +37,9 @@ class ParticipationDeedAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin
         'signedDateTime',
         'isAttached',
         'bleachedParticipationDeedText',
+        'ipAddress',
+        'userAgent',
+        'loggedInUser',
     ]
     autocomplete_fields = [
         'school',
@@ -53,6 +56,8 @@ class ParticipationDeedAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin
         'originalEvent',
         'school',
         'mentorUser',
+        'ipAddress',
+        'loggedInUser',
     ]
 
     statePermissionsFilterLookup = 'originalEvent__state__coordinator'
