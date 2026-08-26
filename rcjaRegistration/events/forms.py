@@ -86,4 +86,4 @@ def getAdminEventsForm(request):
     if request.method == "POST":
         return AdminEventsForm(request.POST)
     else:
-        return AdminEventsForm
+        return AdminEventsForm()
