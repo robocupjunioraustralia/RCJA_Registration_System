@@ -28,6 +28,7 @@
             </h3>
             <p>{{ totalRegistrations }} registration{{ totalRegistrations|pluralize }} so far.</p>
             <div class="event-action-buttons">
+                <a href="{% url 'events:eventAdminSummarySpecific' event.id %}"><button class="ui primary button">View Attendance Summary</button></a>
                 <a href="{% url 'admin:events_event_change' event.id %}" class="ui primary button">Edit Event</a>
                 <a href="{{ event.registrationsAdminURL }}" class="ui primary button">{% if event.boolWorkshop %}View Attendees{% else %}View Teams{% endif %}</a>
                 {% if not event.boolWorkshop %}
