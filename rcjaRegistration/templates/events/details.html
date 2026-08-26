@@ -201,14 +201,14 @@
                 <p>Share this link with the parents and guardians of your students to complete the participation deed electronically:</p>
                 <div class="ui action input" style="width:100%; max-width:40rem;">
                     <input type="text" readonly value="{{ schoolMagicLink }}" id="participationDeedMagicLink">
-                    <button class="ui button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('participationDeedMagicLink').value)">Copy</button>
+                    <button class="ui primary button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('participationDeedMagicLink').value)">Copy</button>
                 </div>
             {% elif teams or workshopAttendees %}
                 <div class="ui warning message">The parent signing link is unavailable (event start date missing or passed).</div>
             {% endif %}
             {% if teams or workshopAttendees %}
                 <p style="margin-top:1rem;">
-                    <a href="{% url 'participationdeeds:mentor_summary' event.id %}" class="ui button">
+                    <a href="{% url 'participationdeeds:mentor_summary' event.id %}" class="ui primary button">
                         View participation deeds{% if unattachedDeedCount %} ({{ unattachedDeedCount }} unattached){% endif %}
                     </a>
                 </p>
