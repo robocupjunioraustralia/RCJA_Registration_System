@@ -30,7 +30,9 @@
                         <td>{{ deed.parentName }}</td>
                         <td>{{ deed.signedDateTime }}</td>
                         <td>
-                            <a href="{% url 'participationdeeds:attach' event.id deed.id %}" class="ui mini primary button">Attach</a>
+                            {% if can_attach_deeds %}
+                                <a href="{% url 'participationdeeds:attach' event.id deed.id %}" class="ui mini primary button">Attach</a>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

@@ -157,6 +157,7 @@ def mentor_summary(request, eventID):
     school, mentorUser = _mentor_event_access(request, event)
 
     unattached = unattached_deeds_for_context(event, school=school, mentorUser=mentorUser)
+    can_attach_deeds = participants_without_deed(event, school=school, mentorUser=mentorUser).exists()
 
     teams = None
     attendees = None
@@ -170,6 +171,7 @@ def mentor_summary(request, eventID):
         'teams': teams,
         'attendees': attendees,
         'unattached': unattached,
+        'can_attach_deeds': can_attach_deeds,
     })
 
 
