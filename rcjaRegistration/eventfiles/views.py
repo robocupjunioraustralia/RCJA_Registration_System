@@ -48,7 +48,7 @@ def fileUploadUploadPermissions( request, eventAttendance):
     fileUploadCommonPermissions(request, eventAttendance)
 
     # Check at least one available file type
-    if eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
+    if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
         raise PermissionDenied("File upload not available")
 
 class MentorEventFileUploadView(LoginRequiredMixin, View):
