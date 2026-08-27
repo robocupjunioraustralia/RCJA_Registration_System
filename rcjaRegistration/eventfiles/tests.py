@@ -581,6 +581,7 @@ class Test_MentorEventFileUploadView_DirectS3_Get(Base_Test_MentorEventFileUploa
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id}))
+        self.assertContains(response, 'id="uploadProgress"')
         self.assertNotContains(response, 'files larger than approximately 10MB')
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=False)
@@ -590,6 +591,7 @@ class Test_MentorEventFileUploadView_DirectS3_Get(Base_Test_MentorEventFileUploa
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'files larger than approximately 10MB')
         self.assertNotContains(response, reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id}))
+        self.assertNotContains(response, 'id="uploadProgress"')
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
     def testExistingFileDoesNotIncludePresignScript(self, mock_direct_s3):
@@ -599,6 +601,7 @@ class Test_MentorEventFileUploadView_DirectS3_Get(Base_Test_MentorEventFileUploa
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id}))
+        self.assertNotContains(response, 'id="uploadProgress"')
 
 class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUploadView, TestCase):
     def setUp(self):

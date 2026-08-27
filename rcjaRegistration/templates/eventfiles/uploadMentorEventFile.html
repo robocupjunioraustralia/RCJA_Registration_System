@@ -113,7 +113,14 @@
                     </div>
                 {% endif %}
                 
-                <p id="uploadStatus" style="display: none;"></p>
+                {% if not uploadedFile and directS3UploadEnabled %}
+                <div class="ui indicating progress" id="uploadProgress" data-percent="0" style="display: none; max-width: 28rem;">
+                    <div class="bar">
+                        <div class="progress"></div>
+                    </div>
+                    <div class="label"></div>
+                </div>
+                {% endif %}
                 <input class="primary ui button" type="submit" value="Save" id="saveButton" />
                 <a href="{{ cancelURL }}" class="ui button negative" style="margin-top:1rem;">Cancel</a>
 
@@ -130,10 +137,46 @@
                     return null;
                 }
 
-                function setUploadStatus(message) {
-                    const status = document.getElementById('uploadStatus');
-                    status.textContent = message;
-                    status.style.display = message ? 'block' : 'none';
+                const uploadProgress = $('#uploadProgress');
+                uploadProgress.progress({
+                    percent: 0,
+                    autoSuccess: false,
+                    showActivity: false,
+                });
+
+                function resetUploadProgress() {
+                    uploadProgress.progress('reset');
+                    uploadProgress.hide();
+                }
+
+                function setUploadProgress(percent, label) {
+                    uploadProgress.show();
+                    uploadProgress.progress('set percent', percent);
+                    uploadProgress.progress('set label', label);
+                }
+
+                function uploadFileToS3(url, file, onProgress) {
+                    return new Promise(function (resolve, reject) {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', url);
+                        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+                        xhr.upload.onprogress = function (event) {
+                            if (event.lengthComputable && onProgress) {
+                                onProgress(event.loaded, event.total);
+                            }
+                        };
+                        xhr.onload = function () {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(xhr);
+                            } else {
+                                reject(new Error('S3 upload failed'));
+                            }
+                        };
+                        xhr.onerror = function () {
+                            reject(new Error('S3 upload failed'));
+                        };
+                        xhr.send(file);
+                    });
                 }
 
                 document.getElementById('uploadForm').addEventListener('submit', function (event) {
@@ -155,7 +198,7 @@
                     }
 
                     saveButton.disabled = true;
-                    setUploadStatus('Preparing upload...');
+                    setUploadProgress(0, 'Preparing upload...');
 
                     $.ajax({
                         type: 'POST',
@@ -172,21 +215,14 @@
                         },
                     })
                         .done(function (data) {
-                            setUploadStatus('Uploading file...');
+                            setUploadProgress(0, 'Uploading file... 0%');
 
-                            fetch(data.presignedUrl, {
-                                method: 'PUT',
-                                body: file,
-                                headers: {
-                                    'Content-Type': file.type || 'application/octet-stream',
-                                },
+                            uploadFileToS3(data.presignedUrl, file, function (loaded, total) {
+                                const percent = Math.min(100, Math.round((loaded / total) * 100));
+                                setUploadProgress(percent, 'Uploading file... ' + percent + '%');
                             })
-                                .then(function (response) {
-                                    if (!response.ok) {
-                                        throw new Error('S3 upload failed');
-                                    }
-
-                                    setUploadStatus('Saving upload...');
+                                .then(function () {
+                                    setUploadProgress(100, 'Saving upload...');
 
                                     const formData = new FormData();
                                     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
@@ -219,7 +255,7 @@
                                 .catch(function () {
                                     alert('Upload failed. Please try again.');
                                     saveButton.disabled = false;
-                                    setUploadStatus('');
+                                    resetUploadProgress();
                                 });
                         })
                         .fail(function (xhr) {
@@ -229,7 +265,7 @@
                             }
                             alert(message);
                             saveButton.disabled = false;
-                            setUploadStatus('');
+                            resetUploadProgress();
                         });
                 });
             </script>
