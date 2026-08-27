@@ -1686,7 +1686,10 @@ class TestAdminSummaryContext(TestCase):
 
         WorkshopAttendee.objects.create(event = self.workshop2, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='student', firstName='Student',lastName='Student',yearLevel=1,gender='male')
         WorkshopAttendee.objects.create(event = self.workshop2, division=self.division, school=self.newSchool, mentorUser=self.user,attendeeType='teacher', firstName='Teacher',lastName='Teacher',yearLevel=1,gender='female')
-        
+
+        self.user.is_staff = True
+        self.user.is_superuser = True
+        self.user.save()
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testCompetitionDict(self):
@@ -1724,13 +1727,14 @@ class TestAdminSummaryContext(TestCase):
     def testBlankForm(self):
         response = self.client.get(reverse('events:eventAdminSummary'))
         self.assertContains(response,'Event Comparisons')
+        self.assertContains(response, 'Produce CSV')
 
     def testWorkshopAndCompetition(self):
         response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id],'workshops':[self.workshop.id]})
         self.assertContains(response,'Cannot directly compare workshops and competitions')
 
     def testCompetitionFromURL(self):
-        response = self.client.post(reverse('events:eventAdminSummarySpecific', kwargs= {'eventID':self.oldEventWithTeams.id}))
+        response = self.client.get(reverse('events:eventAdminSummarySpecific', kwargs= {'eventID':self.oldEventWithTeams.id}))
         self.assertContains(response,'Students', 2)
         self.assertContains(response,'Teams', 2)
         self.assertContains(response,'Divisions', 1)
@@ -1753,7 +1757,7 @@ class TestAdminSummaryContext(TestCase):
         self.assertContains(response,self.newEvent.name, 4)
 
     def testWorkshopFromURL(self):
-        response = self.client.post(reverse('events:eventAdminSummarySpecific', kwargs= {'eventID':self.workshop.id}))
+        response = self.client.get(reverse('events:eventAdminSummarySpecific', kwargs= {'eventID':self.workshop.id}))
         self.assertContains(response,'Students', 2)
         self.assertContains(response,'Teachers', 2)
         self.assertContains(response,'Divisions', 1)
@@ -1774,3 +1778,17 @@ class TestAdminSummaryContext(TestCase):
         self.assertContains(response,'Teachers Per School', 1)
         self.assertContains(response,self.workshop.name, 4)
         self.assertContains(response,self.workshop2.name, 4)
+
+    def testProduceCSV(self):
+        response = self.client.post(reverse('events:eventAdminSummary'), {
+            'competitions': [self.oldEventWithTeams.id, self.newEvent.id],
+            'workshops': [],
+            'csv': 'on',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="Attendance Summary.csv"')
+        self.assertContains(response, 'Students Per Division')
+        self.assertContains(response, 'Teams Per Division')
+        self.assertContains(response, self.oldEventWithTeams.name)
+        self.assertContains(response, self.newEvent.name)

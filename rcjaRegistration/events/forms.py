@@ -73,7 +73,7 @@ def getAdminEventsForm(request):
     class AdminEventsForm(forms.Form):
         competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))
         workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(WORKSHOPS_CHOICES, tuple))
-        csv = forms.BooleanField(required=False,label="Produce CSV")
+        csv = forms.BooleanField(required=False, label="Produce CSV", label_suffix="")
 
         def clean(self):
             workshops = len(self.cleaned_data.get('workshops', []))>0
