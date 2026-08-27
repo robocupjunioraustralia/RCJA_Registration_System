@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.http import HttpRequest
 from django.core.exceptions import ValidationError
@@ -15,7 +15,16 @@ from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 
 from .models import MentorEventFileType, MentorEventFileUpload, EventAvailableFileType
 from .forms import MentorEventFileUploadForm
-from .s3_upload import verify_s3_object
+from .s3_upload import (
+    MENTOR_FILE_S3_KEY_PATTERN,
+    PRESIGNED_URL_EXPIRY_SECONDS,
+    direct_s3_upload_enabled,
+    generate_mentor_file_s3_key,
+    generate_presigned_put_url,
+    get_file_extension,
+    validate_upload_metadata,
+    verify_s3_object,
+)
 
 import datetime
 import json
@@ -391,6 +400,16 @@ class Test_MentorEventFilePresignView(Base_Test_MentorEventFileUploadView, TestC
     def url(self):
         return reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id})
 
+    def validPayload(self, **overrides):
+        payload = {
+            'originalFilename': 'doc.doc',
+            'fileSize': 12,
+            'contentType': 'application/msword',
+            'fileType': self.fileType1.id,
+        }
+        payload.update(overrides)
+        return payload
+
     def postPresign(self, payload):
         with patch('eventfiles.views.direct_s3_upload_enabled', return_value=True):
             return self.client.post(self.url(), data=json.dumps(payload), content_type='application/json')
@@ -398,30 +417,184 @@ class Test_MentorEventFilePresignView(Base_Test_MentorEventFileUploadView, TestC
     @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
     @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     def testSuccess(self, mock_generate_key, mock_presign):
-        response = self.postPresign({
-            'originalFilename': 'doc.doc',
-            'fileSize': 12,
-            'contentType': 'application/msword',
-            'fileType': self.fileType1.id,
-        })
+        response = self.postPresign(self.validPayload())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['presignedUrl'], 'https://example.com/presigned')
         self.assertEqual(response.json()['s3Key'], 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+        mock_generate_key.assert_called_once_with('doc.doc')
+        mock_presign.assert_called_once_with(
+            'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc',
+            'application/msword',
+        )
+
+    @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    def testSuccessSuperUser(self, mock_generate_key, mock_presign):
+        self.client.logout()
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.postPresign(self.validPayload())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['presignedUrl'], 'https://example.com/presigned')
+
+    @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    def testDefaultsEmptyContentType(self, mock_generate_key, mock_presign):
+        response = self.postPresign(self.validPayload(contentType=''))
+
+        self.assertEqual(response.status_code, 200)
+        mock_presign.assert_called_once_with(
+            'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc',
+            'application/octet-stream',
+        )
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=False)
+    def testDisabled(self, mock_direct_s3):
+        response = self.client.post(self.url(), data=json.dumps(self.validPayload()), content_type='application/json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content.decode(), 'Direct S3 upload is not enabled')
+
+    def testInvalidJson(self):
+        with patch('eventfiles.views.direct_s3_upload_enabled', return_value=True):
+            response = self.client.post(self.url(), data='not json', content_type='application/json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errors'], ['Invalid request body'])
+
+    def testMissingRequiredFields(self):
+        response = self.postPresign({})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errors'], ['Missing required fields'])
+
+    def testInvalidFileSize(self):
+        response = self.postPresign(self.validPayload(fileSize='abc'))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errors'], ['Invalid file size'])
 
     def testRejectsInvalidExtension(self):
         self.fileType1.allowedFileTypes = 'pdf'
         self.fileType1.save()
 
-        response = self.postPresign({
-            'originalFilename': 'doc.doc',
-            'fileSize': 12,
-            'contentType': 'application/msword',
-            'fileType': self.fileType1.id,
-        })
+        response = self.postPresign(self.validPayload())
 
         self.assertEqual(response.status_code, 400)
         self.assertIn('File not of allowed type', response.json()['errors'][0])
+
+    def testRejectsMissingExtension(self):
+        response = self.postPresign(self.validPayload(originalFilename='noext'))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('File must have a file extension', response.json()['errors'][0])
+
+    def testRejectsFileTooLarge(self):
+        self.fileType1.maxFilesizeMB = 1
+        self.fileType1.save()
+
+        response = self.postPresign(self.validPayload(fileSize=2 * 2**20))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('File must be less than', response.json()['errors'][0])
+
+    def testUnknownFileTypeReturns404(self):
+        response = self.postPresign(self.validPayload(fileType=99999))
+
+        self.assertEqual(response.status_code, 404)
+
+    def testFileTypeNotOnEventReturns404(self):
+        other_file_type = MentorEventFileType.objects.create(name='Other File Type')
+
+        response = self.postPresign(self.validPayload(fileType=other_file_type.id))
+
+        self.assertEqual(response.status_code, 404)
+
+    def testDeniedNotAdminTeam(self):
+        self.team1.mentorUser = self.user2
+        self.team1.save()
+
+        response = self.postPresign(self.validPayload())
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'You are not an administrator of this team/ attendee', status_code=403)
+
+    def testDeniedEventNotPublished(self):
+        self.event.status = 'draft'
+        self.event.save()
+
+        response = self.postPresign(self.validPayload())
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Event is not published', status_code=403)
+
+    def testDeniedUploadDeadlinePassed(self):
+        self.availableFileType1.uploadDeadline = (datetime.datetime.now() - datetime.timedelta(days=5)).date()
+        self.availableFileType1.save()
+
+        response = self.postPresign(self.validPayload())
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'File upload not available', status_code=403)
+
+    @patch('events.models.BaseEventAttendance.eventAttendanceType', return_value='workshopattendee')
+    def testDeniedWorkshopAttendee(self, mock_eventAttendanceType):
+        response = self.postPresign(self.validPayload())
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'File upload is only supported for teams', status_code=403)
+
+    @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    def testAllowedSuperUserUploadDeadlinePassed(self, mock_generate_key, mock_presign):
+        self.availableFileType1.uploadDeadline = (datetime.datetime.now() - datetime.timedelta(days=5)).date()
+        self.availableFileType1.save()
+        self.client.logout()
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.postPresign(self.validPayload())
+
+        self.assertEqual(response.status_code, 200)
+
+    def testGetNotAllowed(self):
+        response = self.client.get(self.url())
+
+        self.assertEqual(response.status_code, 405)
+
+class Test_MentorEventFileUploadView_DirectS3_Get(Base_Test_MentorEventFileUploadView, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
+
+    def url(self):
+        return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    def testIncludesPresignScript(self, mock_direct_s3):
+        response = self.client.get(self.url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id}))
+        self.assertNotContains(response, 'files larger than approximately 10MB')
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=False)
+    def testShowsSizeWarningWhenDisabled(self, mock_direct_s3):
+        response = self.client.get(self.url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'files larger than approximately 10MB')
+        self.assertNotContains(response, reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id}))
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    def testExistingFileDoesNotIncludePresignScript(self, mock_direct_s3):
+        uploaded_file = createFile(self)
+
+        response = self.client.get(reverse('eventfiles:edit', kwargs={'uploadedFileID': uploaded_file.id}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('eventfiles:uploadFilePresign', kwargs={'eventAttendanceID': self.team1.id}))
 
 class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUploadView, TestCase):
     def setUp(self):
@@ -432,18 +605,22 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
     def url(self):
         return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
 
-    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
-    @patch('eventfiles.views.verify_s3_object', return_value=12)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
-    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
-    def testSuccess(self, mock_size, mock_exists, mock_verify, mock_direct_s3):
+    def validData(self, **overrides):
         data = {
             'fileType': self.fileType1.id,
             's3Key': self.s3_key,
             'originalFilename': 'doc.doc',
         }
+        data.update(overrides)
+        return data
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.verify_s3_object', return_value=12)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
+    def testSuccess(self, mock_size, mock_exists, mock_verify, mock_direct_s3):
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
-        response = self.client.post(self.url(), data=data)
+        response = self.client.post(self.url(), data=self.validData())
         self.assertEqual(response.status_code, 302)
 
         uploaded_file = MentorEventFileUpload.objects.first()
@@ -452,6 +629,90 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
         self.assertEqual(uploaded_file.originalFilename, 'doc.doc')
         self.assertEqual(uploaded_file.fileUpload.name, self.s3_key)
         self.assertEqual(response.url, reverse('teams:details', kwargs={"teamID": self.team1.id}))
+        mock_verify.assert_called_once()
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.verify_s3_object', return_value=12)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
+    def testSuccessSuperUser(self, mock_size, mock_exists, mock_verify, mock_direct_s3):
+        self.client.logout()
+        self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
+
+        response = self.client.post(self.url(), data=self.validData())
+
+        self.assertEqual(response.status_code, 302)
+        uploaded_file = MentorEventFileUpload.objects.first()
+        self.assertEqual(uploaded_file.uploadedBy, self.superUser)
+        self.assertEqual(response.url, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    def testMissingOriginalFilename(self, mock_direct_s3):
+        response = self.client.post(self.url(), data=self.validData(originalFilename=''))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Missing required upload fields')
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    def testInvalidS3Key(self, mock_direct_s3):
+        response = self.client.post(self.url(), data=self.validData(s3Key='not-a-valid-key.doc'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Invalid upload key')
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=False)
+    def testRejectsMissingS3ObjectOnPost(self, mock_exists, mock_direct_s3):
+        response = self.client.post(self.url(), data=self.validData())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Uploaded file not found')
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
+    def testRejectsInvalidExtension(self, mock_size, mock_exists, mock_direct_s3):
+        self.fileType1.allowedFileTypes = 'pdf'
+        self.fileType1.save()
+
+        response = self.client.post(self.url(), data=self.validData())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'File not of allowed type')
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=2 * 2**20)
+    def testRejectsFileTooLarge(self, mock_size, mock_exists, mock_direct_s3):
+        self.fileType1.maxFilesizeMB = 1
+        self.fileType1.save()
+
+        response = self.client.post(self.url(), data=self.validData())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'File must be less than')
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    def testFallsBackToFormWithoutS3Key(self, mock_direct_s3):
+        response = self.client.post(self.url(), data={'fileType': self.fileType1.id})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    def testDeniedNotAdminTeam(self, mock_direct_s3):
+        self.team1.mentorUser = self.user2
+        self.team1.save()
+
+        response = self.client.post(self.url(), data=self.validData())
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=False)
     def testRejectsMissingS3Object(self, mock_exists):
@@ -537,6 +798,194 @@ class Test_MentorEventFileUploadView_Delete(Base_Test_MentorEventFileUploadView,
         self.assertEqual(MentorEventFileUpload.objects.count(), 1)
 
 # Unit tests
+
+class Test_S3Upload_Helpers(TestCase):
+    def testDirectS3UploadEnabledWithTestSettings(self):
+        self.assertTrue(direct_s3_upload_enabled())
+
+    @override_settings(PRIVATE_BUCKET='PRIVATE_BUCKET')
+    def testDirectS3UploadDisabledPlaceholderBucket(self):
+        self.assertFalse(direct_s3_upload_enabled())
+
+    @override_settings(AWS_ACCESS_KEY_ID='AWS_ACCESS_KEY_ID')
+    def testDirectS3UploadDisabledPlaceholderAccessKey(self):
+        self.assertFalse(direct_s3_upload_enabled())
+
+    def testGetFileExtension(self):
+        self.assertEqual(get_file_extension('doc.doc'), 'doc')
+        self.assertEqual(get_file_extension('archive.tar.gz'), 'gz')
+        self.assertEqual(get_file_extension('Photo.JPEG'), 'JPEG')
+        self.assertIsNone(get_file_extension('noext'))
+
+    def testGenerateMentorFileS3Key(self):
+        key = generate_mentor_file_s3_key('my file.doc')
+
+        self.assertTrue(MENTOR_FILE_S3_KEY_PATTERN.match(key))
+        self.assertTrue(key.startswith('MentorFiles/MentorFile_'))
+        self.assertTrue(key.endswith('.doc'))
+
+    def testGenerateMentorFileS3KeyUnique(self):
+        key1 = generate_mentor_file_s3_key('file.doc')
+        key2 = generate_mentor_file_s3_key('file.doc')
+
+        self.assertNotEqual(key1, key2)
+
+    def testGenerateMentorFileS3KeyRequiresExtension(self):
+        with self.assertRaises(ValidationError) as ctx:
+            generate_mentor_file_s3_key('noext')
+
+        self.assertIn('File must have a file extension', str(ctx.exception))
+
+    @patch('eventfiles.s3_upload.boto3.client')
+    def testGeneratePresignedPutUrl(self, mock_client):
+        mock_s3 = mock_client.return_value
+        mock_s3.generate_presigned_url.return_value = 'https://example.com/presigned'
+        s3_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+
+        url = generate_presigned_put_url(s3_key, 'application/msword')
+
+        self.assertEqual(url, 'https://example.com/presigned')
+        mock_client.assert_called_once_with(
+            's3',
+            aws_access_key_id='testing',
+            aws_secret_access_key='testing',
+        )
+        mock_s3.generate_presigned_url.assert_called_once_with(
+            'put_object',
+            Params={
+                'Bucket': 'testing',
+                'Key': s3_key,
+                'ContentType': 'application/msword',
+                'ACL': 'private',
+            },
+            ExpiresIn=PRESIGNED_URL_EXPIRY_SECONDS,
+        )
+
+class Test_S3Upload_ValidateUploadMetadata(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+
+    def testValidNoExtensionRestrictions(self):
+        try:
+            validate_upload_metadata(self.fileType1, 'doc.doc', 12)
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
+
+    def testValidExtensionRestrictions(self):
+        self.fileType1.allowedFileTypes = 'doc,pdf'
+        self.fileType1.save()
+
+        try:
+            validate_upload_metadata(self.fileType1, 'doc.doc', 12)
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
+
+    def testValidExtensionRestrictionsDifferentCase(self):
+        self.fileType1.allowedFileTypes = 'DOC,PDF'
+        self.fileType1.save()
+
+        try:
+            validate_upload_metadata(self.fileType1, 'file.Doc', 12)
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
+
+    def testInvalidExtension(self):
+        self.fileType1.allowedFileTypes = 'pdf'
+        self.fileType1.save()
+
+        with self.assertRaises(ValidationError) as ctx:
+            validate_upload_metadata(self.fileType1, 'doc.doc', 12)
+
+        self.assertIn('File not of allowed type', str(ctx.exception))
+
+    def testMissingExtension(self):
+        with self.assertRaises(ValidationError) as ctx:
+            validate_upload_metadata(self.fileType1, 'noext', 12)
+
+        self.assertIn('File must have a file extension', str(ctx.exception))
+
+    def testFileTooLarge(self):
+        self.fileType1.maxFilesizeMB = 1
+        self.fileType1.save()
+
+        with self.assertRaises(ValidationError) as ctx:
+            validate_upload_metadata(self.fileType1, 'doc.doc', 2 * 2**20)
+
+        self.assertIn('File must be less than', str(ctx.exception))
+
+class Test_S3Upload_VerifyS3Object(TestCase):
+    email1 = 'user1@user.com'
+    email2 = 'user2@user.com'
+    email3 = 'user3@user.com'
+    email_superUser = 'user4@user.com'
+    password = 'chdj48958DJFHJGKDFNM'
+
+    def setUp(self):
+        newCommonSetUp(self)
+        self.s3_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
+    def testSuccess(self, mock_size, mock_exists):
+        self.assertEqual(verify_s3_object(self.s3_key, self.fileType1), 12)
+
+    def testInvalidKey(self):
+        with self.assertRaises(ValidationError) as ctx:
+            verify_s3_object('not-a-valid-key.doc', self.fileType1)
+
+        self.assertIn('Invalid upload key', str(ctx.exception))
+
+    def testInvalidKeyPathTraversal(self):
+        with self.assertRaises(ValidationError) as ctx:
+            verify_s3_object('../MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc', self.fileType1)
+
+        self.assertIn('Invalid upload key', str(ctx.exception))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=False)
+    def testMissingObject(self, mock_exists):
+        with self.assertRaises(ValidationError) as ctx:
+            verify_s3_object(self.s3_key, self.fileType1)
+
+        self.assertIn('Uploaded file not found', str(ctx.exception))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=2 * 2**20)
+    def testFileTooLarge(self, mock_size, mock_exists):
+        self.fileType1.maxFilesizeMB = 1
+        self.fileType1.save()
+
+        with self.assertRaises(ValidationError) as ctx:
+            verify_s3_object(self.s3_key, self.fileType1)
+
+        self.assertIn('File must be less than', str(ctx.exception))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
+    def testInvalidExtension(self, mock_size, mock_exists):
+        self.fileType1.allowedFileTypes = 'pdf'
+        self.fileType1.save()
+
+        with self.assertRaises(ValidationError) as ctx:
+            verify_s3_object(self.s3_key, self.fileType1)
+
+        self.assertIn('File not of allowed type', str(ctx.exception))
+
+    @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
+    @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
+    def testValidExtensionDifferentCase(self, mock_size, mock_exists):
+        self.fileType1.allowedFileTypes = 'DOC,PDF'
+        self.fileType1.save()
+
+        try:
+            verify_s3_object(self.s3_key, self.fileType1)
+        except ValidationError:
+            self.fail('ValidationError raised unexpectedly')
 
 class Test_MentorEventFileUploadForm(TestCase):
     email1 = 'user1@user.com'
