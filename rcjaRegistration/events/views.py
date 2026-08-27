@@ -9,7 +9,6 @@ from django.db.models import Count, F, Q
 from django.conf import settings
 from django.urls import reverse
 from coordination.permissions import checkCoordinatorPermission
-from django.forms import formset_factory
 
 import datetime, csv
 import jwt
