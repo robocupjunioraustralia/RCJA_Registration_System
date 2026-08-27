@@ -12,7 +12,7 @@ from coordination.models import Coordinator
 from eventfiles.models import EventAvailableFileType, MentorEventFileType
 from invoices.models import Invoice, InvoiceGlobalSettings
 from workshops.models import WorkshopAttendee
-from events.views import getAdminCompSummary, getAdminWorkSummary
+from events.views import getAdminCompetitionSummary, getAdminWorkshopSummary
 
 import datetime
 # Create your tests here.
@@ -1690,13 +1690,14 @@ class TestAdminSummaryContext(TestCase):
         self.client.login(request=HttpRequest(), username=self.username, password=self.password)
 
     def testCompetitionDict(self):
-        returned = getAdminCompSummary(self.oldEventWithTeams)
+        returned = getAdminCompetitionSummary(self.oldEventWithTeams)
+        cat_id = self.divCategory.id
         context = {'name': 'test old yes reg', 
                    'year': '2019', 
                    'division_data': 
-                   {2: {'name': 'Test', 
-                        'rows': [(2, 'test', 4, 3), 
-                                (2, 'Div2', 1, 1)], 
+                   {cat_id: {'name': 'Test', 
+                        'rows': [(cat_id, 'test', 4, 3), 
+                                (cat_id, 'Div2', 1, 1)], 
                         'subtotal': (5, 4), 
                         'size': 3}}, 
                     'school_data': 
@@ -1705,12 +1706,13 @@ class TestAdminSummaryContext(TestCase):
         self.assertEqual(context, returned)
 
     def testWorkshopDict(self):
-        returned = getAdminWorkSummary(self.workshop)
+        returned = getAdminWorkshopSummary(self.workshop)
+        cat_id = self.divCategory.id
         context = {'name': 'Workshop Test', 
                    'year': '2019', 
-                   'division_data': {8: {'name': 'Test', 
-                                         'rows': [(8, 'test', 3, 1), 
-                                                  (8, 'Div2', 1, 0)], 
+                   'division_data': {cat_id: {'name': 'Test', 
+                                         'rows': [(cat_id, 'test', 3, 1), 
+                                                  (cat_id, 'Div2', 1, 0)], 
                                          'subtotal': (4, 1), 
                                          'size': 3}}, 
                                          'school_data': 

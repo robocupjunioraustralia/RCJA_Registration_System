@@ -5,17 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
 from django.conf import settings
 from django.urls import reverse
 from coordination.permissions import checkCoordinatorPermission
 from django.forms import formset_factory
-from django.db import connection
 
 import datetime, csv
 import jwt
 
-from .models import Event, BaseEventAttendance, Year, DivisionCategory
+from .models import Event, BaseEventAttendance, Year, DivisionCategory, Division
 from regions.models import State
 from teams.models import Team, Student
 from schools.models import Campus
@@ -493,12 +492,12 @@ def singlePageAdminSummary(request, eventID):
         raise PermissionDenied("You do not have permission to view this page") 
 
     if event.boolWorkshop():
-        context = getAdminWorkSummary(event)
+        context = getAdminWorkshopSummary(event)
         context["column1"] = "Students"
         context["column0"] = "Teachers"
         return render(request, 'events/adminDetails.html', context)
     else:
-        context = getAdminCompSummary(event)
+        context = getAdminCompetitionSummary(event)
         context["column1"] = "Students"
         context["column0"] = "Teams"
         return render(request, 'events/adminDetails.html', context)
@@ -515,20 +514,22 @@ def eventAdminSummary(request):
             output = form.cleaned_data
             if len(form.cleaned_data['workshops']):
                 events_list = form.cleaned_data['workshops']
-                columnHeadings = ["Teachers", "Students"] 
+                columnHeadings = ["Teachers", "Students"]
+                summaryFunction = getAdminWorkshopSummary
             else:
                 events_list = form.cleaned_data['competitions']
-                columnHeadings = ["Teams", "Students"] 
+                columnHeadings = ["Teams", "Students"]
+                summaryFunction = getAdminCompetitionSummary
 
             if len(events_list)==1 and not form.cleaned_data['csv']:
                 event = get_object_or_404(Event, pk=events_list[0])
-                context = getAdminWorkSummary(event)
+                context = summaryFunction(event)
                 context["column0"] = columnHeadings[0]
                 context["column1"] = columnHeadings[1]
                 return render(request, 'events/adminDetails.html', context)
 
             else:
-                events = [getAdminWorkSummary(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                events = [summaryFunction(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
                 context = mergeMultipleAdminSummary(events)
                 context["column0"] = columnHeadings[0]
                 context["column1"] = columnHeadings[1]
@@ -599,137 +600,24 @@ def mergeMultipleAdminSummary(events):
                'total': {"col1": total_col1, "col0": total_col0}}
     return context
 
-def getAdminCompSummary(event):
-    with connection.cursor() as cursor:
-        cursor.execute("""SELECT cat.id, div.name, COUNT(student.id), COUNT( DISTINCT attendance.id)
-                       FROM events_divisioncategory AS cat LEFT JOIN events_division AS div ON cat.id = div.category_id
-                       LEFT JOIN events_baseeventattendance AS attendance ON attendance.division_id = div.id
-                       LEFT JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
-                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
-                       WHERE attendance.event_id = %s
-                       GROUP BY cat.id, div.id
-                       ORDER BY cat.id
-                       """, [event.pk])
-        division_grouping_data = cursor.fetchall()
-
-        cursor.execute("""SELECT cat.id, cat.name, COUNT(student.id), COUNT( DISTINCT attendance.id)
-                       FROM events_divisioncategory AS cat LEFT JOIN events_division AS div ON cat.id = div.category_id
-                       LEFT JOIN events_baseeventattendance AS attendance ON attendance.division_id = div.id
-                       LEFT JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
-                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
-                       WHERE div.id IN (SELECT division_id FROM events_availabledivision WHERE event_id = %s) AND attendance.event_id = %s
-                       GROUP BY cat.id
-                       ORDER BY cat.id""", [event.pk, event.pk])
-        category_subtotal_data = cursor.fetchall()
-
-        cursor.execute("""SELECT school.name,
-                       COUNT( DISTINCT attendance.id),
-                       COUNT(student.id)
-                       FROM schools_school AS school LEFT JOIN events_baseeventattendance AS attendance ON attendance.school_id = school.id
-                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
-                       WHERE attendance.event_id = %s
-                       GROUP BY school.id 
-                       ORDER BY school.name""", [event.pk])
-        school_grouping_data = cursor.fetchall()
-
-        cursor.execute("""SELECT COUNT(attendance.id) FROM events_baseeventattendance AS attendance 
-                       INNER JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
-                       LEFT JOIN teams_student AS student ON student.team_id = attendance.id
-                       WHERE attendance.event_id = %s AND attendance.school_id IS Null """, [event.pk])
-        school_independent_data = cursor.fetchall()
-        cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN teams_Team AS team ON attendance.id = team.baseeventattendance_ptr_id
-                       WHERE attendance.event_id = %s AND attendance.school_id IS Null """, [event.pk])
-        school_independent_data += cursor.fetchall()
-
-    division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
+def _build_division_data(category_subtotal_data, division_grouping_data):
+    """Pair division rows with category subtotals. Both sequences are ordered by category id."""
+    division_data = {}
     division_grouping_index = 0
 
     for category in category_subtotal_data:
         rows = []
         while True:
-            if len(division_grouping_data)<=division_grouping_index \
-                or division_grouping_data[division_grouping_index][0] > category[0]:
+            if (
+                len(division_grouping_data) <= division_grouping_index
+                or division_grouping_data[division_grouping_index][0] > category[0]
+            ):
                 break
             elif division_grouping_data[division_grouping_index][0] == category[0]:
                 rows.append(division_grouping_data[division_grouping_index])
                 division_grouping_index += 1
             else:
                 division_grouping_index += 1
-    
-        division_data[category[0]] = {
-            "name": category[1],
-            "rows": rows,
-            "subtotal": (category[2], category[3]),
-            "size": len(rows) + 1,
-        }
-
-    # Schools
-    if (school_independent_data[0][0] != 0 or school_independent_data[1][0] != 0):
-        school_grouping_data.append(('Independent', school_independent_data[0][0], school_independent_data[1][0]))
-    
-    context = {
-        "name": event.name,
-        "year": str(event.year),
-        "division_data": division_data,
-        'school_data': school_grouping_data,
-    }
-    return context
-
-def getAdminWorkSummary(event: Event):
-    with connection.cursor() as cursor:
-        cursor.execute("""SELECT cat.id, div.name, 
-                       (SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id WHERE attendance.event_id = %s AND attendance.division_id = div.id AND work."attendeeType" = 'student'),
-                       (SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id WHERE attendance.event_id = %s AND attendance.division_id = div.id AND work."attendeeType" = 'teacher')
-                       FROM events_divisioncategory AS cat LEFT JOIN events_division AS div 
-                       ON cat.id = div.category_id
-                       GROUP BY cat.id, div.id
-                       ORDER BY cat.id
-                       """, [event.pk, event.pk])
-        division_grouping_data = cursor.fetchall()
-
-        cursor.execute("""SELECT cat.id, cat.name, 
-                       (SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id WHERE attendance.event_id = %s AND attendance.division_id IN (SELECT id FROM events_division AS div WHERE cat.id = div.category_id) AND work."attendeeType" = 'student'),
-                       (SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id WHERE attendance.event_id = %s AND attendance.division_id IN (SELECT id FROM events_division AS div WHERE cat.id = div.category_id) AND work."attendeeType" = 'teacher')
-                       FROM events_divisioncategory AS cat LEFT JOIN events_division AS div ON cat.id = div.category_id
-                       WHERE div.id IN (SELECT division_id FROM events_availabledivision WHERE event_id = %s)
-                       GROUP BY cat.id
-                       ORDER BY cat.id""", [event.pk, event.pk, event.pk])
-        category_subtotal_data = cursor.fetchall()
-
-        cursor.execute("""SELECT school.name,
-                       (SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id WHERE attendance.event_id = %s AND attendance.school_id = school.id AND work."attendeeType" = 'student'),
-                       (SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id WHERE attendance.event_id = %s AND attendance.school_id = school.id AND work."attendeeType" = 'teacher')
-                       FROM schools_school AS school
-                       GROUP BY school.id 
-                       ORDER BY school.name""", [event.pk, event.pk])
-        school_grouping_data = cursor.fetchall()
-
-        cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id 
-                       WHERE attendance.event_id = %s AND attendance.school_id IS Null AND work."attendeeType" = 'student' """, [event.pk])
-        school_independent_data = cursor.fetchall()
-        cursor.execute("""SELECT COUNT('attendance.yearLevel') FROM events_baseeventattendance AS attendance INNER JOIN workshops_workshopattendee AS work ON attendance.id = work.baseeventattendance_ptr_id 
-                       WHERE attendance.event_id = %s AND attendance.school_id IS Null AND work."attendeeType" = 'teacher' """, [event.pk])
-        school_independent_data += cursor.fetchall()
-
-    division_data = dict() # Category id containing dictionaries of name, rows, and subtotal
-    division_grouping_index = 0
-    total0 = 0
-    total1 = 0
-
-    for category in category_subtotal_data:
-        rows = []
-        while True:
-            if len(division_grouping_data)<=division_grouping_index \
-                or division_grouping_data[division_grouping_index][0] > category[0]:
-                break
-            elif division_grouping_data[division_grouping_index][0] == category[0]:
-                rows.append(division_grouping_data[division_grouping_index])
-                division_grouping_index += 1
-            else:
-                division_grouping_index += 1
-
-        total0 += category[2]
-        total1 +=  category[3]
 
         division_data[category[0]] = {
             "name": category[1],
@@ -738,18 +626,158 @@ def getAdminWorkSummary(event: Event):
             "size": len(rows) + 1,
         }
 
-    # Schools
-    if (school_independent_data[0][0] != 0 or school_independent_data[1][0] != 0):
-        school_grouping_data.append(('Independent', school_independent_data[0][0], school_independent_data[1][0]))
-    
-    context = {
+    return division_data
+
+
+def _append_independent_school(school_grouping_data, col1, col0):
+    if col1 or col0:
+        school_grouping_data.append(('Independent', col1, col0))
+    return school_grouping_data
+
+
+def _annotated_tuples(queryset, *fields):
+    return [tuple(row[field] for field in fields) for row in queryset]
+
+
+def getAdminCompetitionSummary(event):
+    teams = Team.objects.filter(event=event, division__category__isnull=False)
+
+    division_grouping_data = _annotated_tuples(
+        teams.values('division__category_id', 'division__name', 'division_id')
+        .annotate(
+            student_count=Count('student'),
+            team_count=Count('pk', distinct=True),
+        )
+        .order_by('division__category_id', 'division_id'),
+        'division__category_id',
+        'division__name',
+        'student_count',
+        'team_count',
+    )
+
+    category_subtotal_data = _annotated_tuples(
+        teams.filter(division__in=event.divisions.all())
+        .values('division__category_id', 'division__category__name')
+        .annotate(
+            student_count=Count('student'),
+            team_count=Count('pk', distinct=True),
+        )
+        .order_by('division__category_id'),
+        'division__category_id',
+        'division__category__name',
+        'student_count',
+        'team_count',
+    )
+
+    school_grouping_data = _annotated_tuples(
+        Team.objects.filter(event=event, school__isnull=False)
+        .values('school__name')
+        .annotate(
+            team_count=Count('pk', distinct=True),
+            student_count=Count('student'),
+        )
+        .order_by('school__name'),
+        'school__name',
+        'team_count',
+        'student_count',
+    )
+
+    independent = Team.objects.filter(event=event, school__isnull=True).aggregate(
+        team_count=Count('pk', distinct=True),
+        student_count=Count('student'),
+    )
+    school_grouping_data = _append_independent_school(
+        school_grouping_data,
+        independent['team_count'],
+        independent['student_count'],
+    )
+
+    return {
+        "name": event.name,
+        "year": str(event.year),
+        "division_data": _build_division_data(category_subtotal_data, division_grouping_data),
+        'school_data': school_grouping_data,
+    }
+
+def getAdminWorkshopSummary(event: Event):
+    event_category_ids = event.divisions.exclude(category_id=None).values('category_id')
+
+    division_grouping_data = list(
+        Division.objects.filter(category_id__in=event_category_ids)
+        .annotate(
+            student_count=Count(
+                'baseeventattendance',
+                filter=Q(
+                    baseeventattendance__event=event,
+                    baseeventattendance__workshopattendee__attendeeType='student',
+                ),
+            ),
+            teacher_count=Count(
+                'baseeventattendance',
+                filter=Q(
+                    baseeventattendance__event=event,
+                    baseeventattendance__workshopattendee__attendeeType='teacher',
+                ),
+            ),
+        )
+        .order_by('category_id', 'id')
+        .values_list('category_id', 'name', 'student_count', 'teacher_count')
+    )
+
+    category_subtotal_data = list(
+        DivisionCategory.objects.filter(pk__in=event_category_ids)
+        .annotate(
+            student_count=Count(
+                'division__baseeventattendance',
+                filter=Q(
+                    division__baseeventattendance__event=event,
+                    division__baseeventattendance__workshopattendee__attendeeType='student',
+                ),
+            ),
+            teacher_count=Count(
+                'division__baseeventattendance',
+                filter=Q(
+                    division__baseeventattendance__event=event,
+                    division__baseeventattendance__workshopattendee__attendeeType='teacher',
+                ),
+            ),
+        )
+        .order_by('id')
+        .values_list('id', 'name', 'student_count', 'teacher_count')
+    )
+
+    school_grouping_data = list(
+        WorkshopAttendee.objects.filter(event=event, school__isnull=False)
+        .values('school__name')
+        .annotate(
+            student_count=Count('pk', filter=Q(attendeeType='student')),
+            teacher_count=Count('pk', filter=Q(attendeeType='teacher')),
+        )
+        .order_by('school__name')
+        .values_list('school__name', 'student_count', 'teacher_count')
+    )
+
+    independent = WorkshopAttendee.objects.filter(event=event, school__isnull=True).aggregate(
+        students=Count('pk', filter=Q(attendeeType='student')),
+        teachers=Count('pk', filter=Q(attendeeType='teacher')),
+    )
+    school_grouping_data = _append_independent_school(
+        school_grouping_data,
+        independent['students'],
+        independent['teachers'],
+    )
+
+    division_data = _build_division_data(category_subtotal_data, division_grouping_data)
+    total0 = sum(category[2] for category in category_subtotal_data)
+    total1 = sum(category[3] for category in category_subtotal_data)
+
+    return {
         "name": event.name,
         "year": str(event.year),
         "division_data": division_data,
         'school_data': school_grouping_data,
-        "total":[total0, total1]
+        "total": [total0, total1],
     }
-    return context
 
 def summary_csv(context: dict[str, str]):
     response = HttpResponse(content_type='text/csv')
