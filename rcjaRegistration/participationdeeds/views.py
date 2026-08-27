@@ -104,7 +104,11 @@ def sign_participation_deed(request, token):
                 'lastName': request.POST.get('lastName', ''),
                 'yearLevel': request.POST.get('yearLevel', ''),
             })
-            sign_form = ParticipationDeedSignForm(request.POST)
+            sign_form = ParticipationDeedSignForm(
+                request.POST,
+                child_first_name=request.POST.get('firstName', ''),
+                child_last_name=request.POST.get('lastName', ''),
+            )
             if lookup_form.is_valid() and sign_form.is_valid():
                 child = lookup_form.cleaned_data
                 participant = match_participant(
@@ -137,7 +141,10 @@ def sign_participation_deed(request, token):
             }
         elif lookup_form.is_valid():
             child_data = lookup_form.cleaned_data
-            sign_form = ParticipationDeedSignForm()
+            sign_form = ParticipationDeedSignForm(
+                child_first_name=child_data['firstName'],
+                child_last_name=child_data['lastName'],
+            )
 
     return render(request, 'participationdeeds/sign.html', {
         'event': event,

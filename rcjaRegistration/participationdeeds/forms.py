@@ -14,7 +14,16 @@ class ParticipationDeedSignForm(forms.Form):
         label='I have read and understood, and I agree to all parts of the Participation Deed',
         required=True,
     )
+    confirmParent = forms.BooleanField(
+        label='I am the parent/ guardian of the child',
+        required=True,
+    )
     parentName = forms.CharField(label="Parent's/Guardian's Name", max_length=100)
+
+    def __init__(self, *args, child_first_name='', child_last_name='', **kwargs):
+        super().__init__(*args, **kwargs)
+        child_name = f'{child_first_name} {child_last_name}'.strip() or 'the child'
+        self.fields['confirmParent'].label = f'I am the parent/ guardian of {child_name}'
 
 
 class AttachStudentForm(forms.Form):
