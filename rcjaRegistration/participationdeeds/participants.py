@@ -67,6 +67,14 @@ def team_deed_counts(team):
     return complete, total
 
 
+def participant_deed_counts(event, school=None, mentorUser=None):
+    """Return (complete, incomplete) deed counts across eligible students for a mentor context."""
+    qs = eligible_participants(event, school=school, mentorUser=mentorUser)
+    total = qs.count()
+    complete = qs.exclude(participationDeed=None).count()
+    return complete, total - complete
+
+
 def participant_has_deed(participant):
     """Return whether the participant already has a participation deed attached."""
     return participant.participationDeed_id is not None
@@ -88,8 +96,10 @@ def unattached_deeds_for_context(event, school=None, mentorUser=None):
 def participants_without_deed(event, school=None, mentorUser=None):
     """Return eligible participants for an event/school/mentor who have no deed attached."""
     if event.boolWorkshop():
-        return eligible_workshop_students_queryset(event, school=school, mentorUser=mentorUser).filter(participationDeed=None)
-    return eligible_students_queryset(event, school=school, mentorUser=mentorUser).filter(participationDeed=None)
+        qs = eligible_workshop_students_queryset(event, school=school, mentorUser=mentorUser)
+    else:
+        qs = eligible_students_queryset(event, school=school, mentorUser=mentorUser)
+    return qs.filter(participationDeed=None).order_by('firstName', 'lastName')
 
 
 def mentor_teams_for_context(event, school=None, mentorUser=None):

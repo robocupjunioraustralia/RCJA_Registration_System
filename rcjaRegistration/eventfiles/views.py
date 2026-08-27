@@ -35,14 +35,14 @@ def fileUploadCommonPermissions(request, eventAttendance):
     if not eventAttendance.eventAttendanceType() == 'team':
         raise PermissionDenied("File upload is only supported for teams") 
 
-    if checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change'):
-        return
-
     # Check administrator of this eventAttendance
     if not mentorEventAttendanceAccessPermissions(request, eventAttendance):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
 def fileUploadEditPermissions(request, uploadedFile):
+    if checkCoordinatorPermission(request, BaseEventAttendance, uploadedFile.eventAttendance, 'change'):
+        return
+
     fileUploadCommonPermissions(request, uploadedFile.eventAttendance)
 
     # Check upload deadline not passed
@@ -50,11 +50,13 @@ def fileUploadEditPermissions(request, uploadedFile):
         raise PermissionDenied("The upload deadline has passed for this file type for this event")
 
 def fileUploadUploadPermissions(request, eventAttendance):
+    if checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change'):
+        return
+
     fileUploadCommonPermissions(request, eventAttendance)
 
     # Check at least one available file type
-    if not (eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists()
-        or checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change')):
+    if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
         raise PermissionDenied("File upload not available")
 
 class MentorEventFileUploadView(LoginRequiredMixin, View):

@@ -80,8 +80,11 @@
                     <a href = "{% url 'teams:edit' team.id %}" class = "ui button positive" style="margin-top:1rem;">Edit</a>
                 {% endif %}
 
-                {% if uploadedFiles.exists or team.availableFileUploadTypes %}
+                {% if uploadedFiles.exists or team.availableFileUploadTypes or coordinatorEditFilesPermission %}
                     <h2>Files</h2>
+                    {% if not team.availableFileUploadTypes and coordinatorEditFilesPermission %}
+                    <p style="color: red">File upload and edit available to coordinators only (closed for mentors).</p>
+                    {% endif %}
                 {% endif %}
                 {% if uploadedFiles.exists %}
                     <table id="filesTable" class="ui celled table">
@@ -102,7 +105,7 @@
                                     <td>{{uploadedFile.uploadedBy.fullname_or_email}}</td>
                                     <td>{{uploadedFile.creationDateTime}}</td>
                                     <td>
-                                        {% if not uploadedFile.uploadDeadlinePassed %}
+                                        {% if not uploadedFile.uploadDeadlinePassed or coordinatorEditFilesPermission %}
                                             <a href="{% url 'eventfiles:edit' uploadedFile.id %}"><button class="ui primary button">Edit</button></a>
                                             <button onClick="showDeleteModal({{uploadedFile.id}}, '{% url 'eventfiles:edit' uploadedFile.id %}')" class="ui negative button">Delete</button>
                                         {% endif %}
@@ -112,7 +115,7 @@
                         </tbody>
                     </table>
                 {% endif %}
-                {% if team.availableFileUploadTypes %}
+                {% if team.availableFileUploadTypes or coordinatorEditFilesPermission %}
                     <a href = "{% url 'eventfiles:uploadFile' team.id %}" class = "ui button primary" style="margin-top:1rem;">Upload a new file</a>
                     <h3>File upload categories:</h3>
                     <ul>

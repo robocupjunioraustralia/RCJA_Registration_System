@@ -21,7 +21,7 @@ from workshops.models import WorkshopAttendee
 from .forms import getSummaryForm
 
 from participationdeeds.tokens import dumps_school_or_mentor, deeds_available_for_event
-from participationdeeds.participants import team_deed_counts, unattached_deeds_for_context
+from participationdeeds.participants import team_deed_counts, unattached_deeds_for_context, participant_deed_counts
 
 # Need to check if schooladministrator is None
 
@@ -113,6 +113,10 @@ def dashboard(request):
 def coordinatorEventDetailsPermissions(request, event):
     return checkCoordinatorPermission(request, Event, event, 'view')
 
+def coordinatorInvoiceViewPermissions(request, event):
+    from invoices.models import Invoice
+    return checkCoordinatorPermission(request, Invoice, event, 'view')
+
 def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):
         return True
@@ -201,6 +205,8 @@ def details(request, eventID):
     electronicParticipationDeedsEnabled = event.electronicParticipationDeedsEnabled
     schoolMagicLink = None
     unattachedDeedCount = 0
+    completeDeedCount = 0
+    incompleteDeedCount = 0
     teamDeedSummaries = {}
 
     hasStudentRegistrations = (teams.exists() or workshopAttendees.filter(attendeeType='student').exists())
@@ -214,6 +220,11 @@ def details(request, eventID):
                 reverse('participationdeeds:sign_participation_deed', kwargs={'token': token})
             )
         unattachedDeedCount = unattached_deeds_for_context(event, school=school, mentorUser=mentorUser).count()
+        completeDeedCount, incompleteDeedCount = participant_deed_counts(
+            event,
+            school=school,
+            mentorUser=mentorUser,
+        )
         if not event.boolWorkshop():
             for team in teams:
                 complete, total = team_deed_counts(team)
@@ -229,6 +240,7 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'hasInvoiceViewPermissions': coordinatorInvoiceViewPermissions(request, event),
         'maxEventRegistrationsForSchoolReached': event.maxEventRegistrationsForSchoolReached(request.user),
         'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
@@ -238,6 +250,8 @@ def details(request, eventID):
         'electronicParticipationDeedsAvailable': electronicParticipationDeedsAvailable,
         'schoolMagicLink': schoolMagicLink,
         'unattachedDeedCount': unattachedDeedCount,
+        'completeDeedCount': completeDeedCount,
+        'incompleteDeedCount': incompleteDeedCount,
         'teamDeedSummaries': teamDeedSummaries,
     }
     return render(request, 'events/details.html', context)
