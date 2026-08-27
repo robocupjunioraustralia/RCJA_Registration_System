@@ -16,12 +16,16 @@ from teams.models import Team, Student, HardwarePlatform, SoftwarePlatform
 from .models import MentorEventFileType, MentorEventFileUpload, EventAvailableFileType
 from .forms import MentorEventFileUploadForm
 from .s3_upload import (
+    MENTOR_FILE_PENDING_S3_KEY_PATTERN,
     MENTOR_FILE_S3_KEY_PATTERN,
     PRESIGNED_URL_EXPIRY_SECONDS,
+    delete_s3_object,
     direct_s3_upload_enabled,
     generate_mentor_file_s3_key,
     generate_presigned_put_url,
     get_file_extension,
+    pending_key_to_final_key,
+    promote_pending_s3_object,
     validate_upload_metadata,
     verify_s3_object,
 )
@@ -415,21 +419,21 @@ class Test_MentorEventFilePresignView(Base_Test_MentorEventFileUploadView, TestC
             return self.client.post(self.url(), data=json.dumps(payload), content_type='application/json')
 
     @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
-    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     def testSuccess(self, mock_generate_key, mock_presign):
         response = self.postPresign(self.validPayload())
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['presignedUrl'], 'https://example.com/presigned')
-        self.assertEqual(response.json()['s3Key'], 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+        self.assertEqual(response.json()['s3Key'], 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc')
         mock_generate_key.assert_called_once_with('doc.doc')
         mock_presign.assert_called_once_with(
-            'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc',
+            'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc',
             'application/msword',
         )
 
     @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
-    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     def testSuccessSuperUser(self, mock_generate_key, mock_presign):
         self.client.logout()
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
@@ -440,13 +444,13 @@ class Test_MentorEventFilePresignView(Base_Test_MentorEventFileUploadView, TestC
         self.assertEqual(response.json()['presignedUrl'], 'https://example.com/presigned')
 
     @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
-    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     def testDefaultsEmptyContentType(self, mock_generate_key, mock_presign):
         response = self.postPresign(self.validPayload(contentType=''))
 
         self.assertEqual(response.status_code, 200)
         mock_presign.assert_called_once_with(
-            'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc',
+            'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc',
             'application/octet-stream',
         )
 
@@ -547,7 +551,7 @@ class Test_MentorEventFilePresignView(Base_Test_MentorEventFileUploadView, TestC
         self.assertContains(response, 'File upload is only supported for teams', status_code=403)
 
     @patch('eventfiles.views.generate_presigned_put_url', return_value='https://example.com/presigned')
-    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+    @patch('eventfiles.views.generate_mentor_file_s3_key', return_value='MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     def testAllowedSuperUserUploadDeadlinePassed(self, mock_generate_key, mock_presign):
         self.availableFileType1.uploadDeadline = (datetime.datetime.now() - datetime.timedelta(days=5)).date()
         self.availableFileType1.save()
@@ -600,7 +604,9 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
     def setUp(self):
         super().setUp()
         self.login = self.client.login(request=HttpRequest(), username=self.email1, password=self.password)
-        self.s3_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+        self.pending_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+        self.final_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+        self.s3_key = self.pending_key
 
     def url(self):
         return reverse('eventfiles:uploadFile', kwargs={'eventAttendanceID': self.team1.id})
@@ -608,17 +614,19 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
     def validData(self, **overrides):
         data = {
             'fileType': self.fileType1.id,
-            's3Key': self.s3_key,
+            's3Key': self.pending_key,
             'originalFilename': 'doc.doc',
         }
         data.update(overrides)
         return data
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.delete_s3_object')
+    @patch('eventfiles.views.promote_pending_s3_object', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     @patch('eventfiles.views.verify_s3_object', return_value=12)
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
-    def testSuccess(self, mock_size, mock_exists, mock_verify, mock_direct_s3):
+    def testSuccess(self, mock_size, mock_exists, mock_verify, mock_promote, mock_delete, mock_direct_s3):
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
         response = self.client.post(self.url(), data=self.validData())
         self.assertEqual(response.status_code, 302)
@@ -627,15 +635,19 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
         self.assertEqual(uploaded_file.uploadedBy, self.user1)
         self.assertEqual(uploaded_file.eventAttendance.childObject(), self.team1)
         self.assertEqual(uploaded_file.originalFilename, 'doc.doc')
-        self.assertEqual(uploaded_file.fileUpload.name, self.s3_key)
+        self.assertEqual(uploaded_file.fileUpload.name, self.final_key)
         self.assertEqual(response.url, reverse('teams:details', kwargs={"teamID": self.team1.id}))
         mock_verify.assert_called_once()
+        mock_promote.assert_called_once_with(self.pending_key)
+        mock_delete.assert_called_once_with(self.pending_key)
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.delete_s3_object')
+    @patch('eventfiles.views.promote_pending_s3_object', return_value='MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
     @patch('eventfiles.views.verify_s3_object', return_value=12)
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
-    def testSuccessSuperUser(self, mock_size, mock_exists, mock_verify, mock_direct_s3):
+    def testSuccessSuperUser(self, mock_size, mock_exists, mock_verify, mock_promote, mock_delete, mock_direct_s3):
         self.client.logout()
         self.client.login(request=HttpRequest(), username=self.email_superUser, password=self.password)
 
@@ -644,37 +656,55 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
         self.assertEqual(response.status_code, 302)
         uploaded_file = MentorEventFileUpload.objects.first()
         self.assertEqual(uploaded_file.uploadedBy, self.superUser)
+        self.assertEqual(uploaded_file.fileUpload.name, self.final_key)
         self.assertEqual(response.url, reverse('admin:teams_team_changelist') + f"?event__id__exact={str(self.team1.event.id)}")
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
-    def testMissingOriginalFilename(self, mock_direct_s3):
+    @patch('eventfiles.views.promote_pending_s3_object')
+    def testMissingOriginalFilename(self, mock_promote, mock_direct_s3):
         response = self.client.post(self.url(), data=self.validData(originalFilename=''))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Missing required upload fields')
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        mock_promote.assert_not_called()
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
-    def testInvalidS3Key(self, mock_direct_s3):
+    @patch('eventfiles.views.promote_pending_s3_object')
+    def testInvalidS3Key(self, mock_promote, mock_direct_s3):
         response = self.client.post(self.url(), data=self.validData(s3Key='not-a-valid-key.doc'))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Invalid upload key')
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        mock_promote.assert_not_called()
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.promote_pending_s3_object')
+    def testRejectsFinalKey(self, mock_promote, mock_direct_s3):
+        response = self.client.post(self.url(), data=self.validData(s3Key=self.final_key))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Invalid upload key')
+        self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        mock_promote.assert_not_called()
+
+    @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.promote_pending_s3_object')
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=False)
-    def testRejectsMissingS3ObjectOnPost(self, mock_exists, mock_direct_s3):
+    def testRejectsMissingS3ObjectOnPost(self, mock_exists, mock_promote, mock_direct_s3):
         response = self.client.post(self.url(), data=self.validData())
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Uploaded file not found')
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        mock_promote.assert_not_called()
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.promote_pending_s3_object')
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
-    def testRejectsInvalidExtension(self, mock_size, mock_exists, mock_direct_s3):
+    def testRejectsInvalidExtension(self, mock_size, mock_exists, mock_promote, mock_direct_s3):
         self.fileType1.allowedFileTypes = 'pdf'
         self.fileType1.save()
 
@@ -683,11 +713,13 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'File not of allowed type')
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        mock_promote.assert_not_called()
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
+    @patch('eventfiles.views.promote_pending_s3_object')
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=2 * 2**20)
-    def testRejectsFileTooLarge(self, mock_size, mock_exists, mock_direct_s3):
+    def testRejectsFileTooLarge(self, mock_size, mock_exists, mock_promote, mock_direct_s3):
         self.fileType1.maxFilesizeMB = 1
         self.fileType1.save()
 
@@ -696,6 +728,7 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'File must be less than')
         self.assertEqual(MentorEventFileUpload.objects.count(), 0)
+        mock_promote.assert_not_called()
 
     @patch('eventfiles.views.direct_s3_upload_enabled', return_value=True)
     def testFallsBackToFormWithoutS3Key(self, mock_direct_s3):
@@ -717,7 +750,7 @@ class Test_MentorEventFileUploadView_DirectS3_Post(Base_Test_MentorEventFileUplo
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=False)
     def testRejectsMissingS3Object(self, mock_exists):
         with self.assertRaises(ValidationError) as ctx:
-            verify_s3_object(self.s3_key, self.fileType1)
+            verify_s3_object(self.pending_key, self.fileType1)
 
         self.assertIn('Uploaded file not found', str(ctx.exception))
 
@@ -820,8 +853,9 @@ class Test_S3Upload_Helpers(TestCase):
     def testGenerateMentorFileS3Key(self):
         key = generate_mentor_file_s3_key('my file.doc')
 
-        self.assertTrue(MENTOR_FILE_S3_KEY_PATTERN.match(key))
-        self.assertTrue(key.startswith('MentorFiles/MentorFile_'))
+        self.assertTrue(MENTOR_FILE_PENDING_S3_KEY_PATTERN.match(key))
+        self.assertFalse(MENTOR_FILE_S3_KEY_PATTERN.match(key))
+        self.assertTrue(key.startswith('MentorFiles/pending/MentorFile_'))
         self.assertTrue(key.endswith('.doc'))
 
     def testGenerateMentorFileS3KeyUnique(self):
@@ -836,11 +870,26 @@ class Test_S3Upload_Helpers(TestCase):
 
         self.assertIn('File must have a file extension', str(ctx.exception))
 
+    def testPendingKeyToFinalKey(self):
+        pending_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+
+        self.assertEqual(
+            pending_key_to_final_key(pending_key),
+            'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc',
+        )
+        self.assertTrue(MENTOR_FILE_S3_KEY_PATTERN.match(pending_key_to_final_key(pending_key)))
+
+    def testPendingKeyToFinalKeyRejectsFinalKey(self):
+        with self.assertRaises(ValidationError) as ctx:
+            pending_key_to_final_key('MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc')
+
+        self.assertIn('Invalid upload key', str(ctx.exception))
+
     @patch('eventfiles.s3_upload.boto3.client')
     def testGeneratePresignedPutUrl(self, mock_client):
         mock_s3 = mock_client.return_value
         mock_s3.generate_presigned_url.return_value = 'https://example.com/presigned'
-        s3_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+        s3_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
 
         url = generate_presigned_put_url(s3_key, 'application/msword')
 
@@ -859,6 +908,45 @@ class Test_S3Upload_Helpers(TestCase):
                 'ACL': 'private',
             },
             ExpiresIn=PRESIGNED_URL_EXPIRY_SECONDS,
+        )
+
+    @patch('eventfiles.s3_upload.boto3.client')
+    def testPromotePendingS3Object(self, mock_client):
+        mock_s3 = mock_client.return_value
+        pending_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+        final_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+
+        self.assertEqual(promote_pending_s3_object(pending_key), final_key)
+        mock_s3.copy_object.assert_called_once_with(
+            Bucket='testing',
+            CopySource={
+                'Bucket': 'testing',
+                'Key': pending_key,
+            },
+            Key=final_key,
+            MetadataDirective='COPY',
+        )
+
+    @patch('eventfiles.s3_upload.boto3.client')
+    def testPromotePendingS3ObjectCopyFailure(self, mock_client):
+        mock_client.return_value.copy_object.side_effect = RuntimeError('S3 error')
+        pending_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+
+        with self.assertRaises(ValidationError) as ctx:
+            promote_pending_s3_object(pending_key)
+
+        self.assertIn('Failed to save uploaded file', str(ctx.exception))
+
+    @patch('eventfiles.s3_upload.boto3.client')
+    def testDeleteS3Object(self, mock_client):
+        mock_s3 = mock_client.return_value
+        pending_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+
+        delete_s3_object(pending_key)
+
+        mock_s3.delete_object.assert_called_once_with(
+            Bucket='testing',
+            Key=pending_key,
         )
 
 class Test_S3Upload_ValidateUploadMetadata(TestCase):
@@ -928,7 +1016,7 @@ class Test_S3Upload_VerifyS3Object(TestCase):
 
     def setUp(self):
         newCommonSetUp(self)
-        self.s3_key = 'MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc'
+        self.s3_key = 'MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc'
 
     @patch('storages.backends.s3boto3.S3Boto3Storage.exists', return_value=True)
     @patch('storages.backends.s3boto3.S3Boto3Storage.size', return_value=12)
@@ -941,9 +1029,15 @@ class Test_S3Upload_VerifyS3Object(TestCase):
 
         self.assertIn('Invalid upload key', str(ctx.exception))
 
+    def testRejectsFinalKey(self):
+        with self.assertRaises(ValidationError) as ctx:
+            verify_s3_object('MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc', self.fileType1)
+
+        self.assertIn('Invalid upload key', str(ctx.exception))
+
     def testInvalidKeyPathTraversal(self):
         with self.assertRaises(ValidationError) as ctx:
-            verify_s3_object('../MentorFiles/MentorFile_12345678-1234-1234-1234-123456789012.doc', self.fileType1)
+            verify_s3_object('../MentorFiles/pending/MentorFile_12345678-1234-1234-1234-123456789012.doc', self.fileType1)
 
         self.assertIn('Invalid upload key', str(ctx.exception))
 

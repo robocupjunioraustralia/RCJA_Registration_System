@@ -16,9 +16,11 @@ from events.views import mentorEventAttendanceAccessPermissions
 
 from .forms import MentorEventFileUploadForm
 from .s3_upload import (
+    delete_s3_object,
     direct_s3_upload_enabled,
     generate_mentor_file_s3_key,
     generate_presigned_put_url,
+    promote_pending_s3_object,
     validate_upload_metadata,
     verify_s3_object,
 )
@@ -138,16 +140,29 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
 
                 file_type = get_object_or_404(file_type_queryset, pk=file_type_id)
                 verify_s3_object(s3_key, file_type)
+                final_key = promote_pending_s3_object(s3_key)
 
-                uploadedFile = MentorEventFileUpload(
-                    eventAttendance=eventAttendance,
-                    fileType=file_type,
-                    uploadedBy=request.user,
-                    originalFilename=original_filename,
-                )
-                uploadedFile.fileUpload.name = s3_key
-                uploadedFile.full_clean()
-                uploadedFile.save()
+                try:
+                    uploadedFile = MentorEventFileUpload(
+                        eventAttendance=eventAttendance,
+                        fileType=file_type,
+                        uploadedBy=request.user,
+                        originalFilename=original_filename,
+                    )
+                    uploadedFile.fileUpload.name = final_key
+                    uploadedFile.full_clean()
+                    uploadedFile.save()
+                except Exception:
+                    try:
+                        delete_s3_object(final_key)
+                    except Exception:
+                        pass
+                    raise
+
+                try:
+                    delete_s3_object(s3_key)
+                except Exception:
+                    pass
 
                 if mentorEventAttendanceAccessPermissions(request, eventAttendance):
                     return redirect(reverse('teams:details', kwargs={"teamID": eventAttendance.id}))
