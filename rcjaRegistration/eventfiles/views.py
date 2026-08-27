@@ -49,7 +49,7 @@ def fileUploadEditPermissions(request, uploadedFile):
     if not uploadedFile.eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today(), fileType=uploadedFile.fileType).exists():
         raise PermissionDenied("The upload deadline has passed for this file type for this event")
 
-def fileUploadUploadPermissions( request, eventAttendance):
+def fileUploadUploadPermissions(request, eventAttendance):
     fileUploadCommonPermissions(request, eventAttendance)
 
     # Check at least one available file type
