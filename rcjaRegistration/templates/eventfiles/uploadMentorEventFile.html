@@ -44,6 +44,8 @@
             <h2>Upload a new file</h2>
             {% if not directS3UploadEnabled %}
             <h3 style="color: red">Due to an issue files larger than approximately 10MB currently cannot be uploaded. For larger files please instead submit a sharing link.<br/><br/>If you wish to submit a sharing link, please upload a Word or Notepad file with the sharing link inside. Ensure the sharing is set to public.</h3>
+            {% else %}
+            <h3 style="color: green">You can now upload large files directly to the system (no sharing link is required).</h3>
             {% endif %}
         {% else %}
             <h2>Edit existing file: <a href="{{uploadedFile.fileURL}}" target="_blank">{{uploadedFile.originalFilename}}</a></h2>
