@@ -8,13 +8,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 # from .forms import 
 
-from .models import MentorEventFileUpload, MentorEventFileType
+from .models import MentorEventFileUpload
 from events.models import BaseEventAttendance
 
 from events.views import mentorEventAttendanceAccessPermissions
 
 from .forms import MentorEventFileUploadForm
-from .helpers import getIsCoordinator, availableFileUploadTypes
+from .helpers import getIsCoordinator, availableFileUploadTypes_req, validFileTypes_req
 from .s3_upload import (
     delete_s3_object,
     direct_s3_upload_enabled,
@@ -98,7 +98,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         context = {
             "eventAttendance": eventAttendance,
             "uploadedFile": uploadedFile,
-            "availableFileUploadTypes": availableFileUploadTypes(request, eventAttendance),
+            "availableFileUploadTypes": availableFileUploadTypes_req(request, eventAttendance),
             "form": MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, isCoordinator=getIsCoordinator(request, eventAttendance)), # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
             "cancelURL": cancelURL,
             "directS3UploadEnabled": direct_s3_upload_enabled(),
@@ -121,7 +121,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
                 if not s3_key or not original_filename or not file_type_id:
                     raise ValidationError('Missing required upload fields')
 
-                file_type = get_object_or_404(availableFileUploadTypes(request, eventAttendance), pk=file_type_id)
+                file_type = get_object_or_404(validFileTypes_req(request, eventAttendance), pk=file_type_id)
                 verify_s3_object(s3_key, file_type)
                 final_key = promote_pending_s3_object(s3_key)
 
@@ -165,7 +165,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             context = {
                 "eventAttendance": eventAttendance,
                 "uploadedFile": uploadedFile,
-                "availableFileUploadTypes": availableFileUploadTypes(request, eventAttendance),
+                "availableFileUploadTypes": availableFileUploadTypes_req(request, eventAttendance),
                 "form": form,
                 "cancelURL": cancelURL,
                 "directS3UploadEnabled": direct_s3_upload_enabled(),
@@ -201,7 +201,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         context = {
             "eventAttendance": eventAttendance,
             "uploadedFile": uploadedFile,
-            "availableFileUploadTypes": availableFileUploadTypes(request, eventAttendance),
+            "availableFileUploadTypes": availableFileUploadTypes_req(request, eventAttendance),
             "form": form,
             "cancelURL": cancelURL,
             "directS3UploadEnabled": direct_s3_upload_enabled(),
@@ -251,7 +251,7 @@ class MentorEventFilePresignView(LoginRequiredMixin, View):
         except (TypeError, ValueError):
             return JsonResponse({'errors': ['Invalid file size']}, status=400)
 
-        file_type = get_object_or_404(availableFileUploadTypes(request, eventAttendance), pk=file_type_id)
+        file_type = get_object_or_404(validFileTypes_req(request, eventAttendance), pk=file_type_id)
 
         try:
             validate_upload_metadata(file_type, original_filename, declared_size)
