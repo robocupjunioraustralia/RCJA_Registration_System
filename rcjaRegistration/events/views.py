@@ -547,14 +547,12 @@ def mergeMultipleAdminSummary(events):
                 "name": category["name"],
                 "rows": {},
                 "subtotal": comps_number*[0],
-                "size": 1,
             })
 
             categoryCol0 = categoriesCol0.get(cat_id, {
                 "name": category["name"],
                 "rows": {},
                 "subtotal": comps_number*[0],
-                "size": 1,
             })
 
             for row in category["rows"]:
@@ -568,11 +566,14 @@ def mergeMultipleAdminSummary(events):
             
             categoryCol0["subtotal"][i] = category["subtotal"][1]
             categoryCol1["subtotal"][i] = category["subtotal"][0]
-            categoryCol1["size"] += 1
-            categoryCol0["size"] += 1
             categoriesCol1[cat_id] = categoryCol1
             categoriesCol0[cat_id] = categoryCol0
-    
+
+    for category in categoriesCol1.values():
+        category["size"] = len(category["rows"]) + 1
+    for category in categoriesCol0.values():
+        category["size"] = len(category["rows"]) + 1
+
     # Schools
     schools = {}
     for i, event in enumerate(events):
@@ -580,14 +581,14 @@ def mergeMultipleAdminSummary(events):
             school = schools.get(school_name, {'name':school_name,'col1':[0]*comps_number,'col0':[0]*comps_number})
             school['col1'][i] += col1
             school['col0'][i] += col0
-            schools['name'] = school
+            schools[school_name] = school
             total_col1[i] += col1
             total_col0[i] += col0
-    events = [event["name"] for event in events]
+    event_headers = [event["header"] for event in events]
     context = {'catCol1': categoriesCol1,
                'catCol0': categoriesCol0,
                'schools': schools,
-               'events': events,
+               'events': event_headers,
                'total': {"col1": total_col1, "col0": total_col0}}
     return context
 
@@ -618,6 +619,20 @@ def _build_division_data(category_subtotal_data, division_grouping_data):
         }
 
     return division_data
+
+
+def _event_summary_context(event, category_subtotal_data, division_grouping_data, school_grouping_data):
+    return {
+        "name": event.name,
+        "header": str(event),
+        "year": str(event.year),
+        "division_data": _build_division_data(category_subtotal_data, division_grouping_data),
+        "school_data": school_grouping_data,
+        "total": [
+            sum(category[2] for category in category_subtotal_data),
+            sum(category[3] for category in category_subtotal_data),
+        ],
+    }
 
 
 def _append_independent_school(school_grouping_data, col1, col0):
@@ -683,12 +698,12 @@ def getAdminCompetitionSummary(event):
         independent['student_count'],
     )
 
-    return {
-        "name": event.name,
-        "year": str(event.year),
-        "division_data": _build_division_data(category_subtotal_data, division_grouping_data),
-        'school_data': school_grouping_data,
-    }
+    return _event_summary_context(
+        event,
+        category_subtotal_data,
+        division_grouping_data,
+        school_grouping_data,
+    )
 
 def getAdminWorkshopSummary(event: Event):
     event_category_ids = event.divisions.exclude(category_id=None).values('category_id')
@@ -758,17 +773,12 @@ def getAdminWorkshopSummary(event: Event):
         independent['teachers'],
     )
 
-    division_data = _build_division_data(category_subtotal_data, division_grouping_data)
-    total0 = sum(category[2] for category in category_subtotal_data)
-    total1 = sum(category[3] for category in category_subtotal_data)
-
-    return {
-        "name": event.name,
-        "year": str(event.year),
-        "division_data": division_data,
-        'school_data': school_grouping_data,
-        "total": [total0, total1],
-    }
+    return _event_summary_context(
+        event,
+        category_subtotal_data,
+        division_grouping_data,
+        school_grouping_data,
+    )
 
 def summary_csv(context: dict[str, str]):
     response = HttpResponse(content_type='text/csv')

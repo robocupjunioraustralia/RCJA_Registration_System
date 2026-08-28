@@ -3,6 +3,16 @@
 {% block head %}
 
 <title> {{name}} Registrations</title>
+<style>
+    .ui.celled.table.division-summary > tbody > tr > td:first-child:not([rowspan]) {
+        border-left: 1px solid rgba(34, 36, 38, 0.1);
+    }
+    .ui.table tr.subtotal td,
+    .ui.table tr.subtotal th {
+        background: #f0f0f0;
+        font-weight: bold;
+    }
+</style>
 
 {% endblock %}
 
@@ -16,7 +26,7 @@
         <h2>Divisions</h2>
     </div>
     <div class="row">
-        <table class="ui celled table">
+        <table class="ui celled table division-summary">
             <thead><tr>
                 <th>Category</th>
                 <th>Division</th>
@@ -25,23 +35,28 @@
             </tr></thead>
             <tbody>
                 {% for division_cat in division_data.values %}
-                    <tr>
-                        <td rowspan={{division_cat.size}}>{{division_cat.name}}</td>
                     {% for division in division_cat.rows %}
-                        <td>{{division.1}}</td>
-                        <td>{{division.2}}</td>
-                        <td>{{division.3}}</td>
-                    </tr>
                     <tr>
+                        {% if forloop.first %}
+                        <td rowspan="{{ division_cat.size }}">{{ division_cat.name }}</td>
+                        {% endif %}
+                        <td>{{ division.1 }}</td>
+                        <td>{{ division.2 }}</td>
+                        <td>{{ division.3 }}</td>
+                    </tr>
                     {% endfor %}
+                    <tr class="subtotal">
+                        {% if not division_cat.rows %}
+                        <td rowspan="{{ division_cat.size }}">{{ division_cat.name }}</td>
+                        {% endif %}
                         <td>Subtotal</td>
-                        <td>{{division_cat.subtotal.0}}</td>
-                        <td>{{division_cat.subtotal.1}}</td>
+                        <td>{{ division_cat.subtotal.0 }}</td>
+                        <td>{{ division_cat.subtotal.1 }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
-                <tr><th colspan="2">Total</th>
+                <tr class="subtotal"><th colspan="2">Total</th>
                 <th>{{total.0}}</th>
                 <th>{{total.1}}</th>
             </tr>
@@ -69,7 +84,7 @@
                 {% endfor %}
             </tbody>
             <tfoot>
-                <tr><th>Total</th>
+                <tr class="subtotal"><th>Total</th>
                 <th>{{total.0}}</th>
                 <th>{{total.1}}</th>
             </tr>
