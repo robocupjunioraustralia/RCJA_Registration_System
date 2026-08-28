@@ -5,7 +5,6 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequ
 from django.urls import reverse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from coordination.permissions import checkCoordinatorPermission
 
 # from .forms import 
 
@@ -15,6 +14,7 @@ from events.models import BaseEventAttendance
 from events.views import mentorEventAttendanceAccessPermissions
 
 from .forms import MentorEventFileUploadForm
+from .helpers import getIsCoordinator, availableFileUploadTypes
 from .s3_upload import (
     delete_s3_object,
     direct_s3_upload_enabled,
@@ -42,7 +42,7 @@ def fileUploadCommonPermissions(request, eventAttendance):
         raise PermissionDenied("You are not an administrator of this team/ attendee")
 
 def fileUploadEditPermissions(request, uploadedFile):
-    if checkCoordinatorPermission(request, BaseEventAttendance, uploadedFile.eventAttendance, 'change'):
+    if getIsCoordinator(request, uploadedFile.eventAttendance):
         return
 
     fileUploadCommonPermissions(request, uploadedFile.eventAttendance)
@@ -52,7 +52,7 @@ def fileUploadEditPermissions(request, uploadedFile):
         raise PermissionDenied("The upload deadline has passed for this file type for this event")
 
 def fileUploadUploadPermissions(request, eventAttendance):
-    if checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change'):
+    if getIsCoordinator(request, eventAttendance):
         return
 
     fileUploadCommonPermissions(request, eventAttendance)
@@ -61,16 +61,7 @@ def fileUploadUploadPermissions(request, eventAttendance):
     if not eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today()).exists():
         raise PermissionDenied("File upload not available")
 
-class MentorEventFileUploadView(LoginRequiredMixin, View):
-    def admin_access(self, request, eventAttendance):
-        return checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change')
-
-    def get_file_types(self, request, eventAttendance):
-        if self.admin_access(request, eventAttendance):
-            return eventAttendance.event.eventavailablefiletype_set.all()
-        else:
-            return eventAttendance.event.eventavailablefiletype_set.filter(uploadDeadline__gte=datetime.datetime.today())
-
+class MentorEventFileUploadView(LoginRequiredMixin, View):    
     def get_post_common(self, request, eventAttendanceID, uploadedFileID):
         # Check if editing an existing file
         if uploadedFileID is not None:
@@ -107,8 +98,8 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         context = {
             "eventAttendance": eventAttendance,
             "uploadedFile": uploadedFile,
-            "availableFileUploadTypes": self.get_file_types(request, eventAttendance),
-            "form": MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, admin=self.admin_access(request, eventAttendance)), # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
+            "availableFileUploadTypes": availableFileUploadTypes(request, eventAttendance),
+            "form": MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, isCoordinator=getIsCoordinator(request, eventAttendance)), # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
             "cancelURL": cancelURL,
             "directS3UploadEnabled": direct_s3_upload_enabled(),
         }
@@ -120,7 +111,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         eventAttendance, uploadedFile, cancelURL = self.get_post_common(request, eventAttendanceID, uploadedFileID)
 
         if uploadedFile is None and direct_s3_upload_enabled() and request.POST.get('s3Key'):
-            form = MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, admin=self.admin_access(request, eventAttendance))
+            form = MentorEventFileUploadForm(instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, isCoordinator=getIsCoordinator(request, eventAttendance))
             form.cleaned_data = {}
             s3_key = request.POST.get('s3Key', '').strip()
             original_filename = request.POST.get('originalFilename', '').strip()
@@ -130,15 +121,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
                 if not s3_key or not original_filename or not file_type_id:
                     raise ValidationError('Missing required upload fields')
 
-                if self.admin_access(request, eventAttendance):
-                    file_type_queryset = MentorEventFileType.objects.all()
-                else:
-                    file_type_queryset = MentorEventFileType.objects.filter(
-                        eventavailablefiletype__event__baseeventattendance=eventAttendance,
-                        eventavailablefiletype__uploadDeadline__gte=datetime.datetime.today(),
-                    )
-
-                file_type = get_object_or_404(file_type_queryset, pk=file_type_id)
+                file_type = get_object_or_404(availableFileUploadTypes(request, eventAttendance), pk=file_type_id)
                 verify_s3_object(s3_key, file_type)
                 final_key = promote_pending_s3_object(s3_key)
 
@@ -182,7 +165,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
             context = {
                 "eventAttendance": eventAttendance,
                 "uploadedFile": uploadedFile,
-                "availableFileUploadTypes": self.get_file_types(request, eventAttendance),
+                "availableFileUploadTypes": availableFileUploadTypes(request, eventAttendance),
                 "form": form,
                 "cancelURL": cancelURL,
                 "directS3UploadEnabled": direct_s3_upload_enabled(),
@@ -192,7 +175,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
 
         # Get the form here so it can be used in the saving of valid data and also returning errors
         # If uploadedFile is None this is simply passed to and dealt with by the Form - means uploading a new file
-        form = MentorEventFileUploadForm(request.POST, request.FILES, instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, admin=self.admin_access(request, eventAttendance))
+        form = MentorEventFileUploadForm(request.POST, request.FILES, instance=uploadedFile, uploadedFile=uploadedFile, eventAttendance=eventAttendance, isCoordinator=getIsCoordinator(request, eventAttendance))
 
         if form.is_valid():
             # Create fileUpload object but don't save so can set foreign keys
@@ -218,7 +201,7 @@ class MentorEventFileUploadView(LoginRequiredMixin, View):
         context = {
             "eventAttendance": eventAttendance,
             "uploadedFile": uploadedFile,
-            "availableFileUploadTypes": self.get_file_types(request, eventAttendance),
+            "availableFileUploadTypes": availableFileUploadTypes(request, eventAttendance),
             "form": form,
             "cancelURL": cancelURL,
             "directS3UploadEnabled": direct_s3_upload_enabled(),
@@ -268,16 +251,7 @@ class MentorEventFilePresignView(LoginRequiredMixin, View):
         except (TypeError, ValueError):
             return JsonResponse({'errors': ['Invalid file size']}, status=400)
 
-        admin_access = checkCoordinatorPermission(request, BaseEventAttendance, eventAttendance, 'change')
-        if admin_access:
-            file_type_queryset = MentorEventFileType.objects.all()
-        else:
-            file_type_queryset = MentorEventFileType.objects.filter(
-                eventavailablefiletype__event__baseeventattendance=eventAttendance,
-                eventavailablefiletype__uploadDeadline__gte=datetime.datetime.today(),
-            )
-
-        file_type = get_object_or_404(file_type_queryset, pk=file_type_id)
+        file_type = get_object_or_404(availableFileUploadTypes(request, eventAttendance), pk=file_type_id)
 
         try:
             validate_upload_metadata(file_type, original_filename, declared_size)

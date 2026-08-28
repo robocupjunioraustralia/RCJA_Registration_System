@@ -4,6 +4,7 @@ from django.forms import ModelForm
 import datetime
 
 from .models import MentorEventFileUpload, MentorEventFileType
+from .helpers import form_availableFileUploadTypes
 
 class MentorEventFileUploadForm(ModelForm):
     class Meta:
@@ -14,14 +15,11 @@ class MentorEventFileUploadForm(ModelForm):
         ]
 
     # Override init to filter fileType
-    def __init__(self, *args, uploadedFile, eventAttendance, admin=False, **kwargs):
+    def __init__(self, *args, uploadedFile, eventAttendance, isCoordinator=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Filter fileType to available fileTypes
-        if admin:
-            self.fields['fileType'].queryset = MentorEventFileType.objects.all()
-        else:
-            self.fields['fileType'].queryset = MentorEventFileType.objects.filter(eventavailablefiletype__event__baseeventattendance=eventAttendance, eventavailablefiletype__uploadDeadline__gte=datetime.datetime.today())
+        self.fields['fileType'].queryset = form_availableFileUploadTypes(isCoordinator, eventAttendance)
 
         if uploadedFile:
             self.fields['fileUpload'].disabled = True
