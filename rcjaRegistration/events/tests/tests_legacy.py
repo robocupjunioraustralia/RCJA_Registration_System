@@ -1705,7 +1705,8 @@ class TestAdminSummaryContext(TestCase):
                         'size': 3}}, 
                     'school_data': 
                         [('Melbourne High', 3, 3), 
-                         ('School 2', 1, 2)]}
+                         ('School 2', 1, 2)],
+                    'total': [5, 4]}
         self.assertEqual(context, returned)
 
     def testWorkshopDict(self):
@@ -1739,6 +1740,8 @@ class TestAdminSummaryContext(TestCase):
         self.assertContains(response,'Teams', 2)
         self.assertContains(response,'Divisions', 1)
         self.assertContains(response,'Schools', 1)
+        self.assertContains(response, '<th>5</th>', 2)
+        self.assertContains(response, '<th>4</th>', 2)
 
     def testCompetitionFromForm(self):
         response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id],'workshops':[]})
@@ -1746,6 +1749,8 @@ class TestAdminSummaryContext(TestCase):
         self.assertContains(response,'Teams', 2)
         self.assertContains(response,'Divisions', 1)
         self.assertContains(response,'Schools', 1)
+        self.assertContains(response, '<th>5</th>', 2)
+        self.assertContains(response, '<th>4</th>', 2)
 
     def testMultipleCompetitions(self):
         response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[self.oldEventWithTeams.id, self.newEvent.id],'workshops':[]})
@@ -1762,6 +1767,8 @@ class TestAdminSummaryContext(TestCase):
         self.assertContains(response,'Teachers', 2)
         self.assertContains(response,'Divisions', 1)
         self.assertContains(response,'Schools', 1)
+        self.assertContains(response, '<th>4</th>', 2)
+        self.assertContains(response, '<th>1</th>', 2)
 
     def testWorkshopFromForm(self):
         response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[],'workshops':[self.workshop.id]})
@@ -1769,6 +1776,8 @@ class TestAdminSummaryContext(TestCase):
         self.assertContains(response,'Teachers', 2)
         self.assertContains(response,'Divisions', 1)
         self.assertContains(response,'Schools', 1)
+        self.assertContains(response, '<th>4</th>', 2)
+        self.assertContains(response, '<th>1</th>', 2)
 
     def testMultipleWorkshop(self):
         response = self.client.post(reverse('events:eventAdminSummary'), {'competitions':[],'workshops':[self.workshop.id, self.workshop2.id]})

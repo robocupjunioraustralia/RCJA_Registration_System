@@ -620,6 +620,19 @@ def _build_division_data(category_subtotal_data, division_grouping_data):
     return division_data
 
 
+def _event_summary_context(event, category_subtotal_data, division_grouping_data, school_grouping_data):
+    return {
+        "name": event.name,
+        "year": str(event.year),
+        "division_data": _build_division_data(category_subtotal_data, division_grouping_data),
+        "school_data": school_grouping_data,
+        "total": [
+            sum(category[2] for category in category_subtotal_data),
+            sum(category[3] for category in category_subtotal_data),
+        ],
+    }
+
+
 def _append_independent_school(school_grouping_data, col1, col0):
     if col1 or col0:
         school_grouping_data.append(('Independent', col1, col0))
@@ -683,12 +696,12 @@ def getAdminCompetitionSummary(event):
         independent['student_count'],
     )
 
-    return {
-        "name": event.name,
-        "year": str(event.year),
-        "division_data": _build_division_data(category_subtotal_data, division_grouping_data),
-        'school_data': school_grouping_data,
-    }
+    return _event_summary_context(
+        event,
+        category_subtotal_data,
+        division_grouping_data,
+        school_grouping_data,
+    )
 
 def getAdminWorkshopSummary(event: Event):
     event_category_ids = event.divisions.exclude(category_id=None).values('category_id')
@@ -758,17 +771,12 @@ def getAdminWorkshopSummary(event: Event):
         independent['teachers'],
     )
 
-    division_data = _build_division_data(category_subtotal_data, division_grouping_data)
-    total0 = sum(category[2] for category in category_subtotal_data)
-    total1 = sum(category[3] for category in category_subtotal_data)
-
-    return {
-        "name": event.name,
-        "year": str(event.year),
-        "division_data": division_data,
-        'school_data': school_grouping_data,
-        "total": [total0, total1],
-    }
+    return _event_summary_context(
+        event,
+        category_subtotal_data,
+        division_grouping_data,
+        school_grouping_data,
+    )
 
 def summary_csv(context: dict[str, str]):
     response = HttpResponse(content_type='text/csv')
