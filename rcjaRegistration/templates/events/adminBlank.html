@@ -16,6 +16,10 @@
         <p>Choose one or more events to view the attendance summaries. </p>
         <p>Competitions and workshops cannot be directly compared because competitions have teams whilst workshops have students and teachers.</p>
         <p>Select the <em>Produce CSV</em> button if you wish to export a CSV file instead of viewing the data through a web page.</p>
+        {% if user.currentlySelectedAdminState or user.currentlySelectedAdminYear %}
+            <br>
+            <p>Filtered to: {{ user.currentlySelectedAdminState|default:"All states" }} {{ user.currentlySelectedAdminYear|default:"" }}</p>
+        {% endif %}
     </div>
     <br>
     <div class="row">

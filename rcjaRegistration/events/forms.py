@@ -60,13 +60,27 @@ def getSummaryForm(request):
     return SummaryRequestForm(request.GET)
 
 def getAdminEventsForm(request):
+    def event_common_filter_dict(request):
+            output = {
+                'status': 'published',
+                'state__in': request.user.adminViewableStates(),
+            }
+
+            if request.user.currentlySelectedAdminState:
+                output['state'] = request.user.currentlySelectedAdminState
+
+            if request.user.currentlySelectedAdminYear:
+                output['year'] = request.user.currentlySelectedAdminYear
+
+            return output
+
     def COMPETITIONS_CHOICES():
-        for event in Event.objects.filter(status='published', eventType='competition', state__in=request.user.adminViewableStates()):
+        for event in Event.objects.filter(eventType='competition').filter(**event_common_filter_dict(request)):
             label = f"{event.year} - {event.state} - {event.name}"
             yield (event.pk, label)
 
     def WORKSHOPS_CHOICES():
-        for event in Event.objects.filter(status='published', eventType='workshop', state__in=request.user.adminViewableStates()):
+        for event in Event.objects.filter(eventType='workshop').filter(**event_common_filter_dict(request)):
             label = f"{event.year} - {event.state} - {event.name}"
             yield (event.pk, label)
 
