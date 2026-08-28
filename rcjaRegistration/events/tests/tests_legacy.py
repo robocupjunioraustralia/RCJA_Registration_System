@@ -1695,7 +1695,8 @@ class TestAdminSummaryContext(TestCase):
     def testCompetitionDict(self):
         returned = getAdminCompetitionSummary(self.oldEventWithTeams)
         cat_id = self.divCategory.id
-        context = {'name': 'test old yes reg', 
+        context = {'name': 'test old yes reg',
+                   'header': str(self.oldEventWithTeams),
                    'year': '2019', 
                    'division_data': 
                    {cat_id: {'name': 'Test', 
@@ -1712,7 +1713,8 @@ class TestAdminSummaryContext(TestCase):
     def testWorkshopDict(self):
         returned = getAdminWorkshopSummary(self.workshop)
         cat_id = self.divCategory.id
-        context = {'name': 'Workshop Test', 
+        context = {'name': 'Workshop Test',
+                   'header': str(self.workshop),
                    'year': '2019', 
                    'division_data': {cat_id: {'name': 'Test', 
                                          'rows': [(cat_id, 'test', 3, 1), 
