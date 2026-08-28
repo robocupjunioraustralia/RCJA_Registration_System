@@ -17,7 +17,7 @@ def availableFileUploadTypes_req(request, eventAttendance):
     return availableFileUploadTypes(getIsCoordinator(request, eventAttendance), eventAttendance)
 
 def validFileTypes(isCoordinator, eventAttendance):
-    return MentorEventFileType.objects.filter(pk__in=availableFileUploadTypes(isCoordinator, eventAttendance).values_list('pk', flat=True))
+    return MentorEventFileType.objects.filter(pk__in=availableFileUploadTypes(isCoordinator, eventAttendance).values_list('fileType', flat=True))
 
 def validFileTypes_req(request, eventAttendance):
     return validFileTypes(getIsCoordinator(request, eventAttendance), eventAttendance)
