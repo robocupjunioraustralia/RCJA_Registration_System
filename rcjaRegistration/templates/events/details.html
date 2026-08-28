@@ -131,69 +131,6 @@
         </div>
     </div>
 
-    <div class="ui segment">
-        <h3 class="ui dividing header">Available divisions</h3>
-        {% if availableDivisions %}
-            <style>
-                .available-division-item {
-                    display: flex;
-                    flex-wrap: wrap;
-                    align-items: baseline;
-                    gap: 0.25rem 0.75rem;
-                }
-                .available-division-item .division-name {
-                    font-weight: 700;
-                }
-                .available-division-item .division-detail {
-                    margin: 0;
-                    color: rgba(0, 0, 0, 0.7);
-                }
-                .available-division-item .division-detail::before {
-                    content: "·";
-                    margin-right: 0.75rem;
-                    color: rgba(0, 0, 0, 0.7);
-                }
-            </style>
-            <div class="ui relaxed divided list">
-                {% for availableDivision in availableDivisions %}
-                    <div class="item available-division-item">
-                        <span class="division-name">{{ availableDivision.division.name }}</span>
-                        {% if availableDivision.division.description %}
-                            <span class="division-detail">{{ availableDivision.division.description }}</span>
-                        {% endif %}
-                        {% if availableDivision.division_billingType != 'event' %}
-                            <span class="division-detail">This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.</span>
-                        {% endif %}
-                        {% if availableDivision.division_maxRegistrationsPerSchool %}
-                            <span class="division-detail">{{ availableDivision.division_maxRegistrationsPerSchool }} team per school limit.</span>
-                        {% endif %}
-                        {% if availableDivision.division_maxRegistrationsForDivision %}
-                            <span class="division-detail">{{ availableDivision.division_maxRegistrationsForDivision }} team overall limit.</span>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>TBC</p>
-        {% endif %}
-        {% if divisionsMaxReachedWarnings %}
-            <div class="ui negative message">
-                <ul class="list">
-                    {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
-                        <li>{{ divisionsMaxReachedWarning }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-    </div>
-
-    {% if event.eventDetails %}
-        <div class="ui segment">
-            <h3 class="ui dividing header">Event details</h3>
-            {{ event.bleachedEventDetails|linebreaks }}
-        </div>
-    {% endif %}
-
     {% if electronicParticipationDeedsAvailable %}
         <div class="ui segment">
             <h3 class="ui dividing header">Participation deeds</h3>
@@ -357,6 +294,69 @@
                     {% endfor %}
                 </tbody>
             </table>
+        {% endif %}
+    </div>
+
+    {% if event.eventDetails %}
+        <div class="ui segment">
+            <h3 class="ui dividing header">Event details</h3>
+            {{ event.bleachedEventDetails|linebreaks }}
+        </div>
+    {% endif %}
+
+    <div class="ui segment">
+        <h3 class="ui dividing header">Available divisions</h3>
+        {% if availableDivisions %}
+            <style>
+                .available-division-item {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: baseline;
+                    gap: 0.25rem 0.75rem;
+                }
+                .available-division-item .division-name {
+                    font-weight: 700;
+                }
+                .available-division-item .division-detail {
+                    margin: 0;
+                    color: rgba(0, 0, 0, 0.7);
+                }
+                .available-division-item .division-detail::before {
+                    content: "·";
+                    margin-right: 0.75rem;
+                    color: rgba(0, 0, 0, 0.7);
+                }
+            </style>
+            <div class="ui relaxed divided list">
+                {% for availableDivision in availableDivisions %}
+                    <div class="item available-division-item">
+                        <span class="division-name">{{ availableDivision.division.name }}</span>
+                        {% if availableDivision.division.description %}
+                            <span class="division-detail">{{ availableDivision.division.description }}</span>
+                        {% endif %}
+                        {% if availableDivision.division_billingType != 'event' %}
+                            <span class="division-detail">This division costs ${{ availableDivision.division_entryFee }} {% if event.entryFeeIncludesGST %}(including GST){% else %}(excluding GST){% endif %} per {{ availableDivision.division_billingType }}.</span>
+                        {% endif %}
+                        {% if availableDivision.division_maxRegistrationsPerSchool %}
+                            <span class="division-detail">{{ availableDivision.division_maxRegistrationsPerSchool }} team per school limit.</span>
+                        {% endif %}
+                        {% if availableDivision.division_maxRegistrationsForDivision %}
+                            <span class="division-detail">{{ availableDivision.division_maxRegistrationsForDivision }} team overall limit.</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>TBC</p>
+        {% endif %}
+        {% if divisionsMaxReachedWarnings %}
+            <div class="ui negative message">
+                <ul class="list">
+                    {% for divisionsMaxReachedWarning in divisionsMaxReachedWarnings %}
+                        <li>{{ divisionsMaxReachedWarning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         {% endif %}
     </div>
 </div>
