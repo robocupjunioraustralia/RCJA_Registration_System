@@ -1,6 +1,8 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.functional import lazy
 
-from events.models import Division, Year
+from events.models import Division, Event, Year
 from schools.models import Campus
 from events.models import AvailableDivision
 
@@ -39,6 +41,11 @@ class BaseEventAttendanceFormInitMixin:
         self.fields['event'].disabled = True
         self.fields['event'].widget = forms.HiddenInput()
 
+        # MentorUser field
+        self.fields['mentorUser'].initial = user.id
+        self.fields['mentorUser'].disabled = True
+        self.fields['mentorUser'].widget = forms.HiddenInput()
+
 def getSummaryForm(request):
     # Use constructor function as user from request is required for permissions
     class SummaryRequestForm(forms.Form):
@@ -52,3 +59,45 @@ def getSummaryForm(request):
 
     return SummaryRequestForm(request.GET)
 
+def getAdminEventsForm(request):
+    def event_common_filter_dict(request):
+            output = {
+                'status': 'published',
+                'state__in': request.user.adminViewableStates(),
+            }
+
+            if request.user.currentlySelectedAdminState:
+                output['state'] = request.user.currentlySelectedAdminState
+
+            if request.user.currentlySelectedAdminYear:
+                output['year'] = request.user.currentlySelectedAdminYear
+
+            return output
+
+    def COMPETITIONS_CHOICES():
+        for event in Event.objects.filter(eventType='competition').filter(**event_common_filter_dict(request)):
+            label = f"{event.year} - {event.state} - {event.name}"
+            yield (event.pk, label)
+
+    def WORKSHOPS_CHOICES():
+        for event in Event.objects.filter(eventType='workshop').filter(**event_common_filter_dict(request)):
+            label = f"{event.year} - {event.state} - {event.name}"
+            yield (event.pk, label)
+
+    class AdminEventsForm(forms.Form):
+        competitions = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(COMPETITIONS_CHOICES, tuple))
+        workshops = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple,choices=lazy(WORKSHOPS_CHOICES, tuple))
+        csv = forms.BooleanField(required=False, label="Produce CSV", label_suffix="")
+
+        def clean(self):
+            workshops = len(self.cleaned_data.get('workshops', []))>0
+            competitions = len(self.cleaned_data.get('competitions', []))>0
+            if workshops and competitions:
+                raise ValidationError("Cannot directly compare workshops and competitions")
+            if not (workshops or competitions):
+                raise ValidationError("Choose at least one event")
+
+    if request.method == "POST":
+        return AdminEventsForm(request.POST)
+    else:
+        return AdminEventsForm()

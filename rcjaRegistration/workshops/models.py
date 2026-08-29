@@ -16,14 +16,23 @@ class WorkshopAttendee(BaseEventAttendance):
     attendeeType = models.CharField('Attendee type', max_length=15, choices=attendeeTypeChoices)
 
     # Compulsory for all attendee types
-    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
-    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_]*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_ and space.")])
+    firstName = models.CharField('First name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_']*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_' and space.")])
+    lastName = models.CharField('Last name', max_length=50, validators=[RegexValidator(regex=r"^[0-9a-zA-Z \-\_']*$", message="Contains character that isn't allowed. Allowed characters are a-z, A-Z, 0-9, -_' and space.")])
     yearLevel = models.CharField('Year level', max_length=10)
     genderOptions = (('male','Male'),('female','Female'),('other','Other'))
     gender = models.CharField('Gender', choices=genderOptions, max_length=10)
 
     # Required for teachers
     email = models.EmailField('Email', blank=True)
+
+    # Participation deeds (students)
+    participationDeed = models.ForeignKey(
+        'participationdeeds.ParticipationDeed',
+        verbose_name='Participation deed',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     # *****Meta and clean*****
     class Meta:
@@ -83,6 +92,32 @@ class WorkshopAttendee(BaseEventAttendance):
 
     def __str__(self):
         return f"{self.attendeeFullName()} ({self.event.name} {self.event.year})"
+
+    def participationDeedComplete(self):
+        if self.attendeeType != 'student':
+            return ''
+        return bool(self.participationDeed_id)
+    participationDeedComplete.short_description = 'Participation Deed Complete'
+
+    def participationDeedStatus(self):
+        if self.attendeeType != 'student':
+            return ''
+        if self.participationDeed_id:
+            return f'Complete ({self.participationDeed.parentName})'
+        return 'Incomplete'
+    participationDeedStatus.short_description = 'Participation Deed'
+
+    def participationDeedParentName(self):
+        if self.attendeeType != 'student' or not self.participationDeed_id:
+            return ''
+        return self.participationDeed.parentName
+    participationDeedParentName.short_description = 'Parent/ Guardian Name'
+
+    def participationDeedSignedDateTime(self):
+        if self.attendeeType != 'student' or not self.participationDeed_id:
+            return ''
+        return self.participationDeed.signedDateTime
+    participationDeedSignedDateTime.short_description = 'Deed Signed Time'
 
     # *****CSV export methods*****
 

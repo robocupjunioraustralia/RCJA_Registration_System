@@ -20,6 +20,7 @@ from . import views
 app_name = 'eventfiles'
 
 urlpatterns = [
+    path('teams/<int:eventAttendanceID>/uploadFile/presign', views.MentorEventFilePresignView.as_view(), name='uploadFilePresign'),
     path('teams/<int:eventAttendanceID>/uploadFile', views.MentorEventFileUploadView.as_view(), name='uploadFile'),
     path('eventfiles/<int:uploadedFileID>/edit', views.MentorEventFileUploadView.as_view(), name='edit'),
 ]

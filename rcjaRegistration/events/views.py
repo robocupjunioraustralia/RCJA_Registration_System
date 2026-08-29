@@ -5,19 +5,23 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
 from django.conf import settings
+from django.urls import reverse
 from coordination.permissions import checkCoordinatorPermission
 
-import datetime
+import datetime, csv
 import jwt
 
-from .models import Event, BaseEventAttendance, Year
+from .models import Event, BaseEventAttendance, Year, DivisionCategory, Division
 from regions.models import State
 from teams.models import Team, Student
 from schools.models import Campus
 from workshops.models import WorkshopAttendee
-from .forms import getSummaryForm
+from .forms import getSummaryForm, getAdminEventsForm
+
+from participationdeeds.tokens import dumps_school_or_mentor, deeds_available_for_event
+from participationdeeds.participants import team_deed_counts, unattached_deeds_for_context, participant_deed_counts
 
 # Need to check if schooladministrator is None
 
@@ -109,6 +113,10 @@ def dashboard(request):
 def coordinatorEventDetailsPermissions(request, event):
     return checkCoordinatorPermission(request, Event, event, 'view')
 
+def coordinatorInvoiceViewPermissions(request, event):
+    from invoices.models import Invoice
+    return checkCoordinatorPermission(request, Invoice, event, 'view')
+
 def eventDetailsPermissions(request, event, filterDict):
     if coordinatorEventDetailsPermissions(request, event):
         return True
@@ -194,6 +202,35 @@ def details(request, eventID):
     else:
         totalRegistrations = event.baseeventattendance_set.exclude(team__withdrawn=True).count()
 
+    electronicParticipationDeedsEnabled = event.electronicParticipationDeedsEnabled
+    schoolMagicLink = None
+    unattachedDeedCount = 0
+    completeDeedCount = 0
+    incompleteDeedCount = 0
+    teamDeedSummaries = {}
+
+    hasStudentRegistrations = (teams.exists() or workshopAttendees.filter(attendeeType='student').exists())
+    electronicParticipationDeedsAvailable = electronicParticipationDeedsEnabled and hasStudentRegistrations
+    if electronicParticipationDeedsAvailable:
+        school = filterDict.get('school')
+        mentorUser = request.user if school is None else None 
+        if deeds_available_for_event(event):
+            token = dumps_school_or_mentor(event, school=school, mentorUser=mentorUser)
+            schoolMagicLink = request.build_absolute_uri(
+                reverse('participationdeeds:sign_participation_deed', kwargs={'token': token})
+            )
+        unattachedDeedCount = unattached_deeds_for_context(event, school=school, mentorUser=mentorUser).count()
+        completeDeedCount, incompleteDeedCount = participant_deed_counts(
+            event,
+            school=school,
+            mentorUser=mentorUser,
+        )
+        if not event.boolWorkshop():
+            for team in teams:
+                complete, total = team_deed_counts(team)
+                team.deedSummary = f"{complete}/{total}"
+                teamDeedSummaries[team.id] = (complete, total)
+
     context = {
         'event': event,
         'availableDivisions': event.availabledivision_set.prefetch_related('division'),
@@ -203,11 +240,19 @@ def details(request, eventID):
         'showCampusColumn': BaseEventAttendance.objects.filter(**filterDict).exclude(campus=None).exists(),
         'billingTypeLabel': billingTypeLabel,
         'hasAdminPermissions': coordinatorEventDetailsPermissions(request, event),
+        'hasInvoiceViewPermissions': coordinatorInvoiceViewPermissions(request, event),
         'maxEventRegistrationsForSchoolReached': event.maxEventRegistrationsForSchoolReached(request.user),
         'maxEventRegistrationsTotalReached': event.maxEventRegistrationsTotalReached(),
         'divisionsMaxReachedWarnings': getDivisionsMaxReachedWarnings(event, request.user),
         'duplicateTeamsAvailable': availableToCopyTeams.exists(),
         'totalRegistrations': totalRegistrations,
+        'electronicParticipationDeedsEnabled': electronicParticipationDeedsEnabled,
+        'electronicParticipationDeedsAvailable': electronicParticipationDeedsAvailable,
+        'schoolMagicLink': schoolMagicLink,
+        'unattachedDeedCount': unattachedDeedCount,
+        'completeDeedCount': completeDeedCount,
+        'incompleteDeedCount': incompleteDeedCount,
+        'teamDeedSummaries': teamDeedSummaries,
     }
     return render(request, 'events/details.html', context)
 
@@ -250,30 +295,36 @@ def mentorEventAttendanceAccessPermissions(request, eventAttendance):
 
     return True
 
+def createPermissionForEvent(event, eventType):
+    # Check is correct event type
+    if event.eventType != eventType:
+        raise PermissionDenied('Teams/ attendees cannot be created for this event type')
+
+    # Check registrations open
+    if not event.registrationsOpen():
+        raise PermissionDenied("Registration has closed for this event")
+
+    # Check event is published
+    if not event.published():
+        raise PermissionDenied("Event is not published")
+
+def checkEventLimitsReached(request, event):
+    if event.maxEventRegistrationsForSchoolReached(request.user):
+        raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+
+    if event.maxEventRegistrationsTotalReached():
+        raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+
 class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
     def common(self, request, event, eventAttendance):
-        # Check is correct event type
-        if event.eventType != self.eventType:
-            raise PermissionDenied('Teams/ attendees cannot be created for this event type')
-
-        # Check registrations open
-        if not event.registrationsOpen():
-            raise PermissionDenied("Registration has closed for this event")
-
-        # Check event is published
-        if not event.published():
-            raise PermissionDenied("Event is not published")
+        createPermissionForEvent(event, self.eventType)
 
         # Check administrator of this eventAttendance
         if eventAttendance and not mentorEventAttendanceAccessPermissions(request, eventAttendance):
             raise PermissionDenied("You are not an administrator of this team/ attendee")
 
         if not eventAttendance:
-            if event.maxEventRegistrationsForSchoolReached(request.user):
-                raise PermissionDenied(f"Max {event.registrationName()}s for school for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
-
-            if event.maxEventRegistrationsTotalReached():
-                raise PermissionDenied(f"Max {event.registrationName()}s for this event reached. Contact the organiser if you want to register more {event.registrationName()}s for this event.")
+            checkEventLimitsReached(request, event)
 
     def delete(self, request, teamID=None, attendeeID=None, eventID=None, sourceTeamID=None):
         # This endpoint should never be called with eventID or sourceTeamID
@@ -295,6 +346,8 @@ class CreateEditBaseEventAttendance(LoginRequiredMixin, View):
         # Delete team
         eventAttendance.delete()
         return HttpResponse(status=204)
+
+# Event summary pages
 
 def getEventsForSummary(state, year):
     """ Create list of event dictionaries of all events in state and year """
@@ -414,3 +467,322 @@ def summaryReport(request):
         'year': selected_year,
     }
     return render(request, 'events/summaryReport.html', context)
+
+
+@login_required
+def singlePageAdminSummary(request, eventID):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+
+    event = get_object_or_404(Event, pk=eventID)
+
+    if not coordinatorEventDetailsPermissions(request, event):
+        raise PermissionDenied("You do not have permission to view this page") 
+
+    if event.boolWorkshop():
+        context = getAdminWorkshopSummary(event)
+        context["column1"] = "Students"
+        context["column0"] = "Teachers"
+        return render(request, 'events/adminDetails.html', context)
+    else:
+        context = getAdminCompetitionSummary(event)
+        context["column1"] = "Students"
+        context["column0"] = "Teams"
+        return render(request, 'events/adminDetails.html', context)
+
+@login_required
+def eventAdminSummary(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to view this page")
+
+    output = ""
+    if request.method == "POST":
+        form = getAdminEventsForm(request)
+        if form.is_valid():
+            output = form.cleaned_data
+            if len(form.cleaned_data['workshops']):
+                events_list = form.cleaned_data['workshops']
+                columnHeadings = ["Teachers", "Students"]
+                summaryFunction = getAdminWorkshopSummary
+            else:
+                events_list = form.cleaned_data['competitions']
+                columnHeadings = ["Teams", "Students"]
+                summaryFunction = getAdminCompetitionSummary
+
+            if len(events_list)==1 and not form.cleaned_data['csv']:
+                event = get_object_or_404(Event, pk=events_list[0])
+                context = summaryFunction(event)
+                context["column0"] = columnHeadings[0]
+                context["column1"] = columnHeadings[1]
+                return render(request, 'events/adminDetails.html', context)
+
+            else:
+                events = [summaryFunction(get_object_or_404(Event, pk=event_id)) for event_id in events_list]
+                context = mergeMultipleAdminSummary(events)
+                context["column0"] = columnHeadings[0]
+                context["column1"] = columnHeadings[1]
+
+                if form.cleaned_data['csv']:
+                    return summary_csv(context)
+                else:
+                    return render(request, 'events/adminMultiDetails.html', context)
+
+    else:
+        form = getAdminEventsForm(request)
+    return render(request, "events/adminBlank.html", {"form": form, 'output':output})
+
+def mergeMultipleAdminSummary(events):
+    comps_number = len(events)
+    total_col1 = [0]*comps_number
+    total_col0 = [0]*comps_number
+
+    categoriesCol1 = {}
+    categoriesCol0 = {}
+    for i, event in enumerate(events):
+        for cat_id, category in event["division_data"].items():
+            categoryCol1 = categoriesCol1.get(cat_id, {
+                "name": category["name"],
+                "rows": {},
+                "subtotal": comps_number*[0],
+            })
+
+            categoryCol0 = categoriesCol0.get(cat_id, {
+                "name": category["name"],
+                "rows": {},
+                "subtotal": comps_number*[0],
+            })
+
+            for row in category["rows"]:
+                _cat_id, div_name, col1, col0 = row
+                c_1 = categoryCol1["rows"].get(div_name, [div_name] + comps_number*[0])
+                c_0 = categoryCol0["rows"].get(div_name, [div_name] + comps_number*[0])
+                c_1[i+1] = col1
+                c_0[i+1] = col0
+                categoryCol1["rows"][div_name] = c_1
+                categoryCol0["rows"][div_name] = c_0
+            
+            categoryCol0["subtotal"][i] = category["subtotal"][1]
+            categoryCol1["subtotal"][i] = category["subtotal"][0]
+            categoriesCol1[cat_id] = categoryCol1
+            categoriesCol0[cat_id] = categoryCol0
+
+    for category in categoriesCol1.values():
+        category["size"] = len(category["rows"]) + 1
+    for category in categoriesCol0.values():
+        category["size"] = len(category["rows"]) + 1
+
+    # Schools
+    schools = {}
+    for i, event in enumerate(events):
+        for school_name, col1, col0 in event["school_data"]:
+            school = schools.get(school_name, {'name':school_name,'col1':[0]*comps_number,'col0':[0]*comps_number})
+            school['col1'][i] += col1
+            school['col0'][i] += col0
+            schools[school_name] = school
+            total_col1[i] += col1
+            total_col0[i] += col0
+    event_headers = [event["header"] for event in events]
+    context = {'catCol1': categoriesCol1,
+               'catCol0': categoriesCol0,
+               'schools': schools,
+               'events': event_headers,
+               'total': {"col1": total_col1, "col0": total_col0}}
+    return context
+
+def _build_division_data(category_subtotal_data, division_grouping_data):
+    """Pair division rows with category subtotals. Both sequences are ordered by category id."""
+    division_data = {}
+    division_grouping_index = 0
+
+    for category in category_subtotal_data:
+        rows = []
+        while True:
+            if (
+                len(division_grouping_data) <= division_grouping_index
+                or division_grouping_data[division_grouping_index][0] > category[0]
+            ):
+                break
+            elif division_grouping_data[division_grouping_index][0] == category[0]:
+                rows.append(division_grouping_data[division_grouping_index])
+                division_grouping_index += 1
+            else:
+                division_grouping_index += 1
+
+        division_data[category[0]] = {
+            "name": category[1],
+            "rows": rows,
+            "subtotal": (category[2], category[3]),
+            "size": len(rows) + 1,
+        }
+
+    return division_data
+
+
+def _event_summary_context(event, category_subtotal_data, division_grouping_data, school_grouping_data):
+    return {
+        "name": event.name,
+        "header": str(event),
+        "year": str(event.year),
+        "division_data": _build_division_data(category_subtotal_data, division_grouping_data),
+        "school_data": school_grouping_data,
+        "total": [
+            sum(category[2] for category in category_subtotal_data),
+            sum(category[3] for category in category_subtotal_data),
+        ],
+    }
+
+
+def _append_independent_school(school_grouping_data, col1, col0):
+    if col1 or col0:
+        school_grouping_data.append(('Independent', col1, col0))
+    return school_grouping_data
+
+
+def _annotated_tuples(queryset, *fields):
+    return [tuple(row[field] for field in fields) for row in queryset]
+
+
+def getAdminCompetitionSummary(event):
+    teams = Team.objects.filter(event=event, division__category__isnull=False)
+
+    division_grouping_data = _annotated_tuples(
+        teams.values('division__category_id', 'division__name', 'division_id')
+        .annotate(
+            student_count=Count('student'),
+            team_count=Count('pk', distinct=True),
+        )
+        .order_by('division__category_id', 'division_id'),
+        'division__category_id',
+        'division__name',
+        'student_count',
+        'team_count',
+    )
+
+    category_subtotal_data = _annotated_tuples(
+        teams.filter(division__in=event.divisions.all())
+        .values('division__category_id', 'division__category__name')
+        .annotate(
+            student_count=Count('student'),
+            team_count=Count('pk', distinct=True),
+        )
+        .order_by('division__category_id'),
+        'division__category_id',
+        'division__category__name',
+        'student_count',
+        'team_count',
+    )
+
+    school_grouping_data = _annotated_tuples(
+        Team.objects.filter(event=event, school__isnull=False)
+        .values('school__name')
+        .annotate(
+            team_count=Count('pk', distinct=True),
+            student_count=Count('student'),
+        )
+        .order_by('school__name'),
+        'school__name',
+        'team_count',
+        'student_count',
+    )
+
+    independent = Team.objects.filter(event=event, school__isnull=True).aggregate(
+        team_count=Count('pk', distinct=True),
+        student_count=Count('student'),
+    )
+    school_grouping_data = _append_independent_school(
+        school_grouping_data,
+        independent['team_count'],
+        independent['student_count'],
+    )
+
+    return _event_summary_context(
+        event,
+        category_subtotal_data,
+        division_grouping_data,
+        school_grouping_data,
+    )
+
+def getAdminWorkshopSummary(event: Event):
+    event_category_ids = event.divisions.exclude(category_id=None).values('category_id')
+
+    division_grouping_data = list(
+        Division.objects.filter(category_id__in=event_category_ids)
+        .annotate(
+            student_count=Count(
+                'baseeventattendance',
+                filter=Q(
+                    baseeventattendance__event=event,
+                    baseeventattendance__workshopattendee__attendeeType='student',
+                ),
+            ),
+            teacher_count=Count(
+                'baseeventattendance',
+                filter=Q(
+                    baseeventattendance__event=event,
+                    baseeventattendance__workshopattendee__attendeeType='teacher',
+                ),
+            ),
+        )
+        .order_by('category_id', 'id')
+        .values_list('category_id', 'name', 'student_count', 'teacher_count')
+    )
+
+    category_subtotal_data = list(
+        DivisionCategory.objects.filter(pk__in=event_category_ids)
+        .annotate(
+            student_count=Count(
+                'division__baseeventattendance',
+                filter=Q(
+                    division__baseeventattendance__event=event,
+                    division__baseeventattendance__workshopattendee__attendeeType='student',
+                ),
+            ),
+            teacher_count=Count(
+                'division__baseeventattendance',
+                filter=Q(
+                    division__baseeventattendance__event=event,
+                    division__baseeventattendance__workshopattendee__attendeeType='teacher',
+                ),
+            ),
+        )
+        .order_by('id')
+        .values_list('id', 'name', 'student_count', 'teacher_count')
+    )
+
+    school_grouping_data = list(
+        WorkshopAttendee.objects.filter(event=event, school__isnull=False)
+        .values('school__name')
+        .annotate(
+            student_count=Count('pk', filter=Q(attendeeType='student')),
+            teacher_count=Count('pk', filter=Q(attendeeType='teacher')),
+        )
+        .order_by('school__name')
+        .values_list('school__name', 'student_count', 'teacher_count')
+    )
+
+    independent = WorkshopAttendee.objects.filter(event=event, school__isnull=True).aggregate(
+        students=Count('pk', filter=Q(attendeeType='student')),
+        teachers=Count('pk', filter=Q(attendeeType='teacher')),
+    )
+    school_grouping_data = _append_independent_school(
+        school_grouping_data,
+        independent['students'],
+        independent['teachers'],
+    )
+
+    return _event_summary_context(
+        event,
+        category_subtotal_data,
+        division_grouping_data,
+        school_grouping_data,
+    )
+
+def summary_csv(context: dict[str, str]):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Attendance Summary.csv"'
+    t = loader.get_template("events/adminCsv.txt")
+    response.write(t.render(context))
+    return response
