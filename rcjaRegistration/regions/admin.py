@@ -31,11 +31,15 @@ class StateAdmin(AdminPermissions, admin.ModelAdmin, ExportCSVMixin):
         'bankAccountName',
         'bankAccountBSB',
         'bankAccountNumber',
-        'paypalEmail'
+        'paypalEmail',
+        'introductionEmailTemplate'
     ]
     fieldsets = (
         (None, {
             'fields': ('name', 'abbreviation')
+        }),
+        ('Introductory Email', {
+            'fields': ('introductionEmailTemplate',)
         }),
         ('Type', {
             'fields': ('typeCompetition', 'typeUserRegistration', 'typeGlobal', 'typeWebsite')
