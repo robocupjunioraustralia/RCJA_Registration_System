@@ -9,6 +9,9 @@ from events.models import Event
 from common.baseTests.populateDatabase import createStates, createUsers, createEvents
 import jwt
 
+# PyJWT requires HMAC keys of at least 32 bytes for HS256 (RFC 7518 §3.2)
+CMS_JWT_TEST_SECRET = "TESTONLY_cms_jwt_secret_at_least_32_bytes"
+
 class TestCMSView(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -73,7 +76,7 @@ class TestCMSView(TestCase):
         self.assertContains(response, "The CMS for this event is unavailable", status_code=403)
 
     @override_settings(
-        CMS_JWT_SECRET="TEST_SECRET",
+        CMS_JWT_SECRET=CMS_JWT_TEST_SECRET,
         CMS_EVENT_URL_CREATE="https://rcjcms.local/rcj_cms/event/create?token={TOKEN}"
     )
     def test_cms_generates_jwt_and_redirects(self):
@@ -88,7 +91,7 @@ class TestCMSView(TestCase):
         self.assertIn("https://rcjcms.local/rcj_cms/event/create", response.url)
 
         token = response.url.split("token=")[1]
-        payload = jwt.decode(token, "TEST_SECRET", algorithms=["HS256"])
+        payload = jwt.decode(token, CMS_JWT_TEST_SECRET, algorithms=["HS256"])
         self.assertEqual(payload["event"], self.competition.id)
 
         user_obj = User.objects.get(email=self.email_user_state1_fullcoordinator)
