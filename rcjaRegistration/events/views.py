@@ -484,13 +484,13 @@ def singlePageAdminSummary(request, eventID):
 
     if event.boolWorkshop():
         context = getAdminWorkshopSummary(event)
-        context["column1"] = "Students"
-        context["column0"] = "Teachers"
+        context["column0"] = "Students"
+        context["column1"] = "Teachers"
         return render(request, 'events/adminDetails.html', context)
     else:
         context = getAdminCompetitionSummary(event)
-        context["column1"] = "Students"
         context["column0"] = "Teams"
+        context["column1"] = "Students"
         return render(request, 'events/adminDetails.html', context)
 
 @login_required
@@ -657,8 +657,8 @@ def getAdminCompetitionSummary(event):
         .order_by('division__category_id', 'division_id'),
         'division__category_id',
         'division__name',
-        'student_count',
         'team_count',
+        'student_count',
     )
 
     category_subtotal_data = _annotated_tuples(
@@ -671,8 +671,8 @@ def getAdminCompetitionSummary(event):
         .order_by('division__category_id'),
         'division__category_id',
         'division__category__name',
-        'student_count',
         'team_count',
+        'student_count',
     )
 
     school_grouping_data = _annotated_tuples(
