@@ -1700,14 +1700,14 @@ class TestAdminSummaryContext(TestCase):
                    'year': '2019', 
                    'division_data': 
                    {cat_id: {'name': 'Test', 
-                        'rows': [(cat_id, 'test', 4, 3), 
+                        'rows': [(cat_id, 'test', 3, 4), 
                                 (cat_id, 'Div2', 1, 1)], 
-                        'subtotal': (5, 4), 
+                        'subtotal': (4, 5), 
                         'size': 3}}, 
                     'school_data': 
                         [('Melbourne High', 3, 3), 
                          ('School 2', 1, 2)],
-                    'total': [5, 4]}
+                    'total': [4, 5]}
         self.assertEqual(context, returned)
 
     def testWorkshopDict(self):
@@ -1717,14 +1717,14 @@ class TestAdminSummaryContext(TestCase):
                    'header': str(self.workshop),
                    'year': '2019', 
                    'division_data': {cat_id: {'name': 'Test', 
-                                         'rows': [(cat_id, 'test', 3, 1), 
-                                                  (cat_id, 'Div2', 1, 0)], 
-                                         'subtotal': (4, 1), 
+                                         'rows': [(cat_id, 'test', 1, 3), 
+                                                  (cat_id, 'Div2', 0, 1)], 
+                                         'subtotal': (1, 4), 
                                          'size': 3}}, 
                                          'school_data': 
-                                            [('Melbourne High', 3, 1), 
-                                             ('School 2', 1, 0)], 
-                                         'total': [4, 1]}
+                                            [('Melbourne High', 1, 3), 
+                                             ('School 2', 0, 1)], 
+                                         'total': [1, 4]}
         self.assertEqual(context, returned)
 
     def testBlankForm(self):

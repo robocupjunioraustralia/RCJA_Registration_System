@@ -484,13 +484,13 @@ def singlePageAdminSummary(request, eventID):
 
     if event.boolWorkshop():
         context = getAdminWorkshopSummary(event)
-        context["column1"] = "Students"
         context["column0"] = "Teachers"
+        context["column1"] = "Students"
         return render(request, 'events/adminDetails.html', context)
     else:
         context = getAdminCompetitionSummary(event)
-        context["column1"] = "Students"
         context["column0"] = "Teams"
+        context["column1"] = "Students"
         return render(request, 'events/adminDetails.html', context)
 
 @login_required
@@ -657,8 +657,8 @@ def getAdminCompetitionSummary(event):
         .order_by('division__category_id', 'division_id'),
         'division__category_id',
         'division__name',
-        'student_count',
         'team_count',
+        'student_count',
     )
 
     category_subtotal_data = _annotated_tuples(
@@ -671,8 +671,8 @@ def getAdminCompetitionSummary(event):
         .order_by('division__category_id'),
         'division__category_id',
         'division__category__name',
-        'student_count',
         'team_count',
+        'student_count',
     )
 
     school_grouping_data = _annotated_tuples(
@@ -727,7 +727,7 @@ def getAdminWorkshopSummary(event: Event):
             ),
         )
         .order_by('category_id', 'id')
-        .values_list('category_id', 'name', 'student_count', 'teacher_count')
+        .values_list('category_id', 'name', 'teacher_count', 'student_count')
     )
 
     category_subtotal_data = list(
@@ -749,7 +749,7 @@ def getAdminWorkshopSummary(event: Event):
             ),
         )
         .order_by('id')
-        .values_list('id', 'name', 'student_count', 'teacher_count')
+        .values_list('id', 'name', 'teacher_count', 'student_count')
     )
 
     school_grouping_data = list(
@@ -760,7 +760,7 @@ def getAdminWorkshopSummary(event: Event):
             teacher_count=Count('pk', filter=Q(attendeeType='teacher')),
         )
         .order_by('school__name')
-        .values_list('school__name', 'student_count', 'teacher_count')
+        .values_list('school__name', 'teacher_count', 'student_count')
     )
 
     independent = WorkshopAttendee.objects.filter(event=event, school__isnull=True).aggregate(
@@ -769,8 +769,8 @@ def getAdminWorkshopSummary(event: Event):
     )
     school_grouping_data = _append_independent_school(
         school_grouping_data,
-        independent['students'],
         independent['teachers'],
+        independent['students'],
     )
 
     return _event_summary_context(
