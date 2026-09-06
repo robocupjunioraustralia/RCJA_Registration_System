@@ -23,7 +23,7 @@
     </div>
     <br> 
     <div class="row">
-        <h2>{{column1}} Per Division</h2>
+        <h2>{{column0}} Per Division</h2>
     </div>
     <div class="row">
         <table class="ui celled table division-summary">
@@ -68,7 +68,38 @@
     </div>
     <br> 
     <div class="row">
-        <h2>{{column0}} Per Division</h2>
+        <h2>{{column0}} Per School</h2>
+    </div>
+    <div class="row">
+        <table class="ui celled table">
+            <thead><tr>
+                <th>School</th>
+                {% for event in events %}
+                <th>{{event}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for school in schools.values %}
+                    <tr>
+                        <td>{{school.name}}</td>
+                    {% for event in school.col1 %}
+                        <td>{{event}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="subtotal"><th>Total</th>
+                {% for event in total.col1 %}
+                    <td>{{event}}</td>
+                {% endfor %}
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+    <br>
+    <div class="row">
+        <h2>{{column1}} Per Division</h2>
     </div>
     <div class="row">
         <table class="ui celled table division-summary">
@@ -112,40 +143,8 @@
         </table>
     </div>
     <br>
-    <br> 
     <div class="row">
         <h2>{{column1}} Per School</h2>
-    </div>
-    <div class="row">
-        <table class="ui celled table">
-            <thead><tr>
-                <th>School</th>
-                {% for event in events %}
-                <th>{{event}}</th>
-                {% endfor %}
-            </tr></thead>
-            <tbody>
-                {% for school in schools.values %}
-                    <tr>
-                        <td>{{school.name}}</td>
-                    {% for event in school.col1 %}
-                        <td>{{event}}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr class="subtotal"><th>Total</th>
-                {% for event in total.col1 %}
-                    <td>{{event}}</td>
-                {% endfor %}
-            </tr>
-            </tfoot>
-        </table>
-    </div>
-    <br> 
-    <div class="row">
-        <h2>{{column0}} Per School</h2>
     </div>
     <div class="row">
         <table class="ui celled table">
