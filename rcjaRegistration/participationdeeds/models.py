@@ -107,6 +107,7 @@ class ParticipationDeed(SaveDeleteMixin, models.Model):
 
     def submittedFullName(self):
         return f'{self.submittedFirstName} {self.submittedLastName}'
+    submittedFullName.short_description = "Submitted Full Name"
 
     def isAttached(self):
         return self.student_set.exists() or self.workshopattendee_set.exists()
