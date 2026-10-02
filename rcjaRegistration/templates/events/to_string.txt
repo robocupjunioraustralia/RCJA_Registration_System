@@ -1,0 +1,6 @@
+{%if competitions%}
+The following competitions are occurring in {{state}}:{% for event in competitions %}
+- {{event.name}}    {{event.startDate|default_if_none:"TBC"}}{% if event.startDate != event.endDate %} - {{event.endDate|default_if_none:"TBC"}}{% endif %}
+{% endfor %}{% endif %}{%if workshops%}The following workshops are occurring in {{state}}:{% for event in workshops %}
+- {{event.name}}    {{event.startDate|default_if_none:"TBC"}}{% if event.startDate != event.endDate %} - {{event.endDate|default_if_none:"TBC"}}{% endif %}
+{% endfor %}{% endif %}
