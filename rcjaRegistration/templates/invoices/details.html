@@ -136,12 +136,8 @@
             </div>
             <div class="ui card">
                 <div class="content center aligned text segment">
-                    <small class="ui sub header"> Amount Due (EFT): </small>
+                    <small class="ui sub header"> Amount Due: </small>
                     <p class="bigfont"> ${{ invoice.amountDueInclGST|floatformat:2 }} </p>
-                    {% if invoice.paypalAvailable %}
-                    <small class="ui sub header"> Amount Due (PayPal): </small>
-                    <p class="bigfont"> ${{ invoice.amountDuePaypal|floatformat:2 }} </p>
-                    {% endif %}
                 </div>
             </div>
             <div class="ui card">
