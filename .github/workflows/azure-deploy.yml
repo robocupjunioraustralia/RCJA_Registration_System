@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v5
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
         python-version: 3.13
     - name: Install dependencies
@@ -23,9 +23,9 @@ jobs:
         source env/bin/activate
         pip install -r requirements.txt
     - name: 'Docker login'
-      uses: azure/docker-login@v1
+      uses: docker/login-action@v4
       with:
-        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
 
