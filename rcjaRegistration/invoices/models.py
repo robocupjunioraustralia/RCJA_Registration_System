@@ -515,6 +515,8 @@ class Invoice(SaveDeleteMixin, models.Model):
     amountDueInclGST.admin_order_field = '_amountDueUnrounded'
 
     def amountDuePaypal(self):
+        return self.amountDueInclGST()
+        # Leaving the original function for now because may be resurrected for multi country support where surcharges allowed 
         if self.amountDueInclGST_unrounded() < 0.05: # 0.05 to avoid tiny sum edge caes
             return 0
         return round(self.amountDueInclGST_unrounded() * 1.0275 + 0.3, 2)
