@@ -45,13 +45,13 @@ class AssociationMember(SaveDeleteMixin, models.Model):
 
         # Prevent setting approvalStatus to approved if membershipStartDate or rulesAcceptedDate are blank
         if not self.membershipStartDate and self.approvalStatus == 'approved':
-            errors['approvalStatus'] = 'Membership start date must be set before approval.'
+            if errors.get('membershipStartDate'):
+                errors['membershipStartDate'] += ' Membership start date must be set before approval.'
+            else:
+                errors['membershipStartDate'] = 'Membership start date must be set before approval.'
 
         if not self.rulesAcceptedDate and self.approvalStatus == 'approved':
-            if errors.get('approvalStatus'):
-                errors['approvalStatus'] += ' Rules must be accepted before approval.'
-            else:
-                errors['approvalStatus'] = 'Rules must be accepted before approval.'
+            errors['rulesAcceptedDate'] = 'Rules must be accepted before approval.'
 
         # Raise any errors
         if errors:
