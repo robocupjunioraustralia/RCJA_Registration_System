@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404,redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template import loader
@@ -13,14 +13,20 @@ from django.views.decorators.debug import sensitive_post_parameters, sensitive_v
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.encoding import iri_to_uri
 from urllib.parse import urlparse
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+
+from datetime import date
 
 from .models import User
 from userquestions.models import Question, QuestionResponse
 from userquestions.forms import QuestionResponseForm
 from schools.models import School
+from events.models import Event
 
 from regions.utils import getRegionsLookup
 from coordination.permissions import checkCoordinatorPermission
+
 
 @login_required
 def details(request):
@@ -37,28 +43,41 @@ def details(request):
         form=QuestionResponseForm,
         extra=numberQuestions,
         max_num=numberQuestions,
-        can_delete=False
+        can_delete=False,
     )
 
     questionResponseInitials = []
 
     for question in questions:
-        questionResponseInitials.append({
-            'question': question.id,
-            'user': request.user.id,
-        })
+        questionResponseInitials.append(
+            {
+                "question": question.id,
+                "user": request.user.id,
+            }
+        )
 
     # Create get version of the forms here so that exist before the exception is added if missing management data
     form = UserForm(instance=request.user)
-    questionFormset = QuestionReponseFormSet(instance=request.user, initial=questionResponseInitials)
+    questionFormset = QuestionReponseFormSet(
+        instance=request.user, initial=questionResponseInitials
+    )
 
-    if request.method == 'POST':
+    if request.method == "POST":
         # Create Post versions of forms
         form = UserForm(request.POST, instance=request.user)
-        questionFormset = QuestionReponseFormSet(request.POST, instance=request.user, initial=questionResponseInitials, error_messages={"missing_management_form": "ManagementForm data is missing or has been tampered with"})
+        questionFormset = QuestionReponseFormSet(
+            request.POST,
+            instance=request.user,
+            initial=questionResponseInitials,
+            error_messages={
+                "missing_management_form": "ManagementForm data is missing or has been tampered with"
+            },
+        )
 
         # Don't redirect to home if use was forced here and no schools, so user can create a school
-        displayAgain = request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool
+        displayAgain = (
+            request.user.forceDetailsUpdate and not request.user.currentlySelectedSchool
+        )
 
         if all([x.is_valid() for x in (form, questionFormset)]):
             # Save user
@@ -67,51 +86,115 @@ def details(request):
             user.save()
 
             # Save question response questionFormset
-            questionFormset.save() 
+            questionFormset.save()
 
             # Stay on page if continue_editing in response or if must display again, else redirect to home
-            if displayAgain or 'continue_editing' in request.POST:
-                return redirect(reverse('users:details'))
+            if displayAgain or "continue_editing" in request.POST:
+                return redirect(reverse("users:details"))
 
-            return redirect(reverse('events:dashboard'))
+            return redirect(reverse("events:dashboard"))
 
-    return render(request, 'registration/profile.html', {'form': form, 'questionFormset': questionFormset, 'schools':schools, 'regionsLookup': getRegionsLookup()})
+    return render(
+        request,
+        "registration/profile.html",
+        {
+            "form": form,
+            "questionFormset": questionFormset,
+            "schools": schools,
+            "regionsLookup": getRegionsLookup(),
+        },
+    )
 
-@sensitive_post_parameters('password', 'passwordConfirm')
-@sensitive_variables('form', 'cleaned_data')
+
+@sensitive_post_parameters("password", "passwordConfirm")
+@sensitive_variables("form", "cleaned_data")
 def signup(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = UserSignupForm(request.POST)
 
         if form.is_valid():
             # Save user
             user = form.save()
             user.set_password(form.cleaned_data["password"])
-            user.forceDetailsUpdate = True # Force redirect to details page so user can submit question responses and create a school
+            user.forceDetailsUpdate = True  # Force redirect to details page so user can submit question responses and create a school
             user.save()
 
+            # Send email
+            send_signup_email(user)
             # Login and redirect
             login(request, user)
-            return redirect(reverse('users:details'))
+            return redirect(reverse("users:details"))
     else:
         form = UserSignupForm()
 
-    return render(request, 'registration/signup.html', {'form': form, 'regionsLookup': getRegionsLookup()})
+    return render(
+        request,
+        "registration/signup.html",
+        {"form": form, "regionsLookup": getRegionsLookup()},
+    )
+
+
+def send_signup_email(user):
+    today = date.today()
+    events = {
+        "competitions": Event.objects.filter(
+            state=user.homeState,
+            registrationsCloseDate__gte=today,
+            year__year=today.year,
+            status="published",
+            eventType="competition",
+        ),
+        "workshops": Event.objects.filter(
+            state=user.homeState,
+            registrationsCloseDate__gte=today,
+            year__year=today.year,
+            status="published",
+            eventType="workshop",
+        ),
+        "state": user.homeState,
+    }
+    events_text = loader.render_to_string(
+        "events/to_string.txt",
+        context=events,
+    )
+    context = {"name": user.fullname_or_email(), "events": events_text.strip()}
+
+    state_message_template = user.homeState.introductionEmailTemplate
+    if state_message_template:
+        message_template = state_message_template
+    else:
+        with open("templates/emails/welcome.txt", "rt") as file:
+            message_template = file.read()
+
+    text_content = message_template.replace("{{name}}", context["name"]).replace(
+        "{{events}}", context["events"]
+    )
+    subject = "Welcome to Robocup"
+    msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+    )
+    msg.send()
+
 
 def termsAndConditions(request):
     if request.user.is_authenticated:
-        return render(request,'termsAndConditions/termsAndConditionsLoggedIn.html')
+        return render(request, "termsAndConditions/termsAndConditionsLoggedIn.html")
     else:
-        return render(request,'termsAndConditions/termsAndConditionsNoAuth.html') 
+        return render(request, "termsAndConditions/termsAndConditionsNoAuth.html")
+
 
 def redirectCurrentPage(request):
-    referrer = request.META.get('HTTP_REFERER', '')
+    referrer = request.META.get("HTTP_REFERER", "")
     parsed = urlparse(referrer)
     uri = iri_to_uri(parsed.path)
     if url_has_allowed_host_and_scheme(uri, None):
         return redirect(uri)
     else:
-        return redirect('/')
+        return redirect("/")
+
 
 @login_required
 def setCurrentAdminYear(request, year):
@@ -127,15 +210,17 @@ def setCurrentAdminYear(request, year):
 
     else:
         from events.models import Year
+
         year = get_object_or_404(Year, pk=year)
 
         # Set current year on user
         request.user.currentlySelectedAdminYear = year
 
     # Save field
-    request.user.save(update_fields=['currentlySelectedAdminYear'])
-    
+    request.user.save(update_fields=["currentlySelectedAdminYear"])
+
     return redirectCurrentPage(request)
+
 
 @login_required
 def setCurrentAdminState(request, stateID):
@@ -151,19 +236,21 @@ def setCurrentAdminState(request, stateID):
 
     else:
         from regions.models import State
+
         state = get_object_or_404(State, pk=stateID)
 
         # Check permissions
-        if not checkCoordinatorPermission(request, State, state, 'view'):
+        if not checkCoordinatorPermission(request, State, state, "view"):
             raise PermissionDenied("You do not have permission to view this state")
 
         # Set current state on user
         request.user.currentlySelectedAdminState = state
 
     # Save field
-    request.user.save(update_fields=['currentlySelectedAdminState'])
-    
+    request.user.save(update_fields=["currentlySelectedAdminState"])
+
     return redirectCurrentPage(request)
+
 
 @login_required
 def adminChangelog(request):
@@ -171,4 +258,4 @@ def adminChangelog(request):
     if not request.user.is_staff:
         raise PermissionDenied("Must be staff")
 
-    return render(request, 'users/adminChangelog.html')
+    return render(request, "users/adminChangelog.html")
