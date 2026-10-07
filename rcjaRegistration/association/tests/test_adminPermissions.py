@@ -17,6 +17,7 @@ class AssociationMember_Base:
         'user': 0,
         'approvalStatus':'pending',
         'membershipStartDate': datetime.date.today(),
+        'rulesAcceptedDate': datetime.date.today(),
     }
 
     @classmethod
@@ -33,20 +34,77 @@ class Test_AssociationMember_NotStaff(AssociationMember_Base, Base_Test_NotStaff
 class AdditionalAssociationMemberTestsMixin:
     expectedAddEditableFields = [
         ('approvalStatus', 'Approval status'),
+        ('rulesAcceptedDate', 'Rules accepted date'),
     ]
     expectedAddReadonlyFields = [
         ('approvalRejectionBy', 'Approved/ rejected by'),
         ('approvalRejectionDate', 'Approval/ rejection date'),
-        ('rulesAcceptedDate', 'Rules accepted date'),
     ]
     expectedChangeEditableFields = [
         ('approvalStatus', 'Approval status'),
+        ('rulesAcceptedDate', 'Rules accepted date'),
     ]
     expectedChangeReadonlyFields = [
         ('approvalRejectionBy', 'Approved/ rejected by'),
         ('approvalRejectionDate', 'Approval/ rejection date'),
-        ('rulesAcceptedDate', 'Rules accepted date'),
     ]
+
+    def test_save_rulesAcceptedDate_changed(self):
+        payload = self.validPayload.copy()
+        payload['rulesAcceptedDate'] = datetime.date.today() + datetime.timedelta(days=-5)
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertEqual(self.state1_associationMember1.rulesAcceptedDate, datetime.date.today() + datetime.timedelta(days=-5))
+
+    def test_save_rulesAcceptedDate_cleared(self):
+        payload = self.validPayload.copy()
+        payload['rulesAcceptedDate'] = ''
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_SUCCESS)
+        self.state1_associationMember1.refresh_from_db()
+        self.assertIsNone(self.state1_associationMember1.rulesAcceptedDate)
+
+    def test_save_rulesAcceptedDate_cleared_approving(self):
+        payload = self.validPayload.copy()
+        payload['approvalStatus'] = 'approved'
+        payload['rulesAcceptedDate'] = ''
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Rules must be accepted before approval.')
+
+    def test_save_rulesAcceptedDate_cleared_alreadyApproved(self):
+        self.state1_associationMember1.approvalStatus = 'approved'
+        self.state1_associationMember1.approvalRejectionDate = datetime.date.today()
+        self.state1_associationMember1.save()
+
+        payload = self.validPayload.copy()
+        del payload['approvalStatus'] # since approvalStatus is readonly if already approved
+        payload['rulesAcceptedDate'] = ''
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Rules must be accepted before approval.')
+        self.state1_associationMember1.refresh_from_db()
+        self.assertIsNotNone(self.state1_associationMember1.rulesAcceptedDate)
+
+    def test_save_membershipStartDate_cleared_alreadyApproved(self):
+        self.state1_associationMember1.approvalStatus = 'approved'
+        self.state1_associationMember1.approvalRejectionDate = datetime.date.today()
+        self.state1_associationMember1.save()
+
+        payload = self.validPayload.copy()
+        del payload['approvalStatus'] # since approvalStatus is readonly if already approved
+        payload['membershipStartDate'] = ''
+
+        response = self.client.post(reverse(f'admin:{self.modelURLName}_change', args=(self.state1ObjID,)), data=payload)
+        self.assertEqual(response.status_code, POST_VALIDATION_FAILURE)
+        self.assertContains(response, 'Membership start date must be set before approval.')
+        self.state1_associationMember1.refresh_from_db()
+        self.assertIsNotNone(self.state1_associationMember1.membershipStartDate)
 
     def test_approvalStatus_approved_readonly(self):
         self.state1_associationMember1.approvalStatus = 'approved'
@@ -249,6 +307,20 @@ class Test_AssociationMember_GlobalFullCoordinator(AssociationBulkActionsTestsMi
 
     def test_bulkReject_action_hidden(self):
         pass
+
+class Test_AssociationMember_StateAssociationManager(Test_AssociationMember_FullCoordinator):
+    @classmethod
+    def additionalSetup(cls):
+        super().additionalSetup()
+        cls.coord_state1_fullcoordinator.permissionLevel = 'associationmanager'
+        cls.coord_state1_fullcoordinator.save()
+
+class Test_AssociationMember_GlobalAssociationManager(Test_AssociationMember_GlobalFullCoordinator):
+    @classmethod
+    def additionalSetup(cls):
+        super().additionalSetup()
+        cls.coord_state1_fullcoordinator.permissionLevel = 'associationmanager'
+        cls.coord_state1_fullcoordinator.save()
 
 class Test_AssociationMember_ViewCoordinator(AssociationMember_Coordinators_Base, Base_Test_ViewCoordinator, TestCase):
     pass

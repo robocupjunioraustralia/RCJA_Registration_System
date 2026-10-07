@@ -23,7 +23,7 @@ class AssociationMember(SaveDeleteMixin, models.Model):
     approvalStatus = models.CharField('Approval status', max_length=8, choices=approvalStatusChoices, default='pending')
     approvalRejectionDate = models.DateField('Approval/ rejection date', null=True, blank=True, editable=False)
     approvalRejectionBy = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Approved/ rejected by', on_delete=models.PROTECT, null=True, blank=True, related_name='associationMemberApprovalRejections', editable=False)
-    rulesAcceptedDate = models.DateField('Rules accepted date', null=True, blank=True, editable=False)
+    rulesAcceptedDate = models.DateField('Rules accepted date', null=True, blank=True)
 
     # *****Meta and clean*****
     class Meta:
@@ -36,22 +36,22 @@ class AssociationMember(SaveDeleteMixin, models.Model):
         if self.membershipEndDate:
             if not self.membershipStartDate:
                 errors['membershipStartDate'] = 'Membership start date must not be blank if membership end date set.'
-            
+
             elif self.membershipStartDate >= self.membershipEndDate:
                 errors['membershipStartDate'] = 'Membership start date must be before membership end date.'
-        
+
         if not self.under18() and not self.address:
             errors['address'] = 'Address must not be blank for members 18 and over.'
 
         # Prevent setting approvalStatus to approved if membershipStartDate or rulesAcceptedDate are blank
         if not self.membershipStartDate and self.approvalStatus == 'approved':
-            errors['approvalStatus'] = 'Membership start date must be set before approval.'
+            if errors.get('membershipStartDate'):
+                errors['membershipStartDate'] += ' Membership start date must be set before approval.'
+            else:
+                errors['membershipStartDate'] = 'Membership start date must be set before approval.'
 
         if not self.rulesAcceptedDate and self.approvalStatus == 'approved':
-            if errors.get('approvalStatus'):
-                errors['approvalStatus'] += ' Rules must be accepted before approval.'
-            else:
-                errors['approvalStatus'] = 'Rules must be accepted before approval.'
+            errors['rulesAcceptedDate'] = 'Rules must be accepted before approval.'
 
         # Raise any errors
         if errors:
