@@ -185,12 +185,15 @@ class TestAssociationMemberClean(TestCase):
         self.associationMember1.rulesAcceptedDate = datetime.datetime.now().date()
         self.associationMember1.membershipStartDate = None
         self.assertRaisesMessage(ValidationError, "Membership start date must be set before approval.", self.associationMember1.clean)
-    
+
     def test_approval_both_blank(self):
         self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.rulesAcceptedDate = None
         self.associationMember1.membershipStartDate = None
-        self.assertRaisesMessage(ValidationError, "Membership start date must be set before approval. Rules must be accepted before approval.", self.associationMember1.clean)
+        with self.assertRaises(ValidationError) as ctx:
+            self.associationMember1.clean()
+        self.assertEqual(ctx.exception.message_dict['membershipStartDate'], ['Membership start date must be set before approval.'])
+        self.assertEqual(ctx.exception.message_dict['rulesAcceptedDate'], ['Rules must be accepted before approval.'])
 
     def test_approval_both_set(self):
         self.associationMember1.approvalStatus = 'approved'
@@ -227,7 +230,7 @@ class TestAssociationMemberMethods(TestCase):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
         self.associationMember1.address = 'Test address'
         self.assertEqual(self.associationMember1.address, 'Test address')
-        
+
         self.associationMember1.save()
 
         self.associationMember1.refresh_from_db()
@@ -247,7 +250,7 @@ class TestAssociationMemberMethods(TestCase):
     def test_membershipActive_startYesterday(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertTrue(self.associationMember1.membershipActive())
-    
+
     def test_membershipActive_startTomorrow(self):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         self.assertFalse(self.associationMember1.membershipActive())
@@ -255,11 +258,11 @@ class TestAssociationMemberMethods(TestCase):
     def test_under18_noBirthday(self):
         self.associationMember1.birthday = None
         self.assertIsNone(self.associationMember1.under18())
-    
+
     def test_under18_17(self):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*17)).date()
         self.assertTrue(self.associationMember1.under18())
-    
+
     def test_under18_19(self):
         self.associationMember1.birthday = (datetime.datetime.now() + datetime.timedelta(days=-365*19)).date()
         self.assertFalse(self.associationMember1.under18())
@@ -291,7 +294,7 @@ class TestAssociationMemberMethods(TestCase):
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-1)).date()
         self.assertIsNone(self.associationMember1.membershipEndDate)
         self.assertEqual(self.associationMember1.membershipStatus(), 'Active')
-    
+
     def test_membershipStatus_expired(self):
         self.associationMember1.approvalStatus = 'approved'
         self.associationMember1.membershipStartDate = (datetime.datetime.now() + datetime.timedelta(days=-2)).date()
