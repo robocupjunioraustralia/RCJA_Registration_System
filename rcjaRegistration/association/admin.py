@@ -29,7 +29,6 @@ class SchoolAdmin(FKActionsRemove, AdminPermissions, admin.ModelAdmin, ExportCSV
         'mobileNumber',
         'membershipActive',
         'membershipType',
-        'rulesAcceptedDate',
         'approvalRejectionBy',
         'approvalRejectionDate',
     ]
