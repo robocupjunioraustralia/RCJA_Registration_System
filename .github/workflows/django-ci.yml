@@ -2,6 +2,9 @@ name: Django Tests
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   tests:
 
