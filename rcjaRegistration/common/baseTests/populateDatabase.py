@@ -81,7 +81,8 @@ def createSchools(self):
     self.schooladmin_mentor4 = SchoolAdministrator.objects.create(school=self.school3_state2, user=self.user_state2_school3_mentor4)
 
 def createEvents(self):
-    self.year = Year.objects.create(year=2021, displayEventsOnWebsite=True)
+    today = datetime.date.today()
+    self.year = Year.objects.create(year=today.year, displayEventsOnWebsite=True)
     self.invoiceSettings = InvoiceGlobalSettings.objects.create(
         invoiceFromName='From Name',
         invoiceFromDetails='Test Details Text',
