@@ -257,11 +257,7 @@ class MentorEventFilePresignView(LoginRequiredMixin, View):
             validate_upload_metadata(file_type, original_filename, declared_size)
             s3_key = generate_mentor_file_s3_key(original_filename)
             presigned_url = generate_presigned_put_url(s3_key, content_type)
-        except ValidationError as exc:
-            if hasattr(exc, 'messages'):
-                errors = [str(message) for message in exc.messages]
-            else:
-                errors = [str(exc)]
-            return JsonResponse({'errors': errors}, status=400)
+        except ValidationError:
+            return JsonResponse({'errors': ['Invalid upload metadata']}, status=400)
 
         return JsonResponse({'presignedUrl': presigned_url, 's3Key': s3_key})
